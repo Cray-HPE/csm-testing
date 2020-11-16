@@ -1,0 +1,6 @@
+gossfile:
+  goss-basecamp.yaml: {}
+  goss-bmc-check.yaml: {}
+  goss-dns.yaml: {} 
+  goss-services-enabled.yaml: {}
+  goss-services-running.yaml: {}
