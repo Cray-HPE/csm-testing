@@ -4,7 +4,7 @@ def skipSuccess = false
 
 rpmBuild(
     specfile: "csm-testing.spec",
-    product: "shasta-standard,shasta-premium",
+    product: "csm",
     target_node: "ncn",
     send_events: "csm-testing",
     channel: "metal-ci-alerts"
