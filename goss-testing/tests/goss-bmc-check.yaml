@@ -1,0 +1,11 @@
+# Variable file: vars-ncns-minus-pit.yaml
+command:
+  {{range $node := index .Vars "ncns"}}
+  bmc-check-{{$node}}:
+    exec: ipmitool -I lanplus -U root -P initial0 -H {{printf "%s-mgmt" $node}} chassis status
+    exit-status: 0
+  {{end}}
+  # The PIT node needs to be connected to differently.
+  pit-node:
+    exec: ipmitool chassis status
+    exit-status: 0

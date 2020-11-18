@@ -1,0 +1,4 @@
+command:
+  basecamp:
+    exec: "cat /var/www/ephemeral/configs/data.json | jq"
+    exit-status: 0

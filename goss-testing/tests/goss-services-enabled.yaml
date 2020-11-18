@@ -1,0 +1,6 @@
+# Variable file: vars-services.yaml
+service:
+  {{range $service := index .Vars "services"}}
+  {{$service}}:
+    running: true
+  {{end}}

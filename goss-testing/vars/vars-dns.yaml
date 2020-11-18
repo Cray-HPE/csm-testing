@@ -1,0 +1,33 @@
+ncns:
+  - nodes: 
+      - ncn-m002
+      - ncn-m003
+      - ncn-w001
+      - ncn-w002
+      - ncn-w003
+    networks:
+      - ""
+      - "nmn"
+      - "hmn"
+      - "mtl"
+      - "can"
+  - nodes: 
+      - ncn-s001
+      - ncn-s002
+      - ncn-s003
+    networks:
+      - ""
+      - "nmn"
+      - "mtl"
+      - "can"
+      - "hmn"
+
+pit:
+  - nodes:
+    - ncn-m001
+    networks:
+      - ""
+      - "nmn"
+      - "hmn"
+      - "mtl"
+      - "can"

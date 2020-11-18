@@ -1,0 +1,5 @@
+# Variable file: vars-services.yaml
+services:
+  - dnsmasq
+  - nexus
+  - basecamp
