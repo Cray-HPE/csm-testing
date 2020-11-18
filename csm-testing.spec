@@ -5,7 +5,7 @@
 %define livecd %{install_dir}/livecd
 %define ncn %{install_dir}/ncn
 
-Name: csm-testing-goss-tests
+Name: csm-testing
 License: HPE Software License Agreement
 Summary: Goss tests to test out installation set-up
 Group: HPC
