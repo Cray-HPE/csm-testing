@@ -1,7 +1,7 @@
 command:
 {{range $interface := index .Vars "interfaces"}}
   check_interface_{{$interface}}:
-    exec: 'ip link show | grep -e "[0-9]*: {{$interface}}"'
+    exec: 'ip link show dev {{$interface}}'
     exit-status: 0
     timeout: 10000
     skip: false
