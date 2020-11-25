@@ -1,0 +1,4 @@
+gossfile:
+  goss-interface-has-ip.yaml: {}
+  goss-network-interfaces.yaml: {}
+  goss-services-running.yaml: {}
