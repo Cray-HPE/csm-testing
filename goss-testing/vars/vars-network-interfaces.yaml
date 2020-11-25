@@ -1,5 +1,0 @@
-interfaces:
-  - bond0
-  - vlan002
-  - vlan004
-  - vlan007

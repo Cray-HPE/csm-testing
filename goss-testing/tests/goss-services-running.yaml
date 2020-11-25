@@ -1,4 +1,4 @@
-# Variable file: vars-services.yaml
+# Variable set: services-running
 service:
   {{range $service := index .Vars "services"}}
   {{$service}}:

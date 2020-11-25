@@ -1,6 +1,6 @@
-# Variable file: vars-ncns-minus-pit.yaml
+# Variable set: ncns-nopit
 command:
-  {{range $node := index .Vars "ncns"}}
+  {{range $node := index .Vars .Vars.ncns-nopit}}
   bmc-check-{{$node}}:
     exec: ipmitool -I lanplus -U root -P initial0 -H {{printf "%s-mgmt" $node}} chassis status
     exit-status: 0
