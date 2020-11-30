@@ -1,0 +1,78 @@
+ncns:
+  - ncn-w001
+  - ncn-w002
+  - ncn-w003
+  - ncn-s001
+  - ncn-s002
+  - ncn-s003
+  - ncn-m001
+  - ncn-m002
+  - ncn-m003
+
+ncns-nopit:
+  - ncn-w001
+  - ncn-w002
+  - ncn-w003
+  - ncn-s001
+  - ncn-s002
+  - ncn-s003
+  - ncn-m002
+  - ncn-m003
+
+dns:
+  - nodes:
+      - ncn-m002
+      - ncn-m003
+      - ncn-w001
+      - ncn-w002
+      - ncn-w003
+    networks:
+      - ""
+      - "nmn"
+      - "hmn"
+      - "mtl"
+      - "can"
+  - nodes:
+      - ncn-s001
+      - ncn-s002
+      - ncn-s003
+    networks:
+      - ""
+      - "nmn"
+      - "mtl"
+      - "can"
+      - "hmn"
+
+network-interfaces:
+  - bond0
+  - vlan002
+  - vlan004
+  - vlan007
+
+services-enabled:
+  - cloud-config
+  - cloud-init
+  - cloud-final
+  - cloud-init-local
+  - ca-certificates
+  - issue-generator
+  - ca-certificates
+  - cloud-config
+  - cloud-init
+  - issue-generator
+  - kdump
+  - kdump-early
+  - purge-kernels
+  - rc-local
+  - rollback
+  - sshd
+  - wicked
+  - wickedd-auto4
+  - wickedd-dhcp4
+  - wickedd-dhcp6
+  - wickedd-nanny
+  - getty@tty1
+  - lldpad
+  - postfix
+  - chronyd
+  - spire-agent

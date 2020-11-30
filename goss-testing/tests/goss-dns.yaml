@@ -1,7 +1,7 @@
-# Variable file: vars-dns.yaml
+# Variable set: dns
 dns:
   # Iterate through the nodes sharing the same networks
-  {{range $nodes := index .Vars "ncns"}}
+  {{range $nodes := index .Vars "dns"}}
   # Iterate through each node
   {{range $name := index $nodes "nodes"}}
   # Iterate through each network for the node
