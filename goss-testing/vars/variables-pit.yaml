@@ -35,6 +35,11 @@ network-interfaces:
   - vlan004
   - vlan007
 
+services-enabled:
+  - dnsmasq
+  - nexus
+  - basecamp
+
 services-running:
   - dnsmasq
   - nexus
