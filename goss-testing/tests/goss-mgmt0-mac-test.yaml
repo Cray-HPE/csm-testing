@@ -1,6 +1,6 @@
 command:
-  check_mac_mgmt1:
-    exec: 'if [ `ip addr show dev mgmt1 | grep "link/ether" | tr -s " " | cut -d " " -f 3` = `ip addr show dev bond0 | grep "link/ether" | tr -s " " | cut -d " " -f 3` ]; then echo good; else echo bad; fi'
+  check_mac_mgmt0:
+    exec: 'if [ `ip addr show dev mgmt0 | grep "link/ether" | tr -s " " | cut -d " " -f 3` = `ip addr show dev bond0 | grep "link/ether" | tr -s " " | cut -d " " -f 3` ]; then echo good; else echo bad; fi'
     exit-status: 0
     stdout:
     - good
