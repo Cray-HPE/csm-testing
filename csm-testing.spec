@@ -36,6 +36,11 @@ install -m 644 goss-testing/vars/*.yaml   %{buildroot}%{livecd}/vars
 install -m 644 goss-testing/tests/*.yaml  %{buildroot}%{ncn}/tests
 install -m 644 goss-testing/vars/*.yaml   %{buildroot}%{ncn}/vars
 
+# Install goss-server files
+mkdir -p %{buildroot}/usr/sbin
+install -m 755 start-goss-servers.sh %{buildroot}/usr/sbin/
+install -m 755 goss_servers.service %{buildroot}/etc/systemd/system/
+
 %clean
 rm -rf %{buildroot}%{livecd}
 rm -rf %{buildroot}%{ncn}
@@ -46,3 +51,13 @@ rm -rf %{buildroot}%{ncn}
 %{ncn}
 
 %changelog
+
+%package goss-server
+Summary: Goss Health Check Endpoint Service
+
+%description goss-server
+Sets up a systemd service for running Goss health check servers
+
+%files goss-server
+/usr/sbin/start-goss-servers.sh
+/etc/systemd/system/goss_servers.service
