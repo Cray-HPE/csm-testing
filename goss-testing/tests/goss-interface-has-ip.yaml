@@ -1,6 +1,6 @@
 command:
 {{range $interface := index .Vars "network-interfaces"}}
-  check_interface_{{$interface}}:
+  check_interface_ip_{{$interface}}:
     exec: "ip addr show dev {{$interface}} scope global | grep 'inet ' | awk '{print $2}'"
     exit-status: 0
     timeout: 10000
