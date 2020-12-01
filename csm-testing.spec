@@ -38,6 +38,7 @@ install -m 644 goss-testing/vars/*.yaml   %{buildroot}%{ncn}/vars
 
 # Install goss-server files
 mkdir -p %{buildroot}/usr/sbin
+mkdir -p %{buildroot}/etc/systemd/system/
 install -m 755 start-goss-servers.sh %{buildroot}/usr/sbin/
 install -m 755 goss_servers.service %{buildroot}/etc/systemd/system/
 
