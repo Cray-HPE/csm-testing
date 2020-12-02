@@ -3,6 +3,8 @@ command:
   check_interface_ip_{{$interface}}:
     exec: "ip addr show dev {{$interface}} scope global | grep 'inet ' | awk '{print $2}'"
     exit-status: 0
+    stdout:
+    - /[1-9]/
     timeout: 10000
     skip: false
 {{end}}

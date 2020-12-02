@@ -1,0 +1,11 @@
+command:
+  {{range $interface := index .Vars "network-interfaces"}}
+  check_mac_{{$interface}}:
+    stdout:
+    - good
+    exec: 'if [ `ip addr show dev {{$interface}} | grep "link/ether" | tr -s " " | cut -d " " -f 3` = `ip addr show dev bond0 | grep "link/ether" | tr -s " " | cut -d " " -f 3` ]; then echo good; else echo bad; fi'
+    exit-status: 0
+    timeout: 1000
+    skip: false
+  {{end}}
+

@@ -1,2 +1,4 @@
 gossfile:
   goss-services-enabled.yaml: {}
+  goss-interfaces-have-same-mac.yaml: {}
+  goss-mgmt0-mac-test.yaml: {}
