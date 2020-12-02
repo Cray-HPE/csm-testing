@@ -20,7 +20,7 @@
 
 @Library('dst-shared') _
 rpmBuild(
-    specfile: "goss_servers.spec",
+    specfile: "csm-testing.spec",
     product: "csm",
     target_node: "ncn",
     send_events: "goss_servers",
