@@ -18,15 +18,11 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
-@Library("dst-shared") _
-dockerBuildPipeline {
-    app = "goss-server"
-    name = "goss-server"
-    repository = "cray"
-    imagePrefix = ""
-    dockerfile = "Dockerfile"
-    description = "Goss server systemd service."
-    postBuildScript = 'noop.sh'
-    product = "csm"
-    slackNotification = ["#casm-cloud-alerts", "", false, false, true, false]
-}
+@Library('dst-shared') _
+rpmBuild(
+    specfile: "goss_servers.spec",
+    product: "csm",
+    target_node: "ncn",
+    send_events: "goss_servers",
+    channel: "metal-ci-alerts"
+)
