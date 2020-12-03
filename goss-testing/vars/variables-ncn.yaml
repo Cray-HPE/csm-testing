@@ -76,3 +76,6 @@ services-enabled:
   - postfix
   - chronyd
   - spire-agent
+
+datajson:
+  - "/mnt/configs/data.json"

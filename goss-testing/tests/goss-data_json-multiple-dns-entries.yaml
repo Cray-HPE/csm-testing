@@ -1,0 +1,9 @@
+command:
+
+  check_for_multiple_dns-server_entries:
+    exec: "/usr/bin/env python3 ../scripts/python/data_json-multiple-dns_server-entries.py {{ .Vars.datajson }}"
+    exit-status: 0
+    stdout:
+    - "1"
+
+
