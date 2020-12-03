@@ -53,12 +53,12 @@ rm -rf %{buildroot}%{ncn}
 
 %changelog
 
-%package goss-server
+%package -n goss-servers
 Summary: Goss Health Check Endpoint Service
 
-%description goss-server
+%description goss-servers
 Sets up a systemd service for running Goss health check servers
 
-%files goss-server
+%files goss-servers
 /usr/sbin/start-goss-servers.sh
 /etc/systemd/system/goss-servers.service
