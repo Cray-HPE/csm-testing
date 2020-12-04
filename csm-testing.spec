@@ -53,7 +53,7 @@ rm -rf %{buildroot}%{ncn}
 
 %changelog
 
-%package goss-server
+%package -n goss-server
 Summary: Goss Health Check Endpoint Service
 
 %description goss-server
