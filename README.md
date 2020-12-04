@@ -12,4 +12,3 @@ are in place to allow the NCNs to boot successfully.
 
 The NCN run-time tests test that the necessary services have started to allow the
 Shasta environment to operate successfully.
-
