@@ -1,7 +1,11 @@
 # Overview
-This repository contains tests. 
+
+This repository contains Goss test files, Goss variable files and code for the `goss-servers`
+systemd service which provides a run-time Goss testing endpoint on nodes where it's
+installed.
 
 ## Goss Testing
+
 Goss tests are being used to test out the LiveCD and Non-Compute Node (NCN) environments.
 
 Some goss tests are used at build-time for the LiveCD and NCN images. Other goss tests
