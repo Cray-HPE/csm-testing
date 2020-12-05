@@ -1,7 +1,11 @@
 # Overview
-This repository contains tests. 
+
+This repository contains Goss test files, Goss variable files and code for the `goss-servers`
+systemd service which provides a run-time Goss testing endpoint on nodes where it's
+installed.
 
 ## Goss Testing
+
 Goss tests are being used to test out the LiveCD and Non-Compute Node (NCN) environments.
 
 Some goss tests are used at build-time for the LiveCD and NCN images. Other goss tests
@@ -13,3 +17,11 @@ are in place to allow the NCNs to boot successfully.
 The NCN run-time tests test that the necessary services have started to allow the
 Shasta environment to operate successfully.
 
+### Running Remote Run-Time Tests
+
+Run the NCN run-time Goss test suite at the following endpoint:
+
+> http://[ip-or-hostname-of-ncn]:8080/ncn-tests-all
+
+The endpoint can be queried from LiveCD or other nodes with access to the NCN. The response
+format will be in JSON.
