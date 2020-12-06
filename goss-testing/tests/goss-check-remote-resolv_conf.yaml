@@ -1,0 +1,9 @@
+command:
+
+  check_remote_resolv_conf_against_data_json:
+    exec: "/usr/bin/env python3 ../scripts/python/check-remote-resolv_conf-against-data_json.py {{ .Vars.datajson }}"
+    exit-status: 0
+    stdout:
+    - PASS
+
+

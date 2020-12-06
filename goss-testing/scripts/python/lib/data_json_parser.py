@@ -36,7 +36,11 @@ class dataJson:
         self.objFile = data_json_path
 
         with open(self.objFile) as obj:
-            self.payload = json.load(obj)
+            try:
+                self.payload = json.load(obj)
+            except:
+                print("Unable to open " + objFile + ". Possibly malformed json?")
+                sys.exit()
 
         self.keys = self.payload.keys()
         self.ncnKeys = []
