@@ -4,27 +4,36 @@
 # Invocation: check-remote-mac-against-configs.py /path/to/data.json /path/to/statics.conf
 # Check the count of passed tests against the number of NCNs in data.conf - and send either PASS or FAIL
 
-import subprocess, sys
+import subprocess, sys, logging
 import lib.data_json_parser as djp
 
 getMACcommand = "ip addr show dev bond0 | grep 'link/ether' | tr -s ' ' | cut -d ' ' -f 3"
 passed = 0
 failed = 0
 
+# setup logging
+logging.basicConfig(filename='/tmp/' + sys.argv[0].split('/')[-1] + '.log',  level=logging.DEBUG)
+logging.info("Starting up")
+
 def remoteCmd(host, command):
     cmd = subprocess.Popen(['ssh', '-o StrictHostKeyChecking=no', host , command], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-   
     stdout,stderr = cmd.communicate()
     return stdout
+
+def get_arg_no_brackets(arg):
+    return arg.strip('[').strip(']')
 
 # quick check to ensure we received the locations of data.json and statics.conf
 if len(sys.argv) != 3:
     print("Wrong number of arguments provided")
     sys.exit()
     
-data = djp.dataJson(sys.argv[1])
-staticsFile = open(sys.argv[2],'r')
+# This version of goss sends [.Arg.*] as string with [
+# Apparently fixed in 0.3.14 
+data = djp.dataJson(get_arg_no_brackets(sys.argv[1]))
+staticsFile = open(get_arg_no_brackets(sys.argv[2]),'r')
 statics = staticsFile.read()
+
 
 # ensure remote MAC matches data.json (casminst-384) and statics.conf (casminst-380)
 for server in data.ncnList:
