@@ -1,0 +1,8 @@
+command:
+  check_interface_ips_not_in_dns_ip_pool:
+    exec: "/usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/pyTest-check-qnd.py {{ .Vars.qnd}} {{ .Vars.network_interfaces }}"
+    exit-status: 0
+    stdout:
+    - "PASS"
+    timeout: 10000
+    skip: false

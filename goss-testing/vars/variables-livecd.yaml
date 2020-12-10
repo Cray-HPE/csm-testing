@@ -44,3 +44,18 @@ services-running:
   - dnsmasq
   - nexus
   - basecamp
+
+datajson:
+  - "/var/www/ephemeral/configs/data.json"
+
+staticsconf:
+  - "/var/www/ephemeral/statics.conf"
+
+qnd:
+  - "/var/www/ephemeral/qnd-1.4.sh"
+
+network_interfaces:
+  - bond0
+  - vlan002
+  - vlan004
+  - vlan007

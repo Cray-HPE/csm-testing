@@ -44,3 +44,9 @@ services-running:
   - dnsmasq
   - nexus
   - basecamp
+
+datajson:
+  - "/mnt/configs/data.json"
+
+staticsconf:
+  - "/mnt/statics.conf"

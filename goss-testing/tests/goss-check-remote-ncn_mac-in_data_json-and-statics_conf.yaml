@@ -1,0 +1,8 @@
+command:
+  check_remote_mac:
+    exec: "/usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/check-remote-mac-against-configs.py {{.Vars.datajson}} {{ .Vars.staticsconf}}"
+    exit-status: 0
+    stdout:
+    - PASS
+
+
