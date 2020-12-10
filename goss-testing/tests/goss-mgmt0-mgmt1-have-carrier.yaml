@@ -1,0 +1,10 @@
+command:
+  check-mgmt0-mgmt1-have-carrier:
+    exec: "ip link | grep 'mgmt0\\|mgmt1' | grep DOWN || echo 'PASS'"
+    stdout:
+      - PASS
+    exit-status: 0
+    timeout: 10000
+    skip: false
+
+
