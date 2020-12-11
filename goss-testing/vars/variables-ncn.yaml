@@ -79,3 +79,10 @@ services-enabled:
 
 datajson:
   - "/mnt/configs/data.json"
+
+switch_Aruba:
+  ip: "10.103.10.20"
+  login_url: "https://10.103.10.20/rest/v1/login"
+  username: admin
+  endpoint: "rest/v10.04/fullconfigs/running-config"
+  jq_cmd: "jq '.ACL | .\"nmn-hmn/ipv4\" | .cfg_version'"
