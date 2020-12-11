@@ -1,0 +1,6 @@
+# Variable file: vars-packages.yaml
+package:
+{{range $name := index .Vars "packages"}}
+  {{$name}}:
+    installed: true
+{{end}}

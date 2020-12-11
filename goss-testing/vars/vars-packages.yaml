@@ -1,0 +1,3 @@
+# Variable file: vars-services.yaml
+packages:
+  - dracut-metal-mdsquash
