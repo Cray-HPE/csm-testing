@@ -1,0 +1,8 @@
+command:
+  check-k8s-pods-ips-in-nmn-pool:
+    exec: "kubectl -n kube-system get pods -o wide | grep '^etcd-ncn\|^kube-apiserver\|^kube-controller-manager\|^kube-multus-ds\|^kube-proxy\|^kube-scheduler\|^weave-net' | awk '{print $6}' | grep -v '10.252.' || echo PASS"
+    stdout:
+      - PASS
+    exit-status: 0
+    timeout: 10000
+    skip: false
