@@ -23,7 +23,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 # start server with NCN test suites (as of now, goss server only runs on NCNs)
-/usr/local/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-run-time-tests.yaml --vars /opt/cray/tests/install/ncn/vars/variables-ncn.yaml serve --format json --endpoint /ncn-tests-all --listen-addr :8080
+/usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-run-time-tests.yaml --vars /opt/cray/tests/install/ncn/vars/variables-ncn.yaml serve --format json --endpoint /ncn-tests-all --listen-addr :8080
 
 # additional servers can be added below with different ports, endpoints and tests
 
