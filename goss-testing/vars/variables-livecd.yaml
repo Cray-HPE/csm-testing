@@ -66,3 +66,10 @@ switch_Aruba:
   username: admin
   endpoint: "rest/v10.04/fullconfigs/running-config"
   jq_cmd: "jq '.ACL | .\"nmn-hmn/ipv4\" | .cfg_version'"
+
+ncns_k8s:
+  - ncn-w001
+  - ncn-w002
+  - ncn-w003
+  - ncn-m002
+  - ncn-m003

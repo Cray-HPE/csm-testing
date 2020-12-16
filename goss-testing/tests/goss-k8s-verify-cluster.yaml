@@ -1,0 +1,14 @@
+command:
+  test-k8s-get-nodes:
+    exec: "kubectl get po -n kube-system"
+    stdout:
+    - /^kube-apiserver.*Running/
+    - /^kube-controller-manager.*Running/
+    - /^kube-multus-ds.*Running/
+    - /^kube-proxy.*Running/
+    - /^kube-scheduler.*Running/
+    - /^weave-net.*Running/
+    - /^etcd-ncn.*Running/
+    - /^coredns.*Running/
+
+    exit-status: 0
