@@ -1,8 +1,7 @@
 command:
   {{range $ncn := index .Vars "ncns_k8s"}}
   test-k8s-get-nodes-check-node-{{$ncn}}:
-          # kubectl get nodes
-    exec: "cat /home/markw/k8s-get-nodes.txt"
+    exec: "kubectl get nodes"
     stdout: 
     - "{{$ncn}}"
 
