@@ -1,0 +1,8 @@
+command:
+{{range $ip_addr := .Vars.resolvconf_ips}}
+  resolvconf_ips_{{$ip_addr}}:
+    exec: "if [ $(cat /etc/resolv.conf | grep {{$ip_addr}}| wc -l) -gt 0 ]; then exit 0; else exit 1;fi"
+    exit-status: 0
+    timeout: 10000
+    skip: false
+{{end}}

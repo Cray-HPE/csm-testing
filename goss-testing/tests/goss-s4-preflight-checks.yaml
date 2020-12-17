@@ -1,0 +1,8 @@
+command:
+  preflight_s4_checks:
+    exec: "/usr/bin/sh {{.Env.GOSS_BASE}}/scripts/s4_preflight_checks.sh"
+    exit-status: 0
+    timeout: 200000
+    skip: false
+    stdout:
+    - Success!

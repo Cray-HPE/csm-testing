@@ -26,15 +26,31 @@ They test both the LiveCD and NCN environment.
 
 %install
 
-# Install tests
-install -d -m 755 %{buildroot}%{livecd}/vars
-install -d -m 755 %{buildroot}%{livecd}/tests
-install -d -m 755 %{buildroot}%{ncn}/vars
-install -d -m 755 %{buildroot}%{ncn}/tests
-install -m 644 goss-testing/tests/*.yaml  %{buildroot}%{livecd}/tests
-install -m 644 goss-testing/vars/*.yaml   %{buildroot}%{livecd}/vars
-install -m 644 goss-testing/tests/*.yaml  %{buildroot}%{ncn}/tests
-install -m 644 goss-testing/vars/*.yaml   %{buildroot}%{ncn}/vars
+# Install tests and variable files
+install -d -m 644 %{buildroot}%{livecd}/tests
+install -d -m 644 %{buildroot}%{livecd}/vars
+install -d -m 644 %{buildroot}%{ncn}/tests
+install -d -m 644 %{buildroot}%{ncn}/vars
+install -m 644 goss-testing/tests/*.yaml %{buildroot}%{livecd}/tests
+install -m 644 goss-testing/vars/*.yaml  %{buildroot}%{livecd}/vars
+install -m 644 goss-testing/tests/*.yaml %{buildroot}%{ncn}/tests
+install -m 644 goss-testing/vars/*.yaml  %{buildroot}%{ncn}/vars
+
+# Install script files
+install -d -m 755 %{buildroot}%{livecd}/scripts
+install -d -m 755 %{buildroot}%{livecd}/scripts/python
+install -d -m 755 %{buildroot}%{livecd}/scripts/python/lib
+install -d -m 755 %{buildroot}%{ncn}/scripts
+install -d -m 755 %{buildroot}%{ncn}/scripts/python
+install -d -m 755 %{buildroot}%{ncn}/scripts/python/lib
+cp -a goss-testing/scripts/*            %{buildroot}%{livecd}/scripts
+cp -a goss-testing/scripts/python/*     %{buildroot}%{livecd}/scripts/python
+cp -a goss-testing/scripts/python/lib/* %{buildroot}%{livecd}/scripts/python/lib
+cp -a goss-testing/scripts/*            %{buildroot}%{ncn}/scripts
+cp -a goss-testing/scripts/python/*     %{buildroot}%{ncn}/scripts/python
+cp -a goss-testing/scripts/python/lib/* %{buildroot}%{ncn}/scripts/python/lib
+chmod +x -R %{buildroot}%{ncn}/scripts/
+chmod +x -R %{buildroot}%{livecd}/scripts/
 
 # Install goss-servers files
 mkdir -p %{buildroot}/usr/sbin
