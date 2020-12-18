@@ -6,4 +6,3 @@ gossfile:
   goss-services-running.yaml: {}
   goss-interfaces-have-same-mac.yaml: {}
   goss-data_json-multiple-dns-entries.yaml: {}
-  goss-resolvconf-ips.yaml: {}
