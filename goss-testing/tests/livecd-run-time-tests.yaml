@@ -8,6 +8,6 @@ gossfile:
   goss-data_json-multiple-dns-entries.yaml: {}
   goss-resolvconf-ips.yaml: {}
   goss-csi-validate-dns.yaml: {}
-   goss-ncns-in-dnsmasq-leases.yaml: {}
+  goss-ncns-in-dnsmasq-leases.yaml: {}
   goss-podman-test-for-basecamp-and-nexus.yaml: {}
   goss-ping-arti_dev-accessibility-test.yaml: {}
