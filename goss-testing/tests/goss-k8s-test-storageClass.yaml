@@ -1,0 +1,9 @@
+command:
+  test-k8s-get-nodes:
+    exec: "kubectl get storageclass"
+    stdout:
+    - ceph-cephfs-external
+    - k8s-block-replicated
+    - sma-block-replicated
+
+    exit-status: 0

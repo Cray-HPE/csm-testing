@@ -1,0 +1,9 @@
+command:
+  {{range $ncn := index .Vars "ncns_k8s"}}
+  test-k8s-get-nodes-check-node-{{$ncn}}:
+    exec: "kubectl get nodes"
+    stdout: 
+    - "{{$ncn}}"
+
+    exit-status: 0
+  {{end}}
