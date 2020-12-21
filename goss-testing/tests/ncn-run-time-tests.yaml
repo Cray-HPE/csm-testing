@@ -3,3 +3,4 @@ gossfile:
   goss-network-interfaces.yaml: {}
   goss-services-enabled.yaml: {}
   goss-interfaces-have-same-mac.yaml: {}
+  goss-resolvconf-ips.yaml: {}
