@@ -1,0 +1,8 @@
+command:
+  check-dnsmasq_leases-for-ncns-in-data_json:
+    exec: "/usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/csi_validate_dns_check.py {{.Vars.datajson}}"
+    stdout:
+    - PASS
+    exit-status: 0
+    timeout: 10000
+    skip: false

@@ -1,0 +1,6 @@
+command:
+  ping-artifactory-to-ensure-accessibilty:
+    exec: "ping -q -c 1 arti.dev.cray.com"
+    exit-status: 0
+    timeout: 5000
+    skip: false
