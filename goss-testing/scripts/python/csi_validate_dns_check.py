@@ -12,7 +12,7 @@ dnsmasq_file = '/var/lib/misc/dnsmasq.leases'
 
 # Assume we got the right info from goss, but JIC
 if len(sys.argv) == 2:
-    data_json = sys.argv[1]
+    data_json = sys.argv[1].strip('[').strip(']')
 else:
     data_json = "/var/www/ephemeral/configs/data.json"
 
