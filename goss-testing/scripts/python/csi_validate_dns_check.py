@@ -1,8 +1,9 @@
 import sys, os
 import lib.data_json_parser as dp
 
-''' Simple test to validate dns. It checks the output of `grep -Eo 'ncn-.*-mgmt'` against data.json global meta-data ntp-peers
-Counts the number of times that the ntp-peer appears in the output of the grep
+''' Simple test to validate dns. It mimics the CSI validate check `grep -Eo 'ncn-.*-mgmt'` 
+    against data.json global meta-data ntp-peers.
+Counts the number of times that the ntp-peer appears in dnsmasq.leases file
 matches that to the number of ntp_peers - they should be ==
 '''
 
