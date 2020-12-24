@@ -19,7 +19,7 @@ ncns-nopit:
   - ncn-m002
   - ncn-m003
 
-dns:
+dns-nodes:
   - nodes:
     - ncn-m001
     networks:
@@ -28,6 +28,9 @@ dns:
       - "hmn"
       - "mtl"
       - "can"
+
+dns-services:
+  - arti.dev.cray.com
 
 network-interfaces:
   - bond0
