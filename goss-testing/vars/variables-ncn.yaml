@@ -19,7 +19,7 @@ ncns-nopit:
   - ncn-m002
   - ncn-m003
 
-dns:
+dns-nodes:
   - nodes:
       - ncn-m002
       - ncn-m003
