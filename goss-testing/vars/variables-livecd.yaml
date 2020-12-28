@@ -19,7 +19,7 @@ ncns-nopit:
   - ncn-m002
   - ncn-m003
 
-dns:
+dns-nodes:
   - nodes:
     - ncn-m001
     networks:
@@ -29,11 +29,18 @@ dns:
       - "mtl"
       - "can"
 
+dns-services:
+  - arti.dev.cray.com
+
 network-interfaces:
   - bond0
   - vlan002
   - vlan004
   - vlan007
+
+bond-members:
+  - mgmt0
+  - mgmt1
 
 services-enabled:
   - dnsmasq
@@ -53,12 +60,6 @@ staticsconf:
 
 qnd:
   - "/var/www/ephemeral/qnd-1.4.sh"
-
-network_interfaces:
-  - bond0
-  - vlan002
-  - vlan004
-  - vlan007
 
 switch_Aruba:
   ip: "10.103.10.20"

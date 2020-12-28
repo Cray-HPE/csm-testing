@@ -19,7 +19,7 @@ ncns-nopit:
   - ncn-m002
   - ncn-m003
 
-dns:
+dns-nodes:
   - nodes:
       - ncn-m002
       - ncn-m003
@@ -48,6 +48,10 @@ network-interfaces:
   - vlan002
   - vlan004
   - vlan007
+
+bond-members:
+  - mgmt0
+  - mgmt1
 
 services-enabled:
   - cloud-config
