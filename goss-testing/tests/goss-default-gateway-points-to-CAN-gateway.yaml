@@ -1,0 +1,8 @@
+command:
+  NCN-default-gateway-points-to-CAN-gateway:
+    exec: "ip route show default | grep `craysys metadata get can-gw | cut -f1 -d'/'` | grep `craysys metadata get can-if` || echo FAIL"
+    exit-status: 0
+    stdout:
+      - "!FAIL"
+    timeout: 10000
+    skip: false
