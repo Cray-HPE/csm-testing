@@ -1,0 +1,10 @@
+command:
+  {{range $member := index .Vars "bond-members"}}
+  bond_member_{{$member}}:
+    stdout:
+    - link
+    exec: 'ip link show dev {{$member}}'
+    exit-status: 0
+    timeout: 1000
+    skip: false
+  {{end}}
