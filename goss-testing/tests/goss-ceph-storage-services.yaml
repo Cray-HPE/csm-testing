@@ -1,0 +1,8 @@
+command:
+  {{range $service := index .Vars "ceph-services"}}
+  ceph_service_{{$service}}:
+    exec: 'ceph -s | grep {{$service}}:'
+    exit-status: 0
+    timeout: 1000
+    skip: false
+  {{end}}

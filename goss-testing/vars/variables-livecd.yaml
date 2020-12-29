@@ -74,3 +74,10 @@ ncns_k8s:
   - ncn-w003
   - ncn-m002
   - ncn-m003
+
+ceph-services:
+  - mon
+  - mgr
+  - mds
+  - osd
+  - rgw
