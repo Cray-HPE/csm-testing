@@ -1,0 +1,8 @@
+command:
+  ceph_storage_health:
+    exec: "ceph -s"
+    stdout:
+    - HEALTH_OK
+    exit-status: 0
+    timeout: 10000
+    skip: false
