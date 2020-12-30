@@ -1,0 +1,8 @@
+command:
+  check-sitch-ips-in-sls_input_json:
+    exec: for ip in `jq . /var/www/ephemeral/prep/$(hostname | cut -f1 -d'-')/sls_input_file.json | grep IP4addr | cut -f 2 -d ':' | sed 's/"//g' | tr -s ',\n' ' '` ;do ping -q -c1 $ip || echo FAIL; done
+    stdout:
+      - "!FAIL"
+    exit-status: 0
+    timeout: 10000
+    skip: false
