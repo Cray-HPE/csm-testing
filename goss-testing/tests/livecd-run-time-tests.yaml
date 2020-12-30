@@ -8,3 +8,11 @@ gossfile:
   goss-data_json-multiple-dns-entries.yaml: {}
   goss-ceph-storage-health.yaml: {}
   goss-ceph-storage-services.yaml: {}
+  goss-ncns-in-dnsmasq-leases.yaml: {}
+  goss-podman-test-for-basecamp-and-nexus.yaml: {}
+  goss-ping-arti_dev-accessibility-test.yaml: {}
+  goss-k8s-get-nodes.yaml: {}		
+  goss-k8s-test-storageClass.yaml: {}
+  goss-k8s-verify-cluster.yaml: {}
+  goss-net-dhcp-pools-in-dnsmasq_d-are-correctly-defined.yaml: {}
+
