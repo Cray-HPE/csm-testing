@@ -8,7 +8,6 @@ gossfile:
   goss-data_json-multiple-dns-entries.yaml: {}
   goss-ceph-storage-health.yaml: {}
   goss-ceph-storage-services.yaml: {}
-  goss-ceph-storage-services.yaml: {}
 #  goss-resolvconf-ips.yaml: {}
   goss-ncns-in-dnsmasq-leases.yaml: {}
   goss-podman-test-for-basecamp-and-nexus.yaml: {}
