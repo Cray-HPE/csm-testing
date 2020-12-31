@@ -1,0 +1,8 @@
+command:
+  check-dnsmasq-dhcp-pools-are-correctly-defined:
+    exec: /usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/pyTest-ips-in-dnsmasq_d-in-correct-order.py
+    exit-status: 0
+    stdout:
+      - "!FAIL"
+    timeout: 10000
+    skip: false
