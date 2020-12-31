@@ -81,3 +81,9 @@ ceph-services:
   - mds
   - osd
   - rgw
+
+network_interfaces:
+  - bond0
+  - vlan002
+  - vlan004
+  - vlan007
