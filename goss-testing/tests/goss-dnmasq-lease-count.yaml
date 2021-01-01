@@ -1,0 +1,8 @@
+command:
+  dnsmasq-lease-count:
+    exec: "grep -Eo ncn-.*-mgmt /var/lib/misc/dnsmasq.leases | wc -l"
+    stdout:
+    - 8
+    exit-status: 0
+    timeout: 10000
+    skip: false
