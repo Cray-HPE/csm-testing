@@ -9,7 +9,7 @@ ncns:
   - ncn-m002
   - ncn-m003
 
-ncns-nopit:
+ncns_nopit:
   - ncn-w001
   - ncn-w002
   - ncn-w003
@@ -19,7 +19,7 @@ ncns-nopit:
   - ncn-m002
   - ncn-m003
 
-dns-nodes:
+dns_nodes:
   - nodes:
       - ncn-m002
       - ncn-m003
@@ -43,17 +43,17 @@ dns-nodes:
       - "can"
       - "hmn"
 
-network-interfaces:
+network_interfaces:
   - bond0
   - vlan002
   - vlan004
   - vlan007
 
-bond-members:
+bond_members:
   - mgmt0
   - mgmt1
 
-services-enabled:
+services_enabled:
   - cloud-config
   - cloud-init
   - cloud-final

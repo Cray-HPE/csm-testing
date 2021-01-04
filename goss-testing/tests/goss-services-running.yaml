@@ -1,6 +1,6 @@
-# Variable set: services-running
+# Variable set: services_running
 service:
-  {{range $service := index .Vars "services-running"}}
+  {{range $service := index .Vars "services_running"}}
   {{$service}}:
     running: true
   {{end}}

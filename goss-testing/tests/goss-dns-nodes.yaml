@@ -1,7 +1,7 @@
-# Variable set: dns-nodes
+# Variable set: dns_nodes
 dns:
   # Iterate through the nodes sharing the same networks
-  {{range $nodes := index .Vars "dns-nodes"}}
+  {{range $nodes := index .Vars "dns_nodes"}}
   # Iterate through each node
   {{range $name := index $nodes "nodes"}}
   # Iterate through each network for the node

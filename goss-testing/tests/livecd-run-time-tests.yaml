@@ -15,4 +15,3 @@ gossfile:
   goss-k8s-test-storageClass.yaml: {}
   goss-k8s-verify-cluster.yaml: {}
   goss-net-dhcp-pools-in-dnsmasq_d-are-correctly-defined.yaml: {}
-

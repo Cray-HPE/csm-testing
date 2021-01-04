@@ -1,6 +1,6 @@
-# Variable set: network-interfaces
+# Variable set: network_interfaces
 command:
-{{range $interface := index .Vars "network-interfaces"}}
+{{range $interface := index .Vars "network_interfaces"}}
   check_interface_{{$interface}}:
     exec: 'ip link show dev {{$interface}}'
     exit-status: 0
