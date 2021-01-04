@@ -1,4 +1,5 @@
 gossfile:
+  goss-command-available.yaml: {}
   goss-dnmasq-lease-count.yaml: {}
   goss-ceph-storage-health.yaml: {}
   goss-ceph-storage-services.yaml: {}

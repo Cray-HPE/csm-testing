@@ -81,3 +81,8 @@ ceph-services:
   - mds
   - osd
   - rgw
+
+commands:
+  - 'ceph -v'
+  - 'kubectl version --client'
+  - 'ipmitool -V'
