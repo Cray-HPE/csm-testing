@@ -1,5 +1,5 @@
 command:
-  {{range $member := index .Vars "bond-members"}}
+  {{range $member := index .Vars "bond_members"}}
   bond_member_{{$member}}:
     stdout:
     - link

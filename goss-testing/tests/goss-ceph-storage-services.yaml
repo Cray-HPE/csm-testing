@@ -1,5 +1,5 @@
 command:
-  {{range $service := index .Vars "ceph-services"}}
+  {{range $service := index .Vars "ceph_services"}}
   ceph_service_{{$service}}:
     exec: 'ceph -s | grep {{$service}}:'
     exit-status: 0
