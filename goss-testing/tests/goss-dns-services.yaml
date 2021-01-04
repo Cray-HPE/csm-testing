@@ -1,6 +1,6 @@
-# Variable set: dns-services
+# Variable set: dns_services
 dns:
-{{range $name := index .Vars "dns-services"}}
+{{range $name := index .Vars "dns_services"}}
   {{$name}}:
     resolvable: true
     timeout: 10000

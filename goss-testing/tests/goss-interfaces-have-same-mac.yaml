@@ -1,5 +1,5 @@
 command:
-  {{range $interface := index .Vars "network-interfaces"}}
+  {{range $interface := index .Vars "network_interfaces"}}
   check_mac_{{$interface}}:
     stdout:
     - good
