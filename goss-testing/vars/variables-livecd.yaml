@@ -86,3 +86,4 @@ commands:
   - 'ceph -v'
   - 'kubectl version --client'
   - 'ipmitool -V'
+  - 'csi version'
