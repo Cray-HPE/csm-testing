@@ -1,6 +1,13 @@
 gossfile:
   goss-command-available.yaml: {}
+  goss-network-interfaces.yaml: {}
+  goss-dns-services.yaml: {}
+  goss-podman-test-for-basecamp-and-nexus.yaml: {}
+  goss-interface-has-ip.yaml: {}
+  goss-switch-mtu-spine-port.yaml: {}
   goss-dnmasq-lease-count.yaml: {}
   goss-ceph-storage-health.yaml: {}
   goss-ceph-storage-services.yaml: {}
   goss-bond-member-has-link.yaml: {}
+  goss-artifacts-in-place.yaml: {}
+  goss-k8s-get-nodes.yaml: {}
