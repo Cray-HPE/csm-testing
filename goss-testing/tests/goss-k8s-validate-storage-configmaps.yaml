@@ -1,0 +1,9 @@
+command:
+  test-k8s-verify-storage-configmaps:
+    exec: "kubectl get cm | grep csi-sc"
+    stdout:
+    - /^cephfs-csi-sc.*[1-9]+.*[0-9]+[a-z,A-Z]/
+    - /^kube-csi-sc.*[1-9]+.*[0-9]+[a-z,A-Z]/
+    - /^sma-csi-sc.*[1-9]+.*[0-9]+[a-z,A-Z]/
+
+    exit-status: 0
