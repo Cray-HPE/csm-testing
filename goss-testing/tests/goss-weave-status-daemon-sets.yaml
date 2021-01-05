@@ -1,0 +1,6 @@
+command:
+  k8s-check-weave-net-daemon-set:
+    exec: kubectl rollout status -n kube-system daemonset.apps/weave-net
+    exit-status: 0
+    timeout: 10000
+
