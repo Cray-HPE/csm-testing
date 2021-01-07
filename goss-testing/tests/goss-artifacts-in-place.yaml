@@ -1,11 +1,25 @@
+# Validates the LiveCD install artifact directories and symlinks in /var/www exist and symlinks are valid links to real files.
+# Variable set: artifacts
 file:
   {{range $symlink := index .Vars "artifact_symlinks"}}
   /var/www/{{ $symlink }}:
     exists: true
     filetype: symlink
-    mode: "0777"
-    owner: root
-    group: root
     contains: [ " " ]
     skip: false
   {{end}}
+  {{range $dirs := index .Vars "artifact_dirs"}}
+  {{range $dir := index $dirs "dirs"}}
+  /var/www/{{ $dir }}:
+    exists: true
+    filetype: directory
+    skip: false
+  {{range $dir_symlink := index $dirs "symlinks"}}
+  /var/www/{{ $dir }}/{{ $dir_symlink }}:
+    exists: true
+    filetype: symlink
+    contains: [ " " ]
+    skip: false
+  {{ end }}
+  {{ end }}
+  {{ end }}
