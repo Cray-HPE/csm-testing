@@ -92,21 +92,21 @@ switch_mellanox:
   ip: “10.1.0.1”
 
 artifact_symlinks:
-   - filesystem.squashfs
-   - initrd.img.xz
-   - kernel
+  - filesystem.squashfs
+  - initrd.img.xz
+  - kernel
 
 artifact_dirs:
-   - dirs:
-     - ncn-m002
-     - ncn-m003
-     - ncn-s001
-     - ncn-s002
-     - ncn-s003
-     - ncn-w001
-     - ncn-w002
-     - ncn-w003
-     symlinks:
-       - filesystem.squashfs
-       - initrd.img.xz
-       - kernel
+  - dirs:
+    - ncn-m002
+    - ncn-m003
+    - ncn-s001
+    - ncn-s002
+    - ncn-s003
+    - ncn-w001
+    - ncn-w002
+    - ncn-w003
+    symlinks:
+      - filesystem.squashfs
+      - initrd.img.xz
+      - kernel
