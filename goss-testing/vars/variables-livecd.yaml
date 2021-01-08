@@ -75,15 +75,7 @@ ncns_k8s:
   - ncn-m002
   - ncn-m003
 
-ceph_services:
-  - mon
-  - mgr
-  - mds
-  - osd
-  - rgw
-
 commands:
-  - 'ceph -v'
   - 'kubectl version --client'
   - 'ipmitool -V'
   - 'csi version'
