@@ -6,8 +6,6 @@ gossfile:
   goss-services-running.yaml: {}
   goss-interfaces-have-same-mac.yaml: {}
   goss-data_json-multiple-dns-entries.yaml: {}
-  goss-ceph-storage-health.yaml: {}
-  goss-ceph-storage-services.yaml: {}
   goss-ncns-in-dnsmasq-leases.yaml: {}
   goss-podman-test-for-basecamp-and-nexus.yaml: {}
   goss-ping-arti_dev-accessibility-test.yaml: {}

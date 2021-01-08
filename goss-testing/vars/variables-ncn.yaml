@@ -93,3 +93,13 @@ switch_Aruba:
 
 resolvconf_ips:
   - 10.*.100.225
+
+ceph_services:
+  - mon
+  - mgr
+  - mds
+  - osd
+  - rgw
+
+commands:
+  - 'ceph -v'

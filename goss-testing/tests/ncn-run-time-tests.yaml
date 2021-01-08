@@ -1,6 +1,9 @@
 gossfile:
+  goss-command-available.yaml: {}
   goss-interface-has-ip.yaml: {}
   goss-network-interfaces.yaml: {}
   goss-services-enabled.yaml: {}
   goss-interfaces-have-same-mac.yaml: {}
   goss-resolvconf-ips.yaml: {}
+  goss-ceph-storage-health.yaml: {}
+  goss-ceph-storage-services.yaml: {}
