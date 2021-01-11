@@ -16,7 +16,6 @@ It gets 4 arguments from Goss: The Aruba password, the Mellanox password, the Ar
 and the Mellanox MTU. While the Aruba and Mellanox passwords are the same here and now,
 that may not always be the case. The MTU settings on the switch brands is different.
 
-
 """
 
 import json
@@ -176,6 +175,8 @@ if __name__ == '__main__':
     if lArgv >= 3 and lArgv < 5: # assume a human is running it
         ARUBA_MTU = 9198
         MELL_MTU = 9216
+        PASS_ARUBA = sys.argv[1]
+        PASS_MELL = sys.argv[2]
     elif lArgv < 3:
         print("The Aruba and Mellanox admin passwords (both) are required to run this script")
         logging.critical("Passwords were not received as arguments")

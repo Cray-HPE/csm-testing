@@ -1,5 +1,5 @@
 command:
-  get_mtu_from_mellanox_switch:
+  get_mtu_from_mellanox_or_aruba_switch:
     exec: /usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/mtu_aruba_or_mellanox.py {{.Env.switch_Aruba_password}} {{.Env.switch_mellanox_password}} {{.Vars.switch_Aruba.mtu}}  {{.Vars.switch_mellanox.mtu}}
     exit-status: 0
     stdout:
