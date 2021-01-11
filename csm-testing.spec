@@ -26,15 +26,19 @@ They test both the LiveCD and NCN environment.
 
 %install
 
-# Install tests and variable files
+# Install testing files
 install -d -m 644 %{buildroot}%{livecd}/tests
 install -d -m 644 %{buildroot}%{livecd}/vars
+install -d -m 644 %{buildroot}%{livecd}/automated
 install -d -m 644 %{buildroot}%{ncn}/tests
 install -d -m 644 %{buildroot}%{ncn}/vars
+install -d -m 644 %{buildroot}%{ncn}/automated
 install -m 644 goss-testing/tests/*.yaml %{buildroot}%{livecd}/tests
 install -m 644 goss-testing/vars/*.yaml  %{buildroot}%{livecd}/vars
+install -m 644 goss-testing/automated/*  %{buildroot}%{livecd}/automated
 install -m 644 goss-testing/tests/*.yaml %{buildroot}%{ncn}/tests
 install -m 644 goss-testing/vars/*.yaml  %{buildroot}%{ncn}/vars
+install -m 644 goss-testing/automated/*  %{buildroot}%{ncn}/automated
 
 # Install script files
 install -d -m 755 %{buildroot}%{livecd}/scripts
@@ -51,6 +55,7 @@ cp -a goss-testing/scripts/python/*     %{buildroot}%{ncn}/scripts/python
 cp -a goss-testing/scripts/python/lib/* %{buildroot}%{ncn}/scripts/python/lib
 chmod +x -R %{buildroot}%{ncn}/scripts/
 chmod +x -R %{buildroot}%{livecd}/scripts/
+chmod +x -R %{buildroot}%{ncn}/automated/
 
 # Install goss-servers files
 mkdir -p %{buildroot}/usr/sbin
