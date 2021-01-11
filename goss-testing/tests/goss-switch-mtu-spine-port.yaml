@@ -1,0 +1,8 @@
+command:
+  get_mtu_from_mellanox_switch:
+    exec: /usr/bin/env bash {{.Env.GOSS_BASE}}/scripts/mellanox_get_mpu.sh {{.Vars.switch_mellanox.ip}} {{.Env.switch_mellanox_password}}
+    exit-status: 0
+    stdout:
+      - "!FAIL"
+    timeout: 10000
+    skip: false
