@@ -26,7 +26,7 @@ nodes="ncn-s001,ncn-s002,ncn-s003,ncn-w001,ncn-w002,ncn-w003,ncn-m002,ncn-m003"
 IFS=',' read -ra nodes <<< "$nodes"
 
 port=8995
-endpoint="ncn-preflight-tests"
+endpoint="ncn-preflight-checks"
 
 for node in "${nodes[@]}"
 do
