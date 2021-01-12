@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Goss server start up commands to serve health check endpoints
 #
-# (C) Copyright 2020 Hewlett Packard Enterprise Development LP.
+# (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
 # Author: Forrest Jadick
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -22,20 +22,17 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-vars="/opt/cray/tests/install/ncn/vars/variables-ncn.yaml"
+nodes="ncn-s001,ncn-s002,ncn-s003"
+IFS=',' read -ra nodes <<< "$nodes"
 
-# start server with NCN test suites (as of now, goss server only runs on NCNs)
-# designated goss-servers port range: 8994-8999
-/usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-run-time-tests.yaml --vars $vars \
-serve --format json --endpoint /ncn-run-time-tests --listen-addr :8994
+port=8997
+endpoint="ncn-storage-tests"
 
-/usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-preflight-tests.yaml --vars $vars \
-serve --format json --endpoint /ncn-preflight-tests --listen-addr :8995
-
-/usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-k8s-tests.yaml --vars $vars \
-serve --format json --endpoint /ncn-kubernetes-tests --listen-addr :8996
-
-/usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-storage-tests.yaml --vars $vars \
-serve --format json --endpoint /ncn-storage-tests --listen-addr :8997
+for node in "${nodes[@]}"
+do
+  echo "Running tests on NCN storage node: $node"
+  results=`curl -s http://{$node}:{$port}/{$endpoint}`
+  echo $results | jq
+done
 
 exit
