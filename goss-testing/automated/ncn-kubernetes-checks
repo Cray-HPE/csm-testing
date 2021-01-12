@@ -26,7 +26,7 @@ nodes="ncn-w001,ncn-w002,ncn-w003,ncn-m002,ncn-m003"
 IFS=',' read -ra nodes <<< "$nodes"
 
 port=8996
-endpoint="ncn-kubernetes-checks"
+endpoint="ncn-kubernetes-tests"
 
 for node in "${nodes[@]}"
 do

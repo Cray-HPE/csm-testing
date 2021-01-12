@@ -26,7 +26,7 @@ nodes="ncn-s001,ncn-s002,ncn-s003"
 IFS=',' read -ra nodes <<< "$nodes"
 
 port=8997
-endpoint="ncn-storage-checks"
+endpoint="ncn-storage-tests"
 
 for node in "${nodes[@]}"
 do
