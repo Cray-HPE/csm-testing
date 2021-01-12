@@ -32,7 +32,7 @@ serve --format json --endpoint /ncn-run-time-tests --listen-addr :8994
 /usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-preflight-tests.yaml --vars $vars \
 serve --format json --endpoint /ncn-preflight-tests --listen-addr :8995
 
-/usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-k8s-tests.yaml --vars $vars \
+/usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-kubernetes-tests.yaml --vars $vars \
 serve --format json --endpoint /ncn-kubernetes-tests --listen-addr :8996
 
 /usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-storage-tests.yaml --vars $vars \
