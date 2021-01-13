@@ -4,5 +4,3 @@ command:
     exit-status: 0
     stdout:
     - PASS
-
-

@@ -49,10 +49,6 @@ network_interfaces:
   - vlan004
   - vlan007
 
-bond_members:
-  - mgmt0
-  - mgmt1
-
 services_enabled:
   - cloud-config
   - cloud-init
