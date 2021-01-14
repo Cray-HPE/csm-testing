@@ -5,6 +5,7 @@ gossfile:
   goss-services-enabled.yaml: {}
   goss-services-running.yaml: {}
   goss-interfaces-have-same-mac.yaml: {}
+  goss-bond-members-have-links.yaml: {}
   goss-data_json-multiple-dns-entries.yaml: {}
   goss-ncns-in-dnsmasq-leases.yaml: {}
   goss-podman-test-for-basecamp-and-nexus.yaml: {}
