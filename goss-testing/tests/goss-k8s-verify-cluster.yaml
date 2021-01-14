@@ -10,5 +10,4 @@ command:
     - /^weave-net.*Running/
     - /^etcd-ncn.*Running/
     - /^coredns.*Running/
-
     exit-status: 0
