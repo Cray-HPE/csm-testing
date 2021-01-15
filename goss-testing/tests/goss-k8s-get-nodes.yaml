@@ -4,6 +4,5 @@ command:
     exec: "kubectl get nodes"
     stdout: 
     - "{{$ncn}}"
-
     exit-status: 0
   {{end}}

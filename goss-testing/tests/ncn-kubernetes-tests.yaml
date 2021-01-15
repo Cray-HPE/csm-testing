@@ -4,3 +4,4 @@ gossfile:
   goss-k8s-test-storageClass.yaml: {}
   goss-k8s-validate-storage-configmaps.yaml: {}
   goss-k8s-verify-cluster.yaml: {}
+  goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
