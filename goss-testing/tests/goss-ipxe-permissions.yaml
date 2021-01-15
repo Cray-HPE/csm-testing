@@ -1,0 +1,10 @@
+# Validates that ipxe.efi has the correct user and group, which are required for successfull pxe booting
+file:
+  /var/www/boot/ipxe.efi:
+    # required attributes
+    exists: true
+    # optional attributes
+    mode: "0644"
+    owner: dnsmasq
+    group: tftp
+    filetype: file # file,
