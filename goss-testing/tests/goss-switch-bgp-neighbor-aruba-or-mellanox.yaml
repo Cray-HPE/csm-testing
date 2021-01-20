@@ -1,8 +1,8 @@
 command:
   bgp_neighbors_established:
-    title: sls_input.json IPs Correct
+    title: MTU Spint Port Valid
     meta:
-      desc: Extracts the switch IP addresses from sls_input.json and pings them to ensure they are accurate.
+      desc: Validates the MTU spine port number is correct on Mellanox and Aruba network switches.
       sev: 0
     exec: /usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/bgp-neighbors-established-aruba-or-mellanox.py {{.Env.switch_Aruba_password}} {{.Env.switch_mellanox_password}}
     exit-status: 0

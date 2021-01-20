@@ -1,4 +1,6 @@
 gossfile:
+  goss-weave-IPAM-health.yaml: {}
+  goss-weave-status-daemon-sets.yaml: {}
   goss-k8s-get-nodes.yaml: {}
   goss-k8s-pods-ips-in-nmn-pool.yaml: {}
   goss-k8s-storageClass.yaml: {}
