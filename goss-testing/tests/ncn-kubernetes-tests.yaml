@@ -1,7 +1,7 @@
 gossfile:
   goss-k8s-get-nodes.yaml: {}
   goss-k8s-pods-ips-in-nmn-pool.yaml: {}
-  goss-k8s-test-storageClass.yaml: {}
-  goss-k8s-validate-storage-configmaps.yaml: {}
+  goss-k8s-storageClass.yaml: {}
+  goss-k8s-storage-configmaps.yaml: {}
   goss-k8s-verify-cluster.yaml: {}
   goss-k8s-all-loadbalancers-have-external-ips.yaml: {}

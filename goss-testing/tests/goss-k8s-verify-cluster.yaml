@@ -1,5 +1,9 @@
 command:
-  test-k8s-get-nodes:
+  k8s_verify_cluster:
+    title: Kubernetes Pods
+    meta:
+      desc: Kubernetes kube-system namespace pods are running.
+      sev: 0
     exec: "kubectl get po -n kube-system"
     stdout:
     - /^kube-apiserver.*Running/

@@ -1,5 +1,9 @@
 command:
   ceph_storage_health:
+    title: Ceph Service Healthy
+    meta:
+      desc: Checks that the Ceph service is in a healthy state.
+      sev: 0
     exec: "ceph -s"
     stdout:
     - HEALTH_OK

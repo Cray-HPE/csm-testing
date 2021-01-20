@@ -1,9 +1,12 @@
 command:
-  test-k8s-verify-storage-configmaps:
+  k8s_storage_configmaps:
+    title: Kubernetes ConfigMaps
+    meta:
+      desc: Validates Kubernetes has correct ConfigMaps for storage.
+      sev: 0
     exec: "kubectl get cm | grep csi-sc"
     stdout:
     - /^cephfs-csi-sc.*[1-9]+.*[0-9]+[a-z,A-Z]/
     - /^kube-csi-sc.*[1-9]+.*[0-9]+[a-z,A-Z]/
     - /^sma-csi-sc.*[1-9]+.*[0-9]+[a-z,A-Z]/
-
     exit-status: 0

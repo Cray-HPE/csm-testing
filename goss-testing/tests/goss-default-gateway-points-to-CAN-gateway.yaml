@@ -1,5 +1,9 @@
 command:
   NCN-default-gateway-points-to-CAN-gateway:
+    title: Default Gateway Same as CAN Gateway
+    meta:
+      desc: Fails if the default gateway does not match CAN gateway on NCNs.
+      sev: 0
     exec: "ip route show default | grep `craysys metadata get can-gw | cut -f1 -d'/'` | grep `craysys metadata get can-if` || echo FAIL"
     exit-status: 0
     stdout:

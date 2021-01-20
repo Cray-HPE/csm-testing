@@ -3,7 +3,8 @@ gossfile:
   goss-network-interfaces.yaml: {}
   goss-bond-members-have-links.yaml: {}
   goss-dns-services.yaml: {}
-  goss-podman-test-for-basecamp-and-nexus.yaml: {}
+  goss-podman-basecamp.yaml: {}
+  goss-podman-nexus.yaml: {}
   goss-interface-has-ip.yaml: {}
   goss-switch-mtu-spine-port.yaml: {}
   goss-dnmasq-lease-count.yaml: {}

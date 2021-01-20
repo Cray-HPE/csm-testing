@@ -1,5 +1,9 @@
 command:
     check_aruba_switch_configs:
+      title: Aruba Switch Config Version
+      meta:
+        desc: Validates Aruba switch configuration version.
+        sev: 0
       stdout:
       - /-3857207144352459/
       exec: "curl --noproxy \"{{.Vars.switch_Aruba.ip}}\" -k -X POST -c /tmp/auth_cookie -H \"Content-Type: multipart/form-data\" \"{{.Vars.switch_Aruba.login_url}}\" -F username={{.Vars.switch_Aruba.username}} -F password=\"{{.Env.switch_Aruba_password}}\" && curl --noproxy \"{{.Vars.switch_Aruba.ip}}\" -k -X GET -b /tmp/auth_cookie \"https://{{.Vars.switch_Aruba.ip}}/{{.Vars.switch_Aruba.endpoint}}\" | jq '.ACL | .\"nmn-hmn/ipv4\" | .cfg_version' "

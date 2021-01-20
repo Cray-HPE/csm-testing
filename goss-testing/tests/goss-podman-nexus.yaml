@@ -1,0 +1,13 @@
+command:
+  podman_container_nexus:
+    title: Nexus Podman Container
+    meta:
+      desc: Checks whether Podman is running a Nexus container.
+      sev: 0
+    exec: "/usr/bin/podman container ls -a"
+    stdout:
+    - basecamp
+    - nexus
+    exit-status: 0
+    timeout: 10000
+    skip: false

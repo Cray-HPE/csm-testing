@@ -1,5 +1,9 @@
 command:
-  get_mtu_from_mellanox_or_aruba_switch:
+  mtu_spine_port_from_mellanox_or_aruba_switch:
+    title: Network Switch MTU Spine Port
+    meta:
+      desc: Validates the correct MTU spine port is set on Mellanox and Aruba network switches.
+      sev: 0
     exec: /usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/mtu_aruba_or_mellanox.py {{.Env.switch_Aruba_password}} {{.Env.switch_mellanox_password}} {{.Vars.switch_Aruba.mtu}}  {{.Vars.switch_mellanox.mtu}}
     exit-status: 0
     stdout:

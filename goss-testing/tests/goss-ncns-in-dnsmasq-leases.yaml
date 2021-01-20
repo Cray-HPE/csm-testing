@@ -1,5 +1,9 @@
 command:
-  check-dnsmasq_leases-for-ncns-in-data_json:
+  ncns_have_dnsmasq_lease:
+    title: NCNs Have dnsmasq Lease
+    meta:
+      desc: Checks that all ncns in data.json have a dnsmasq lease.
+      sev: 0
     exec: "/usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/csi_validate_dns_check.py {{.Vars.datajson}}"
     stdout:
     - PASS
