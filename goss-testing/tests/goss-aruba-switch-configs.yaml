@@ -6,7 +6,7 @@ command:
         sev: 0
       stdout:
       - /-3857207144352459/
-      exec: "curl --noproxy \"{{.Vars.switch_Aruba.ip}}\" -k -X POST -c /tmp/auth_cookie -H \"Content-Type: multipart/form-data\" \"{{.Vars.switch_Aruba.login_url}}\" -F username={{.Vars.switch_Aruba.username}} -F password=\"{{.Env.switch_Aruba_password}}\" && curl --noproxy \"{{.Vars.switch_Aruba.ip}}\" -k -X GET -b /tmp/auth_cookie \"https://{{.Vars.switch_Aruba.ip}}/{{.Vars.switch_Aruba.endpoint}}\" | jq '.ACL | .\"nmn-hmn/ipv4\" | .cfg_version' "
+      exec: "curl --noproxy \"{{.Vars.switch_aruba.ip}}\" -k -X POST -c /tmp/auth_cookie -H \"Content-Type: multipart/form-data\" \"{{.Vars.switch_aruba.login_url}}\" -F username={{.Vars.switch_aruba.username}} -F password=\"{{.Env.switch_aruba.password}}\" && curl --noproxy \"{{.Vars.switch_aruba.ip}}\" -k -X GET -b /tmp/auth_cookie \"https://{{.Vars.switch_aruba.ip}}/{{.Vars.switch_aruba.endpoint}}\" | jq '.ACL | .\"nmn-hmn/ipv4\" | .cfg_version' "
       exit-status: 0
       timeout: 10000
       skip: false
