@@ -4,7 +4,7 @@ dns:
   {{$name}}:
     title: Service '{{$name}}' Resolvable
     meta:
-      desc: Validates that service {{$name}} is resolvable in DNS.
+      desc: Validates that service '{{$name}}' is resolvable in DNS.
       sev: 0
     resolvable: true
     timeout: 10000
