@@ -7,7 +7,6 @@ gossfile:
   goss-interface-has-ip.yaml: {}
   goss-switch-mtu-spine-port.yaml: {}
   goss-dnmasq-lease-count.yaml: {}
-  goss-bond-member-has-link.yaml: {}
   goss-artifacts-in-place.yaml: {}
   goss-k8s-get-nodes.yaml: {}
   goss-ipxe-permissions.yaml: {}
