@@ -1,4 +1,5 @@
 gossfile:
+  goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
   goss-command-available.yaml: {}
   goss-network-interfaces.yaml: {}
   goss-bond-members-have-links.yaml: {}
