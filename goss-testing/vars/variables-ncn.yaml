@@ -98,4 +98,5 @@ ceph_services:
   - rgw
 
 commands:
-  - 'ceph -v'
+  - 'kubectl version --client'
+  - 'cray --version'

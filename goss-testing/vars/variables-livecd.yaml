@@ -75,6 +75,7 @@ commands:
   - 'kubectl version --client'
   - 'ipmitool -V'
   - 'csi version'
+  - 'cray --version'
 
 switch_mellanox:
   ip: “10.1.0.1”
