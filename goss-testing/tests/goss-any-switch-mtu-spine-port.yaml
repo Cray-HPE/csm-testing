@@ -4,7 +4,7 @@ command:
     meta:
       desc: Validates the correct MTU spine port is set on Mellanox and Aruba network switches.
       sev: 0
-    exec: /usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/mtu_aruba_or_mellanox.py {{.Env.switch_aruba.password}} {{.Vars.switch_mellanox.password}} {{.Vars.switch_aruba.mtu}}  {{.Vars.switch_mellanox.mtu}}
+    exec: /usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/mtu_aruba_or_mellanox.py {{.Vars.switch_aruba.password}} {{.Vars.switch_mellanox.password}} {{.Vars.switch_aruba.mtu}} {{.Vars.switch_mellanox.mtu}}
     exit-status: 0
     stdout:
       - "!FAIL"
