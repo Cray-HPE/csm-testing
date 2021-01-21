@@ -26,16 +26,16 @@ vars="/opt/cray/tests/install/ncn/vars/variables-ncn.yaml"
 
 # start server with NCN test suites (as of now, goss server only runs on NCNs)
 # designated goss-servers port range: 8994-8999
-/usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-run-time-tests.yaml --vars $vars \
-serve --format json --endpoint /ncn-run-time-tests --listen-addr :8994
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-run-time-tests.yaml --vars $vars \
+serve --format json --endpoint /ncn-run-time-tests --listen-addr :8994 &
 
-/usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-preflight-tests.yaml --vars $vars \
-serve --format json --endpoint /ncn-preflight-tests --listen-addr :8995
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-preflight-tests.yaml --vars $vars \
+serve --format json --endpoint /ncn-preflight-tests --listen-addr :8995 &
 
-/usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-kubernetes-tests.yaml --vars $vars \
-serve --format json --endpoint /ncn-kubernetes-tests --listen-addr :8996
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-kubernetes-tests.yaml --vars $vars \
+serve --format json --endpoint /ncn-kubernetes-tests --listen-addr :8996 &
 
-/usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-storage-tests.yaml --vars $vars \
-serve --format json --endpoint /ncn-storage-tests --listen-addr :8997
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/tests/ncn-storage-tests.yaml --vars $vars \
+serve --format json --endpoint /ncn-storage-tests --listen-addr :8997 &
 
 exit
