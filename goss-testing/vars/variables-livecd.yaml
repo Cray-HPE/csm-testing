@@ -5,10 +5,12 @@ switch_aruba:
   password: "!nitial0"
   endpoint: "rest/v10.04/fullconfigs/running-config"
   jq_cmd: "jq '.ACL | .\"nmn-hmn/ipv4\" | .cfg_version'"
+  mtu: 9198
 
 switch_mellanox:
   ip: “10.1.0.1”
   password: "!nitial0"
+  mtu: 9216
 
 ncns:
   - ncn-w001
