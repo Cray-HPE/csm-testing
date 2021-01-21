@@ -1,6 +1,10 @@
 # Validates that the bond0 interface members from the ifcfg-bond0 config file have active links.
 command:
   bond_members_have_links:
+    title: Bond Members Have Links
+    meta:
+      desc: Validates that the bond0 interface members from the ifcfg-bond0 config file have active links.
+      sev: 0
     stdout:
     - "!DOWN"
     exec: "cat /etc/sysconfig/network/ifcfg-bond0 | awk -F \"'\" '/BONDING_SLAVE/{print $2}' | while read member ; do ip link show dev $member ; done"

@@ -2,5 +2,9 @@
 package:
 {{range $name := index .Vars "packages"}}
   {{$name}}:
+    title: Package '{{$name}}' Installed
+    meta:
+      desc: Validates whether package '{{$name}}' is installed on local system.
+      sev: 0
     installed: true
 {{end}}

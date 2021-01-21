@@ -1,5 +1,9 @@
 command:
-  k8s-check-weave-IPAM-status:
+  k8s_check_weave_IPAM_status:
+    title: Weave IPAM Health
+    meta:
+      desc: Check that weave IPAM is healthy.
+      sev: 0
     exec: kubectl -n kube-system exec `kubectl -n kube-system get pods -l name=weave-net -o jsonpath='{.items[*].metadata.name}' | awk '{print $1}'` -c weave -- /home/weave/weave --local status ipam | grep "IP allocation was seeded by different peers"
     exit-status:
       gt: 0

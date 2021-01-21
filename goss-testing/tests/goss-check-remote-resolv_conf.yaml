@@ -1,6 +1,9 @@
 command:
-
   check_remote_resolv_conf_against_data_json:
+    title: Correct DNS Server
+    meta:
+      desc: Checks that remote NCN resovl.conf has a nameserver same as dns-server from data.json.
+      sev: 0
     exec: "/usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/check-remote-resolv_conf-against-data_json.py {{.Vars.datajson}}"
     exit-status: 0
     stdout:

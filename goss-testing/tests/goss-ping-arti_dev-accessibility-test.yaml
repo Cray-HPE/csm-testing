@@ -1,5 +1,9 @@
 command:
-  ping-artifactory-to-ensure-accessibilty:
+  ping_artifactory_to_ensure_accessibilty:
+    title: Artifactory Accessible
+    meta:
+      desc: Checks whether local system has access to Artifactory server.
+      sev: 0
     exec: "ping -q -c 1 arti.dev.cray.com"
     exit-status: 0
     timeout: 5000

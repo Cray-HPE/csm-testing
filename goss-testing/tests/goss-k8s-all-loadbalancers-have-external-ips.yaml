@@ -1,7 +1,10 @@
-# Validates all LoadBalancer services in Kubernetes cluster have a valid external IP.
 command:
   k8s_all_loadbalancers_have_external_ips:
-    exec: "kubectl get service -A | grep LoadBalancer | awk '{print $5}' | while read ip; do if [[ $ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo 'PASS'; else echo 'FAIL'; fi; done"
+    title: LoadBalancer Services Have External IP
+    meta:
+      desc: Validates all LoadBalancer services in Kubernetes cluster have a valid external IP.
+      sev: 0
+    exec: "kubectl get service -A | grep LoadBalancer | awk '{print $5}' | while read ip; do if [[ $ip =~ ^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$ ]]; then echo 'PASS'; else echo 'FAIL'; fi; done"
     stdout:
       - "!FAIL"
     exit-status: 0

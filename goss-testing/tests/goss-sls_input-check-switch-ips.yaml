@@ -1,5 +1,9 @@
 command:
-  check-sitch-ips-in-sls_input_json:
+  check_sls_file_ips:
+    title: sls_input.json IPs Correct
+    meta:
+      desc: Extracts the switch IP addresses from sls_input.json and pings them to ensure they are accurate.
+      sev: 0
     exec: for ip in `jq . /var/www/ephemeral/prep/$(hostname | cut -f1 -d'-')/sls_input_file.json | grep IP4addr | cut -f 2 -d ':' | sed 's/"//g' | tr -s ',\n' ' '` ;do ping -q -c1 $ip || echo FAIL; done
     stdout:
       - "!FAIL"

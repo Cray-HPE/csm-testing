@@ -1,3 +1,15 @@
+switch_aruba:
+  ip: "10.103.10.20"
+  login_url: "https://10.103.10.20/rest/v1/login"
+  username: admin
+  password: "!nitial0"
+  endpoint: "rest/v10.04/fullconfigs/running-config"
+  jq_cmd: "jq '.ACL | .\"nmn-hmn/ipv4\" | .cfg_version'"
+
+switch_mellanox:
+  ip: “10.1.0.1”
+  password: "!nitial0"
+
 ncns:
   - ncn-w001
   - ncn-w002
@@ -80,13 +92,6 @@ services_enabled:
 datajson:
   - "/mnt/configs/data.json"
 
-switch_Aruba:
-  ip: "10.103.10.20"
-  login_url: "https://10.103.10.20/rest/v1/login"
-  username: admin
-  endpoint: "rest/v10.04/fullconfigs/running-config"
-  jq_cmd: "jq '.ACL | .\"nmn-hmn/ipv4\" | .cfg_version'"
-
 resolvconf_ips:
   - 10.*.100.225
 
@@ -98,4 +103,5 @@ ceph_services:
   - rgw
 
 commands:
-  - 'ceph -v'
+  - 'kubectl version --client'
+  - 'cray --version'

@@ -1,13 +1,13 @@
 gossfile:
+  goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
   goss-command-available.yaml: {}
   goss-network-interfaces.yaml: {}
   goss-bond-members-have-links.yaml: {}
   goss-dns-services.yaml: {}
-  goss-podman-test-for-basecamp-and-nexus.yaml: {}
+  goss-podman-basecamp.yaml: {}
+  goss-podman-nexus.yaml: {}
   goss-interface-has-ip.yaml: {}
-  goss-switch-mtu-spine-port.yaml: {}
   goss-dnmasq-lease-count.yaml: {}
-  goss-bond-member-has-link.yaml: {}
   goss-artifacts-in-place.yaml: {}
   goss-k8s-get-nodes.yaml: {}
   goss-ipxe-permissions.yaml: {}

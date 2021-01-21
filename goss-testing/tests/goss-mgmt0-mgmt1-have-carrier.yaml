@@ -1,5 +1,9 @@
 command:
-  check-mgmt0-mgmt1-have-carrier:
+  mgmt0_mgmt1_have_carrier:
+    title: mgmt0/mgmt1 Have Carrier
+    meta:
+      desc: On instances with a mgmt0 interface, checks if they have a carrier.
+      sev: 0
     exec: "ip link | grep 'mgmt0\\|mgmt1' | grep DOWN || echo 'PASS'"
     stdout:
       - PASS

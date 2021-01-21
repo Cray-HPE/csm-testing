@@ -2,5 +2,9 @@
 service:
   {{range $service := index .Vars "services_enabled"}}
   {{$service}}:
+    title: Service '{{$service}}' Enabled
+    meta:
+      desc: Checks whether service '{{$service}}' is enabled.
+      sev: 0
     enabled: true
   {{end}}
