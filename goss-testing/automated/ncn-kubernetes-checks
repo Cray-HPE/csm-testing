@@ -22,15 +22,30 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-nodes="ncn-w001,ncn-w002,ncn-w003,ncn-m002,ncn-m003"
-IFS=',' read -ra nodes <<< "$nodes"
-
+# master nodes
+nodes="ncn-m002,ncn-m003"
+endpoint="ncn-kubernetes-tests-master"
 port=8996
-endpoint="ncn-kubernetes-tests"
+
+IFS=',' read -ra nodes <<< "$nodes"
 
 for node in "${nodes[@]}"
 do
-  echo "Running tests on NCN Kubernetes node: $node"
+  echo "Running tests on NCN Kubernetes master node: $node"
+  results=`curl -s http://{$node}:{$port_m}/{$endpoint_m}`
+  echo $results | jq
+done
+
+# worker nodes
+nodes="ncn-w001,ncn-w002,ncn-w003"
+endpoint="ncn-kubernetes-tests-worker"
+port=8998
+
+IFS=',' read -ra nodes <<< "$nodes"
+
+for node in "${nodes[@]}"
+do
+  echo "Running tests on NCN Kubernetes worker node: $node"
   results=`curl -s http://{$node}:{$port}/{$endpoint}`
   echo $results | jq
 done
