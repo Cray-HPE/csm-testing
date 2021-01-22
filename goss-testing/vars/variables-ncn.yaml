@@ -91,6 +91,9 @@ services_enabled:
   - chronyd
   - spire-agent
 
+services_running:
+  - etcd
+
 datajson:
   - "/mnt/configs/data.json"
 
