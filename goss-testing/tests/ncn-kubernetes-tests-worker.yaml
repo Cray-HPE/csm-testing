@@ -1,5 +1,4 @@
 gossfile:
-  goss-services-running.yaml: {}
   goss-weave-IPAM-health.yaml: {}
   goss-weave-status-daemon-sets.yaml: {}
   goss-k8s-get-nodes.yaml: {}
