@@ -7,3 +7,4 @@ gossfile:
   goss-k8s-storage-configmaps.yaml: {}
   goss-k8s-verify-cluster.yaml: {}
   goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
+  goss-k8s-sealed-secret-key.yaml: {}
