@@ -4,8 +4,8 @@ After=network.target
 StartLimitIntervalSec=0
 
 [Service]
-Type=simple
-Restart=always
+Type=forking
+Restart=on-abort
 RestartSec=1
 User=root
 ExecStart=/bin/bash /usr/sbin/start-goss-servers.sh
