@@ -110,3 +110,5 @@ ceph_services:
 commands:
   - 'kubectl version --client'
   - 'cray --version'
+
+bond_member_mtu: 9000

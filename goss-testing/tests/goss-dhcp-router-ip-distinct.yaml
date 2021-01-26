@@ -1,0 +1,15 @@
+command:
+  {{$path := .Env.GOSS_BASE}}
+  {{range $interface := index .Vars "network_interfaces"}}
+  dhcp_router_ip_distinct_{{$interface}}:
+    title: DHCP Router IP is Distinct
+    meta:
+      desc: Validates the DHCP router IP for interface '{{$interface}}' is different from the interface's IP.
+      sev: 0
+    exec: '/bin/sh {{$path}}/scripts/dhcp_router_ip_check.sh {{$interface}}'
+    stdout:
+    - PASS
+    exit-status: 0
+    timeout: 1000000
+    skip: false
+  {{end}}
