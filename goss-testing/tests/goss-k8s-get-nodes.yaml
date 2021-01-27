@@ -4,7 +4,7 @@ command:
   test_k8s_get_nodes_check_node_{{$ncn}}:
     title: Kubernetes Node for '{{$ncn}}' Exists
     meta:
-      desc: Validates kubernetes node for '{{$ncn}}' node exists.
+      desc: Validates Kubernetes node for '{{$ncn}}' node exists.
       sev: 0
     exec: "kubectl get nodes"
     stdout: 
