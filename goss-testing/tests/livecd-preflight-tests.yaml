@@ -7,7 +7,7 @@ gossfile:
   goss-podman-basecamp.yaml: {}
   goss-podman-nexus.yaml: {}
   goss-interface-has-ip.yaml: {}
-  goss-dnmasq-lease-count.yaml: {}
+  goss-dnsmasq-lease-count.yaml: {}
   goss-artifacts-in-place.yaml: {}
   goss-k8s-get-nodes.yaml: {}
   goss-ipxe-permissions.yaml: {}
