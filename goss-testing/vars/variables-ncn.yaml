@@ -33,6 +33,13 @@ ncns_nopit:
   - ncn-m002
   - ncn-m003
 
+ncns_k8s:
+  - ncn-w001
+  - ncn-w002
+  - ncn-w003
+  - ncn-m002
+  - ncn-m003
+
 dns_nodes:
   - nodes:
       - ncn-m002
