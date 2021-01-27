@@ -6,7 +6,7 @@ command:
       sev: 0
     exec: "grep -Eo ncn-.*-mgmt /var/lib/misc/dnsmasq.leases | wc -l"
     stdout:
-    - 8
+    - >7
     exit-status: 0
     timeout: 10000
     skip: false
