@@ -9,5 +9,4 @@ gossfile:
   goss-interface-has-ip.yaml: {}
   goss-dnmasq-lease-count.yaml: {}
   goss-artifacts-in-place.yaml: {}
-  goss-k8s-get-nodes.yaml: {}
   goss-ipxe-permissions.yaml: {}
