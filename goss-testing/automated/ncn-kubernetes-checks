@@ -31,7 +31,7 @@ IFS=',' read -ra nodes <<< "$nodes"
 for node in "${nodes[@]}"
 do
   echo "Running tests against NCN Kubernetes master node: $node"
-  results=`curl -s http://{$node}:{$port_m}/{$endpoint}`
+  results=`curl -s http://{$node}:{$port}/{$endpoint}`
   echo $results | jq
 done
 
