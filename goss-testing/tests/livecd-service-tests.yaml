@@ -1,2 +1,3 @@
 gossfile:
+  goss-rgw-cert-valid.yaml: {}
   goss-services-running.yaml: {}
