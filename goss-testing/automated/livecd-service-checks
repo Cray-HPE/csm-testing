@@ -21,17 +21,10 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-nodes="ncn-s001,ncn-s002,ncn-s003"
-IFS=',' read -ra nodes <<< "$nodes"
+export GOSS_FILE="/opt/cray/tests/install/livecd/tests/livecd-service-tests.yaml"
+export GOSS_VARS="/opt/cray/tests/install/livecd/vars/variables-livecd.yaml"
 
-port=8997
-endpoint="ncn-storage-tests"
+# run the LiveCD preflight Goss test suite
+/usr/bin/goss validate -f json -o pretty
 
-for node in "${nodes[@]}"
-do
-  echo "Running tests on NCN storage node: $node"
-  results=`curl -s http://{$node}:{$port}/{$endpoint}`
-  echo $results | jq
-done
-
-exit
+# TODO: add parsing to show more human readable test output highlighting failures

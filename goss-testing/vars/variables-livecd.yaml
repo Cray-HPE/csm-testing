@@ -56,11 +56,13 @@ services_enabled:
   - dnsmasq
   - nexus
   - basecamp
+  - conman
 
 services_running:
   - dnsmasq
   - nexus
   - basecamp
+  - conman
 
 datajson:
   - "/var/www/ephemeral/configs/data.json"
