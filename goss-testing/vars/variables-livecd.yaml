@@ -103,5 +103,14 @@ artifact_dirs:
     - ncn-w003
     symlinks:
       - filesystem.squashfs
-      - initrd.img.xz
+      - initrd.img.xzq
       - kernel
+
+unbound_hostnames:
+  - rgw-vip.nmn
+  - rgw-vip.hmn
+  - api-gw-service
+  - api-gw-service.local
+  - api-gw-service-nmn.local
+  - packages
+  - registry
