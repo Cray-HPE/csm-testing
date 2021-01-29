@@ -6,7 +6,7 @@ command:
     meta:
       desc: Validates the Unbound DNS hostname '{{$hostname}}' exists in the service configmap.
       sev: 0
-    exec: kubectl get cm -n services cray-dns-unbound -o yaml | grep "hostname": "{{$hostname}}"
+    exec: "kubectl get cm -n services cray-dns-unbound -o yaml | grep '\"hostname\": \"{{$hostname}}\"'"
     exit-status: 0
     timeout: 1000
     skip: false
