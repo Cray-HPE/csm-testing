@@ -114,3 +114,5 @@ unbound_hostnames:
   - api-gw-service-nmn.local
   - packages
   - registry
+
+bond_member_mtu: 9000

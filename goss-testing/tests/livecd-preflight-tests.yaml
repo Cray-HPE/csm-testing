@@ -12,4 +12,3 @@ gossfile:
   goss-dnsmasq-lease-count.yaml: {}
   goss-artifacts-in-place.yaml: {}
   goss-ipxe-permissions.yaml: {}
-
