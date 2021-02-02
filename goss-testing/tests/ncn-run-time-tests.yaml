@@ -8,3 +8,4 @@ gossfile:
   goss-resolvconf-ips.yaml: {}
   goss-ceph-storage-health.yaml: {}
   goss-ceph-storage-services.yaml: {}
+  goss-platform-ca-certs-exist.yaml: {}
