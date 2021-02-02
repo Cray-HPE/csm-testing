@@ -3,8 +3,8 @@ gossfile:
   ../tests/common/goss-command-available.yaml: {}
   ../tests/common/goss-interface-has-ip.yaml: {}
   ../tests/common/goss-bond-members-have-links.yaml: {}
-  ../tests/ncn/goss-network-interfaces.yaml: {}
-  ../tests/ncn/goss-services-enabled.yaml: {}
+  ../tests/common/goss-network-interfaces.yaml: {}
+  ../tests/common/goss-services-enabled.yaml: {}
   ../tests/common/goss-interfaces-have-same-mac.yaml: {}
   ../tests/ncn/goss-resolvconf-ips.yaml: {}
   ../tests/ncn/goss-remote-resolv_conf.yaml: {}

@@ -4,7 +4,7 @@ gossfile:
   ../tests/livecd/goss-aruba-switch-configs.yaml: {}
   ../tests/livecd/goss-bmc-check.yaml: {}
   ../tests/common/goss-command-available.yaml: {}
-  ../tests/livecd/goss-network-interfaces.yaml: {}
+  ../tests/common/goss-network-interfaces.yaml: {}
   ../tests/common/goss-bond-members-have-links.yaml: {}
   ../tests/common/goss-bond-members-have-correct-mtu.yaml: {}
   ../tests/common/goss-mgmt0-mgmt1-have-carrier.yaml: {}
@@ -21,3 +21,4 @@ gossfile:
   ../tests/livecd/goss-s4-preflight-checks.yaml: {}
   ../tests/livecd/goss-network-ips-not-in-ip-pools.yaml: {}
   ../tests/livecd/goss-sls_input-check-switch-ips.yaml: {}
+  ../tests/livecd/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}

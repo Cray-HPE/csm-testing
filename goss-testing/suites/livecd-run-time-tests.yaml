@@ -3,8 +3,8 @@ gossfile:
   ../tests/livecd/goss-basecamp.yaml: {}
   ../tests/livecd/goss-bmc-check.yaml: {}
   ../tests/livecd/goss-dns.yaml: {} 
-  ../tests/livecd/goss-services-enabled.yaml: {}
-  ../tests/livecd/goss-services-running.yaml: {}
+  ../tests/common/goss-services-enabled.yaml: {}
+  ../tests/common/goss-services-running.yaml: {}
   ../tests/common/goss-interfaces-have-same-mac.yaml: {}
   ../tests/common/goss-bond-members-have-links.yaml: {}
   ../tests/livecd/goss-data_json-multiple-dns-entries.yaml: {}

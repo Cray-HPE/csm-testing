@@ -1,6 +1,6 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 gossfile:
-  ../tests/ncn/goss-services-running.yaml: {}
+  ../tests/common/goss-services-running.yaml: {}
   ../tests/ncn/goss-weave-IPAM-health.yaml: {}
   ../tests/ncn/goss-weave-status-daemon-sets.yaml: {}
   ../tests/ncn/goss-k8s-get-nodes.yaml: {}
