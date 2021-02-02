@@ -2,9 +2,9 @@
 command:
   {{range $ncn := index .Vars "ncns_k8s"}}
   test_k8s_get_nodes_check_node_{{$ncn}}:
-    title: Kubernetes Node for '{{$ncn}}' Exists
+    title: Kubernetes Node '{{$ncn}}' Exists
     meta:
-      desc: Validates Kubernetes node for '{{$ncn}}' node exists.
+      desc: Validates Kubernetes node '{{$ncn}}' node exists.
       sev: 0
     exec: "kubectl get nodes"
     stdout: 

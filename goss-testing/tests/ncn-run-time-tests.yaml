@@ -6,5 +6,4 @@ gossfile:
   goss-services-enabled.yaml: {}
   goss-interfaces-have-same-mac.yaml: {}
   goss-resolvconf-ips.yaml: {}
-  goss-ceph-storage-health.yaml: {}
-  goss-ceph-storage-services.yaml: {}
+  goss-check-remote-resolv_conf.yaml: {}

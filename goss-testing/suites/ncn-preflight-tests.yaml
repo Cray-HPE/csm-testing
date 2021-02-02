@@ -1,9 +1,9 @@
 gossfile:
-  goss-command-available.yaml: {}
-  goss-basecamp-json-ncns.yaml: {}
-  goss-network-interfaces.yaml: {}
-  goss-interface-has-ip.yaml: {}
-  goss-bond-members-have-links.yaml: {}
-  goss-check-remote-ncn_mac-in_data_json-and-statics_conf.yaml: {}
-  goss-resolvconf-ips.yaml: {}
-  goss-default-gateway-points-to-CAN-gateway.yaml: {}
+  ../tests/ncn/goss-command-available.yaml: {}
+  ../tests/ncn/goss-basecamp-json-ncns.yaml: {}
+  ../tests/ncn/goss-network-interfaces.yaml: {}
+  ../tests/ncn/goss-interface-has-ip.yaml: {}
+  ../tests/ncn/goss-bond-members-have-links.yaml: {}
+  ../tests/ncn/goss-check-remote-ncn_mac-in_data_json-and-statics_conf.yaml: {}
+  ../tests/ncn/goss-resolvconf-ips.yaml: {}
+  ../tests/ncn/goss-default-gateway-points-to-CAN-gateway.yaml: {}

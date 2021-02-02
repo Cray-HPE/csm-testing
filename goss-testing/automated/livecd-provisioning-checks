@@ -21,7 +21,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-export GOSS_FILE="/opt/cray/tests/install/livecd/tests/livecd-provisioning-tests.yaml"
+export GOSS_FILE="/opt/cray/tests/install/livecd/suites/livecd-provisioning-tests.yaml"
 export GOSS_VARS="/opt/cray/tests/install/livecd/vars/variables-livecd.yaml"
 
 # run the LiveCD preflight Goss test suite

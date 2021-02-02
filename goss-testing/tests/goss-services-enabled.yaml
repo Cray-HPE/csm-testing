@@ -4,7 +4,8 @@ service:
   {{$service}}:
     title: Service '{{$service}}' Enabled
     meta:
-      desc: Checks whether service '{{$service}}' is enabled.
+      desc: Checks whether service '{{$service}}' is enabled but not running.
       sev: 0
     enabled: true
+    running: false
   {{end}}

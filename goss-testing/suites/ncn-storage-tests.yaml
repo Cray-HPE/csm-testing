@@ -1,3 +1,3 @@
 gossfile:
-  goss-ceph-storage-health.yaml: {}
-  goss-ceph-storage-services.yaml: {}
+  ../tests/ncn/goss-ceph-storage-health.yaml: {}
+  ../tests/ncn/goss-ceph-storage-services.yaml: {}

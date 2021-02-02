@@ -1,2 +1,2 @@
 gossfile:
-  goss-default-gateway-points-to-CAN-gateway.yaml: {}
+  ../tests/ncn/goss-default-gateway-points-to-CAN-gateway.yaml: {}

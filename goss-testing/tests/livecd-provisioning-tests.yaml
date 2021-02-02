@@ -1,3 +1,4 @@
+# Runs immediately after booting the LiveCD
 gossfile:
   goss-rgw-cert-valid.yaml: {}
   goss-services-running.yaml: {}

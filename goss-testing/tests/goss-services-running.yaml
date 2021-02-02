@@ -7,4 +7,5 @@ service:
       desc: Checks whether service '{{$service}}' is running.
       sev: 0
     running: true
+    enabled: true
   {{end}}

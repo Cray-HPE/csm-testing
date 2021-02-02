@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   basecamp_valid_json_ncns:
     title: Basecamp JSON Payload

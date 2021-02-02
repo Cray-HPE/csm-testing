@@ -1,11 +1,11 @@
 gossfile:
-  goss-services-running.yaml: {}
-  goss-weave-IPAM-health.yaml: {}
-  goss-weave-status-daemon-sets.yaml: {}
-  goss-k8s-get-nodes.yaml: {}
-  goss-k8s-pods-ips-in-nmn-pool.yaml: {}
-  goss-k8s-storageclass.yaml: {}
-  goss-k8s-storage-configmaps.yaml: {}
-  goss-k8s-verify-cluster.yaml: {}
-  goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
-  goss-k8s-sealed-secret-key.yaml: {}
+  ../tests/ncn/goss-services-running.yaml: {}
+  ../tests/ncn/goss-weave-IPAM-health.yaml: {}
+  ../tests/ncn/goss-weave-status-daemon-sets.yaml: {}
+  ../tests/ncn/goss-k8s-get-nodes.yaml: {}
+  ../tests/ncn/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
+  ../tests/ncn/goss-k8s-storageclass.yaml: {}
+  ../tests/ncn/goss-k8s-storage-configmaps.yaml: {}
+  ../tests/ncn/goss-k8s-verify-cluster.yaml: {}
+  ../tests/ncn/goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
+  ../tests/ncn/goss-k8s-sealed-secret-key.yaml: {}

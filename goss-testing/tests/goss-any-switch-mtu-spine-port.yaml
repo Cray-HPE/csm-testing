@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   mtu_spine_port_from_mellanox_or_aruba_switch:
     title: Network Switch MTU Spine Port
