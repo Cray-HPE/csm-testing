@@ -1,13 +1,13 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 gossfile:
-  ../tests/ncn/goss-command-available.yaml: {}
-  ../tests/ncn/goss-interface-has-ip.yaml: {}
-  ../tests/ncn/goss-bond-members-have-links.yaml: {}
+  ../tests/common/goss-command-available.yaml: {}
+  ../tests/common/goss-interface-has-ip.yaml: {}
+  ../tests/common/goss-bond-members-have-links.yaml: {}
   ../tests/ncn/goss-network-interfaces.yaml: {}
   ../tests/ncn/goss-services-enabled.yaml: {}
-  ../tests/ncn/goss-interfaces-have-same-mac.yaml: {}
+  ../tests/common/goss-interfaces-have-same-mac.yaml: {}
   ../tests/ncn/goss-resolvconf-ips.yaml: {}
-  ../tests/ncn/goss-check-remote-resolv_conf.yaml: {}
+  ../tests/ncn/goss-remote-resolv_conf.yaml: {}
   ../tests/ncn/goss-ceph-storage-health.yaml: {}
   ../tests/ncn/goss-ceph-storage-services.yaml: {}
   ../tests/ncn/goss-platform-ca-certs-exist.yaml: {}

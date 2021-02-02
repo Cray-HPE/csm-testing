@@ -1,10 +1,10 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 gossfile:
-  ../tests/ncn/goss-command-available.yaml: {}
+  ../tests/common/goss-command-available.yaml: {}
   ../tests/ncn/goss-basecamp-json-ncns.yaml: {}
   ../tests/ncn/goss-network-interfaces.yaml: {}
-  ../tests/ncn/goss-interface-has-ip.yaml: {}
-  ../tests/ncn/goss-bond-members-have-links.yaml: {}
-  ../tests/ncn/goss-check-remote-ncn_mac-in_data_json-and-statics_conf.yaml: {}
+  ../tests/common/goss-interface-has-ip.yaml: {}
+  ../tests/common/goss-bond-members-have-links.yaml: {}
+  ../tests/ncn/goss-remote-ncn_mac-in_data_json-and-statics_conf.yaml: {}
   ../tests/ncn/goss-resolvconf-ips.yaml: {}
   ../tests/ncn/goss-default-gateway-points-to-CAN-gateway.yaml: {}

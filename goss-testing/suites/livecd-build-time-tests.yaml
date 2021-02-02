@@ -1,7 +1,7 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 gossfile:
-  ../tests/livecd/goss-goss-services-enabled.yaml: {}
-  ../tests/livecd/goss-goss-interfaces-have-same-mac.yaml: {}
-  ../tests/livecd/goss-goss-mgmt0-mac-test.yaml: {}
-  ../tests/livecd/goss-goss-data_json-multiple-dns-entries.yaml: {}
-  ../tests/livecd/goss-goss-packages-installed.yaml: {}
+  ../tests/livecd/goss-services-enabled.yaml: {}
+  ../tests/common/goss-interfaces-have-same-mac.yaml: {}
+  ../tests/common/goss-mgmt0-mac-test.yaml: {}
+  ../tests/livecd/goss-data_json-multiple-dns-entries.yaml: {}
+  ../tests/livecd/goss-packages-installed.yaml: {}

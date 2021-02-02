@@ -16,3 +16,4 @@ gossfile:
   ../tests/ncn/goss-k8s-velero-backup-storage-locations-available.yaml: {}
   ../tests/ncn/goss-k8s-velero-backup-vault-schedule-exists.yaml: {}
   ../tests/ncn/goss-k8s-velero-no-failed-backups.yaml: {}
+  ../tests/ncn/goss-unbound-dns-entries.yaml: {}
