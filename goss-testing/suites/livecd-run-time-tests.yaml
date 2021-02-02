@@ -1,0 +1,19 @@
+gossfile:
+  goss-basecamp.yaml: {}
+  goss-bmc-check.yaml: {}
+  goss-dns.yaml: {} 
+  goss-services-enabled.yaml: {}
+  goss-services-running.yaml: {}
+  goss-interfaces-have-same-mac.yaml: {}
+  goss-bond-members-have-links.yaml: {}
+  goss-data_json-multiple-dns-entries.yaml: {}
+  goss-ncns-in-dnsmasq-leases.yaml: {}
+  goss-podman-basecamp.yaml: {}
+  goss-podman-nexus.yaml: {}
+  goss-ping-arti_dev-accessibility-test.yaml: {}
+  goss-k8s-get-nodes.yaml: {}		
+  goss-k8s-test-storageClass.yaml: {}
+  goss-k8s-verify-cluster.yaml: {}
+  goss-net-dhcp-pools-in-dnsmasq_d-are-correctly-defined.yaml: {}
+  goss-weave-IPAM-health.yaml: { }
+  goss-weave-status-daemon-sets.yaml: { }

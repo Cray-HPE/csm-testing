@@ -1,0 +1,19 @@
+# Runs after
+gossfile:
+  goss-any-switch-mtu-spine-port.yaml: {}
+  goss-aruba-switch-configs.yaml: {}
+  goss-bmc-check.yaml: {}
+  goss-command-available.yaml: {}
+  goss-network-interfaces.yaml: {}
+  goss-bond-members-have-links.yaml: {}
+  goss-bond-members-have-correct-mtu.yaml: {}
+  goss-dns-services.yaml: {}
+  goss-unbound-dns-entries.yaml: {}
+  goss-podman-basecamp.yaml: {}
+  goss-podman-nexus.yaml: {}
+  goss-interface-has-ip.yaml: {}
+  goss-dnsmasq-lease-count.yaml: {}
+  goss-artifacts-in-place.yaml: {}
+  goss-ipxe-permissions.yaml: {}
+  goss-data_json-multiple-dns-entries.yaml: {}
+  goss-dhcp-router-ip-distinct.yaml: {}

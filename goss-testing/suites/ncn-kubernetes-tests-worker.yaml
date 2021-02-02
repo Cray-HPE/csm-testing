@@ -1,0 +1,9 @@
+gossfile:
+  goss-weave-IPAM-health.yaml: {}
+  goss-weave-status-daemon-sets.yaml: {}0
+  goss-k8s-get-nodes.yaml: {}
+  goss-k8s-pods-ips-in-nmn-pool.yaml: {}
+  goss-k8s-storageclass.yaml: {}
+  goss-k8s-storage-configmaps.yaml: {}
+  goss-k8s-verify-cluster.yaml: {}
+  goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
