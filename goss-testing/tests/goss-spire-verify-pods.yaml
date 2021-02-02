@@ -1,0 +1,15 @@
+command:
+  k8s_verify_spire_pods:
+    title: Spire Pods
+    meta:
+      desc: Kubernetes spire namespace pods are running.
+      sev: 0
+    exec: "kubectl get po -n spire"
+    stdout:
+    - /^request-ncn-join-token.*Running/
+    - /^spire-agent.*Running/
+    - /^spire-bundle.*Running/
+    - /^spire-jwks.*Running/
+    - /^spire-postgres.*Running/
+    - /^spire-server.*Running/
+    exit-status: 0

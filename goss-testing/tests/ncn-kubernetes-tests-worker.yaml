@@ -8,6 +8,8 @@ gossfile:
   goss-k8s-verify-cluster.yaml: {}
   goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
   goss-k8s-sealed-secret-key.yaml: {}
+  goss-spire-agent-service-running.yaml: {}
+  goss-k8s-sealed-secret-key.yaml: {}
   goss-k8s-certmanager-certs-ready.yaml: {}
   goss-k8s-certmanager-issuers-ready.yaml: {}
   goss-k8s-trustedcerts-bss-certs-exist.yaml: {}

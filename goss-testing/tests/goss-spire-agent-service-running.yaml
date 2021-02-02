@@ -1,0 +1,7 @@
+service:
+  spire-agent:
+    title: Verify spire-agent is enabled and running
+    meta:
+      desc: Verify spire-agent is enabled and running
+    enabled: true
+    running: true
