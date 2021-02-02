@@ -58,8 +58,8 @@ cp -a goss-testing/suites/livecd/common/* %{buildroot}%{livecd}/suites
 cp -a goss-testing/scripts/*              %{buildroot}%{ncn}/scripts
 cp -a goss-testing/scripts/python/*       %{buildroot}%{ncn}/scripts/python
 cp -a goss-testing/scripts/python/lib/*   %{buildroot}%{ncn}/scripts/python/lib
-cp -a goss-testing/suites/ncn/*           %{buildroot}%{ncn}/suites/ncn
-cp -a goss-testing/suites/common/*        %{buildroot}%{livecd}/suites
+cp -a goss-testing/suites/ncn/*           %{buildroot}%{ncn}/suites
+cp -a goss-testing/suites/common/*        %{buildroot}%{ncn}/suites
 chmod +x -R %{buildroot}%{ncn}/scripts/
 chmod +x -R %{buildroot}%{livecd}/scripts/
 chmod +x -R %{buildroot}%{ncn}/automated/
