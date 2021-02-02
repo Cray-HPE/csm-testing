@@ -1,0 +1,11 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  k8s_certmgr_issuers:
+    title: Kubernetes Cert-manager Issuers Ready
+    meta:
+      desc: Validates All Cert-manager Issuers are Ready
+      sev: 0
+    exec: "kubectl get issuer -A -o json | jq '.items[].status.conditions[] | select(.type==\"Ready\") | select(.status==\"False\")' | wc -l"
+    stdout:
+    - "/^0$/"
+    exit-status: 0
