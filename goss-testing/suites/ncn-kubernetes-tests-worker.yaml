@@ -17,3 +17,5 @@ gossfile:
   ../tests/ncn/goss-k8s-velero-backup-vault-schedule-exists.yaml: {}
   ../tests/ncn/goss-k8s-velero-no-failed-backups.yaml: {}
   ../tests/ncn/goss-unbound-dns-entries.yaml: {}
+  ../tests/ncn/goss-spire-agent-service-running.yaml: {}
+  ../tests/ncn/goss-k8s-sealed-secret-key.yaml: {}

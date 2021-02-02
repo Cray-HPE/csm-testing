@@ -18,3 +18,6 @@ gossfile:
   ../tests/ncn/goss-k8s-velero-backup-storage-locations-available.yaml: {}
   ../tests/ncn/goss-k8s-velero-backup-vault-schedule-exists.yaml: {}
   ../tests/ncn/goss-k8s-velero-no-failed-backups.yaml: {}
+  ../tests/ncn/goss-spire-bss-metadata-exist.yaml: {}
+  ../tests/ncn/goss-spire-pods-running.yaml: {}
+  ../tests/ncn/goss-spire-agent-service-running.yaml: {}

@@ -27,19 +27,18 @@ They test both the LiveCD and NCN environment.
 %install
 
 # Install testing files
+install -d -m 644 %{buildroot}%{livecd}/automated
 install -d -m 644 %{buildroot}%{livecd}/tests
 install -d -m 644 %{buildroot}%{livecd}/vars
-install -d -m 644 %{buildroot}%{livecd}/automated
+install -d -m 644 %{buildroot}%{ncn}/automated
 install -d -m 644 %{buildroot}%{ncn}/tests
 install -d -m 644 %{buildroot}%{ncn}/vars
-install -d -m 644 %{buildroot}%{ncn}/automated
+install -m 644 goss-testing/automated/*  %{buildroot}%{livecd}/automated
 install -m 644 goss-testing/tests/*.yaml %{buildroot}%{livecd}/tests
 install -m 644 goss-testing/vars/*.yaml  %{buildroot}%{livecd}/vars
-install -m 644 goss-testing/automated/*  %{buildroot}%{livecd}/automated
+install -m 644 goss-testing/automated/*  %{buildroot}%{ncn}/automated
 install -m 644 goss-testing/tests/*.yaml %{buildroot}%{ncn}/tests
 install -m 644 goss-testing/vars/*.yaml  %{buildroot}%{ncn}/vars
-install -m 644 goss-testing/automated/*  %{buildroot}%{ncn}/automated
-
 # Install script files
 install -d -m 755 %{buildroot}%{livecd}/scripts
 install -d -m 755 %{buildroot}%{livecd}/scripts/python
@@ -47,12 +46,24 @@ install -d -m 755 %{buildroot}%{livecd}/scripts/python/lib
 install -d -m 755 %{buildroot}%{ncn}/scripts
 install -d -m 755 %{buildroot}%{ncn}/scripts/python
 install -d -m 755 %{buildroot}%{ncn}/scripts/python/lib
+# Install test suites
+install -d -m 644 %{buildroot}%{livecd}/suites
+install -d -m 755 %{buildroot}%{livecd}/suites/livecd
+install -d -m 755 %{buildroot}%{livecd}/suites/common
+install -d -m 644 %{buildroot}%{ncn}/suites
+install -d -m 755 %{buildroot}%{ncn}/suites/livecd
+install -d -m 755 %{buildroot}%{ncn}/suites/common
+# Copy files
 cp -a goss-testing/scripts/*            %{buildroot}%{livecd}/scripts
 cp -a goss-testing/scripts/python/*     %{buildroot}%{livecd}/scripts/python
 cp -a goss-testing/scripts/python/lib/* %{buildroot}%{livecd}/scripts/python/lib
+cp -a goss-testing/suites/livecd/*      %{buildroot}%{livecd}/suites/livecd
+cp -a goss-testing/suites/common/*      %{buildroot}%{livecd}/suites/common
 cp -a goss-testing/scripts/*            %{buildroot}%{ncn}/scripts
 cp -a goss-testing/scripts/python/*     %{buildroot}%{ncn}/scripts/python
 cp -a goss-testing/scripts/python/lib/* %{buildroot}%{ncn}/scripts/python/lib
+cp -a goss-testing/suites/ncn/*         %{buildroot}%{ncn}/suites/ncn
+cp -a goss-testing/suites/common/*      %{buildroot}%{livecd}/suites/common
 chmod +x -R %{buildroot}%{ncn}/scripts/
 chmod +x -R %{buildroot}%{livecd}/scripts/
 chmod +x -R %{buildroot}%{ncn}/automated/
