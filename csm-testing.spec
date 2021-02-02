@@ -48,22 +48,18 @@ install -d -m 755 %{buildroot}%{ncn}/scripts/python
 install -d -m 755 %{buildroot}%{ncn}/scripts/python/lib
 # Install test suites
 install -d -m 644 %{buildroot}%{livecd}/suites
-install -d -m 755 %{buildroot}%{livecd}/suites/livecd
-install -d -m 755 %{buildroot}%{livecd}/suites/common
 install -d -m 644 %{buildroot}%{ncn}/suites
-install -d -m 755 %{buildroot}%{ncn}/suites/livecd
-install -d -m 755 %{buildroot}%{ncn}/suites/common
 # Copy files
-cp -a goss-testing/scripts/*            %{buildroot}%{livecd}/scripts
-cp -a goss-testing/scripts/python/*     %{buildroot}%{livecd}/scripts/python
-cp -a goss-testing/scripts/python/lib/* %{buildroot}%{livecd}/scripts/python/lib
-cp -a goss-testing/suites/livecd/*      %{buildroot}%{livecd}/suites/livecd
-cp -a goss-testing/suites/common/*      %{buildroot}%{livecd}/suites/common
-cp -a goss-testing/scripts/*            %{buildroot}%{ncn}/scripts
-cp -a goss-testing/scripts/python/*     %{buildroot}%{ncn}/scripts/python
-cp -a goss-testing/scripts/python/lib/* %{buildroot}%{ncn}/scripts/python/lib
-cp -a goss-testing/suites/ncn/*         %{buildroot}%{ncn}/suites/ncn
-cp -a goss-testing/suites/common/*      %{buildroot}%{livecd}/suites/common
+cp -a goss-testing/scripts/*              %{buildroot}%{livecd}/scripts
+cp -a goss-testing/scripts/python/*       %{buildroot}%{livecd}/scripts/python
+cp -a goss-testing/scripts/python/lib/*   %{buildroot}%{livecd}/scripts/python/lib
+cp -a goss-testing/suites/livecd/*        %{buildroot}%{livecd}/suites
+cp -a goss-testing/suites/livecd/common/* %{buildroot}%{livecd}/suites
+cp -a goss-testing/scripts/*              %{buildroot}%{ncn}/scripts
+cp -a goss-testing/scripts/python/*       %{buildroot}%{ncn}/scripts/python
+cp -a goss-testing/scripts/python/lib/*   %{buildroot}%{ncn}/scripts/python/lib
+cp -a goss-testing/suites/ncn/*           %{buildroot}%{ncn}/suites/ncn
+cp -a goss-testing/suites/common/*        %{buildroot}%{livecd}/suites
 chmod +x -R %{buildroot}%{ncn}/scripts/
 chmod +x -R %{buildroot}%{livecd}/scripts/
 chmod +x -R %{buildroot}%{ncn}/automated/
