@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   preflight_s4_checks:
     title: S4 Preflight Checks

@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 # Variable set: ncns_k8s
 command:
   {{range $ncn := index .Vars "ncns_k8s"}}

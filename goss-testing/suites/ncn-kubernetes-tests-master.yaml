@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 gossfile:
   ../tests/ncn/goss-services-running.yaml: {}
   ../tests/ncn/goss-weave-IPAM-health.yaml: {}
@@ -9,3 +10,11 @@ gossfile:
   ../tests/ncn/goss-k8s-verify-cluster.yaml: {}
   ../tests/ncn/goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
   ../tests/ncn/goss-k8s-sealed-secret-key.yaml: {}
+  ../tests/ncn/goss-k8s-certmanager-certs-ready.yaml: {}
+  ../tests/ncn/goss-k8s-certmanager-issuers-ready.yaml: {}
+  ../tests/ncn/goss-k8s-trustedcerts-bss-certs-exist.yaml: {}
+  ../tests/ncn/goss-k8s-trustedcerts-configmaps-exist.yaml: {}
+  ../tests/ncn/goss-k8s-vault-cluster-health.yaml: {}
+  ../tests/ncn/goss-k8s-velero-backup-storage-locations-available.yaml: {}
+  ../tests/ncn/goss-k8s-velero-backup-vault-schedule-exists.yaml: {}
+  ../tests/ncn/goss-k8s-velero-no-failed-backups.yaml: {}

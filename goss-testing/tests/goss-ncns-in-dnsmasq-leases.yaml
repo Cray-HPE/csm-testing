@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   ncns_have_dnsmasq_lease:
     title: NCNs Have dnsmasq Lease

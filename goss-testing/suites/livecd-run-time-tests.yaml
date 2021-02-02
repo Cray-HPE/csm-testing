@@ -1,4 +1,4 @@
-#
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 gossfile:
   ../tests/livecd/goss-basecamp.yaml: {}
   ../tests/livecd/goss-bmc-check.yaml: {}

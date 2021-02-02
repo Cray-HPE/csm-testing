@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   bgp_neighbors_established:
     title: Switch BGP Neighbors

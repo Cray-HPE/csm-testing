@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 # Variable set: services_enabled
 service:
   {{range $service := index .Vars "services_enabled"}}

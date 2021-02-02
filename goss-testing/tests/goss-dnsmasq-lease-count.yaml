@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   dnsmasq-lease-count:
     title: Controller Lease Count

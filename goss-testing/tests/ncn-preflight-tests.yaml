@@ -1,9 +1,0 @@
-gossfile:
-  goss-command-available.yaml: {}
-  goss-basecamp-json-ncns.yaml: {}
-  goss-network-interfaces.yaml: {}
-  goss-interface-has-ip.yaml: {}
-  goss-bond-members-have-links.yaml: {}
-  goss-check-remote-ncn_mac-in_data_json-and-statics_conf.yaml: {}
-  goss-resolvconf-ips.yaml: {}
-  goss-default-gateway-points-to-CAN-gateway.yaml: {}

@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   mgmt0_mgmt1_have_carrier:
     title: mgmt0/mgmt1 Have Carrier

@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   ping_artifactory_to_ensure_accessibilty:
     title: Artifactory Accessible

@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   check_k8s_pods_ips_in_nmn_pool:
     title: Kubernetes Pod IPs in NMN Pool

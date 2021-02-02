@@ -1,9 +1,0 @@
-gossfile:
-  goss-command-available.yaml: {}
-  goss-interface-has-ip.yaml: {}
-  goss-bond-members-have-links.yaml: {}
-  goss-network-interfaces.yaml: {}
-  goss-services-enabled.yaml: {}
-  goss-interfaces-have-same-mac.yaml: {}
-  goss-resolvconf-ips.yaml: {}
-  goss-check-remote-resolv_conf.yaml: {}

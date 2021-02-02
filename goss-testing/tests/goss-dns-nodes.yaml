@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 # Variable set: dns_nodes
 dns:
   # Iterate through the nodes sharing the same networks

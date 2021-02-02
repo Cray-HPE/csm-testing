@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   check_mac_mgmt0:
     title: mgmt0 MAC Address

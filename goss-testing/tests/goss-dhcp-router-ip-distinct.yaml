@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   {{$path := .Env.GOSS_BASE}}
   {{range $interface := index .Vars "network_interfaces"}}

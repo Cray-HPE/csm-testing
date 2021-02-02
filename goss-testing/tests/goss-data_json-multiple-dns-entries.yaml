@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   check_for_multiple_dns-server_entries:
     title: Single DNS Server Entry
