@@ -22,3 +22,4 @@ gossfile:
   ../tests/goss-network-ips-not-in-ip-pools.yaml: {}
   ../tests/goss-sls_input-check-switch-ips.yaml: {}
   ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
+  ../tests/goss-remote-ncn_mac-in_data_json-and-statics_conf.yaml: {}

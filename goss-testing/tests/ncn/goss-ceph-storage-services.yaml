@@ -5,7 +5,7 @@ command:
   ceph_service_{{$service}}:
     title: Ceph Service '{{$service}}' Running
     meta:
-      desc: Validates that Ceph service {{$service}} is running.
+      desc: Validates that Ceph service '{{$service}}' is running.
       sev: 0
     exec: 'ceph -s | grep {{$service}}:'
     exit-status: 0
