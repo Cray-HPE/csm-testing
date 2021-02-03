@@ -3,16 +3,16 @@ gossfile:
   ../tests/livecd/goss-any-switch-mtu-spine-port.yaml: {}
   ../tests/livecd/goss-aruba-switch-configs.yaml: {}
   ../tests/livecd/goss-bmc-check.yaml: {}
-  ../tests/common/goss-command-available.yaml: {}
-  ../tests/common/goss-network-interfaces.yaml: {}
-  ../tests/common/goss-bond-members-have-links.yaml: {}
-  ../tests/common/goss-bond-members-have-correct-mtu.yaml: {}
-  ../tests/common/goss-mgmt0-mgmt1-have-carrier.yaml: {}
+  ../tests/livecd/goss-command-available.yaml: {}
+  ../tests/livecd/goss-network-interfaces.yaml: {}
+  ../tests/livecd/goss-bond-members-have-links.yaml: {}
+  ../tests/livecd/goss-bond-members-have-correct-mtu.yaml: {}
+  ../tests/livecd/goss-mgmt0-mgmt1-have-carrier.yaml: {}
   ../tests/livecd/goss-dns-services.yaml: {}
   ../tests/livecd/goss-unbound-dns-entries.yaml: {}
   ../tests/livecd/goss-podman-basecamp.yaml: {}
   ../tests/livecd/goss-podman-nexus.yaml: {}
-  ../tests/common/goss-interface-has-ip.yaml: {}
+  ../tests/livecd/goss-interface-has-ip.yaml: {}
   ../tests/livecd/goss-dnsmasq-lease-count.yaml: {}
   ../tests/livecd/goss-artifacts-in-place.yaml: {}
   ../tests/livecd/goss-ipxe-permissions.yaml: {}
