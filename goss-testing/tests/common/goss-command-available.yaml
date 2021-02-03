@@ -1,0 +1,13 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  {{range $command := index .Vars "commands"}}
+  command_{{$command}}:
+    title: Command '{{$command}}' Available
+    meta:
+      desc: Validates that '{{$command}}' is available on the local system.
+      sev: 0
+    exec: {{$command}}
+    exit-status: 0
+    timeout: 10000
+    skip: false
+{{end}}

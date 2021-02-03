@@ -31,7 +31,7 @@ for server in data.ncnList:
     results = remoteCmd(server, remoteCommand).decode().strip().split()
     
     if len(results) < 1:
-        # reult set empty
+        # result set empty
         print("No nameserver entry in /etc/resolv.conf for server " , server)
 
     else:

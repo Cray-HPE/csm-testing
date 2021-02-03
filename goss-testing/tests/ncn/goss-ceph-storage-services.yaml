@@ -1,0 +1,14 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Variable set: ceph_services
+command:
+  {{range $service := index .Vars "ceph_services"}}
+  ceph_service_{{$service}}:
+    title: Ceph Service '{{$service}}' Running
+    meta:
+      desc: Validates that Ceph service '{{$service}}' is running.
+      sev: 0
+    exec: 'ceph -s | grep {{$service}}:'
+    exit-status: 0
+    timeout: 1000
+    skip: false
+  {{end}}

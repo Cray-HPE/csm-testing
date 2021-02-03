@@ -1,0 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+gossfile:
+  ../tests/goss-rgw-cert-valid.yaml: {}
+  ../tests/goss-services-running.yaml: {}

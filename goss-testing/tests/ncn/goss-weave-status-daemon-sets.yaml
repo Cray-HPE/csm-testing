@@ -1,0 +1,11 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  k8s_check_weave_net_daemon_set:
+    title: Weave Net Daemon Set
+    meta:
+      desc: Validates status of Weave Net daemonset.
+      sev: 0
+    exec: kubectl rollout status -n kube-system daemonset.apps/weave-net
+    exit-status: 0
+    timeout: 10000
+

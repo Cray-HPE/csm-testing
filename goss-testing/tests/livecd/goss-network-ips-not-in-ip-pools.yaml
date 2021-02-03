@@ -1,0 +1,13 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  check_interface_ips_not_in_dns_ip_pool:
+    title: Interfaces Not in DHCP Pool
+    meta:
+      desc: Confirm that each network interface has an IP address that is not within the defined DHCP pools.
+      sev: 0
+    exec: "/usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/pyTest-ip-not-in-ip-pools.py {{ .Vars.network_interfaces }}"
+    exit-status: 0
+    stdout:
+    - "PASS"
+    timeout: 10000
+    skip: false

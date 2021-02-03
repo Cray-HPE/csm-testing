@@ -1,0 +1,16 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Variable set: network_interfaces
+command:
+  {{range $interface := index .Vars "network_interfaces"}}
+  check_mac_{{$interface}}:
+    title: Interfaces Have Same MAC
+    meta:
+      desc: Validates that interface '{$interface}}' has same MAC address as bond0.
+      sev: 0
+    stdout:
+    - good
+    exec: 'if [ `ip addr show dev {{$interface}} | grep "link/ether" | tr -s " " | cut -d " " -f 3` = `ip addr show dev bond0 | grep "link/ether" | tr -s " " | cut -d " " -f 3` ]; then echo good; else echo bad; fi'
+    exit-status: 0
+    timeout: 1000
+    skip: false
+  {{end}}

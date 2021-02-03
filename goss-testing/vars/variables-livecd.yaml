@@ -103,7 +103,7 @@ artifact_dirs:
     - ncn-w003
     symlinks:
       - filesystem.squashfs
-      - initrd.img.xzq
+      - initrd.img.xz
       - kernel
 
 unbound_hostnames:

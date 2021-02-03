@@ -1,0 +1,11 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  bmc_connectivity:
+    title: BMC Connectivity
+    meta:
+      desc: Validates connectivity of the BMCs from the PIT node.
+      sev: 0
+    exec: ipmitool chassis status
+    exit-status: 0
+    timeout: 1000
+    skip: false

@@ -1,0 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+gossfile:
+  ../tests/goss-ceph-storage-health.yaml: {}
+  ../tests/goss-ceph-storage-services.yaml: {}

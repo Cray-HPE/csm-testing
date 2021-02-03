@@ -1,0 +1,13 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Variable set: dns_services
+dns:
+{{range $name := index .Vars "dns_services"}}
+  {{$name}}:
+    title: Service '{{$name}}' Resolvable
+    meta:
+      desc: Validates that service '{{$name}}' is resolvable in DNS.
+      sev: 0
+    resolvable: true
+    timeout: 10000
+    skip: false
+{{end}}

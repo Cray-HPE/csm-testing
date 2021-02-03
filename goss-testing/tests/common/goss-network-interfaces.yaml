@@ -1,0 +1,14 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Variable set: network_interfaces
+command:
+{{range $interface := index .Vars "network_interfaces"}}
+  interface_{{$interface}}:
+    title: Interface '{{$interface}}' Has VLAN
+    meta:
+      desc: Ensures VLAN was created for network interface '{{$interface}}'.
+      sev: 0
+    exec: 'ip link show dev {{$interface}}'
+    exit-status: 0
+    timeout: 10000
+    skip: false
+{{end}}

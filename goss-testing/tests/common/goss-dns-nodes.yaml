@@ -1,0 +1,18 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Variable set: dns_nodes
+dns:
+  # Iterate through the nodes sharing the same networks
+  {{range $nodes := index .Vars "dns_nodes"}}
+  # Iterate through each node
+  {{range $name := index $nodes "nodes"}}
+  # Iterate through each network for the node
+  {{range $network := index $nodes "networks"}}
+  {{printf "%s.%s:" $name $network}}
+    title: Node '{{$name}}' Resolvable
+    meta:
+      desc: Validates that node {{$name}} is resolvable in DNS.
+      sev: 0
+    resolvable: true
+  {{end}}
+  {{end}}
+  {{end}}
