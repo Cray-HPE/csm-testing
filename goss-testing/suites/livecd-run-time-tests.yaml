@@ -1,15 +1,15 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 gossfile:
-  ../tests/livecd/goss-bmc-check.yaml: {}
-  ../tests/livecd/goss-dns-nodes.yaml: {}
-  ../tests/livecd/goss-dns-services.yaml: {}
-  ../tests/livecd/goss-services-enabled.yaml: {}
-  ../tests/livecd/goss-services-running.yaml: {}
-  ../tests/livecd/goss-interfaces-have-same-mac.yaml: {}
-  ../tests/livecd/goss-bond-members-have-links.yaml: {}
-  ../tests/livecd/goss-data_json-multiple-dns-entries.yaml: {}
-  ../tests/livecd/goss-ncns-in-dnsmasq-leases.yaml: {}
-  ../tests/livecd/goss-podman-basecamp.yaml: {}
-  ../tests/livecd/goss-podman-nexus.yaml: {}
-  ../tests/livecd/goss-ping-arti_dev-accessibility-test.yaml: {}
-  ../tests/livecd/goss-net-dhcp-pools-in-dnsmasq_d-are-correctly-defined.yaml: {}
+  ../tests/goss-bmc-check.yaml: {}
+  ../tests/goss-dns-nodes.yaml: {}
+  ../tests/goss-dns-services.yaml: {}
+  ../tests/goss-services-enabled.yaml: {}
+  ../tests/goss-services-running.yaml: {}
+  ../tests/goss-interfaces-have-same-mac.yaml: {}
+  ../tests/goss-bond-members-have-links.yaml: {}
+  ../tests/goss-data_json-multiple-dns-entries.yaml: {}
+  ../tests/goss-ncns-in-dnsmasq-leases.yaml: {}
+  ../tests/goss-podman-basecamp.yaml: {}
+  ../tests/goss-podman-nexus.yaml: {}
+  ../tests/goss-ping-arti_dev-accessibility-test.yaml: {}
+  ../tests/goss-net-dhcp-pools-in-dnsmasq_d-are-correctly-defined.yaml: {}
