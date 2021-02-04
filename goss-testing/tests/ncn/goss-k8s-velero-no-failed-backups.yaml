@@ -3,9 +3,7 @@ command:
   k8s_velero_failed_backups:
     title: Kubernetes Velero No Failed Backups
     meta:
-      desc: Validates There are no Velero failed backups
+      desc: Validates there are no failed Velero backups
       sev: 0
-    exec: "kubectl get backups -A -o json | jq '.items[].status.phase | contains(\"Failed\")' | wc -l"
-    stdout:
-    - "/^0$/"
+    exec: "kubectl get backups -A -o json | jq -e '.items[].status.phase | contains(\"Failed\") | not'"
     exit-status: 0

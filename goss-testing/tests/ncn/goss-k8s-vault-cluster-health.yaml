@@ -5,7 +5,7 @@ command:
     meta:
       desc: Kubernetes Check cray-vault Vault Cluster Status
       sev: 0
-    exec: "for n in $(seq 0 2); do kubectl exec -it -n vault -c vault cray-vault-${n} -- sh -c 'export VAULT_ADDR=http://localhost:8200; vault status'; done | egrep 'Initialized|Sealed|HA Mode | sort -u'"
+    exec: "for n in $(seq 0 2); do kubectl exec -it -n vault -c vault cray-vault-${n} -- sh -c 'export VAULT_ADDR=http://localhost:8200; vault status'; done | egrep 'Initialized|Sealed|HA Mode' | sort -u"
     stdout:
     - "/^HA Mode\\s+active$/"
     - "/^HA Mode\\s+standby$/"
