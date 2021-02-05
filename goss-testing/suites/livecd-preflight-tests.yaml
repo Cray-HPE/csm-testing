@@ -9,7 +9,6 @@ gossfile:
   ../tests/goss-bond-members-have-correct-mtu.yaml: {}
   ../tests/goss-mgmt0-mgmt1-have-carrier.yaml: {}
   ../tests/goss-dns-services.yaml: {}
-  ../tests/goss-unbound-dns-entries.yaml: {}
   ../tests/goss-podman-basecamp.yaml: {}
   ../tests/goss-podman-nexus.yaml: {}
   ../tests/goss-interface-has-ip.yaml: {}
@@ -20,5 +19,4 @@ gossfile:
   ../tests/goss-dhcp-router-ip-distinct.yaml: {}
   ../tests/goss-network-ips-not-in-ip-pools.yaml: {}
   ../tests/goss-sls_input-check-switch-ips.yaml: {}
-  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
   ../tests/goss-remote-ncn_mac-in_data_json-and-statics_conf.yaml: {}
