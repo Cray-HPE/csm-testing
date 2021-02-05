@@ -18,7 +18,6 @@ gossfile:
   ../tests/goss-ipxe-permissions.yaml: {}
   ../tests/goss-data_json-multiple-dns-entries.yaml: {}
   ../tests/goss-dhcp-router-ip-distinct.yaml: {}
-  ../tests/goss-s4-preflight-checks.yaml: {}
   ../tests/goss-network-ips-not-in-ip-pools.yaml: {}
   ../tests/goss-sls_input-check-switch-ips.yaml: {}
   ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}

@@ -40,16 +40,16 @@ function run_k8s_tests {
 }
 
 # master nodes
-echo $'\e[1;33m'Master Node Kubernetes Tests$'\e[0m'
-echo $'\e[1;33m'----------------------------$'\e[0m'
+echo $'\e[1;33m'Master Node Kubernetes Checks$'\e[0m'
+echo $'\e[1;33m'-----------------------------$'\e[0m'
 echo
 # find the master node names and query the server endpoint
 grep NMN /etc/dnsmasq.d/statics.conf | grep ncn-m | grep -v ncn-m001 | awk -F"," '{print $5}' | \
   while read node ; do run_k8s_tests "master" "$node" "8996" "ncn-kubernetes-tests-master" echo ; done
 
 # worker nodes
-echo $'\e[1;33m'Worker Node Kubernetes Tests$'\e[0m'
-echo $'\e[1;33m'----------------------------$'\e[0m'
+echo $'\e[1;33m'Worker Node Kubernetes Checks$'\e[0m'
+echo $'\e[1;33m'-----------------------------$'\e[0m'
 echo
 # find the worker node names and query the server endpoint
 grep NMN /etc/dnsmasq.d/statics.conf | grep ncn-w | awk -F"," '{print $5}' | while read node ; \
