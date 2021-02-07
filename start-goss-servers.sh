@@ -23,6 +23,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 vars="/opt/cray/tests/install/ncn/vars/variables-ncn.yaml"
+export GOSS_BASE=/opt/cray/tests/install/ncn
 
 # start server with NCN test suites (as of now, goss server only runs on NCNs)
 # designated goss-servers port range: 8994-8999
