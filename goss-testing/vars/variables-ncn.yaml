@@ -119,3 +119,6 @@ commands:
   - 'cray --version'
 
 bond_member_mtu: 9000
+
+staticsconf:
+  - ""
