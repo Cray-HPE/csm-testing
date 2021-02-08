@@ -33,11 +33,11 @@ install -d -m 644 %{buildroot}%{livecd}/vars
 install -d -m 644 %{buildroot}%{ncn}/automated
 install -d -m 644 %{buildroot}%{ncn}/tests
 install -d -m 644 %{buildroot}%{ncn}/vars
-install -m 644 goss-testing/automated/livecd-*  %{buildroot}%{livecd}/automated
+install -m 644 goss-testing/automated/*         %{buildroot}%{livecd}/automated
 install -m 644 goss-testing/tests/livecd/*.yaml %{buildroot}%{livecd}/tests
 install -m 644 goss-testing/tests/common/*.yaml %{buildroot}%{livecd}/tests
 install -m 644 goss-testing/vars/*.yaml         %{buildroot}%{livecd}/vars
-install -m 644 goss-testing/automated/ncn-*     %{buildroot}%{ncn}/automated
+install -m 644 goss-testing/automated/*         %{buildroot}%{ncn}/automated
 install -m 644 goss-testing/tests/ncn/*.yaml    %{buildroot}%{ncn}/tests
 install -m 644 goss-testing/tests/common/*.yaml %{buildroot}%{ncn}/tests
 install -m 644 goss-testing/vars/*.yaml         %{buildroot}%{ncn}/vars
