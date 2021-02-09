@@ -40,7 +40,6 @@ function run_preflight_tests {
     echo $results | jq -c '.results | sort_by(.result) | .[]' | while read test; do
       if ! `echo $test | jq '.result' > /dev/null 2>&1`; then
         continue
-        exit 2
       else
         result=`echo $test | jq '.result'`
       fi
