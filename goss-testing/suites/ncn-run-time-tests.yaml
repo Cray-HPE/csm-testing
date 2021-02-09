@@ -4,10 +4,8 @@ gossfile:
   ../tests/goss-interface-has-ip.yaml: {}
   ../tests/goss-bond-members-have-links.yaml: {}
   ../tests/goss-network-interfaces.yaml: {}
-  ../tests/goss-services-enabled.yaml: {}
+  ../tests/goss-services-running.yaml: {}
   ../tests/goss-interfaces-have-same-mac.yaml: {}
   ../tests/goss-resolvconf-ips.yaml: {}
   ../tests/goss-remote-resolv_conf.yaml: {}
-  ../tests/goss-ceph-storage-health.yaml: {}
-  ../tests/goss-ceph-storage-services.yaml: {}
   ../tests/goss-platform-ca-certs-exist.yaml: {}
