@@ -1,4 +1,4 @@
-@Library('dst-shared') _
+@Library("dst-shared@release/shasta-1.4") _
 
 def skipSuccess = false
 
