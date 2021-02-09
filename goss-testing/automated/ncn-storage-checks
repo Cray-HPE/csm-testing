@@ -26,8 +26,8 @@ function run_storage_tests {
   port=$2
 
   echo
-  echo Running tests against storage node $'\e[1;33m'$node$'\e[0m'
-  url=http://$node:$port/ncn-storage-tests
+  echo Running tests against storage node $'\e[1;33m'$NODE$'\e[0m'
+  url=http://$NODE:$port/ncn-storage-tests
 
   echo Server URL: $url
   results=`curl -s {$url}`
