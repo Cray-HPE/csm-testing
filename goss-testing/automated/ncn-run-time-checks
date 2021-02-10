@@ -88,6 +88,11 @@ echo $'\e[1;33m'NCN Run-Time Checks$'\e[0m'
 echo $'\e[1;33m'-------------------$'\e[0m'
 
 # find the ncn node names and query the server endpoint
-cat /etc/hosts | grep -ohE "ncn-[m,w,s]([0-9]{3})" | awk '!a[$0]++' | while read node ; do run_run-time_tests "$node" "8994" ; done
+if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
+  cat /etc/dnsmasq.d/statics.conf | grep -ohE "ncn-[m,w,s]([0-9]{3})" | grep -v ncn-m001 | awk '!a[$0]++' | \
+    while read node ; do run_run-time_tests "$node" "8994" ; done
+else
+  cat /etc/hosts | grep -ohE "ncn-[m,w,s]([0-9]{3})" | awk '!a[$0]++' | while read node ; do run_run-time_tests "$node" "8994" ; done
+fi
 
 exit
