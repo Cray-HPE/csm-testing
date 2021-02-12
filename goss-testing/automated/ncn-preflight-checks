@@ -32,43 +32,44 @@ function run_preflight_tests {
   echo Server URL: $url
   results=`curl -s {$url}`
 
-  if ! `echo $results | jq -e > /dev/null 2>&1`; then
-    echo $'\e[1;31m'ERROR: Output not valid JSON$'\e[0m'
-    return 1
-  fi
   if [[ $? == 0 ]]; then
-    echo $results | jq -c '.results | sort_by(.result) | .[]' | while read test; do
-      if ! `echo $test | jq '.result' > /dev/null 2>&1`; then
-        continue
-      else
-        result=`echo $test | jq '.result'`
-      fi
+    if ! `echo $results | jq -e > /dev/null 2>&1`; then
+      echo $'\e[1;31m'ERROR: Output not valid JSON$'\e[0m'
+      return 1
+    else
+      echo $results | jq -c '.results | sort_by(.result) | .[]' | while read test; do
+        if ! `echo $test | jq '.result' > /dev/null 2>&1`; then
+          continue
+        else
+          result=`echo $test | jq '.result'`
+        fi
 
-      if [ -z $result ]; then
-        continue
-      elif [ $result == 0 ]; then
-        result=PASS
-        echo $'\e[1;32m'
-      else
-        result=FAIL
-        echo $'\e[1;31m'
-      fi
+        if [ -z $result ]; then
+          continue
+        elif [ $result == 0 ]; then
+          result=PASS
+          echo $'\e[1;32m'
+        else
+          result=FAIL
+          echo $'\e[1;31m'
+        fi
 
-      title=`echo $test | jq -r '.title'`
-      description=`echo $test | jq -r '.meta.desc'`
-      severity=`echo $test | jq -r '.meta.sev'`
-      summary=`echo $test | jq -r '."summary-line"'`
-      time=`echo $test | jq -r '.duration'`
-      time=`echo "scale=8; $time/1000000000" | bc | awk '{printf "%.8f\n", $0}'`
+        title=`echo $test | jq -r '.title'`
+        description=`echo $test | jq -r '.meta.desc'`
+        severity=`echo $test | jq -r '.meta.sev'`
+        summary=`echo $test | jq -r '."summary-line"'`
+        time=`echo $test | jq -r '.duration'`
+        time=`echo "scale=8; $time/1000000000" | bc | awk '{printf "%.8f\n", $0}'`
 
-      echo "Result: $result"
-      echo "Test Name: $title"
-      echo "Description: $description"
-      echo "Severity: $severity"
-      echo "Test Summary: $summary"
-      echo "Execution Time: $time seconds"
-      echo "Node: $NODE"
-    done
+        echo "Result: $result"
+        echo "Test Name: $title"
+        echo "Description: $description"
+        echo "Severity: $severity"
+        echo "Test Summary: $summary"
+        echo "Execution Time: $time seconds"
+        echo "Node: $NODE"
+      done
+    fi
 
     echo $'\e[0m'
 
