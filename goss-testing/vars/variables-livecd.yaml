@@ -12,27 +12,6 @@ switch_mellanox:
   password: "!nitial0"
   mtu: 9216
 
-ncns:
-  - ncn-w001
-  - ncn-w002
-  - ncn-w003
-  - ncn-s001
-  - ncn-s002
-  - ncn-s003
-  - ncn-m001
-  - ncn-m002
-  - ncn-m003
-
-ncns_nopit:
-  - ncn-w001
-  - ncn-w002
-  - ncn-w003
-  - ncn-s001
-  - ncn-s002
-  - ncn-s003
-  - ncn-m002
-  - ncn-m003
-
 dns_nodes:
   - nodes:
     - ncn-m001

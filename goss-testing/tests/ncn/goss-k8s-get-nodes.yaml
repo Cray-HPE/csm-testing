@@ -1,14 +1,13 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
-# Variable set: ncns_k8s
 command:
-  {{range $ncn := index .Vars "ncns_k8s"}}
-  test_k8s_get_nodes_check_node_{{$ncn}}:
-    title: Kubernetes Node '{{$ncn}}' Exists
+  k8s_nodes_exist:
+    title: Kubernetes Nodes Exist
     meta:
-      desc: Validates Kubernetes node '{{$ncn}}' node exists.
+      desc: Validates expected Kubernetes nodes exists via kubectl command based on those defined in the /etc/hosts file.
       sev: 0
-    exec: "kubectl get nodes"
-    stdout: 
-    - "{{$ncn}}"
+    exec: "cat /etc/hosts | grep -ohE 'ncn-[m,w,s]([0-9]{3})' | awk '!a[$0]++' | while read node ; do kubectl get nodes | grep $node; if [[ $? != 0 ]]; then echo 'FAIL'; fi; done"
     exit-status: 0
-  {{end}}
+    stdout:
+      - "!FAIL"
+    timeout: 1000
+    skip: false
