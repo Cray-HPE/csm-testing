@@ -16,3 +16,4 @@ gossfile:
   ../tests/goss-k8s-velero-backup-storage-locations-available.yaml: {}
   ../tests/goss-k8s-velero-backup-vault-schedule-exists.yaml: {}
   ../tests/goss-k8s-velero-no-failed-backups.yaml: {}
+  ../tests/goss-spire-bss-metadata-exist.yaml: {}

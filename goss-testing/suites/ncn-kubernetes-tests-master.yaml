@@ -13,4 +13,3 @@ gossfile:
   ../tests/goss-k8s-trustedcerts-bss-certs-exist.yaml: {}
   ../tests/goss-k8s-trustedcerts-configmaps-exist.yaml: {}
   ../tests/goss-k8s-vault-cluster-health.yaml: {}
-  ../tests/goss-spire-bss-metadata-exist.yaml: {}
