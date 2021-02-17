@@ -3,7 +3,7 @@ command:
   k8s_nodes_exist:
     title: Kubernetes Nodes Exist
     meta:
-      desc: Validates expected Kubernetes nodes exists via kubectl command based on those defined in the /etc/hosts file.
+      desc: Validates expected Kubernetes nodes exist via kubectl command based on those defined in the /etc/hosts file.
       sev: 0
     exec: "cat /etc/hosts | grep -ohE 'ncn-[m,w,s]([0-9]{3})' | awk '!a[$0]++' | while read node ; do kubectl get nodes | grep $node; if [[ $? != 0 ]]; then echo 'FAIL'; fi; done"
     exit-status: 0
