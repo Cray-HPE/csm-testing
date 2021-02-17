@@ -8,3 +8,4 @@ gossfile:
   ../tests/goss-remote-ncn_mac-in_data_json-and-statics_conf.yaml: {}
   ../tests/goss-resolvconf-ips.yaml: {}
   ../tests/goss-default-gateway-points-to-CAN-gateway.yaml: {}
+  ../tests/goss-bond-members-have-correct-mtu.yaml: {}

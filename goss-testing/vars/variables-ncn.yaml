@@ -94,3 +94,5 @@ bond_member_mtu: 9000
 
 staticsconf:
   - ""
+
+bond_member_mtu: 9000
