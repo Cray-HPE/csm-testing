@@ -94,4 +94,4 @@ unbound_hostnames:
   - packages
   - registry
 
-bond_member_mtu: 9000
+bond_member_mtu: 1500
