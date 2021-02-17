@@ -40,7 +40,7 @@ for server in data.ncnList:
     # get the MAC from the NCN
     mac = remoteCmd(server, getMACcommand).decode().strip()
     
-    # ensure that the MAC address is somehere in data.json
+    # ensure that the MAC address is somewhere in data.json
     if mac in data.ncnKeys:
         # ensure that the hostname's MAC in data.json matches reality
         if data.ncnList[server] == mac:
