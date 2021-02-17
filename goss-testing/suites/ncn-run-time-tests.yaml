@@ -12,3 +12,4 @@ gossfile:
   ../tests/goss-k8s-sealed-secret-key.yaml: {}
   ../tests/goss-spire-verify-pods.yaml: {}
   ../tests/goss-spire-agent-service-running.yaml: {}
+  ../tests/goss-k8s-storageclass.yaml: {}
