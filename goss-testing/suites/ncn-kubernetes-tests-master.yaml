@@ -6,7 +6,6 @@ gossfile:
   ../tests/goss-k8s-get-nodes.yaml: {}
   ../tests/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
   ../tests/goss-k8s-storage-configmaps.yaml: {}
-  ../tests/goss-k8s-storageclass.yaml: {}
   ../tests/goss-k8s-verify-cluster.yaml: {}
   ../tests/goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
   ../tests/goss-k8s-certmanager-certs-ready.yaml: {}
