@@ -18,4 +18,3 @@ gossfile:
   ../tests/goss-k8s-velero-no-failed-backups.yaml: {}
   ../tests/goss-unbound-dns-entries.yaml: {}
   ../tests/goss-spire-agent-service-running.yaml: {}
-  ../tests/goss-k8s-sealed-secret-key.yaml: {}

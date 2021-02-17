@@ -5,7 +5,6 @@ gossfile:
   ../tests/goss-weave-status-daemon-sets.yaml: {}
   ../tests/goss-k8s-get-nodes.yaml: {}
   ../tests/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
-  ../tests/goss-k8s-sealed-secret-key.yaml: {}
   ../tests/goss-k8s-storage-configmaps.yaml: {}
   ../tests/goss-k8s-storageclass.yaml: {}
   ../tests/goss-k8s-verify-cluster.yaml: {}
