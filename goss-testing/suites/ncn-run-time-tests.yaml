@@ -9,5 +9,6 @@ gossfile:
   ../tests/goss-resolvconf-ips.yaml: {}
   ../tests/goss-remote-resolv_conf.yaml: {}
   ../tests/goss-platform-ca-certs-exist.yaml: {}
+  ../tests/goss-k8s-sealed-secret-key.yaml: {}
   ../tests/goss-spire-verify-pods.yaml: {}
   ../tests/goss-spire-agent-service-running.yaml: {}
