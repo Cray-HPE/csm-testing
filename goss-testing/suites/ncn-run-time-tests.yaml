@@ -13,3 +13,6 @@ gossfile:
   ../tests/goss-spire-verify-pods.yaml: {}
   ../tests/goss-spire-agent-service-running.yaml: {}
   ../tests/goss-k8s-storageclass.yaml: {}
+  ../tests/goss-k8s-velero-backup-storage-locations-available.yaml: {}
+  ../tests/goss-k8s-velero-backup-vault-schedule-exists.yaml: {}
+  ../tests/goss-k8s-velero-no-failed-backups.yaml: {}
