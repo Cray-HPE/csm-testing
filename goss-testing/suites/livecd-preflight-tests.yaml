@@ -1,7 +1,6 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 gossfile:
   ../tests/goss-any-switch-mtu-spine-port.yaml: {}
-  ../tests/goss-aruba-switch-configs.yaml: {}
   ../tests/goss-bmc-check.yaml: {}
   ../tests/goss-command-available.yaml: {}
   ../tests/goss-network-interfaces.yaml: {}
