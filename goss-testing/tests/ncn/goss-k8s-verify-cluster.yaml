@@ -13,6 +13,5 @@ command:
     - /^kube-proxy.*Running/
     - /^kube-scheduler.*Running/
     - /^weave-net.*Running/
-    - /^etcd-ncn.*Running/
     - /^coredns.*Running/
     exit-status: 0
