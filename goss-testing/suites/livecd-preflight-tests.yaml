@@ -1,7 +1,6 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 gossfile:
   ../tests/goss-any-switch-mtu-spine-port.yaml: {}
-  ../tests/goss-aruba-switch-configs.yaml: {}
   ../tests/goss-bmc-check.yaml: {}
   ../tests/goss-command-available.yaml: {}
   ../tests/goss-network-interfaces.yaml: {}
@@ -17,5 +16,4 @@ gossfile:
   ../tests/goss-ipxe-permissions.yaml: {}
   ../tests/goss-data_json-multiple-dns-entries.yaml: {}
   ../tests/goss-dhcp-router-ip-distinct.yaml: {}
-  ../tests/goss-network-ips-not-in-ip-pools.yaml: {}
   ../tests/goss-sls_input-check-switch-ips.yaml: {}

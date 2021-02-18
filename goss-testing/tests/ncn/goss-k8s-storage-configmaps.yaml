@@ -7,7 +7,7 @@ command:
       sev: 0
     exec: "kubectl get cm | grep csi-sc"
     stdout:
-    - /^cephfs-csi-sc.*[1-9]+.*[0-9]+[a-z,A-Z]/
-    - /^kube-csi-sc.*[1-9]+.*[0-9]+[a-z,A-Z]/
-    - /^sma-csi-sc.*[1-9]+.*[0-9]+[a-z,A-Z]/
+    - cephfs-csi-sc
+    - kube-csi-sc
+    - sma-csi-sc
     exit-status: 0
