@@ -37,7 +37,6 @@ dns_nodes:
       - "hmn"
 
 network_interfaces:
-  - bond0
   - vlan002
   - vlan004
   - vlan007
@@ -76,7 +75,7 @@ services_running:
 datajson:
   - "/mnt/configs/data.json"
 
-resolvconf_ips:
+unbound_ip:
   - 10.*.100.225
 
 ceph_services:

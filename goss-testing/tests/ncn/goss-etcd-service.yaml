@@ -1,0 +1,9 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+service:
+  etcd:
+    title: Service 'etcd' Running
+    meta:
+      desc: Checks whether etcd service is running.
+      sev: 0
+    enabled: true
+    running: true
