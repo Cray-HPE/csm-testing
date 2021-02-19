@@ -1,0 +1,12 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Variable set: unbound_ip
+command:
+  unbound_ip_in_resolveconf:
+    title: Unbound Nameserver In resolv.conf
+    meta:
+      desc: Validates whether Unbound nameserver IP exists in resolv.conf.
+      sev: 0
+    exec: "if [ $(cat /etc/resolv.conf | grep {{.Vars.unbound_ip}}| wc -l) -gt 0 ]; then exit 0; else exit 1;fi"
+    exit-status: 0
+    timeout: 10000
+    skip: false
