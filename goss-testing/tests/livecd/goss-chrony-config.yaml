@@ -1,0 +1,12 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+file:
+  /etc/chrony.d/cray.conf:
+    title: chrony config exists
+    meta:
+      desc: Validates that chrony config for NCNs exists
+      sev: 0
+    exists: true
+    mode: "0644"
+    owner: root
+    group: root
+    filetype: file
