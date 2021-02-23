@@ -1,0 +1,12 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  zypper_lr_repo_count:
+    title: No repos exist
+    meta:
+      desc: No repos exist
+      sev: 0
+    # List repos, exlcuding the meta on top, and count how many there are
+    exec: "zypper lr | grep -c ^[0-9]"
+    stdout:
+    - "0"
+    exit-status: 0
