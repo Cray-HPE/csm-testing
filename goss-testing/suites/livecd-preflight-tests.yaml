@@ -17,3 +17,4 @@ gossfile:
   ../tests/goss-data_json-multiple-dns-entries.yaml: {}
   ../tests/goss-dhcp-router-ip-distinct.yaml: {}
   ../tests/goss-sls_input-check-switch-ips.yaml: {}
+  ../tests/goss-chrony-config.yaml: {}
