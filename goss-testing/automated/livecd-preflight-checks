@@ -22,12 +22,29 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 export GOSS_FILE="/opt/cray/tests/install/livecd/suites/livecd-preflight-tests.yaml"
-export GOSS_VARS="/opt/cray/tests/install/livecd/vars/variables-livecd.yaml"
+vars_file="/opt/cray/tests/install/livecd/vars/variables-livecd.yaml"
+
+nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE 'ncn-[m,w,s]([0-9]{3})' | awk '!a[$0]++')
+tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
+
+# add node names from statics.conf to temp variables file
+if [ `echo $nodes | wc -w` -ne 0 ];then
+  echo "nodes:" >> $tmpvars
+  for node in $nodes; do
+    echo "  - $node" >> $tmpvars
+    echo "" >> $tmpvars
+  done
+else
+  echo "Node names could not be found in statics.conf file! Exiting now."
+  exit 1
+fi
+cat $vars_file >> $tmpvars
 
 echo $'\e[1;33m'Running LiveCD preflight checks \(may take a few minutes to complete\)...$'\e[0m'
 
 # Run the LiveCD preflight Goss test suite
-results=`/usr/bin/goss validate -f json`
+export GOSS_VARS=$tmpvars
+results=$(/usr/bin/goss validate -f json)
 
 if ! `echo $results | jq -e > /dev/null 2>&1`; then
   echo $'\e[1;31m'ERROR: Output not valid JSON$'\e[0m'
@@ -35,7 +52,16 @@ if ! `echo $results | jq -e > /dev/null 2>&1`; then
 fi
 
 echo $results | jq -c '.results | sort_by(.result) | .[]' | while read test; do
+  # substring substitutions
+  test=$(echo $test | sed -e 's/\\s/ /g')
+  test=$(echo $test | sed -e  's/"gt"/gt/g')
+  test=$(echo $test | sed -e  's/"lt"/lt/g')
+
   if ! `echo $test | jq '.result' > /dev/null 2>&1`; then
+    echo
+    echo $'\e[0m'Could not format test results JSON, so dumping raw output below.
+    echo
+    echo $test
     continue
   else
     result=`echo $test | jq '.result'`
