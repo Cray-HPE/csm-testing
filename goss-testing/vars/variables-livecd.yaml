@@ -47,7 +47,7 @@ datajson:
   - "/var/www/ephemeral/configs/data.json"
 
 staticsconf:
-  - "/var/www/ephemeral/statics.conf"
+  - "/etc/dnsmasq.d/statics.conf"
 
 qnd:
   - "/var/www/ephemeral/qnd-1.4.sh"
