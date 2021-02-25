@@ -8,5 +8,5 @@ command:
     # List repos, exlcuding the meta on top, and count how many there are
     exec: "zypper lr | grep -c ^[0-9]"
     stdout:
-    - "0"
-    exit-status: 0
+    - 0
+    exit-status: 1
