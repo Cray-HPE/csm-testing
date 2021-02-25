@@ -39,7 +39,16 @@ function run_k8s_tests {
       return 1
     else
       echo $results | jq -c '.results | sort_by(.result) | .[]' | while read test; do
+        # substring substitutions
+        test=$(echo $test | sed -e 's/\\s/ /g')
+        test=$(echo $test | sed -e  's/"gt"/gt/g')
+        test=$(echo $test | sed -e  's/"lt"/lt/g')
+
         if ! `echo $test | jq '.result' > /dev/null 2>&1`; then
+          echo
+          echo $'\e[0m'Could not format test results JSON, so dumping raw output below.
+          echo
+          echo $test
           continue
         else
           result=`echo $test | jq '.result'`
