@@ -5,3 +5,4 @@ gossfile:
   ../tests/goss-mgmt0-mac-test.yaml: {}
   ../tests/goss-data_json-multiple-dns-entries.yaml: {}
   ../tests/goss-packages-installed.yaml: {}
+  ../tests/goss-no-repos-exist.yaml: {}
