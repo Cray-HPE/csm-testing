@@ -1,6 +1,6 @@
 [Unit]
 Description=goss-servers
-After=network.target
+After=cloud-init.target network.target cloud-init.service
 StartLimitIntervalSec=0
 
 [Service]
