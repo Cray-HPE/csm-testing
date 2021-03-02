@@ -22,55 +22,24 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+vars="/opt/cray/tests/install/ncn/vars/variables-ncn.yaml"
 export GOSS_BASE=/opt/cray/tests/install/ncn
-vars_file="/opt/cray/tests/install/ncn/vars/variables-ncn.yaml"
-
-nodes=$(cat /etc/hosts | grep -ohE 'ncn-[m,w,s]([0-9]{3})' | awk '!a[$0]++')
-tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
-
-# add node names from /etc/hosts to temp variables file
-if [ `echo $nodes | wc -w` -ne 0 ];then
-  echo "nodes:" >> $tmpvars
-  for node in $nodes; do
-    echo "  - $node" >> $tmpvars
-    echo "" >> $tmpvars
-  done
-else
-  echo "Node names could not be found in /etc/hosts file! Exiting now."
-  exit 1
-fi
-cat $vars_file >> $tmpvars
 
 # start server with NCN test suites (as of now, goss server only runs on NCNs)
 # designated goss-servers port range: 8994-8999
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-run-time-tests.yaml --vars $tmpvars serve \
-  --format json \
-  --endpoint /ncn-run-time-tests \
-  --max-concurrent 4 \
-  --listen-addr :8994 &
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-run-time-tests.yaml --vars $vars \
+serve --format json --endpoint /ncn-run-time-tests --max-concurrent 4 --listen-addr :8994 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-preflight-tests.yaml --vars $tmpvars serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-preflight-tests \
-  --listen-addr :8995 &
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-preflight-tests.yaml --vars $vars \
+serve --format json --endpoint /ncn-preflight-tests --max-concurrent 4 --listen-addr :8995 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-master.yaml --vars $tmpvars serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-kubernetes-tests-master \
-  --listen-addr :8996 &
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-master.yaml --vars $vars \
+serve --format json --endpoint /ncn-kubernetes-tests-master --max-concurrent 4 --listen-addr :8996 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-worker.yaml --vars $tmpvars serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-kubernetes-tests-worker \
-  --listen-addr :8998 &
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-storage-tests.yaml --vars $vars \
+serve --format json --endpoint /ncn-storage-tests --max-concurrent 4 --listen-addr :8997 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-storage-tests.yaml --vars $tmpvars serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-storage-tests \
-  --listen-addr :8997 &
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-worker.yaml --vars $vars \
+serve --format json --endpoint /ncn-kubernetes-tests-worker --max-concurrent 4 --listen-addr :8998 &
 
 exit
