@@ -12,11 +12,15 @@ switch_mellanox:
   password: "!nitial0"
   mtu: 9216
 
-networks:
-  - "nmn"
-  - "hmn"
-  - "mtl"
-  - "can"
+dns_nodes:
+  - nodes:
+    - ncn-m001
+    networks:
+      - ""
+      - "nmn"
+      - "hmn"
+      - "mtl"
+      - "can"
 
 dns_services:
   - arti.dev.cray.com
