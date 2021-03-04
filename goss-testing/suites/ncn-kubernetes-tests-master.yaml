@@ -10,3 +10,4 @@ gossfile:
   ../tests/goss-k8s-certmanager-issuers-ready.yaml: {}
 # ../tests/goss-k8s-trustedcerts-configmaps-exist.yaml: {}
 # ../tests/goss-k8s-vault-cluster-health.yaml: {}
+  ../tests/goss-sdc-drive-master.yaml: {}
