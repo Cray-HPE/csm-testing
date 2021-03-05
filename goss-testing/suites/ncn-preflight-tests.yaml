@@ -1,5 +1,6 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 gossfile:
+  ../tests/goss-dns-nodes.yaml: {}
   ../tests/goss-k8s-get-nodes.yaml: {}
   ../tests/goss-command-available.yaml: {}
   ../tests/goss-basecamp-json-ncns.yaml: {}
