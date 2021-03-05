@@ -5,7 +5,7 @@ command:
     meta:
       desc: On instances with a mgmt0 interface, checks if they have a carrier.
       sev: 0
-    exec: "ip link | grep 'mgmt0\\|mgmt1' | grep DOWN || echo 'PASS'"
+    exec: "ip link | grep -E 'mgmt0|mgmt1' | grep DOWN || echo 'PASS'"
     stdout:
       - PASS
     exit-status: 0
