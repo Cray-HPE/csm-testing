@@ -6,7 +6,7 @@ gossfile:
   ../tests/goss-network-interfaces.yaml: {}
   ../tests/goss-interfaces-have-same-mac.yaml: {}
   ../tests/goss-unbound-ip.yaml: {}
-  ../tests/goss-platform-ca-certs-exist.yaml: {}
+# ../tests/goss-platform-ca-certs-exist.yaml: {}
 # ../tests/goss-k8s-sealed-secret-key.yaml: {}
 # ../tests/goss-spire-agent-healthcheck.yaml: {}
 # ../tests/goss-spire-bss-metadata-exist.yaml: {}
