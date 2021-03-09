@@ -8,9 +8,6 @@ gossfile:
   ../tests/goss-unbound-ip.yaml: {}
 # ../tests/goss-platform-ca-certs-exist.yaml: {}
 # ../tests/goss-k8s-sealed-secret-key.yaml: {}
- ../tests/goss-spire-agent-healthcheck.yaml: {}
- ../tests/goss-spire-bss-metadata-exist.yaml: {}
- ../tests/goss-spire-verify-pods.yaml: {}
 # ../tests/goss-k8s-storageclass.yaml: {}
   ../tests/goss-k8s-velero-backup-storage-locations-available.yaml: {}
 # ../tests/goss-k8s-velero-backup-vault-schedule-exists.yaml: {}
