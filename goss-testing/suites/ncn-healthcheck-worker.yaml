@@ -6,11 +6,10 @@ gossfile:
   ../tests/goss-network-interfaces.yaml: {}
   ../tests/goss-interfaces-have-same-mac.yaml: {}
   ../tests/goss-unbound-ip.yaml: {}
-# ../tests/goss-platform-ca-certs-exist.yaml: {}
-# ../tests/goss-k8s-sealed-secret-key.yaml: {}
-# ../tests/goss-k8s-storageclass.yaml: {}
+  ../tests/goss-platform-ca-certs-exist.yaml: {}
+  ../tests/goss-k8s-storageclass.yaml: {}
   ../tests/goss-k8s-velero-backup-storage-locations-available.yaml: {}
-# ../tests/goss-k8s-velero-backup-vault-schedule-exists.yaml: {}
+  ../tests/goss-k8s-velero-backup-vault-schedule-exists.yaml: {}
   ../tests/goss-k8s-velero-no-failed-backups.yaml: {}
   ../tests/goss-bond-members-have-correct-mtu.yaml: {}
   ../tests/goss-dns-nodes.yaml: {}
