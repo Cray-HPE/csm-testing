@@ -17,3 +17,4 @@ gossfile:
   ../tests/goss-spire-healthcheck.yaml: {}
   ../tests/goss-spire-bss-metadata-exist.yaml: {}
   ../tests/goss-spire-verify-pods.yaml: {}
+  ../tests/goss-etcd-service.yaml: {}
