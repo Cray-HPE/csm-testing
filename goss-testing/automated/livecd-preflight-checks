@@ -52,7 +52,7 @@ if ! `echo $results | jq -e > /dev/null 2>&1`; then
 fi
 
 echo $results | jq -c '.results | sort_by(.result) | .[]' | while read -r test; do
-  result=$(echo $test | jq '.result')
+  result=$(echo $test | jq -r '.result')
 
   if [ -z $result ]; then
     continue

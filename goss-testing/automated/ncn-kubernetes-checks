@@ -39,7 +39,7 @@ function run_k8s_tests {
       return 1
     else
       echo $results | jq -c '.results | sort_by(.result) | .[]' | while read -r test; do
-        result=$(echo $test | jq '.result')
+        result=$(echo $test | jq -r '.result')
 
         if [ -z $result ]; then
           continue
