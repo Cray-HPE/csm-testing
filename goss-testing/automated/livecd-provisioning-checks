@@ -51,11 +51,9 @@ if ! `echo $results | jq -e > /dev/null 2>&1`; then
   exit 1
 fi
 
-echo $results | jq -c '.results | sort_by(.result) | .[]' | while read test; do
-  # substring substitutions
-  test=$(echo $test | sed -e 's/\\s/ /g')
-  test=$(echo $test | sed -e  's/"gt"/gt/g')
-  test=$(echo $test | sed -e  's/"lt"/lt/g')
+echo $results | jq -c '.results | sort_by(.result) | .[] | tojson' | while read test; do
+  # remove quotes around json string
+  test=$(echo $test | sed 's/^.\(.*\).$/\1/')
 
   if ! `echo $test | jq '.result' > /dev/null 2>&1`; then
     echo

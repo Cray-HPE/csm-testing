@@ -37,11 +37,9 @@ function run_storage_tests {
       echo $'\e[1;31m'ERROR: Output not valid JSON$'\e[0m'
       return 1
     else
-      echo $results | jq -c '.results | sort_by(.result) | .[]' | while read test; do
-        # substring substitutions
-        test=$(echo $test | sed -e 's/\\s/ /g')
-        test=$(echo $test | sed -e  's/"gt"/gt/g')
-        test=$(echo $test | sed -e  's/"lt"/lt/g')
+      echo $results | jq -c '.results | sort_by(.result) | .[] | tojson' | while read test; do
+        # remove quotes around json string
+        test=$(echo $test | sed 's/^.\(.*\).$/\1/')
 
         if ! `echo $test | jq '.result' > /dev/null 2>&1`; then
           echo
