@@ -38,6 +38,8 @@ function run_preflight_tests {
       return 1
     else
       echo $results | jq -c '.results | sort_by(.result) | .[]' | while read -r test; do
+        result=$(echo $test | jq '.result')
+
         if [ -z $result ]; then
           continue
         elif [ $result == 0 ]; then
@@ -48,12 +50,12 @@ function run_preflight_tests {
           echo $'\e[1;31m'
         fi
 
-        title=`echo $test | jq -r '.title'`
-        description=`echo $test | jq -r '.meta.desc'`
-        severity=`echo $test | jq -r '.meta.sev'`
-        summary=`echo $test | jq -r '."summary-line"'`
-        time=`echo $test | jq -r '.duration'`
-        time=`echo "scale=8; $time/1000000000" | bc | awk '{printf "%.8f\n", $0}'`
+        title=$(echo $test | jq -r '.title')
+        description=$(echo $test | jq -r '.meta.desc')
+        severity=$(echo $test | jq -r '.meta.sev')
+        summary=$(echo $test | jq -r '."summary-line"')
+        time=$(echo $test | jq -r '.duration')
+        time=$(echo "scale=8; $time/1000000000" | bc | awk '{printf "%.8f\n", $0}')
 
         echo "Result: $result"
         echo "Test Name: $title"
@@ -67,10 +69,10 @@ function run_preflight_tests {
 
     echo $'\e[0m'
 
-    total=`echo $results | jq -r '.summary."test-count"'`
-    failed=`echo $results | jq -r '.summary."failed-count"'`
-    time=`echo $results | jq -r '.summary."total-duration"'`
-    time=`echo "scale=4; $time/1000000000" | bc | awk '{printf "%.4f\n", $0}'`
+    total=$(echo $results | jq -r '.summary."test-count"')
+    failed=$(echo $results | jq -r '.summary."failed-count"')
+    time=$(echo $results | jq -r '.summary."total-duration"')
+    time=$(echo "scale=4; $time/1000000000" | bc | awk '{printf "%.4f\n", $0}')
 
     echo "Total Tests: $total, Total Passed: $((total-failed)), Total Failed: $failed, Total Execution Time: $time seconds"
   else
