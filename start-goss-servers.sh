@@ -42,7 +42,7 @@ fi
 cat $vars_file >> $tmpvars
 
 # start server with NCN test suites (as of now, goss server only runs on NCNs)
-# designated goss-servers port range: 8994-8999
+# designated goss-servers port range: 8994-9001
 
 nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-preflight-tests.yaml --vars $tmpvars serve \
   --format json \
@@ -68,19 +68,19 @@ nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-storage-tests.yaml
   --endpoint /ncn-storage-tests \
   --listen-addr :8997 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-master --vars $tmpvars serve \
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-master.yaml --vars $tmpvars serve \
   --format json \
   --endpoint /ncn-healthcheck-master \
   --max-concurrent 4 \
   --listen-addr :8994 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-worker --vars $tmpvars serve \
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-worker.yaml --vars $tmpvars serve \
   --format json \
   --endpoint /ncn-healthcheck-worker \
   --max-concurrent 4 \
   --listen-addr :9000 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-storage --vars $tmpvars serve \
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-storage.yaml --vars $tmpvars serve \
   --format json \
   --endpoint /ncn-healthcheck-storage \
   --max-concurrent 4 \
