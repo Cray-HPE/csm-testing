@@ -21,7 +21,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-function run_run-time_tests {
+function run_healthchecks {
   export NODE=$1
   port=$2
 
