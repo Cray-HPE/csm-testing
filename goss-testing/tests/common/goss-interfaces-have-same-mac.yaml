@@ -5,7 +5,7 @@ command:
   check_mac_{{$interface}}:
     title: Interfaces Have Same MAC
     meta:
-      desc: Validates that interface '{$interface}}' has same MAC address as bond0.
+      desc: Validates that interface '{{$interface}}' has same MAC address as bond0.
       sev: 0
     stdout:
     - good
