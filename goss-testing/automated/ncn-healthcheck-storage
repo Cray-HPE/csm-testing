@@ -89,7 +89,7 @@ if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
   cat /etc/dnsmasq.d/statics.conf | grep -ohE "ncn-[s]([0-9]{3})" | grep -v ncn-m001 | awk '!a[$0]++' | \
     while read node ; do run_healthchecks "$node" "9001" ; done
 else
-  cat /etc/hosts | grep -ohE "ncn-[m,w,s]([0-9]{3})" | awk '!a[$0]++' | while read node ; do run_healthchecks "$node" "9001" ; done
+  cat /etc/hosts | grep -ohE "ncn-[s]([0-9]{3})" | awk '!a[$0]++' | while read node ; do run_healthchecks "$node" "9001" ; done
 fi
 
 exit
