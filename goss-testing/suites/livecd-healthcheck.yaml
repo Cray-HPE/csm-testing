@@ -2,7 +2,6 @@
 gossfile:
   ../tests/goss-bmc-check.yaml: {}
   ../tests/goss-dns-nodes.yaml: {}
-  ../tests/goss-dns-services.yaml: {}
   ../tests/goss-services-enabled.yaml: {}
   ../tests/goss-services-running.yaml: {}
   ../tests/goss-interfaces-have-same-mac.yaml: {}
