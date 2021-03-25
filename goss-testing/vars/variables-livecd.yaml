@@ -18,9 +18,6 @@ networks:
   - "mtl"
   - "can"
 
-dns_services:
-  - arti.dev.cray.com
-
 network_interfaces:
   - bond0
   - vlan002
