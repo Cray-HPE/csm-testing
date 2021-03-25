@@ -27,6 +27,7 @@ vars_file="/opt/cray/tests/install/ncn/vars/variables-ncn.yaml"
 
 nodes=$(cat /etc/hosts | grep -ohE 'ncn-[m,w,s]([0-9]{3})' | awk '!a[$0]++')
 tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
+interface=vlan004
 
 # add node names from /etc/hosts to temp variables file
 if [ `echo $nodes | wc -w` -ne 0 ];then
@@ -41,6 +42,12 @@ else
 fi
 cat $vars_file >> $tmpvars
 
+# we only want to run the servers on the HMN network
+ip=$(ip -f inet addr show $interface | grep -Po 'inet \K[\d.]+')
+if [ -z $ip ]; then
+  exit 2
+fi
+
 # start server with NCN test suites (as of now, goss server only runs on NCNs)
 # designated goss-servers port range: 8994-9001
 
@@ -48,42 +55,42 @@ nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-preflight-tests.ya
   --format json \
   --max-concurrent 4 \
   --endpoint /ncn-preflight-tests \
-  --listen-addr :8995 &
+  --listen-addr $ip:8995 &
 
 nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-master.yaml --vars $tmpvars serve \
   --format json \
   --max-concurrent 4 \
   --endpoint /ncn-kubernetes-tests-master \
-  --listen-addr :8996 &
+  --listen-addr $ip:8996 &
 
 nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-worker.yaml --vars $tmpvars serve \
   --format json \
   --max-concurrent 4 \
   --endpoint /ncn-kubernetes-tests-worker \
-  --listen-addr :8998 &
+  --listen-addr $ip:8998 &
 
 nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-storage-tests.yaml --vars $tmpvars serve \
   --format json \
   --max-concurrent 4 \
   --endpoint /ncn-storage-tests \
-  --listen-addr :8997 &
+  --listen-addr $ip:8997 &
 
 nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-master.yaml --vars $tmpvars serve \
   --format json \
   --endpoint /ncn-healthcheck-master \
   --max-concurrent 4 \
-  --listen-addr :8994 &
+  --listen-addr $ip:8994 &
 
 nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-worker.yaml --vars $tmpvars serve \
   --format json \
   --endpoint /ncn-healthcheck-worker \
   --max-concurrent 4 \
-  --listen-addr :9000 &
+  --listen-addr $ip:9000 &
 
 nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-storage.yaml --vars $tmpvars serve \
   --format json \
   --endpoint /ncn-healthcheck-storage \
   --max-concurrent 4 \
-  --listen-addr :9001 &
+  --listen-addr $ip:9001 &
 
 exit
