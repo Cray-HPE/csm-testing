@@ -42,7 +42,7 @@ else
 fi
 cat $vars_file >> $tmpvars
 
-# for security reasons we only want to run the servers on the HMN network, which does not accept outside requests
+# for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
 ip=$(ip -f inet addr show $interface | grep -Po 'inet \K[\d.]+')
 if [ -z $ip ]; then
   exit 2
