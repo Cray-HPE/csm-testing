@@ -46,7 +46,7 @@ cat $vars_file >> $tmpvars
 ip=$(ip -f inet addr show $interface | grep -Po 'inet \K[\d.]+')
 [[ -z $ip ]] && exit 2
 
-# start server with NCN test suites (as of now, Goss servers only runs on NCNs)
+# start server with NCN test suites (as of now, Goss servers only run on NCNs)
 # designated goss-servers port range: 8994-9001
 
 nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-preflight-tests.yaml --vars $tmpvars serve \
