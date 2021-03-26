@@ -44,11 +44,9 @@ cat $vars_file >> $tmpvars
 
 # for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
 ip=$(ip -f inet addr show $interface | grep -Po 'inet \K[\d.]+')
-if [ -z $ip ]; then
-  exit 2
-fi
+[[ -z $ip ]] && exit 2
 
-# start server with NCN test suites (as of now, goss server only runs on NCNs)
+# start server with NCN test suites (as of now, Goss servers only runs on NCNs)
 # designated goss-servers port range: 8994-9001
 
 nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-preflight-tests.yaml --vars $tmpvars serve \
