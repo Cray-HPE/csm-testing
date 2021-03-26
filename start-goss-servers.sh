@@ -27,7 +27,6 @@ vars_file="/opt/cray/tests/install/ncn/vars/variables-ncn.yaml"
 
 nodes=$(cat /etc/hosts | grep -ohE 'ncn-[m,w,s]([0-9]{3})' | awk '!a[$0]++')
 tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
-interface=vlan004
 
 # add node names from /etc/hosts to temp variables file
 if [ `echo $nodes | wc -w` -ne 0 ];then
@@ -43,7 +42,7 @@ fi
 cat $vars_file >> $tmpvars
 
 # for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
-ip=$(ip -f inet addr show $interface | grep -Po 'inet \K[\d.]+')
+ip=$(host $( hostname ).hmn | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 [[ -z $ip ]] && exit 2
 
 # start server with NCN test suites (as of now, Goss servers only run on NCNs)
