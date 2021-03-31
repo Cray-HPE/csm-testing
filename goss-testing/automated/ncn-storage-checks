@@ -35,7 +35,7 @@ if [ ! -f "/etc/dnsmasq.d/statics.conf" ]; then
 fi
 
 # find the storage node names and query the server endpoint
-cat /etc/dnsmasq.d/statics.conf | grep -ohE "ncn-s([0-9]{3})" | awk '!a[$0]++' | \
+cat /etc/dnsmasq.d/statics.conf | grep -ohE "ncn-s([0-3]{3})" | awk '!a[$0]++' | \
   while read node ; do run_ncn_tests "$node" "8997" "ncn-storage-tests" ; done
 
 exit
