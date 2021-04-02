@@ -1,0 +1,25 @@
+command:
+  conrun_label_worker:
+    title: Worker Node CONRUN FS Label
+    meta:
+      desc: Validates the CONRUN FS Label is set up correctly on worker nodes.
+      sev: 0
+    # blkid will return non-zero if no block device has the CONRUN label
+    exec: blkid -L CONRUN
+    exit-status: 0
+  conlib_label_worker:
+    title: Worker Node CONLIB FS Label
+    meta:
+      desc: Validates the CONLIB FS Label is set up correctly on worker nodes.
+      sev: 0
+    # blkid will return non-zero if no block device has the CONLIB label
+    exec: blkid -L CONLIB
+    exit-status: 0
+  k8slet_label_worker:
+    title: Worker Node K8SLET FS Label
+    meta:
+      desc: Validates the K8SLET FS Label is set up correctly on worker nodes.
+      sev: 0
+    # blkid will return non-zero if no block device has the K8SLET label
+    exec: blkid -L K8SLET
+    exit-status: 0

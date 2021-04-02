@@ -1,0 +1,9 @@
+command:
+  etcdlvm_drive_master:
+    title: Master Node ETCDLVM FS Label
+    meta:
+      desc: Validates the dedicated drive for ETCD is set up correctly on master nodes.
+      sev: 0
+    exec: blkid -L ETCDLVM
+    # blkid will return non-zero if no block device has the ETCDLVM label
+    exit-status: 0
