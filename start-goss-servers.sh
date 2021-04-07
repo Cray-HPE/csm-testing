@@ -25,18 +25,21 @@
 export GOSS_BASE=/opt/cray/tests/install/ncn
 vars_file="/opt/cray/tests/install/ncn/vars/variables-ncn.yaml"
 
-nodes=$(cat /etc/hosts | grep -ohE 'ncn-[m,w,s]([0-9]{3})' | awk '!a[$0]++')
+# get node list from basecamp metadata endpoint
+nodes=$(curl -s http://ncn-m001:8888/meta-data | jq -r .Global.ntp_peers)
+
+# temporary variable file location
 tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
 
-# add node names from /etc/hosts to temp variables file
+# add node names from basecamp metadata to temp variables file
 if [ `echo $nodes | wc -w` -ne 0 ];then
   echo "nodes:" >> $tmpvars
   for node in $nodes; do
     echo "  - $node" >> $tmpvars
-    echo "" >> $tmpvars
   done
+  echo "" >> $tmpvars
 else
-  echo "Node names could not be found in /etc/hosts file! Exiting now."
+  echo "Node names could not be found in Basecamp metadata! Exiting now."
   exit 1
 fi
 cat $vars_file >> $tmpvars

@@ -1,14 +1,15 @@
 [Unit]
 Description=goss-servers
-After=network.target cloud-init.service
-StartLimitIntervalSec=0
+After=cloud-init.service
+StartLimitInterval=0
 
 [Service]
 Type=forking
-Restart=on-abort
-RestartSec=1
+Restart=on-failure
+RestartSec=30
 User=root
 ExecStart=/bin/bash /usr/sbin/start-goss-servers.sh
+TimeoutSec=60
 
 [Install]
 WantedBy=multi-user.target
