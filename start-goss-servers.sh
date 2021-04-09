@@ -23,6 +23,11 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 export GOSS_BASE=/opt/cray/tests/install/ncn
+
+# necessary for kubectl commands to run
+export KUBECONFIG=/etc/kubernetes/admin.conf
+
+# variables for ncn tests
 vars_file="/opt/cray/tests/install/ncn/vars/variables-ncn.yaml"
 
 # get node list from basecamp metadata endpoint
