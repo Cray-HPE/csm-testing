@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Installs NCN image files on the LiveCD.
 #
 # (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
 # Author: Forrest Jadick
@@ -21,24 +22,31 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
+# usage: install-ncn-images-livecd.sh -k [k8s image version #/id] -s [ceph image version #/id]
 
-source $GOSS_BASE/automated/run-ncn-tests.sh
+k8s_image_id=$2
+ceph_image_id=$4
 
-echo $'\e[1;33m'NCN Preflight Checks$'\e[0m'
-echo $'\e[1;33m'--------------------$'\e[0m'
+# hide old image files
+echo "Cleaning up old install directories..."
+rm -rf /var/www/ephemeral/data/.ceph
+rm -rf /var/www/ephemeral/data/.k8s
+mv /var/www/ephemeral/data/{,.}ceph
+mv /var/www/ephemeral/data/{,.}k8s
 
-if [ ! -f "/etc/dnsmasq.d/statics.conf" ]; then
-  echo "ERROR: These tests can only be run from the LiveCD."
-  exit 1
-fi
+# delete all node directories
+echo "Removing node directories..."
+rm -rf /var/www/ncn-*
 
-# find the ncn node names and query the server endpoint
-nodes=$(grep -ohE "ncn-[m,w,s]([0-9]{3})" /etc/dnsmasq.d/statics.conf | grep -v ncn-m001 | awk '!a[$0]++')
+cd /root
 
-for node in $nodes; do
-  run_ncn_tests $node 8995 ncn-preflight-tests
-done
+# pull images
+echo "Pulling NCN image files..."
+/root/bin/get-sqfs.sh -k $k8s_image_id
+/root/bin/get-sqfs.sh -s $ceph_image_id
+
+# install images
+echo "Installing images in /var/www..."
+/root/bin/set-sqfs-links.sh
 
 exit
