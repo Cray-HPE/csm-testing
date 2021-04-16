@@ -4,7 +4,7 @@ After=cloud-init.service
 StartLimitInterval=0
 
 [Service]
-Type=forking
+Type=simple
 Restart=on-failure
 RestartSec=30
 User=root
