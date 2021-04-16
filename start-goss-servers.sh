@@ -32,6 +32,8 @@ vars_file="/opt/cray/tests/install/ncn/vars/variables-ncn.yaml"
 
 # temporary variable file location
 tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
+cat $vars_file > $tmpvars
+echo "" >> $tmpvars
 
 echo "Using goss vars: $tmpvars"
 
