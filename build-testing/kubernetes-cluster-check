@@ -25,7 +25,7 @@
 results=$(/opt/cray/tests/install/livecd/automated/ncn-smoke-tests)
 echo $results | grep "Result: FAIL"
 
-if [[ $? -eq 0 ]]; do
+if [[ $? -eq 0 ]]; then
   "Smoke tests FAILED. Outputting results below."
   echo
   echo $results
