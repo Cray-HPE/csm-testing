@@ -1,6 +1,5 @@
 [Unit]
 Description=goss-servers
-After=cloud-init.service
 StartLimitInterval=0
 
 [Service]
