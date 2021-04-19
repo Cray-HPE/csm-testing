@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Validates the Kubernetes nodes are functioning correctly.
 #
 # (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
 # Author: Forrest Jadick
@@ -21,24 +22,9 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
 
-source $GOSS_BASE/automated/run-ncn-tests.sh
-
-echo $'\e[1;33m'NCN Preflight Checks$'\e[0m'
-echo $'\e[1;33m'--------------------$'\e[0m'
-
-if [ ! -f "/etc/dnsmasq.d/statics.conf" ]; then
-  echo "ERROR: These tests can only be run from the LiveCD."
-  exit 1
-fi
-
-# find the ncn node names and query the server endpoint
-nodes=$(grep -ohE "ncn-[m,w,s]([0-9]{3})" /etc/dnsmasq.d/statics.conf | grep -v ncn-m001 | awk '!a[$0]++')
-
-for node in $nodes; do
-  run_ncn_tests $node 8995 ncn-preflight-tests
-done
-
-exit
+echo "Running Kubernetes health check tests now (informational only -- failures will not break build)..."
+echo
+/opt/cray/tests/install/livecd/automated/ncn-healthcheck-master
+echo
+/opt/cray/tests/install/livecd/automated/ncn-healthcheck-worker

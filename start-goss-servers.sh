@@ -53,8 +53,8 @@ cat $vars_file >> $tmpvars
 ip=$(host $( hostname ).hmn | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 [[ -z $ip ]] && exit 2
 
-# start server with NCN test suites (as of now, Goss servers only run on NCNs)
-# designated goss-servers port range: 8994-9001
+# start servers with NCN test suites
+# designated goss-servers port range: 8994-9002
 
 nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-preflight-tests.yaml --vars $tmpvars serve \
   --format json \
@@ -97,5 +97,11 @@ nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-storag
   --endpoint /ncn-healthcheck-storage \
   --max-concurrent 4 \
   --listen-addr $ip:9001 &
+
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-smoke-tests.yaml --vars $tmpvars serve \
+  --format json \
+  --endpoint /ncn-smoke-tests \
+  --max-concurrent 4 \
+  --listen-addr $ip:9002 &
 
 exit
