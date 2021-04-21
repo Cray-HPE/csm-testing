@@ -100,29 +100,28 @@ function retry_ssh {
   ssh_retries=$MAX_SSH_RETRIES
   boot_retries=$MAX_BOOT_RETRIES
 
+  echo "Attempting SSH connection to node..."
+
   while [[ $ssh_retries -ne 0 ]]; do
     nmap $node -PN -p ssh | grep open > /dev/null 2>&1
 
     if [[ $? -eq 0 ]]; then
       return 0
-    else
-      echo -en "\rAttempting SSH connection on port 22 ($ssh_retries attempts remaining)"
+      break
     fi
 
     sleep 5
     ((ssh_retries = $ssh_retries - 1))
   done
 
-  if [[ $rc -ne 0 ]] ; then
-    if [[ $boot_retries -gt 0 ]]; then
-      echo
-      echo "Could not SSH to node '$node' after $MAX_SSH_RETRIES attempts. Rebooting node."
-      node_boot_attempt $node 1 $boot_retries
-      ((boot_retries = $boot_retries - 1))
-    else
-      echo "Could not boot node. Giving up."
-      return 1
-    fi
+  if [[ $boot_retries -gt 0 ]]; then
+    echo
+    echo "Could not SSH to node '$node' after $MAX_SSH_RETRIES attempts. Rebooting node."
+    ((boot_retries = $boot_retries - 1))
+    node_boot_attempt $node 1 $boot_retries
+  else
+    echo "Could not boot node. Giving up."
+    return 1
   fi
 }
 
