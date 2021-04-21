@@ -1,10 +1,10 @@
 [Unit]
 Description=goss-servers
-After=cloud-init.service
+After=network.target
 StartLimitInterval=0
 
 [Service]
-Type=forking
+Type=simple
 Restart=on-failure
 RestartSec=30
 User=root
