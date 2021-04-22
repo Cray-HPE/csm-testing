@@ -22,9 +22,8 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# usage: pxe-boot-nodes.sh [s, m or w] [IPMI password]
+# Usage: pxe-boot-nodes.sh [s, m or w] [IPMI password]
 
-# arguments
 type=$1 # options: s, m or w
 export IPMI_PASSWORD=$2
 
@@ -95,33 +94,34 @@ function restart_node {
 }
 
 function retry_ssh {
-  # attempts ssh connection until the node can be reached or the max retries are exhausted
+  # attempts ssh connection until the node can be reached or the max retries are reached
   node=$1
   ssh_retries=$MAX_SSH_RETRIES
   boot_retries=$MAX_BOOT_RETRIES
 
   echo "Attempting SSH connection to node..."
 
-  while [[ $ssh_retries -ne 0 ]]; do
-    nmap $node -PN -p ssh | grep open > /dev/null 2>&1
-
-    if [[ $? -eq 0 ]]; then
-      return 0
+  until nmap $node -PN -p ssh | grep open; do
+    if [[ $ssh_retries -eq 0 ]]; then
       break
     fi
 
-    sleep 5
+    sleep 3
     ((ssh_retries = $ssh_retries - 1))
   done
 
-  if [[ $boot_retries -gt 0 ]]; then
-    echo
-    echo "Could not SSH to node '$node' after $MAX_SSH_RETRIES attempts. Rebooting node."
-    ((boot_retries = $boot_retries - 1))
-    node_boot_attempt $node 1 $boot_retries
+  if nmap $node -PN -p ssh | grep open > /dev/null 2>&1; then
+    return 0
   else
-    echo "Could not boot node. Giving up."
-    return 1
+    if [[ $boot_retries -gt 0 ]]; then
+      echo
+      echo "Could not SSH to node '$node' after $MAX_SSH_RETRIES attempts. Rebooting node."
+      ((boot_retries = $boot_retries - 1))
+      node_boot_attempt $node 1 $boot_retries
+    else
+      echo "Could not boot node. Giving up."
+      return 1
+    fi
   fi
 }
 

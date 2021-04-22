@@ -22,30 +22,32 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# usage: install-ncn-images-livecd.sh -k [k8s image version #/id] -s [ceph image version #/id]
+# Usage: install-ncn-images-livecd.sh -k [k8s image version #/id] -s [ceph image version #/id]
 
 k8s_image_id=$2
 ceph_image_id=$4
 
-# hide old image files
+if [[ -z $k8s_image_id || -z $ceph_image_id ]]; then
+  echo "Missing argument(s)!"
+  echo "Usage: install-ncn-images-livecd.sh -k [k8s image version #/id] -s [ceph image version #/id]"
+  exit 1
+fi
+
 echo "Cleaning up old install directories..."
 rm -rf /var/www/ephemeral/data/.ceph
 rm -rf /var/www/ephemeral/data/.k8s
 mv /var/www/ephemeral/data/{,.}ceph
 mv /var/www/ephemeral/data/{,.}k8s
 
-# delete all node directories
 echo "Removing node directories..."
 rm -rf /var/www/ncn-*
 
 cd /root
 
-# pull images
 echo "Pulling NCN image files..."
 /root/bin/get-sqfs.sh -k $k8s_image_id
 /root/bin/get-sqfs.sh -s $ceph_image_id
 
-# install images
 echo "Installing images in /var/www..."
 /root/bin/set-sqfs-links.sh
 
