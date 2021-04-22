@@ -93,7 +93,7 @@ function restart_node {
 }
 
 function retry_ssh {
-  # attempts ssh connection until the node can be reached or the max retries are reached
+  # attempts ssh connection until connection is successful or the max retries are reached
   node=$1
   ssh_retries=$MAX_SSH_RETRIES
 
@@ -101,14 +101,14 @@ function retry_ssh {
 
   until nmap $node -PN -p ssh | grep open; do
     if [[ $ssh_retries -eq 0 ]]; then
-      return 0
+      return 1
     fi
 
-    sleep 3
     ((ssh_retries = $ssh_retries - 1))
+    sleep 3
   done
 
-  return 1
+  return 0
 }
 
 function node_boot_attempt {
