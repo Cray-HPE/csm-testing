@@ -101,18 +101,14 @@ function retry_ssh {
 
   until nmap $node -PN -p ssh | grep open; do
     if [[ $ssh_retries -eq 0 ]]; then
-      break
+      return 0
     fi
 
     sleep 3
     ((ssh_retries = $ssh_retries - 1))
   done
 
-  if nmap $node -PN -p ssh | grep open > /dev/null 2>&1; then
-    return 0
-  else
-    return 1
-  fi
+  return 1
 }
 
 function node_boot_attempt {
@@ -195,7 +191,7 @@ function node_boot_attempt {
 }
 
 if [[ -z $1 ]]; then
-  echo "ERROR! Csommand missing a node type prefix (either m, w or s)."
+  echo "ERROR! Command missing a node type prefix (either m, w or s)."
   echo "Usage: $usage"
   exit 0
 fi
