@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Validates that all nodes have joined the Kubernetes cluster.
+# Basic automated NCN smoke tests.
 #
 # (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
 # Author: Forrest Jadick
@@ -26,13 +26,13 @@ results=$(/opt/cray/tests/install/livecd/automated/ncn-smoke-tests)
 echo $results | grep -E "FAIL|ERROR"
 
 if [[ $? -eq 0 ]]; then
-  echo Smoke tests FAILED. Outputting results below.
-  echo
   echo "$results"
+  echo
+  echo Automated smoke tests FAILED!
   exit 1
 else
-  echo Smoke tests SUCCEEDED. Outputting results below.
-  echo
   echo "$results"
+  echo
+  echo Automated smoke tests SUCCEEDED!
   exit 0
 fi

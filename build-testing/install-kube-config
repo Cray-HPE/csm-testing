@@ -1,0 +1,8 @@
+#!/usr/bin/expect
+set password [lindex $argv 0];
+spawn ssh root@ncn-m001 >/root/.ssh/known_hosts
+spawn ssh root@ncn-m001 mkdir -pv ~/.kube
+spawn  scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  ncn-m002.nmn:/etc/kubernetes/admin.conf /root/.kube/config
+expect "Password:"
+send "$password\n";
+interact
