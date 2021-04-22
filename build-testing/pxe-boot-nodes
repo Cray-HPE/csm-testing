@@ -97,7 +97,6 @@ function retry_ssh {
   # attempts ssh connection until the node can be reached or the max retries are reached
   node=$1
   ssh_retries=$MAX_SSH_RETRIES
-  boot_retries=$MAX_BOOT_RETRIES
 
   echo "Attempting SSH connection to node..."
 
@@ -113,15 +112,8 @@ function retry_ssh {
   if nmap $node -PN -p ssh | grep open > /dev/null 2>&1; then
     return 0
   else
-    if [[ $boot_retries -gt 0 ]]; then
-      echo
-      echo "Could not SSH to node '$node' after $MAX_SSH_RETRIES attempts. Rebooting node."
-      ((boot_retries = $boot_retries - 1))
-      node_boot_attempt $node 1 $boot_retries
-    else
-      echo "Could not boot node. Giving up."
-      return 1
-    fi
+    echo "SSH connection to node failed."
+    return 1
   fi
 }
 
@@ -129,6 +121,7 @@ function node_boot_attempt {
   # main orchestration function
   node=$1
   start_retries=$MAX_START_RETRIES
+  boot_retries=$MAX_BOOT_RETRIES
 
   # keep trying to restart the node for specified number of retries
   while [[ $start_retries -ne 0 ]]; do
@@ -172,8 +165,22 @@ function node_boot_attempt {
     if [[ $? -eq 0 ]]; then
       echo "Network boot confirmed. Boot was successful."
     else
-      echo "Node did not PXE boot. Restarting node."
+      if [[ $boot_retries -gt 0 ]]; then
+        echo "Node did not PXE boot. Restarting node."
+        ((boot_retries = $boot_retries - 1))
+        node_boot_attempt $node
+      fi
+    fi
+  else
+    if [[ $boot_retries -gt 0 ]]; then
+      echo
+      echo "Could not SSH to node '$node' after $MAX_SSH_RETRIES attempts. Rebooting node."
+      ((boot_retries = $boot_retries - 1))
       node_boot_attempt $node
+    else
+      echo
+      echo "Could not establish SSH connection to node. Giving up."
+      exit 1
     fi
   fi
 
