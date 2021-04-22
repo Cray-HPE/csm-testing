@@ -22,7 +22,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# Usage: pxe-boot-nodes.sh [s, m or w] [IPMI password]
+usage="pxe-boot-nodes [s, m or w] [IPMI password]"
 
 type=$1 # options: s, m or w
 export IPMI_PASSWORD=$2
@@ -111,7 +111,6 @@ function retry_ssh {
   if nmap $node -PN -p ssh | grep open > /dev/null 2>&1; then
     return 0
   else
-    echo "SSH connection to node failed."
     return 1
   fi
 }
@@ -196,12 +195,14 @@ function node_boot_attempt {
 }
 
 if [[ -z $1 ]]; then
-  echo "Must specify a node type prefix (either m, w or s)."
+  echo "ERROR! Csommand missing a node type prefix (either m, w or s)."
+  echo "Usage: $usage"
   exit 0
 fi
 
 if [[ -z $2 ]]; then
-  echo "Must provide the IPMI password."
+  echo "ERROR! Command missing IPMI password."
+  echo "Usage: $usage"
   exit 0
 fi
 

@@ -22,14 +22,14 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# Usage: install-ncn-images-livecd.sh -k [k8s image version #/id] -s [ceph image version #/id]
+usage="install-ncn-images-livecd -k [k8s image version #/id] -s [ceph image version #/id]"
 
 k8s_image_id=$2
 ceph_image_id=$4
 
 if [[ -z $k8s_image_id || -z $ceph_image_id ]]; then
-  echo "Missing argument(s)!"
-  echo "Usage: install-ncn-images-livecd.sh -k [k8s image version #/id] -s [ceph image version #/id]"
+  echo "ERROR! Missing argument(s)."
+  echo "Usage: $usage"
   exit 1
 fi
 
