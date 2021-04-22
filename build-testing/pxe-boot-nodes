@@ -22,7 +22,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-usage="pxe-boot-nodes [s, m or w] [IPMI password]"
+usage_info="pxe-boot-nodes [s, m or w] [IPMI password]"
 
 type=$1 # options: s, m or w
 export IPMI_PASSWORD=$2
@@ -137,7 +137,7 @@ function node_boot_attempt {
         restart_node $node
       else
         echo
-        echo "Failed to start node after $MAX_START_RETRIES attempts! Exiting."
+        echo "Failed to start node after $MAX_START_RETRIES attempts. Exiting."
         exit 1
       fi
     fi
@@ -192,13 +192,13 @@ function node_boot_attempt {
 
 if [[ -z $1 ]]; then
   echo "ERROR! Command missing a node type prefix (either m, w or s)."
-  echo "Usage: $usage"
+  echo "Usage: $usage_info"
   exit 0
 fi
 
 if [[ -z $2 ]]; then
   echo "ERROR! Command missing IPMI password."
-  echo "Usage: $usage"
+  echo "Usage: $usage_info"
   exit 0
 fi
 
