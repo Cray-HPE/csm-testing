@@ -22,17 +22,16 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-usage_info="pxe-boot-nodes [s, m or w] [IPMI password]"
+usage_info="pxe-boot-nodes [s, m or w] [IPMI password] [maximum boot retries]"
 
 type=$1 # options: s, m or w
 export IPMI_PASSWORD=$2
+export MAX_BOOT_RETRIES=$3
 
 export NODE_COUNT=$(grep -ohE "ncn-$type([0-3]{3})" /etc/dnsmasq.d/statics.conf | awk '!a[$0]++' | wc -l)
 export NODE_NUM=1
 export IPMI_USERNAME=root
-export MAX_START_RETRIES=5
-export MAX_SSH_RETRIES=100
-export MAX_BOOT_RETRIES=2
+export MAX_SSH_ATTEMPTS=100
 export CONMAN_LOGS=/var/log/conman
 
 function pxe_boot_check {
@@ -60,7 +59,7 @@ function restart_node {
 
   if echo $power_status | grep on; then
     # node is powered on, so power it off
-    echo "Attempting to power off node..."
+    echo "Powering off node..."
     ipmitool -I lanplus -U $IPMI_USERNAME -E -H $node-mgmt power off
 
     if [[ $? -ne 0 ]]; then
@@ -69,7 +68,7 @@ function restart_node {
     fi
   fi
 
-  echo "Setting node to PXE boot from network..."
+  # set network boot option
   ipmitool -I lanplus -U $IPMI_USERNAME -E -H $node-mgmt chassis bootdev pxe options=efiboot,persistent
 
   if [[ $? -ne 0 ]]; then
@@ -77,10 +76,10 @@ function restart_node {
     return 2
   fi
 
-  echo "Waiting to power on node..."
+  # wait to power on node
   sleep 8
 
-  echo "Attempting to power on node '$node'"
+  # power on node
   ipmitool -I lanplus -U $IPMI_USERNAME -E -H $node-mgmt power on
 
   if [[ $? -ne 0 ]]; then
@@ -95,7 +94,7 @@ function restart_node {
 function retry_ssh {
   # attempts ssh connection until connection is successful or the max retries are reached
   node=$1
-  ssh_retries=$MAX_SSH_RETRIES
+  ssh_retries=$MAX_SSH_ATTEMPTS
 
   echo "Attempting SSH connection to node..."
 
@@ -114,43 +113,29 @@ function retry_ssh {
 function node_boot_attempt {
   # main orchestration function
   node=$1
-  start_retries=$MAX_START_RETRIES
-  boot_retries=$MAX_BOOT_RETRIES
+  retries_left=$2
+  ((retries_left = $retries_left - 1))
 
-  # keep trying to restart the node for specified number of retries
-  while [[ $start_retries -ne 0 ]]; do
-    ((start_retries = $start_retries - 1))
+  echo "Attempting to network boot node '$node' with $retries_left retries remaining..."
+  echo
+  echo "Restarting Node: $node"
+
+  restart_node $node
+
+  if [[ $? -eq 0 ]]; then
+    # node started
+    conman_log_prep $node
+  else
     echo
-    echo "Restarting Node: $node"
-    echo "-------------------------"
+    echo "Node startup attempt failed. Retrying $start_retries more times."
+    echo
+    node_boot_attempt $node $retries_left
+  fi
 
-    restart_node $node
-
-    if [[ $? -eq 0 ]]; then
-      # node started
-      conman_log_prep $node
-      break
-    else
-      if [[ $start_retries -gt 0 ]]; then
-        echo
-        echo "Node startup attempt failed. Retrying $start_retries more times."
-        restart_node $node
-      else
-        echo
-        echo "Failed to start node after $MAX_START_RETRIES attempts. Exiting."
-        exit 1
-      fi
-    fi
-
-    sleep 5
-  done
+  sleep 5
 
   # try sshing to the node since it started
   sleep 30
-
-  echo
-  echo "Testing Connection: $node"
-  echo "----------------------------"
 
   retry_ssh $node
 
@@ -163,21 +148,21 @@ function node_boot_attempt {
     if [[ $? -eq 0 ]]; then
       echo "Network boot confirmed. Boot was successful."
     else
-      if [[ $boot_retries -gt 0 ]]; then
+      if [[ $retries_left -gt 0 ]]; then
         echo "Node did not PXE boot. Restarting node."
-        ((boot_retries = $boot_retries - 1))
-        node_boot_attempt $node
+        echo
+        node_boot_attempt $node $retries_left
       fi
     fi
   else
-    if [[ $boot_retries -gt 0 ]]; then
+    if [[ $retries_left -gt 0 ]]; then
       echo
       echo "Could not SSH to '$node'. Rebooting node."
-      ((boot_retries = $boot_retries - 1))
-      node_boot_attempt $node
+      echo
+      node_boot_attempt $node $retries_left
     else
       echo
-      echo "Could not establish SSH connection to node after $MAX_SSH_RETRIES attempts. Giving up."
+      echo "Could not successfully boot node after $MAX_BOOT_RETRIES attempts. Exiting."
       exit 1
     fi
   fi
@@ -205,7 +190,7 @@ fi
 nodes=$(grep -ohE "ncn-$type([0-3]{3})" /etc/dnsmasq.d/statics.conf | grep -v m001 | awk '!a[$0]++')
 
 for node in $nodes; do
-  node_boot_attempt $node
+  node_boot_attempt $node $MAX_BOOT_RETRIES
 done
 
 exit
