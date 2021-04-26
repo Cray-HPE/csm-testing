@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Attempts to boot NCNs from the LiveCD for testing purposes based on type (storage, master or worker)
+# Attempts to network boot a single NCN from the LiveCD for testing purposes
 #
 # (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
 # Author: Forrest Jadick
@@ -24,10 +24,10 @@
 
 [[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/livecd"
 
-usage_info="pxe-boot-nodes [s, m or w] [IPMI password] [maximum boot retries]"
+usage_info="pxe-boot-one-node [node name, ie ncn-m002] [IPMI password] [maximum boot retries]"
 
 if [[ -z $1 ]]; then
-  echo "ERROR! Command missing a node type prefix (either m, w or s)."
+  echo "ERROR! Command missing node name (ie, ncn-m002, ncn-s003, etc)."
   echo "Usage: $usage_info"
   exit 0
 fi
@@ -44,7 +44,7 @@ if [[ -z $3 ]]; then
   exit 0
 fi
 
-type=$1 # options: s, m or w
+node=$1
 export IPMI_PASSWORD=$2
 export MAX_BOOT_RETRIES=$3
 
@@ -56,10 +56,4 @@ export CONMAN_LOGS=/var/log/conman
 
 source $GOSS_BASE/build-testing/boot-functions.sh
 
-nodes=$(grep -ohE "ncn-$type([0-3]{3})" /etc/dnsmasq.d/statics.conf | grep -v m001 | awk '!a[$0]++')
-
-for node in $nodes; do
-  node_boot_attempt $node $MAX_BOOT_RETRIES
-done
-
-exit
+node_boot_attempt $node $MAX_BOOT_RETRIES
