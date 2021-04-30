@@ -119,7 +119,6 @@ echo "starting ncn-smoke-tests in background"
   --max-concurrent 4 \
   --listen-addr $ip:9002 &
 
-exit
 echo "Goss servers started in background"
 
 # Keep process running so systemd can kill and monitor background jobs as needed
