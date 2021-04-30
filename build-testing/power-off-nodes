@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Attempts to network boot a single NCN from the LiveCD for testing purposes
+# Powers off all the NCNs to prepare for smoke testing.
 #
 # (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
 # Author: Forrest Jadick
@@ -22,40 +22,13 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-[[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/livecd"
+export IPMI_PASSWORD=$1
+IPMI_USERNAME=root
 
-usage_info="pxe-boot-one-node [node name, ie ncn-m002] [IPMI password] [maximum boot retries]"
+nodes=$(grep -ohE 'ncn-[m,w,s]([0-9]{3})' /etc/dnsmasq.d/statics.conf  | awk '!a[$0]++' | grep -v ncn-m001)
 
-if [[ -z $1 ]]; then
-  echo "ERROR! Command missing node name (ie, ncn-m002, ncn-s003, etc)."
-  echo "Usage: $usage_info"
-  exit 0
-fi
+for node in $nodes; do
+  ipmitool -I lanplus -U $IPMI_USERNAME -E -H $node-mgmt power off
+done
 
-if [[ -z $2 ]]; then
-  echo "ERROR! Command missing IPMI password."
-  echo "Usage: $usage_info"
-  exit 0
-fi
-
-if [[ -z $3 ]]; then
-  echo "ERROR! Command missing maximum boot retries."
-  echo "Usage: $usage_info"
-  exit 0
-fi
-
-node=$1
-export IPMI_PASSWORD=$2
-export MAX_BOOT_RETRIES=$3
-
-export NODE_COUNT=$(grep -ohE "ncn-$type([0-3]{3})" /etc/dnsmasq.d/statics.conf | awk '!a[$0]++' | wc -l)
-export NODE_NUM=1
-export IPMI_USERNAME=root
-export MAX_SSH_ATTEMPTS=100
-export CONMAN_LOGS=/var/log/conman
-
-source $GOSS_BASE/build-testing/boot-functions.sh
-
-node_boot_attempt $node $MAX_BOOT_RETRIES
-
-exit
+exit 0

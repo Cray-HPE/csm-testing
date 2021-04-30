@@ -113,10 +113,16 @@ function node_boot_attempt {
     # node started
     conman_log_prep $node
   else
-    echo
-    echo "Node startup attempt failed. Retrying $start_retries more times."
-    echo
-    node_boot_attempt $node $retries_left
+    if [[ $retries_left -gt 0 ]]; then
+      echo
+      echo "Node startup attempt failed. Retrying $retries_left more times."
+      echo
+      node_boot_attempt $node $retries_left
+    else
+      echo
+      echo "Could not successfully boot node after $MAX_BOOT_RETRIES attempts. Exiting."
+      exit 1
+    fi
   fi
 
   sleep 5
