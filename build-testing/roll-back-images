@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs NCN image files on the LiveCD.
+# Rolls back image deployment on smoke testing environment.
 #
 # (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
 # Author: Forrest Jadick
@@ -22,35 +22,12 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-usage_info="install-ncn-images-livecd -k [k8s image version #/id] -s [ceph image version #/id]"
+echo "Removing previous deployment..."
+rm -rf /var/www/ephemeral/data/ceph
+rm -rf /var/www/ephemeral/data/k8s
 
-k8s_image_id=$2
-ceph_image_id=$4
-
-if [[ -z $k8s_image_id || -z $ceph_image_id ]]; then
-  echo "ERROR! Missing argument(s)."
-  echo "Usage: $usage_info"
-  exit 1
-fi
-
-echo "Cleaning up rollback directories..."
-rm -rf /var/www/ephemeral/data/ceph-rollback
-rm -rf /var/www/ephemeral/data/k8s-rollback
-
-echo "Creating new rollback directories..."
-mv /var/www/ephemeral/data/ceph /var/www/ephemeral/data/ceph-rollback
-mv /var/www/ephemeral/data/k8s /var/www/ephemeral/data/k8s-rollback
-
-echo "Removing node directories..."
-rm -rf /var/www/ncn-*
-
-cd /root
-
-echo "Pulling NCN image files..."
-/root/bin/get-sqfs.sh -k $k8s_image_id
-/root/bin/get-sqfs.sh -s $ceph_image_id
-
-echo "Installing images in /var/www..."
-/root/bin/set-sqfs-links.sh
+echo "Rolling back image deployment..."
+mv /var/www/ephemeral/data/ceph-rollback /var/www/ephemeral/data/ceph
+mv /var/www/ephemeral/data/k8s-rollback /var/www/ephemeral/data/k8sj
 
 exit
