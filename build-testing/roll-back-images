@@ -28,6 +28,6 @@ rm -rf /var/www/ephemeral/data/k8s
 
 echo "Rolling back image deployment..."
 mv /var/www/ephemeral/data/ceph-rollback /var/www/ephemeral/data/ceph
-mv /var/www/ephemeral/data/k8s-rollback /var/www/ephemeral/data/k8sj
+mv /var/www/ephemeral/data/k8s-rollback /var/www/ephemeral/data/k8s
 
 exit
