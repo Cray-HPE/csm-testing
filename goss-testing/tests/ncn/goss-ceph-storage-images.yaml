@@ -1,0 +1,15 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  ceph_storage_images:
+    title: Validates the ceph storage images have been loaded into podman
+    meta:
+      desc: If this test fails, inspect the '/var/log/cloud-init-output.log' to determine if there were errors loading the docker images.
+      sev: 0
+    exec: "podman images"
+    stdout:
+    - registry.local/ceph/ceph
+#    - registry.local/ceph/ceph-grafana
+#    - registry.local/prometheus/prometheus
+#    - registry.local/prometheus/alertmanager
+#    - registry.local/prometheus/node-exporter
+    exit-status: 0

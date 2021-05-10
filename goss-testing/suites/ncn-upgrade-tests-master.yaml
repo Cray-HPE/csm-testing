@@ -1,0 +1,9 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+gossfile:
+  ../tests/goss-k8s-nodes-ready.yaml: {}
+  ../tests/goss-k8s-etcd-members.yaml: {}
+  ../tests/goss-k8s-nexus-can-pull.yaml: {}
+  ../tests/goss-k8s-keycloak-healthy.yaml: {}
+  ../tests/goss-k8s-cray-cli-configured.yaml: {}
+  ../tests/goss-etcdlvm-drive-master.yaml: {}
+  ../tests/goss-k8s-nodes-have-running-pods.yaml: {}
