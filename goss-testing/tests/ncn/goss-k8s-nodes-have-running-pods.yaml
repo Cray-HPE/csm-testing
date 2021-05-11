@@ -1,0 +1,11 @@
+command:
+  k8s_nodes_have_running_pods:
+    title: Validate that all kubernetes nodes have pods in a Running state
+    meta:
+      desc: If this test fails, run 'kubectl describe node <ncn>' for newly upgraded ncn to determine why pods aren't running on the node.
+      sev: 0
+    exec: result="PASS"; num_nodes=$(kubectl get nodes | grep ^ncn | wc -l); num_nodes_running_pods=$(kubectl get po -A -o wide | grep Running | awk '{print $(NF-2)}' | sort | uniq | wc -l); if [[ "$num_nodes" -ne "$num_nodes_running_pods" ]]; then result="FAIL"; fi; echo $result
+    exit-status: 0
+    stdout:
+    - "PASS"
+    timeout: 20000
