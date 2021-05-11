@@ -39,11 +39,11 @@ echo "Using goss vars: $tmpvars"
 
 nodes=""
 # add node names from basecamp metadata to temp variables file
-while [[ `echo $nodes | wc -w` -eq 0 || "$nodes" == "null" ]];do
+while [[ `echo $nodes | wc -w` -eq 0 || "$nodes" == "null" ]]; do
   # get node list from basecamp metadata endpoint
-  nodes=$(curl -s http://ncn-m001:8888/meta-data | jq -r .Global.ntp_peers)
+  nodes=$(curl -s http://ncn-m001:8888/meta-data | jq -r .Global.host_records[].aliases[1] | grep -ohE "ncn-[m,w,s]([0-9]{3})" | awk '!a[$0]++')
 
-  if [[ `echo $nodes | wc -w` -ne 0 && "$nodes" != "null" ]];then
+  if [[ `echo $nodes | wc -w` -ne 0 && "$nodes" != "null" ]]; then
     echo "Found nodes $nodes"
     echo "nodes:" >> $tmpvars
     for node in $nodes; do
@@ -57,7 +57,7 @@ while [[ `echo $nodes | wc -w` -eq 0 || "$nodes" == "null" ]];do
 done
 
 # for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
-ip=$(host $( hostname ).hmn | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+ip=$(host $(hostname).hmn | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 [[ -z $ip ]] && exit 2
 
 # start servers with NCN test suites
