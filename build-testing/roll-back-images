@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Validates that all nodes have joined the Kubernetes cluster.
+# Rolls back image deployment on smoke testing environment.
 #
 # (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
 # Author: Forrest Jadick
@@ -22,23 +22,12 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-nodes=$(grep -ohE 'ncn-[m,w,s]([0-9]{3})' /etc/dnsmasq.d/statics.conf  | awk '!a[$0]++' | grep -v ncn-m001)
-fail=0
+echo "Removing previous deployment..."
+rm -rf /var/www/ephemeral/data/ceph
+rm -rf /var/www/ephemeral/data/k8s
 
-for node in $nodes; do
-  test=$(kubectl get nodes | grep $node)
-  if [[ $? != 0 ]]; then
-    echo ERROR! Node not in cluster: $node
-    fail=1
-  fi
-done
+echo "Rolling back image deployment..."
+mv /var/www/ephemeral/data/ceph-rollback /var/www/ephemeral/data/ceph
+mv /var/www/ephemeral/data/k8s-rollback /var/www/ephemeral/data/k8s
 
-if [[ $fail -eq 1 ]]; then
-  echo
-  echo Kubernetes cluster node check failed!
-  exit 1
-else
-  echo
-  echo Kubernetes cluster node check passed!
-  exit 0
-fi
+exit

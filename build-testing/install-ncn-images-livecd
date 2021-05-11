@@ -33,11 +33,13 @@ if [[ -z $k8s_image_id || -z $ceph_image_id ]]; then
   exit 1
 fi
 
-echo "Cleaning up old install directories..."
-rm -rf /var/www/ephemeral/data/.ceph
-rm -rf /var/www/ephemeral/data/.k8s
-mv /var/www/ephemeral/data/{,.}ceph
-mv /var/www/ephemeral/data/{,.}k8s
+echo "Cleaning up rollback directories..."
+rm -rf /var/www/ephemeral/data/ceph-rollback
+rm -rf /var/www/ephemeral/data/k8s-rollback
+
+echo "Creating new rollback directories..."
+mv /var/www/ephemeral/data/ceph /var/www/ephemeral/data/ceph-rollback
+mv /var/www/ephemeral/data/k8s /var/www/ephemeral/data/k8s-rollback
 
 echo "Removing node directories..."
 rm -rf /var/www/ncn-*
