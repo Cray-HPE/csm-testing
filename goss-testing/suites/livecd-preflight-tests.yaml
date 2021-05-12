@@ -18,4 +18,3 @@ gossfile:
   ../tests/goss-dhcp-router-ip-distinct.yaml: {}
   ../tests/goss-sls_input-check-switch-ips.yaml: {}
   ../tests/goss-chrony-config.yaml: {}
-  ../tests/goss-hostnames-match-dns-names.yaml: {}
