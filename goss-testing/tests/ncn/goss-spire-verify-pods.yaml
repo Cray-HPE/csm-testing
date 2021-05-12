@@ -8,7 +8,6 @@ command:
     stdout:
     - /^request-ncn-join-token.*Running/
     - /^spire-agent.*Running/
-    - /^spire-bundle.*Running/
     - /^spire-jwks.*Running/
     - /^spire-postgres.*Running/
     - /^spire-server.*Running/
