@@ -7,3 +7,4 @@ gossfile:
   ../tests/goss-k8s-cray-cli-configured.yaml: {}
   ../tests/goss-etcdlvm-drive-master.yaml: {}
   ../tests/goss-k8s-nodes-have-running-pods.yaml: {}
+  ../tests/goss-check-clock-skew.yaml: {}

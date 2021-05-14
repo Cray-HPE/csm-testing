@@ -19,3 +19,4 @@ gossfile:
   ../tests/goss-spire-verify-pods.yaml: {}
   ../tests/goss-etcd-service.yaml: {}
   ../tests/goss-default-gateway-points-to-CAN-gateway.yaml: {}
+  ../tests/goss-check-clock-skew.yaml: {}
