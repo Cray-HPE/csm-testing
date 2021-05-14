@@ -14,3 +14,4 @@ gossfile:
   ../tests/goss-net-dhcp-pools-in-dnsmasq_d-are-correctly-defined.yaml: {}
   ../tests/goss-unbound-dns-entries.yaml: {}
   ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
+  ../tests/goss-hostnames-match-dns-names.yaml: {}
