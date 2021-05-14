@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+exec > /var/metal-bmc-dhcp-hack.$$.out 2>&1
+export username=root
+export IPMI_PASSWORD=$1
+grep mgmt /etc/conman.conf | grep -v m001 | awk '{print $3}' | cut -d ':' -f2 | tr -d \" | xargs -t -i ipmitool -I lanplus -U $username -E -H {} lan set 3 ipsrc dhcp
+
+exit
