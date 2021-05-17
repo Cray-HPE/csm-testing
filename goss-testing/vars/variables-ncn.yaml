@@ -35,6 +35,7 @@ services_enabled:
   - cloud-init
   - issue-generator
   - kdump
+  - kdump-cray
   - kdump-early
   - purge-kernels
   - rc-local
