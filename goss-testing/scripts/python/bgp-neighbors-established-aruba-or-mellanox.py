@@ -12,19 +12,22 @@ file to get the switch IP address. These files are expected to be in
 Then, depending on the brand, the correct query is ececuted, the results are reteived,
 parsed, and compared to the expected results.
 
-It gets 2 arguments from Goss: The Aruba password, the Mellanox password While the Aruba 
-and Mellanox passwords are the same here and now, that may not always be the case. 
+It gets 2 arguments from Goss: The Aruba password, the Mellanox password While the Aruba
+and Mellanox passwords are the same here and now, that may not always be the case.
 
 """
 
 import json
 import sys
+import subprocess
 import logging
 import requests
 import urllib3
 import socket
 import yaml
 import re
+
+from pathlib import Path
 
 # Some very light logging.
 LOG_LEVEL=logging.INFO
@@ -33,7 +36,7 @@ LOG_LEVEL=logging.INFO
 SLS_FILE = 'sls_input_file.json'
 HMN_FILE = 'networks/HMN.yaml'
 COOKIE_FILE = '/tmp/cookie'
-# I need the environment name to find the files 
+# I need the environment name to find the files
 HOSTNAME = socket.gethostname()
 HOSTNAME = HOSTNAME[:HOSTNAME.find('-')]
 BASENAME = '/var/www/ephemeral/prep/' + HOSTNAME +'/'
@@ -66,7 +69,7 @@ def get_results(ip_address, brand):
     if brand == 'Mellanox':
         print("Mellanox test")
         # Copied almost whole-cloth from https://stash.us.cray.com/projects/CASMNET/repos/network_troubleshooting/browse/mellanox/check_mlag.py#30
-        
+
         PASSWD = PASS_MELL
         spine = "https://{}/admin/launch?script=".format(ip_address)
         action = "rh&template=json-request&action=json-login"
@@ -156,7 +159,7 @@ def get_results(ip_address, brand):
                     fail = True
                 else:
                     print("Pass")
-                            
+
         finally:
             logout = session.post(f"https://{ip_address}/rest/v10.04/logout")
             # print(f"This is the logout code: {logout.status_code}")
@@ -167,11 +170,32 @@ def get_results(ip_address, brand):
 
     return fail
 
+def get_switch_info_from_config_map():
+    spine_switches = {}
+    try:
+        logging.info(f"Getting switch IPs from configmap")
+        command_line = ['kubectl', 'get', 'cm', '-n', 'metallb-system', '-o', 'yaml', 'config']
+        response = subprocess.check_output(command_line, stderr=subprocess.STDOUT).decode("utf8")
+        logging.debug(response)
+        configmap = yaml.safe_load(response)
+        for resource_name in configmap["data"]:
+            resource = yaml.safe_load(configmap["data"][resource_name])
+            for peer in resource["peers"]:
+                spine_switches[peer["peer-address"]] = peer["peer-address"]
+    except subprocess.CalledProcessError as err:
+        logging.error(f"Could not retrieve metallb configmap. Got exit code {err.returncode}. Msg: {err.output}")
+        pass
+
+    return spine_switches
+
+
 if __name__ == '__main__':
 
+    #
     # We're expecting Goss to send us:
     # The Aruba password and the Mellanox password. While these are the same now, it may not always be so.
-    # We also need the MTU of both brands as they are not the same
+    #
+    lArgv = len(sys.argv)
     if lArgv < 3:
         print("The Aruba and Mellanox admin passwords (both) are required to run this script")
         logging.critical("Passwords were not received as arguments")
@@ -180,33 +204,52 @@ if __name__ == '__main__':
         PASS_ARUBA = sys.argv[1]
         PASS_MELL = sys.argv[2]
     else:
-        print("Wrong number of arguments. Usage: mtu_aruba_or_mellanox.py aruba_password mellanox_password aruba_mtu mellanox_mtu")
+        print("Wrong number of arguments. Usage: bgp-neighbors-established-aruba-or-mellanox.py aruba_password mellanox_password")
         logging.critical("Wrong number of arguments passed. Args = {}.".format(sys.argv))
         sys.exit(1)
 
     # Setting up the needed files
     SLS_FILE = BASENAME + SLS_FILE
     HMN_FILE = BASENAME + HMN_FILE
-    
-    with open(SLS_FILE, 'r') as f:
-        payload = f.read().strip()
-    data = json.loads(payload)
 
-    data_hw = data['Hardware']
-    data_net = data['Networks']
+    sls_file = Path(SLS_FILE)
+    if sls_file.is_file():
 
-    # A list of dictionaries of the data in the switches part of the file - dictionary looks like:
-    # [{'Name': 'sw-spine-001', 'IPAddress': '10.254.0.2', 'Comment': 'x3000c0h24s1'},
-    switches = data_net['HMN']['ExtraProperties']['Subnets'][0]['IPReservations']
+        with open(SLS_FILE, 'r') as f:
+            payload = f.read().strip()
+        data = json.loads(payload)
 
-    for switch in switches:
-        if 'spine' in switch['Name']:
-            switch_name = switch['Name']
-            switch_xname = switch['Comment']
-            switch_IP_addr = get_switch_info(HMN_FILE)[switch_name][0]
-            switch_brand = data_hw[switch_xname]['ExtraProperties']['Brand']
-            logging.debug(switch_name, switch_IP_addr, switch_xname, switch_brand)
-            # assigning to the variable 'results' in case we want to do something else in the future.
-            # Goss will fail when it sees 'FAIL' in STDOUT in the get_results function
-            results = get_results(switch_IP_addr, switch_brand)
+        data_hw = data['Hardware']
+        data_net = data['Networks']
 
+        # A list of dictionaries of the data in the switches part of the file - dictionary looks like:
+        # [{'Name': 'sw-spine-001', 'IPAddress': '10.254.0.2', 'Comment': 'x3000c0h24s1'},
+        switches = data_net['HMN']['ExtraProperties']['Subnets'][0]['IPReservations']
+
+        for switch in switches:
+            if 'spine' in switch['Name']:
+                switch_name = switch['Name']
+                switch_xname = switch['Comment']
+                switch_IP_addr = get_switch_info(HMN_FILE)[switch_name][0]
+                switch_brand = data_hw[switch_xname]['ExtraProperties']['Brand']
+                logging.debug(switch_name, switch_IP_addr, switch_xname, switch_brand)
+                # assigning to the variable 'results' in case we want to do something else in the future.
+                # Goss will fail when it sees 'FAIL' in STDOUT in the get_results function
+                results = get_results(switch_IP_addr, switch_brand)
+    else:
+        #
+        # No sls file -- let's get config from kubernetes
+        #
+        switches=get_switch_info_from_config_map()
+        for switch in switches:
+            logging.debug(switch)
+            try:
+                #
+                # We will first see if we can talk Aruba
+                #
+                results = get_results(switch, 'Aruba')
+            except ValueError:
+                #
+                # Failed to talk Aruba, let's try Mellanox
+                #
+                results = get_results(switch, 'Mellanox')
