@@ -28,6 +28,7 @@ services_enabled:
   - cloud-init
   - cloud-final
   - cloud-init-local
+  - cloud-init-oneshot
   - ca-certificates
   - issue-generator
   - ca-certificates
