@@ -4,3 +4,4 @@ gossfile:
   ../tests/goss-lvm-drives-storage.yaml: {}
   ../tests/goss-ceph-storage-images.yaml: {}
   ../tests/goss-ceph-storage-config-files.yaml: {}
+  ../tests/goss-check-clock-skew.yaml: {}
