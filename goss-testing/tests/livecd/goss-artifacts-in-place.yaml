@@ -1,17 +1,6 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 # Variable sets: artifact_symlinks and artifact_dirs
 file:
-  {{range $symlink := index .Vars "artifact_symlinks"}}
-  /var/www/{{ $symlink }}:
-    title: Symlinks in Place
-    meta:
-      desc: Validates the symlinks in /var/www exist and are valid links to real files.
-      sev: 0
-    exists: true
-    filetype: symlink
-    contains: [ " " ]
-    skip: false
-  {{end}}
   {{range $artifact_dirs := index .Vars "artifact_dirs"}}
   {{range $dir := index $artifact_dirs "dirs"}}
   /var/www/{{ $dir }}:
