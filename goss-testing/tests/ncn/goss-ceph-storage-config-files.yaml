@@ -9,5 +9,4 @@ command:
     stdout:
     - ceph.client.admin.keyring
     - ceph.conf
-    - ceph.pub
     exit-status: 0
