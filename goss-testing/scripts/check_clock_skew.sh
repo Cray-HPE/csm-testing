@@ -6,7 +6,7 @@ baseline=""
 # of room for ssh times, but not too much so we don't
 # allow real drift.
 #
-allowed_drift_seconds=5
+allowed_drift_seconds=1
 cnt=0
 exit_code=0
 pdsh_node_args=""
