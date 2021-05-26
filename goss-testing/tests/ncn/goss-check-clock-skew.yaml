@@ -5,7 +5,7 @@ command:
     meta:
       desc: If this test fails, run the '/opt/cray/tests/install/ncn/scripts/check_clock_skew.sh' for more detail on which nodes have clock skew and then inspect those node(s) to determine why ntp sync may be failing.  Start by running 'systemctl status chronyd.service' on those nodes, as well looking for any chrony related messages in /var/log/messages." 
       sev: 0
-    exec: "{{.Env.GOSS_BASE}}/ncn/scripts/check_clock_skew.sh"
+    exec: "{{.Env.GOSS_BASE}}/scripts/check_clock_skew.sh"
     exit-status: 0
     timeout: 60000
     skip: false
