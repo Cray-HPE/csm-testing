@@ -1,0 +1,8 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+gossfile:
+  ../tests/goss-k8s-nodes-ready.yaml: {}
+  ../tests/goss-check-mounts-worker.yaml: {}
+  ../tests/goss-dedicated-drive-worker.yaml: {}
+  ../tests/goss-k8s-nodes-have-running-pods.yaml: {}
+  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
+  ../tests/goss-check-clock-skew.yaml: {}

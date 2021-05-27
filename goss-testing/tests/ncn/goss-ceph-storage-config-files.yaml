@@ -1,0 +1,12 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  ceph_storage_config_files:
+    title: Validates the ceph config files are in place.
+    meta:
+      desc: If this test fails, verify install/upgrade steps were completed properly without errors.
+      sev: 0
+    exec: "ls /etc/ceph"
+    stdout:
+    - ceph.client.admin.keyring
+    - ceph.conf
+    exit-status: 0

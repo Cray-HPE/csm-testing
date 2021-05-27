@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Installs NCN image files on the LiveCD.
 #
 # (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
 # Author: Forrest Jadick
@@ -21,24 +22,35 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
+usage_info="install-ncn-images-livecd -k [k8s image version #/id] -s [ceph image version #/id]"
 
-source $GOSS_BASE/automated/run-ncn-tests.sh
+k8s_image_id=$2
+ceph_image_id=$4
 
-echo $'\e[1;33m'NCN Preflight Checks$'\e[0m'
-echo $'\e[1;33m'--------------------$'\e[0m'
-
-if [ ! -f "/etc/dnsmasq.d/statics.conf" ]; then
-  echo "ERROR: These tests can only be run from the LiveCD."
+if [[ -z $k8s_image_id || -z $ceph_image_id ]]; then
+  echo "ERROR! Missing argument(s)."
+  echo "Usage: $usage_info"
   exit 1
 fi
 
-# find the ncn node names and query the server endpoint
-nodes=$(grep -ohE "ncn-[m,w,s]([0-9]{3})" /etc/dnsmasq.d/statics.conf | grep -v ncn-m001 | awk '!a[$0]++')
+echo "Cleaning up rollback directories..."
+rm -rf /var/www/ephemeral/data/ceph-rollback
+rm -rf /var/www/ephemeral/data/k8s-rollback
 
-for node in $nodes; do
-  run_ncn_tests $node 8995 ncn-preflight-tests
-done
+echo "Creating new rollback directories..."
+mv /var/www/ephemeral/data/ceph /var/www/ephemeral/data/ceph-rollback
+mv /var/www/ephemeral/data/k8s /var/www/ephemeral/data/k8s-rollback
+
+echo "Removing node directories..."
+rm -rf /var/www/ncn-*
+
+cd /root
+
+echo "Pulling NCN image files..."
+/root/bin/get-sqfs.sh -k $k8s_image_id
+/root/bin/get-sqfs.sh -s $ceph_image_id
+
+echo "Installing images in /var/www..."
+/root/bin/set-sqfs-links.sh
 
 exit

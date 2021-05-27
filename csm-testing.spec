@@ -30,6 +30,7 @@ They test both the LiveCD and NCN environment.
 install -d -m 644 %{buildroot}%{livecd}/automated
 install -d -m 644 %{buildroot}%{livecd}/tests
 install -d -m 644 %{buildroot}%{livecd}/vars
+install -d -m 644 %{buildroot}%{livecd}/build-testing
 install -d -m 644 %{buildroot}%{ncn}/automated
 install -d -m 644 %{buildroot}%{ncn}/tests
 install -d -m 644 %{buildroot}%{ncn}/vars
@@ -37,6 +38,7 @@ install -m 644 goss-testing/automated/*         %{buildroot}%{livecd}/automated
 install -m 644 goss-testing/tests/livecd/*.yaml %{buildroot}%{livecd}/tests
 install -m 644 goss-testing/tests/common/*.yaml %{buildroot}%{livecd}/tests
 install -m 644 goss-testing/vars/*.yaml         %{buildroot}%{livecd}/vars
+install -m 644 build-testing/*                  %{buildroot}%{livecd}/build-testing
 install -m 644 goss-testing/automated/*         %{buildroot}%{ncn}/automated
 install -m 644 goss-testing/tests/ncn/*.yaml    %{buildroot}%{ncn}/tests
 install -m 644 goss-testing/tests/common/*.yaml %{buildroot}%{ncn}/tests

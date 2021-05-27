@@ -30,72 +30,96 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 # variables for ncn tests
 vars_file="/opt/cray/tests/install/ncn/vars/variables-ncn.yaml"
 
-# get node list from basecamp metadata endpoint
-nodes=$(curl -s http://ncn-m001:8888/meta-data | jq -r .Global.ntp_peers)
-
 # temporary variable file location
 tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
+cat $vars_file > $tmpvars
+echo "" >> $tmpvars
 
+echo "Using goss vars: $tmpvars"
+
+nodes=""
 # add node names from basecamp metadata to temp variables file
-if [ `echo $nodes | wc -w` -ne 0 ];then
-  echo "nodes:" >> $tmpvars
-  for node in $nodes; do
-    echo "  - $node" >> $tmpvars
-  done
-  echo "" >> $tmpvars
-else
-  echo "Node names could not be found in Basecamp metadata! Exiting now."
-  exit 1
-fi
-cat $vars_file >> $tmpvars
+while [[ `echo $nodes | wc -w` -eq 0 || "$nodes" == "null" ]]; do
+  # get node list from basecamp metadata endpoint
+  nodes=$(curl -s http://ncn-m001:8888/meta-data | jq -r .Global.host_records[].aliases[1] | grep -ohE "ncn-[m,w,s]([0-9]{3})" | awk '!a[$0]++')
+
+  if [[ `echo $nodes | wc -w` -ne 0 && "$nodes" != "null" ]]; then
+    echo "Found nodes $nodes"
+    echo "nodes:" >> $tmpvars
+    for node in $nodes; do
+      echo "  - $node" >> $tmpvars
+    done
+    echo "" >> $tmpvars
+  else
+    echo "Node names could not be found in Basecamp. Waiting for 30s"
+    sleep 30
+  fi
+done
 
 # for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
-ip=$(host $( hostname ).hmn | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+ip=$(host $(hostname).hmn | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 [[ -z $ip ]] && exit 2
 
-# start server with NCN test suites (as of now, Goss servers only run on NCNs)
-# designated goss-servers port range: 8994-9001
+# start servers with NCN test suites
+# designated goss-servers port range: 8994-9002
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-preflight-tests.yaml --vars $tmpvars serve \
+echo "starting ncn-preflight-tests in background"
+/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-preflight-tests.yaml --vars $tmpvars serve \
   --format json \
   --max-concurrent 4 \
   --endpoint /ncn-preflight-tests \
   --listen-addr $ip:8995 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-master.yaml --vars $tmpvars serve \
+echo "starting ncn-kubernetes-tests-master in background"
+/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-master.yaml --vars $tmpvars serve \
   --format json \
   --max-concurrent 4 \
   --endpoint /ncn-kubernetes-tests-master \
   --listen-addr $ip:8996 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-worker.yaml --vars $tmpvars serve \
+echo "starting ncn-kubernetes-tests-worker in background"
+/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-worker.yaml --vars $tmpvars serve \
   --format json \
   --max-concurrent 4 \
   --endpoint /ncn-kubernetes-tests-worker \
   --listen-addr $ip:8998 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-storage-tests.yaml --vars $tmpvars serve \
+echo "starting ncn-storage-tests in background"
+/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-storage-tests.yaml --vars $tmpvars serve \
   --format json \
   --max-concurrent 4 \
   --endpoint /ncn-storage-tests \
   --listen-addr $ip:8997 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-master.yaml --vars $tmpvars serve \
+echo "starting ncn-healthcheck-master in background"
+/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-master.yaml --vars $tmpvars serve \
   --format json \
-  --endpoint /ncn-healthcheck-master \
   --max-concurrent 4 \
+  --endpoint /ncn-healthcheck-master \
   --listen-addr $ip:8994 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-worker.yaml --vars $tmpvars serve \
+echo "starting ncn-healthcheck-worker in background"
+/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-worker.yaml --vars $tmpvars serve \
   --format json \
-  --endpoint /ncn-healthcheck-worker \
   --max-concurrent 4 \
+  --endpoint /ncn-healthcheck-worker \
   --listen-addr $ip:9000 &
 
-nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-storage.yaml --vars $tmpvars serve \
+echo "starting ncn-healthcheck-storage in background"
+/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-storage.yaml --vars $tmpvars serve \
   --format json \
-  --endpoint /ncn-healthcheck-storage \
   --max-concurrent 4 \
+  --endpoint /ncn-healthcheck-storage \
   --listen-addr $ip:9001 &
 
-exit
+echo "starting ncn-smoke-tests in background"
+/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-smoke-tests.yaml --vars $tmpvars serve \
+  --format json \
+  --endpoint /ncn-smoke-tests \
+  --max-concurrent 4 \
+  --listen-addr $ip:9002 &
+
+echo "Goss servers started in background"
+
+# Keep process running so systemd can kill and monitor background jobs as needed
+sleep infinity

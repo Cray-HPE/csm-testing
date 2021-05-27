@@ -1,0 +1,7 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+gossfile:
+  ../tests/goss-ceph-storage-health.yaml: {}
+  ../tests/goss-lvm-drives-storage.yaml: {}
+  ../tests/goss-ceph-storage-images.yaml: {}
+  ../tests/goss-ceph-storage-config-files.yaml: {}
+  ../tests/goss-check-clock-skew.yaml: {}

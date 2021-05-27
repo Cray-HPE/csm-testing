@@ -1,0 +1,12 @@
+mount:
+  /var/lib/containerd:
+    exists: true
+    usage:
+      lt: 1
+  /var/lib/kubelet:
+    exists: true
+    usage:
+      lt: 1
+  /run/containerd:
+    exists: true
+      lt: 1

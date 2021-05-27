@@ -1,0 +1,11 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  k8s_cray_cli_configured:
+    title: Validate that the cray cli is configured
+    meta:
+      desc: If this test fails, follow instructions in the admin guide for how to initially configure the cray cli.
+      sev: 0
+    exec: "cray artifacts buckets list"
+    exit-status: 0
+    timeout: 5000
+    skip: false

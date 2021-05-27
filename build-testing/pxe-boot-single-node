@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Attempts to network boot a single NCN from the LiveCD for testing purposes
 #
 # (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
 # Author: Forrest Jadick
@@ -21,24 +22,40 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
+[[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/livecd"
 
-source $GOSS_BASE/automated/run-ncn-tests.sh
+usage_info="pxe-boot-one-node [node name, ie ncn-m002] [IPMI password] [maximum boot retries]"
 
-echo $'\e[1;33m'NCN Preflight Checks$'\e[0m'
-echo $'\e[1;33m'--------------------$'\e[0m'
-
-if [ ! -f "/etc/dnsmasq.d/statics.conf" ]; then
-  echo "ERROR: These tests can only be run from the LiveCD."
-  exit 1
+if [[ -z $1 ]]; then
+  echo "ERROR! Command missing node name (ie, ncn-m002, ncn-s003, etc)."
+  echo "Usage: $usage_info"
+  exit 0
 fi
 
-# find the ncn node names and query the server endpoint
-nodes=$(grep -ohE "ncn-[m,w,s]([0-9]{3})" /etc/dnsmasq.d/statics.conf | grep -v ncn-m001 | awk '!a[$0]++')
+if [[ -z $2 ]]; then
+  echo "ERROR! Command missing IPMI password."
+  echo "Usage: $usage_info"
+  exit 0
+fi
 
-for node in $nodes; do
-  run_ncn_tests $node 8995 ncn-preflight-tests
-done
+if [[ -z $3 ]]; then
+  echo "ERROR! Command missing maximum boot retries."
+  echo "Usage: $usage_info"
+  exit 0
+fi
+
+node=$1
+export IPMI_PASSWORD=$2
+export MAX_BOOT_RETRIES=$3
+
+export NODE_COUNT=$(grep -ohE "ncn-$type([0-3]{3})" /etc/dnsmasq.d/statics.conf | awk '!a[$0]++' | wc -l)
+export NODE_NUM=1
+export IPMI_USERNAME=root
+export MAX_SSH_ATTEMPTS=100
+export CONMAN_LOGS=/var/log/conman
+
+source $GOSS_BASE/build-testing/boot-functions.sh
+
+node_boot_attempt $node $MAX_BOOT_RETRIES
 
 exit
