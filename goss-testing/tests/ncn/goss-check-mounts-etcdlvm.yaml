@@ -1,0 +1,5 @@
+mount:
+  /var/lib/etcd:
+    exists: true
+    usage:
+      lt: 1
