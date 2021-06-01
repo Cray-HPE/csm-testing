@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -e
+
+# wipe ceph storage
+if [[ ! -f /var/lib/ceph/*-* ]]; then
+  exit 0
+fi
+FSID=$(basename $(ls -d /var/lib/ceph/*-*))
+cephadm rm-cluster --fsid $FSID --force
+vgremove -f --select 'vg_name=~ceph*'
+umount /etc/ceph /var/lib/containers /var/lib/ceph
+vgremove -f metalvg0
+sgdisk --zap-all /dev/sd*
+wipefs -fa /dev/sd*
+
+# wipe k8s storage
+if [[ ! -f /dev/sd* ]]; then
+  exit 0
+fi
+sgdis --zap-all /dev/sd*
+wipefs -fa /dev/sd*
+
+exit
