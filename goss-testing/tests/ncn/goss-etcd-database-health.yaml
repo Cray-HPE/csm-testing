@@ -1,0 +1,13 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  etcd_database_health:
+    title: Ectd Database Health
+    meta:
+      desc: Checks the health of the etcd service databases.
+      sev: 0
+    exec: /bin/sh {{.Env.GOSS_BASE}}/scripts/etcd_database_health.sh
+    stdout:
+      - "!FAIL"
+    exit-status: 0
+    timeout: 1000
+    skip: false
