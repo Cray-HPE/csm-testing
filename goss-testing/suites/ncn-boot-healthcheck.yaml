@@ -1,0 +1,11 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+gossfile:
+  ../tests/goss-k8s-services.yaml: {}
+  ../tests/goss-k8s-etcd-service.yaml: {}
+  ../tests/goss-services-running.yaml: {}
+  ../tests/goss-k8s-nexus-endpoint.yaml: {}
+  ../tests/goss-k8s-nexus-running.yaml: {}
+  ../tests/goss-k8s-services-endpoint.yaml: {}
+  ../tests/goss-k8s-services-running.yaml: {}
+  ../tests/goss-etcd-service-health.yaml: {}
+  ../tests/goss-etcd-database-health.yaml: {}
