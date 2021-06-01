@@ -1,0 +1,12 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  k8s_service_nexus_running:
+    title: Kubernetes Service 'nexus' Is Running
+    meta:
+      desc: Validates that Kubernetes service 'nexus' is running.
+      sev: 0
+    exec: kubectl -n nexus get pods | grep nexus | grep Running
+    exit-status: 0
+    timeout: 10000
+    skip: false
+  {{end}}

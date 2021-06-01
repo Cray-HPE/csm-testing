@@ -1,0 +1,12 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  k8s_service_nexus_endpoint:
+    title: Kubernetes Service 'nexus' Has Endpoint
+    meta:
+      desc: Validates that Kubernetes service 'nexus' has an endpoint.
+      sev: 0
+    exec: kubectl -n nexus get endpoints | grep nexus
+    exit-status: 0
+    timeout: 10000
+    skip: false
+  {{end}}

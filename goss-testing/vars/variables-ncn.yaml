@@ -56,6 +56,15 @@ services_enabled:
 services_running:
   - etcd
 
+k8s_services:
+  - cray-tftp
+  - cray-bss
+  - cray-dhcp-kea
+  - cray-dns-unbound-tcp-hmn
+  - cray-dns-unbound-tcp-nmn
+  - cray-dns-unbound-udp-hmn
+  - cray-dns-unbound-tcp-nmn
+
 datajson:
   - "/mnt/configs/data.json"
 

@@ -1,0 +1,14 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Variable set: k8s_services
+command:
+  {{range $service := index .Vars "k8s_services"}}
+  k8s_service_{{$service}}_running:
+    title: Kubernetes Service '{{$service}}' Running
+    meta:
+      desc: Validates that Kubernetes service '{{$service}}' is running.
+      sev: 0
+    exec: kubectl -n services get pods | grep {{$service}} | grep Running
+    exit-status: 0
+    timeout: 10000
+    skip: false
+  {{end}}
