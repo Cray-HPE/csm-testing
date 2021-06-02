@@ -2,11 +2,11 @@ mount:
   /var/lib/containerd:
     exists: true
     usage:
-      lt: 1
+      lt: 75
   /var/lib/kubelet:
     exists: true
     usage:
-      lt: 1
+      lt: 75
   /run/containerd:
     exists: true
     usage:
