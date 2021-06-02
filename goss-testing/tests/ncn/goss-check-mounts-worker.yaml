@@ -9,4 +9,5 @@ mount:
       lt: 1
   /run/containerd:
     exists: true
-      lt: 1
+    usage:
+      lt: 75
