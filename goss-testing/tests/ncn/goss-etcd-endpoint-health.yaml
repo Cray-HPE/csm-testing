@@ -1,0 +1,14 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  etcd_database_health:
+    title: Ectd Cluster Endpoint Health
+    meta:
+      desc: Checks the endpoint health of the etcd clusters.
+      sev: 0
+    exec: for pod in $(kubectl get pods -l app=etcd -n services -o jsonpath='{.items[*].metadata.name}');do
+      kubectl -n services exec ${pod} -- /bin/sh -c "ETCDCTL_API=3 etcdctl endpoint health"; done
+    stdout:
+      - "!unhealthy"
+    exit-status: 0
+    timeout: 10000
+    skip: false
