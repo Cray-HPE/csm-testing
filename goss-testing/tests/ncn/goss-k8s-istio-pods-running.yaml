@@ -1,0 +1,15 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Variable set: k8s_services
+command:
+  {{range $service := index .Vars "pods_istio"}}
+  k8s_service_{{$service}}_running:
+    title: Kubernetes Service '{{$service}}' Running
+    meta:
+      desc: Validates that Kubernetes service '{{$service}}' is running.
+      sev: 0
+    exec: kubectl get pods -n istio-system -l {{$label}} | awk 'NR>1' | awk '{ print $3 }' | \
+      while read status; do if [ "$status" != "Running" ]; then echo FAIL; fi; done
+    exit-status: 0
+    timeout: 10000
+    skip: false
+  {{end}}
