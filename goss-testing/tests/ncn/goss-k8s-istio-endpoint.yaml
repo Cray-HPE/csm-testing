@@ -1,0 +1,17 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Variable set: k8s_istio_services
+command:
+  {{range $service := index .Vars "k8s_istio_services"}}
+  k8s_istio_service_{{$service}}_endpoint:
+    title: Kubernetes Service '{{$service}}' Has Endpoint
+    meta:
+      desc: Validates that Kubernetes Istio service '{{$service}}' has an endpoint.
+      sev: 0
+    exec: endpoint=$(kubectl -n istio-system get endpoints | grep {{$service}} | awk '{ print $2 }'); \
+      if [ "$endpoint" == '<none>' ] || [ -z "$endpoint" ]; then echo FAIL; fi
+    exit-status: 0
+    stdout:
+    - "!FAIL"
+    timeout: 10000
+    skip: false
+  {{end}}
