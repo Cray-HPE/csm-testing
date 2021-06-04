@@ -56,6 +56,15 @@ services_enabled:
 services_running:
   - etcd
 
+pods_services:
+  - app.kubernetes.io/name=cray-bss
+  - app.kubernetes.io/name=cray-dns-unbound
+  - app.kubernetes.io/name=cray-dhcp-kea
+  - app.kubernetes.io/name=cray-tftp
+
+pods_istio:
+  - app=istio-ingressgateway
+
 k8s_services:
   - cray-tftp
   - cray-bss
