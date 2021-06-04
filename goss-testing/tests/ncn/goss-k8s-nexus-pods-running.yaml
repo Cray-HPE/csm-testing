@@ -10,4 +10,3 @@ command:
     exit-status: 0
     timeout: 10000
     skip: false
-  {{end}}

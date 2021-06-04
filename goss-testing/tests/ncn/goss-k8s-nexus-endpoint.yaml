@@ -11,5 +11,3 @@ command:
     stdout: !FAIL
     timeout: 10000
     skip: false
-  {{end}}
-  {{end}}
