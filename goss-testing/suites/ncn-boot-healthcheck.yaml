@@ -8,3 +8,4 @@ gossfile:
   ../tests/goss-k8s-istio-pods-running.yaml: {}
   ../tests/goss-k8s-nexus-endpoint.yaml: {}
   ../tests/goss-k8s-services-endpoint.yaml: {}
+  ../tests/goss-k8s-istio-endpoint.yaml: {}
