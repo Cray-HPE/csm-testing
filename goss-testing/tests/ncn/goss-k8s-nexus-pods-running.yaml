@@ -5,8 +5,8 @@ command:
     meta:
       desc: Validates that Kubernetes service 'nexus' is running.
       sev: 0
-    exec: kubectl get pods -n nexus -l app=nexus | awk 'NR>1' | awk '{ print $3 }' | \
-      while read status; do if [ "$status" != "Running" ]; then echo FAIL; fi; done
+    exec: pods=$(kubectl get pods -n nexus -l app=nexus 2>&1 | awk 'NR>1' | awk '{ print $3 }'); if [ -z $pods ]; \
+      then echo FAIL; else for status in $pods; do if [ "$status" != "Running" ]; then echo FAIL; fi; done; fi
     exit-status: 0
     timeout: 10000
     skip: false
