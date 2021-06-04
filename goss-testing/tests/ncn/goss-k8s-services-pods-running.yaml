@@ -2,7 +2,7 @@
 # Variable set: pods_services
 command:
   {{range $label := index .Vars "pods_services"}}
-  k8s_service_{{$service}}_running:
+  k8s_service_{{$label}}_running:
     title: Kubernetes Service '{{$label}}' Running
     meta:
       desc: Validates that Kubernetes service with label '{{$label}}' is running.
