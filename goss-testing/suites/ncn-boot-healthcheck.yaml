@@ -1,0 +1,11 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+gossfile:
+  ../tests/goss-services-running.yaml: {}
+  ../tests/goss-etcd-service.yaml: {}
+  ../tests/goss-etcd-endpoint-health.yaml: {}
+  ../tests/goss-etcd-database-health.yaml: {}
+  ../tests/goss-k8s-nexus-pods-running.yaml: {}
+  ../tests/goss-k8s-istio-pods-running.yaml: {}
+  ../tests/goss-k8s-nexus-endpoint.yaml: {}
+  ../tests/goss-k8s-services-endpoint.yaml: {}
+  ../tests/goss-k8s-istio-endpoint.yaml: {}
