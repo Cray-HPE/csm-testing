@@ -10,7 +10,8 @@ command:
     exec: endpoint=$(kubectl -n services get endpoints | grep {{$service}} | awk '{ print $2 }'); \
       if [ "$endpoint" == '<none>' ] || [ -z "$endpoint" ]; then echo FAIL; fi
     exit-status: 0
-    stdout: !FAIL
+    stdout:
+    - "!FAIL"
     timeout: 10000
     skip: false
   {{end}}

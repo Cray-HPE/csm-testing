@@ -5,9 +5,10 @@ command:
     meta:
       desc: Validates that Kubernetes service 'nexus' has an endpoint.
       sev: 0
-    exec: endpoint=$(kubectl -n nexus get endpoints | grep nexus | awk '{ print $2 }'); \
-      if [ "$endpoint" == '<none>' ] || [ -z "$endpoint" ]; then echo FAIL; fi
+    exec: endpoint=$(kubectl -n nexus get endpoints | grep nexus | awk '{ print $2 }');if [ "$endpoint" == '<none>' ]\
+      || [ -z "$endpoint" ]; then echo FAIL; fi
     exit-status: 0
-    stdout: !FAIL
+    stdout:
+    - "!FAIL"
     timeout: 10000
     skip: false
