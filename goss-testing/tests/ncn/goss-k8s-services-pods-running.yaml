@@ -1,5 +1,5 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
-# Variable set: k8s_services
+# Variable set: pods_services
 command:
   {{range $label := index .Vars "pods_services"}}
   k8s_service_{{$service}}_running:
