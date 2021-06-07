@@ -24,6 +24,16 @@
 # GOSS_BASE isn't set by default on the NCNs, just on LiveCD
 [[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
 
+kube_creds=/root/.kube/config
+
+if [ ! -f $kube_creds ]; then
+  echo "Credentials not installed at $kube_creds! Cannot run tests without credentials."
+  exit 1
+else:
+  # run local kubernetes tests
+  
+fi
+
 source $GOSS_BASE/automated/run-ncn-tests.sh
 
 # master nodes
