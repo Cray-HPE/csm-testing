@@ -56,6 +56,35 @@ services_enabled:
 services_running:
   - etcd
 
+pods_services:
+  - app.kubernetes.io/name=cray-bss
+  - app.kubernetes.io/name=cray-dns-unbound
+  - app.kubernetes.io/name=cray-dhcp-kea
+  - app.kubernetes.io/name=cray-tftp
+
+pods_istio:
+  - app=istio-ingressgateway
+
+k8s_services:
+  - cray-tftp
+  - cray-tftp-hmn
+  - cray-bss
+  - cray-bss-etcd
+  - cray-bss-etcd-client
+  - cray-dhcp-kea-api
+  - cray-dhcp-kea-tcp-hmn
+  - cray-dhcp-kea-tcp-nmn
+  - cray-dhcp-kea-udp-hmn
+  - cray-dhcp-kea-udp-nmn
+  - cray-dns-unbound-tcp-hmn
+  - cray-dns-unbound-tcp-nmn
+  - cray-dns-unbound-udp-hmn
+  - cray-dns-unbound-udp-nmn
+
+k8s_istio_services:
+  - istio-ingressgateway
+  - istio-ingressgateway-local
+
 datajson:
   - "/mnt/configs/data.json"
 
