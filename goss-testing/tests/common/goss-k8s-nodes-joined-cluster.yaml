@@ -7,7 +7,7 @@ command:
     meta:
       desc: Validates that Kubernetes node '{{$node}}' joined cluster and is in ready state.
       sev: 0
-    exec: kubectl get nodes | grep {{$node}} | grep Ready
+    exec: kubectl get nodes | grep {{$node}} | grep Ready | grep -v NotReady
     exit-status: 0
     timeout: 10000
     skip: false
