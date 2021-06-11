@@ -2,7 +2,7 @@
 # Variable set: k8s_nodes
 command:
   {{range $node := index .Vars "k8s_nodes"}}
-  k8s_node_{{$node}}_joined_cluster:
+  k8s_node_{{$node}}_age_valid:
     title: Kubernetes Node '{{$node}}' Valid Age
     meta:
       desc: Validates that Kubernetes node '{{$node}}' has valid age.
