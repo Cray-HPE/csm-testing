@@ -53,16 +53,16 @@ while [[ `echo $nodes | wc -w` -eq 0 || "$nodes" == "null" ]]; do
     echo "" >> $tmpvars
 
     # add lists of k8s and storage nodes
-    k8s_nodes=$(curl -s http://ncn-m001:8888/meta-data | jq -r .Global.host_records[].aliases[1] | grep -ohE "ncn-[m,w]([0-9]{3})" | awk '!a[$0]++')
+    nodes=$(curl -s http://ncn-m001:8888/meta-data | jq -r .Global.host_records[].aliases[1] | grep -ohE "ncn-[m,w]([0-9]{3})" | awk '!a[$0]++')
     echo "k8s_nodes:" >> $tmpvars
-    for node in $k8s_nodes; do
+    for node in $nodes; do
       echo "  - $node" >> $tmpvars
     done
     echo "" >> $tmpvars
 
-    storage_nodes=$(curl -s http://ncn-m001:8888/meta-data | jq -r .Global.host_records[].aliases[1] | grep -ohE "ncn-[s]([0-9]{3})" | awk '!a[$0]++')
+    nodes=$(curl -s http://ncn-m001:8888/meta-data | jq -r .Global.host_records[].aliases[1] | grep -ohE "ncn-[s]([0-9]{3})" | awk '!a[$0]++')
     echo "storage_nodes:" >> $tmpvars
-    for node in $k8s_nodes; do
+    for node in $nodes; do
       echo "  - $node" >> $tmpvars
     done
   else

@@ -29,7 +29,7 @@ export GOSS_VARS=/tmp/goss-variables-$(date +%s)-temp.yaml
 cat $GOSS_BASE/vars/variables-livecd.yaml > $GOSS_VARS
 echo "" >> $GOSS_VARS
 
-# livecd test variables
+# files needed to run from livecd
 kube_creds=/root/.kube/config
 pit_file=/etc/pit-release
 
@@ -60,6 +60,7 @@ if [ -f $kube_creds ] && [ -f $pit_file ]; then
   /usr/bin/goss -g $GOSS_BASE/tests/goss-k8s-nodes-joined-cluster.yaml v
   echo
 else
+  # run tests from an ncn
   echo $'\e[1;33m'Kubernetes Cluster Node Checks$'\e[0m'
   echo $'\e[1;33m'------------------------------$'\e[0m'
   echo
