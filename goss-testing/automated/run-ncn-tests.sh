@@ -27,7 +27,7 @@ function k8s_local_tests {
   /usr/bin/goss -g $GOSS_BASE/tests/goss-k8s-nodes-joined-cluster.yaml v
   echo
   echo "Test Name: Kubernetes Nodes Have Valid Age"
-  /usr/bin/goss -g $GOSS_BASE/tests/ goss-k8s-nodes-age-valid.yaml v
+  /usr/bin/goss -g $GOSS_BASE/tests/goss-k8s-nodes-age-valid.yaml v
   echo
 }
 
