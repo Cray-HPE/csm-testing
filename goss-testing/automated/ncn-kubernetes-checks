@@ -59,7 +59,7 @@ if [ -f $kube_creds ] && [ -f $pit_file ]; then
   echo "Test Name: Kubernetes Nodes in Ready State"
   /usr/bin/goss -g $GOSS_BASE/tests/goss-k8s-nodes-joined-cluster.yaml v
   echo
-elif [ ! -f $pit_file ]; then
+else
   echo $'\e[1;33m'Kubernetes Cluster Node Checks$'\e[0m'
   echo $'\e[1;33m'------------------------------$'\e[0m'
   echo
