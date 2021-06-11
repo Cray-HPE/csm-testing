@@ -1,0 +1,14 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Variable set: k8s_nodes
+command:
+  {{range $node := index .Vars "k8s_nodes"}}
+  k8s_node_{{$node}}_joined_cluster:
+    title: Kubernetes Node '{{$node}}' Ready
+    meta:
+      desc: Validates that Kubernetes node '{{$node}}' joined cluster and is in ready state.
+      sev: 0
+    exec: kubectl get nodes | grep {{$node}} | grep Ready | grep -v NotReady
+    exit-status: 0
+    timeout: 10000
+    skip: false
+  {{end}}
