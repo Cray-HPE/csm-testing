@@ -5,7 +5,6 @@ gossfile:
   ../tests/goss-k8s-etcd-members.yaml: {}
   ../tests/goss-k8s-nexus-can-pull.yaml: {}
   ../tests/goss-k8s-keycloak-healthy.yaml: {}
-  ../tests/goss-k8s-cray-cli-configured.yaml: {}
   ../tests/goss-check-mounts-etcdlvm.yaml: {}
   ../tests/goss-etcdlvm-drive-master.yaml: {}
   ../tests/goss-k8s-nodes-have-running-pods.yaml: {}
