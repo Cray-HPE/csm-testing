@@ -1,0 +1,11 @@
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+command:
+  verify_rgw_health:
+    title: Verify rgw is healthy
+    meta:
+      desc: Check that rgw-vip and all storage nodes are up. Check rgw endpoint health by uploading and downloading a file from a bucket. For more detailed output, navigate to '/opt/cray/tests/install/ncn/scripts' directory  and run 'GOSS_BASE=/opt/cray/tests/install/ncn ./rgw_health_check.sh'.
+      sev: 0
+    exec: "{{.Env.GOSS_BASE}}/scripts/rgw_health_check.sh"
+    exit-status: 0
+    timeout: 180000
+    skip: false

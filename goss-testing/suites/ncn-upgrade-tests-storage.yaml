@@ -5,3 +5,4 @@ gossfile:
   ../tests/goss-ceph-storage-images.yaml: {}
   ../tests/goss-ceph-storage-config-files.yaml: {}
   ../tests/goss-check-clock-skew.yaml: {}
+  ../tests/goss-rgw-health.yaml: {}

@@ -12,3 +12,4 @@ gossfile:
   ../tests/goss-bond-members-have-correct-mtu.yaml: {}
   ../tests/goss-ceph-storage-health.yaml: {}
   ../tests/goss-k8s-cray-cli-configured.yaml: {}
+  ../tests/goss-rgw-health.yaml: {}
