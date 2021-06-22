@@ -1,0 +1,11 @@
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+command:
+  verify_etcd_health:
+    title: Verify cray etcd is healthy
+    meta:
+      desc: Check the correct number of etcd nodes are running per cluster, check endpoint health, and check that no alarms are set. Upon failure, '/opt/cray/tests/install/ncn/scripts/etcd_health_check.sh' for more details.
+      sev: 0
+    exec: "{{.Env.GOSS_BASE}}/scripts/etcd_health_check.sh"
+    exit-status: 0
+    timeout: 180000
+    skip: false
