@@ -5,7 +5,7 @@ command:
     meta:
       desc: If this test fails run the enable-psp.sh script to enable PodSecurityPolicy.
       sev: 0
-    exec: "for pod in $(kubectl get pods -n kube-system -l component=kube-apiserver -o custom-columns=:metadata.name --no-headers=true); do if ! kubectl describe -n kube-system pod $pod | grep -q -- '--enable-admission-plugins=NodeRestriction,PodSecurityPolicy'; then exit 1; fi; done"
+    exec: "for pod in $(kubectl get pods -n kube-system -l component=kube-apiserver -o custom-columns=:metadata.name --no-headers=true); do if ! kubectl describe -n kube-system pod $pod | grep -Eq -- '--enable-admission-plugins=.*PodSecurityPolicy'; then exit 1; fi; done"
     exit-status: 0
     timeout: 5000
     skip: false
