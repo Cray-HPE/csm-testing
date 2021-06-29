@@ -1,0 +1,11 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  k8s_service_ipxe_running:
+    title: Kubernetes Service 'cray-ipxe' Is Running
+    meta:
+      desc: If this test fails, look at the state of the ipxe pod (kubectl get po -n services | grep cray-ipxe) to investigate.
+      sev: 0
+    exec: kubectl get pods -n services -l 'app.kubernetes.io/name=cray-ipxe' | awk '{ print $3 }' | grep Running
+    exit-status: 0
+    timeout: 10000
+    skip: false
