@@ -3,7 +3,7 @@ command:
   k8s_service_nexus_running:
     title: Kubernetes Service 'nexus' Is Running
     meta:
-      desc: Validates that Kubernetes service 'nexus' is running.
+      desc: If this test fails, look at the state of the nexus pods (kubectl get po -n nexus) to investigate.
       sev: 0
     exec: kubectl get pods -n nexus -l app=nexus | awk '{ print $3 }' | grep Running
     exit-status: 0
