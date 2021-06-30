@@ -2,14 +2,12 @@ switch_aruba:
   ip: "10.103.10.20"
   login_url: "https://10.103.10.20/rest/v1/login"
   username: admin
-  password: "REPLACED_AT_RUNTIME"
   endpoint: "rest/v10.04/fullconfigs/running-config"
   jq_cmd: "jq '.ACL | .\"nmn-hmn/ipv4\" | .cfg_version'"
   mtu: 9198
 
 switch_mellanox:
   ip: “10.1.0.1”
-  password: "REPLACED_AT_RUNTIME"
   mtu: 9216
 
 networks:
