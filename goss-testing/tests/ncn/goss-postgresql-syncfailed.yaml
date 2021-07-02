@@ -1,0 +1,13 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  postgresql_check_SyncFailed:
+    title: Postgresql SyncFailed status check
+    meta:
+      desc: Checks if any posgresql have status SyncFailed. If this fails, investigate postgresql statuses.
+      sev: 0
+    exec: "if [[ -z $(kubectl get postgresql -A -o jsonpath='{.items[*].status.PostgresClusterStatus}' | grep SyncFailed ) ]]; then echo 'PASS'; else echo 'FAIL'; fi"
+    stdout:
+      - "!FAIL"
+    exit-status: 0
+    timeout: 1000
+    skip: false
