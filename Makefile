@@ -30,7 +30,8 @@ BUILD_METADATA ?= "1~development~$(shell git rev-parse --short HEAD)"
 RPM_SOURCE_NAME_1 ?= ${RPM_NAME}-${RPM_VERSION}
 RPM_SOURCE_NAME_2 ?= ${RPM_NAME_2}-${RPM_VERSION}
 RPM_BUILD_DIR ?= $(PWD)/dist/rpmbuild
-RPM_SOURCE_PATH := ${RPM_BUILD_DIR}/SOURCES/${RPM_SOURCE_NAME}.tar.bz2
+RPM_SOURCE_PATH_1 := ${RPM_BUILD_DIR}/SOURCES/${RPM_SOURCE_NAME_1}.tar.bz2
+RPM_SOURCE_PATH_2 := ${RPM_BUILD_DIR}/SOURCES/${RPM_SOURCE_NAME_2}.tar.bz2
 
 build-csm-testing: rpm_package_source1 rpm_build_source1 rpm_build1
 build-goss-servers: rpm_package_source2 rpm_build_source2 rpm_build2
@@ -43,10 +44,10 @@ rpm_prepare:
 # csm-testing rpm
 
 rpm_package_source1:
-	tar --transform 'flags=r;s,^,/$(RPM_SOURCE_NAME)/,' --exclude .git --exclude dist -cvjf $(RPM_SOURCE_PATH) .
+	tar --transform 'flags=r;s,^,/$(RPM_SOURCE_NAME_1)/,' --exclude .git --exclude dist -cvjf $(RPM_SOURCE_PATH_1) .
 
 rpm_build_source1:
-	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ts $(RPM_SOURCE_PATH) --define "_topdir $(RPM_BUILD_DIR)"
+	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ts $(RPM_SOURCE_PATH_1) --define "_topdir $(RPM_BUILD_DIR)"
 
 rpm_build1:
 	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ba $(SPEC_FILE) --define "_topdir $(RPM_BUILD_DIR)"
@@ -54,10 +55,10 @@ rpm_build1:
 # goss-servers rpm
 
 rpm_package_source2:
-	tar --transform 'flags=r;s,^,/$(RPM_SOURCE_NAME)/,' --exclude .git --exclude dist -cvjf $(RPM_SOURCE_PATH) .
+	tar --transform 'flags=r;s,^,/$(RPM_SOURCE_NAME_2)/,' --exclude .git --exclude dist -cvjf $(RPM_SOURCE_PATH_2) .
 
 rpm_build_source2:
-	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ts $(RPM_SOURCE_PATH) --define "_topdir $(RPM_BUILD_DIR)"
+	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ts $(RPM_SOURCE_PATH_2) --define "_topdir $(RPM_BUILD_DIR)"
 
 rpm_build2:
 	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ba $(SPEC_FILE) --define "_topdir $(RPM_BUILD_DIR)"
