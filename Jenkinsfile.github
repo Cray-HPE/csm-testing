@@ -24,13 +24,13 @@ pipeline {
             }
         }
 
-        stage("Build") {
+        stage("Build RPM 1") {
             steps {
                 sh "make build-csm-testing"
             }
         }
 
-        stage("Build") {
+        stage("Build RPM 2") {
             steps {
                 sh "make build-goss-servers"
             }
