@@ -39,10 +39,8 @@ pipeline {
         stage('Publish ') {
             steps {
                 script {
-                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/x86_64/*.rpm", arch: "noarch", isStable: env.IS_STABLE)
+                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/noarch/*.rpm", arch: "noarch", isStable: env.IS_STABLE)
                     publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/*.rpm", arch: "src", isStable: env.IS_STABLE)
-                    publishCsmRpms(component: "goss-servers", pattern: "dist/rpmbuild/RPMS/x86_64/*.rpm", arch: "noarch", isStable: env.IS_STABLE)
-                    publishCsmRpms(component: "goss-servers", pattern: "dist/rpmbuild/RPMS/*.rpm", arch: "src", isStable: env.IS_STABLE)
                 }
             }
         }
