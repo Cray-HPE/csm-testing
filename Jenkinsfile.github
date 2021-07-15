@@ -26,7 +26,13 @@ pipeline {
 
         stage("Build") {
             steps {
-                sh "make build"
+                sh "make build-csm-testing"
+            }
+        }
+
+        stage("Build") {
+            steps {
+                sh "make build-goss-servers"
             }
         }
 
