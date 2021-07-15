@@ -15,7 +15,6 @@ pipeline {
         DESCRIPTION = "CSM automated testing"
         IS_STABLE = getBuildIsStable()
         BUILD_METADATA = getRpmRevision(isStable: env.IS_STABLE)
-        CHART_VERSION = getChartVersion(name: env.NAME, isStable: env.IS_STABLE)
     }
 
     stages {
@@ -36,6 +35,8 @@ pipeline {
                 script {
                     publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/x86_64/*.rpm", arch: "x86_64", isStable: env.IS_STABLE)
                     publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/*.rpm", arch: "src", isStable: env.IS_STABLE)
+                    publishCsmRpms(component: "goss-servers", pattern: "dist/rpmbuild/RPMS/x86_64/*.rpm", arch: "x86_64", isStable: env.IS_STABLE)
+                    publishCsmRpms(component: "goss-servers", pattern: "dist/rpmbuild/RPMS/*.rpm", arch: "src", isStable: env.IS_STABLE)
                 }
             }
         }
