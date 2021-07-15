@@ -51,8 +51,8 @@ install -d -m 755 %{buildroot}%{ncn}/scripts
 install -d -m 755 %{buildroot}%{ncn}/scripts/python
 install -d -m 755 %{buildroot}%{ncn}/scripts/python/lib
 # Install test suites
-install -d -m 644 %{buildroot}%{livecd}/suites
-install -d -m 644 %{buildroot}%{ncn}/suites
+install -d -m 755 %{buildroot}%{livecd}/suites
+install -d -m 755 %{buildroot}%{ncn}/suites
 # Copy files
 cp -a goss-testing/scripts/*            %{buildroot}%{livecd}/scripts
 cp -a goss-testing/scripts/python/*     %{buildroot}%{livecd}/scripts/python
