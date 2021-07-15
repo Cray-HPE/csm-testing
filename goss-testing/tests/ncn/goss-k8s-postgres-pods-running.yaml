@@ -1,0 +1,27 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  k8s_postgres_{{.Env.CLUSTER_NAME}}_running:
+    title: Kubernetes Postgres '{{.Env.CLUSTER_NAME}}' Is Running
+    meta:
+      desc: If this test fails, look at the state of the postgres pods (kubectl get po -n {{.Env.CLUSTER_NS}} | grep {{.Env.CLUSTER_NAME}}) to investigate.
+      sev: 0
+    exec: |-
+          numOfPostgres=$(kubectl get po -n {{.Env.CLUSTER_NS}} | grep {{.Env.CLUSTER_NAME}} | grep Running | grep -v pooler | wc -l)
+          if [[ $numOfPostgres -lt 3 ]]; then
+            echo "Not enought postgres pods running"
+            exit 1
+          fi 
+          
+          numOfPostgresPooler=$(kubectl get po -n {{.Env.CLUSTER_NS}} | grep {{.Env.CLUSTER_NAME}} | grep Running | grep -v pooler | wc -l)
+          if [[ ! -z $numOfPostgresPooler ]]; then
+            if [[ $numOfPostgresPooler -lt 3 ]]; then
+              echo "Not enought postgres pooler pods running"
+            exit 1
+          fi 
+          fi
+          echo "PASS"
+    exit-status: 0
+    stdout:
+      - PASS
+    timeout: 1000
+    skip: false
