@@ -35,13 +35,18 @@ tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
 cat $vars_file > $tmpvars
 echo "" >> $tmpvars
 
-echo "Using goss vars: $tmpvars"
+echo "Using Goss vars: $tmpvars"
 
 nodes=""
-# add node names from basecamp metadata to temp variables file
+# add node names from basecamp or bss metadata to temp variables file
 while [[ `echo $nodes | wc -w` -eq 0 || "$nodes" == "null" ]]; do
-  # get node list from basecamp metadata endpoint
+  # try getting node list from basecamp metadata endpoint first
   nodes=$(curl -s http://ncn-m001:8888/meta-data | jq -r .Global.host_records[].aliases[1] | grep -ohE "ncn-[m,w,s]([0-9]{3})" | awk '!a[$0]++')
+
+  if [[ `echo $nodes | wc -w` -eq 0 || "$nodes" == "null" ]]; then
+    echo "Node names not found in Basecamp. Trying to query BSS metadata instead."
+    nodes=$(curl -s http://api-gw-service-nmn.local:8888/meta-data | jq -r .Global.host_records[].aliases[1] | grep -ohE "ncn-[m,w,s]([0-9]{3})" | awk '!a[$0]++')
+  fi
 
   if [[ `echo $nodes | wc -w` -ne 0 && "$nodes" != "null" ]]; then
     # add list of all nodes
@@ -53,16 +58,16 @@ while [[ `echo $nodes | wc -w` -eq 0 || "$nodes" == "null" ]]; do
     echo "" >> $tmpvars
 
     # add lists of k8s and storage nodes
-    nodes=$(curl -s http://ncn-m001:8888/meta-data | jq -r .Global.host_records[].aliases[1] | grep -ohE "ncn-[m,w]([0-9]{3})" | awk '!a[$0]++')
+    k8s_nodes=$(echo $nodes | grep -ohE "ncn-[m,w]([0-9]{3})")
     echo "k8s_nodes:" >> $tmpvars
-    for node in $nodes; do
+    for node in $k8s_nodes; do
       echo "  - $node" >> $tmpvars
     done
     echo "" >> $tmpvars
 
-    nodes=$(curl -s http://ncn-m001:8888/meta-data | jq -r .Global.host_records[].aliases[1] | grep -ohE "ncn-[s]([0-9]{3})" | awk '!a[$0]++')
+    storage_nodes=$(echo $nodes | grep -ohE "ncn-[s]([0-9]{3})")
     echo "storage_nodes:" >> $tmpvars
-    for node in $nodes; do
+    for node in $storage_nodes; do
       echo "  - $node" >> $tmpvars
     done
   else
