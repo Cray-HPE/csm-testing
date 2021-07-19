@@ -27,22 +27,22 @@ They test both the LiveCD and NCN environment.
 %install
 
 # Install testing files
-install -d -m 644 %{buildroot}%{livecd}/automated
-install -d -m 644 %{buildroot}%{livecd}/tests
-install -d -m 644 %{buildroot}%{livecd}/vars
-install -d -m 644 %{buildroot}%{livecd}/build-testing
-install -d -m 644 %{buildroot}%{ncn}/automated
-install -d -m 644 %{buildroot}%{ncn}/tests
-install -d -m 644 %{buildroot}%{ncn}/vars
-install -m 644 goss-testing/automated/*         %{buildroot}%{livecd}/automated
-install -m 644 goss-testing/tests/livecd/*.yaml %{buildroot}%{livecd}/tests
-install -m 644 goss-testing/tests/common/*.yaml %{buildroot}%{livecd}/tests
-install -m 644 goss-testing/vars/*.yaml         %{buildroot}%{livecd}/vars
-install -m 644 build-testing/*                  %{buildroot}%{livecd}/build-testing
-install -m 644 goss-testing/automated/*         %{buildroot}%{ncn}/automated
-install -m 644 goss-testing/tests/ncn/*.yaml    %{buildroot}%{ncn}/tests
-install -m 644 goss-testing/tests/common/*.yaml %{buildroot}%{ncn}/tests
-install -m 644 goss-testing/vars/*.yaml         %{buildroot}%{ncn}/vars
+install -d -m 755 %{buildroot}%{livecd}/automated
+install -d -m 755 %{buildroot}%{livecd}/tests
+install -d -m 755 %{buildroot}%{livecd}/vars
+install -d -m 755 %{buildroot}%{livecd}/build-testing
+install -d -m 755 %{buildroot}%{ncn}/automated
+install -d -m 755 %{buildroot}%{ncn}/tests
+install -d -m 755 %{buildroot}%{ncn}/vars
+install -m 755 goss-testing/automated/*         %{buildroot}%{livecd}/automated
+install -m 755 goss-testing/tests/livecd/*.yaml %{buildroot}%{livecd}/tests
+install -m 755 goss-testing/tests/common/*.yaml %{buildroot}%{livecd}/tests
+install -m 755 goss-testing/vars/*.yaml         %{buildroot}%{livecd}/vars
+install -m 755 build-testing/*                  %{buildroot}%{livecd}/build-testing
+install -m 755 goss-testing/automated/*         %{buildroot}%{ncn}/automated
+install -m 755 goss-testing/tests/ncn/*.yaml    %{buildroot}%{ncn}/tests
+install -m 755 goss-testing/tests/common/*.yaml %{buildroot}%{ncn}/tests
+install -m 755 goss-testing/vars/*.yaml         %{buildroot}%{ncn}/vars
 # Install script files
 install -d -m 755 %{buildroot}%{livecd}/scripts
 install -d -m 755 %{buildroot}%{livecd}/scripts/python
@@ -51,8 +51,8 @@ install -d -m 755 %{buildroot}%{ncn}/scripts
 install -d -m 755 %{buildroot}%{ncn}/scripts/python
 install -d -m 755 %{buildroot}%{ncn}/scripts/python/lib
 # Install test suites
-install -d -m 644 %{buildroot}%{livecd}/suites
-install -d -m 644 %{buildroot}%{ncn}/suites
+install -d -m 755 %{buildroot}%{livecd}/suites
+install -d -m 755 %{buildroot}%{ncn}/suites
 # Copy files
 cp -a goss-testing/scripts/*            %{buildroot}%{livecd}/scripts
 cp -a goss-testing/scripts/python/*     %{buildroot}%{livecd}/scripts/python
