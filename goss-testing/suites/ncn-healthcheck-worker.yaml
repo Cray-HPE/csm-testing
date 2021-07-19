@@ -17,3 +17,4 @@ gossfile:
   ../tests/goss-spire-bss-metadata-exist.yaml: {}
   ../tests/goss-default-gateway-points-to-CAN-gateway.yaml: {}
   ../tests/goss-cray-service-etcd-health-check.yaml: {}
+  ../tests/goss-platform-ca-certs-match-cloud-init.yaml: {}

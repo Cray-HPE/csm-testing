@@ -1,0 +1,12 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  goss_platform_ca_certs_match_cloud_init:
+    title: Validate that the local platform CA bundle matches the one in cloud-init
+    meta:
+      desc: Validates that the local platform CA bundle matches the one in cloud-init
+      sev: 0
+    exec: "curl -s http://10.92.100.71:8888/meta-data | jq -r '.Global.\"ca-certs\".trusted[]' | sed '/^$/d' > /tmp/trusted.goss;\
+           diff /etc/pki/trust/anchors/platform-ca-certs.crt /tmp/trusted.goss"
+    exit-status: 0
+    timeout: 10000
+    skip: false
