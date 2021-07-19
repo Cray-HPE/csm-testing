@@ -14,7 +14,6 @@ gossfile:
   ../tests/goss-k8s-cray-cli-configured.yaml: {}
   ../tests/goss-rgw-health.yaml: {}
   ../tests/goss-k8s-nexus-pods-running.yaml: {}
-  ../tests/goss-k8s-conman-pod-running.yaml: {}
   ../tests/goss-k8s-ipxe-pod-running.yaml: {}
   ../tests/goss-k8s-kea-pod-running.yaml: {}
   ../tests/goss-k8s-tftp-pods-running.yaml: {}
