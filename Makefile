@@ -1,0 +1,64 @@
+# Copyright 2019-2021 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+# (MIT License)
+
+# RPM
+SPEC_NAME ?= csm-testing
+RPM_NAME ?= csm-testing
+RPM_NAME_2 ?= csm-testing
+RPM_VERSION ?= $(shell cat .rpm_version)
+SPEC_FILE ?= ${SPEC_NAME}.spec
+BUILD_METADATA ?= "1~development~$(shell git rev-parse --short HEAD)"
+RPM_SOURCE_NAME_1 ?= ${RPM_NAME}-${RPM_VERSION}
+RPM_SOURCE_NAME_2 ?= ${RPM_NAME_2}-${RPM_VERSION}
+RPM_BUILD_DIR ?= $(PWD)/dist/rpmbuild
+RPM_SOURCE_PATH_1 := ${RPM_BUILD_DIR}/SOURCES/${RPM_SOURCE_NAME_1}.tar.bz2
+RPM_SOURCE_PATH_2 := ${RPM_BUILD_DIR}/SOURCES/${RPM_SOURCE_NAME_2}.tar.bz2
+
+build-csm-testing: rpm_package_source1 rpm_build_source1 rpm_build1
+build-goss-servers: rpm_package_source2 rpm_build_source2 rpm_build2
+
+rpm_prepare:
+	rm -rf $(RPM_BUILD_DIR)
+	mkdir -p $(RPM_BUILD_DIR)/SPECS $(RPM_BUILD_DIR)/SOURCES
+	cp $(SPEC_FILE) $(RPM_BUILD_DIR)/SPECS/
+
+# csm-testing rpm
+
+rpm_package_source1:
+	tar --transform 'flags=r;s,^,/$(RPM_SOURCE_NAME_1)/,' --exclude .git --exclude dist -cvjf $(RPM_SOURCE_PATH_1) .
+
+rpm_build_source1:
+	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ts $(RPM_SOURCE_PATH_1) --define "_topdir $(RPM_BUILD_DIR)"
+
+rpm_build1:
+	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ba $(SPEC_FILE) --define "_topdir $(RPM_BUILD_DIR)"
+
+# goss-servers rpm
+
+rpm_package_source2:
+	tar --transform 'flags=r;s,^,/$(RPM_SOURCE_NAME_2)/,' --exclude .git --exclude dist -cvjf $(RPM_SOURCE_PATH_2) .
+
+rpm_build_source2:
+	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ts $(RPM_SOURCE_PATH_2) --define "_topdir $(RPM_BUILD_DIR)"
+
+rpm_build2:
+	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ba $(SPEC_FILE) --define "_topdir $(RPM_BUILD_DIR)"
