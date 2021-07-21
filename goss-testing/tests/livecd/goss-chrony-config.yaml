@@ -6,7 +6,6 @@ file:
       desc: Validates that chrony config for NCNs exists
       sev: 0
     exists: true
-    mode: "0644"
     owner: root
     group: root
     filetype: file
