@@ -1,3 +1,5 @@
+curl -H "X-JFrog-Art-API:AKCp8jQd48jCCgaZVxFzNLdXCqLHTLJkTMd1jTKX3jNVGtgWFoP4GCtPmbLWSPcTHXNjuSndB" -X POST "http://localhost:8081/artifactory/api/system/decrypt"
+
 #!/usr/bin/env bash
 #
 # (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
