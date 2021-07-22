@@ -1,4 +1,4 @@
-@Library('csm-shared-library') _
+@Library('csm-shared-library@feature/rpm-signing') _
 
 pipeline {
     agent {
@@ -36,7 +36,13 @@ pipeline {
             }
         }
 
-        stage('Publish ') {
+        stage('Sign RPMs') {
+            steps{
+                signCsmRpms(rpmDirectory: "dist/rpmbuild/RPMS/noarch")
+            }
+        }
+
+        stage('Publish') {
             steps {
                 script {
                     publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/noarch/*.rpm", arch: "noarch", isStable: env.IS_STABLE)
