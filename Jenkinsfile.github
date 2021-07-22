@@ -36,17 +36,11 @@ pipeline {
             }
         }
 
-        stage('Sign RPMs') {
-            steps{
-                signCsmRpms(rpmDirectory: "dist/rpmbuild/RPMS/noarch")
-            }
-        }
-
         stage('Publish') {
             steps {
                 script {
-                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/noarch/*.rpm", arch: "noarch", isStable: env.IS_STABLE)
-                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/SRPMS/*.rpm", arch: "src", isStable: env.IS_STABLE)
+                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/noarch/*.rpm", arch: "noarch", isStable: env.IS_STABLE, alwaysSignRpms: true)
+                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/SRPMS/*.rpm", arch: "src", isStable: env.IS_STABLE, alwaysSignRpms: true)
                 }
             }
         }
