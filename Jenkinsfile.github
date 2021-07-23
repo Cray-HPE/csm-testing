@@ -1,4 +1,4 @@
-@Library('csm-shared-library@feature/rpm-signing') _
+@Library('csm-shared-library@feature/malware-scanning') _
 
 pipeline {
     agent {
@@ -40,7 +40,7 @@ pipeline {
             steps {
                 script {
                     publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/noarch/*.rpm", arch: "noarch", isStable: env.IS_STABLE, alwaysSignRpms: true)
-                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/SRPMS/*.rpm", arch: "src", isStable: env.IS_STABLE, alwaysSignRpms: true)
+                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/SRPMS/*.rpm", arch: "src", isStable: env.IS_STABLE)
                 }
             }
         }
