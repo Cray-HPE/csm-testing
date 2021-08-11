@@ -5,5 +5,5 @@ command:
     meta:
       desc: Validates there are no failed Velero backups
       sev: 0
-    exec: "kubectl get backups -A -o json | jq -e '.items[].status.phase | contains(\"Failed\") | not'"
+    exec: /bin/sh {{.Env.GOSS_BASE}}/scripts/velero_backup_check.sh
     exit-status: 0
