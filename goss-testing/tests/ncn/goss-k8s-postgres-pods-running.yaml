@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   k8s_postgres_pods_per_cluster:
     title: Kubernetes Postgres Check that there are the Correct Number of Pods 'Running' Per Cluster

@@ -1,3 +1,4 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   k8s_postgres_clusters_running:
     title: Kubernetes Postgres Check that All Clusters are in a Running State
