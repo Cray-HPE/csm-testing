@@ -13,6 +13,8 @@ import sys
 
 import yaml
 
+from kubernetes import client, config
+
 DEFAULT_LOG_LEVEL = os.environ.get("LOG_LEVEL", logging.INFO)
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
@@ -33,7 +35,7 @@ logger.addHandler(console_handler)
 # Service names expected to be found
 EXPECTED_SERVICES = {
     "cray-console-operator",
-    "cray-console-node-0",
+    "cray-console-node",
     "cray-console-data"
 }
 
@@ -43,48 +45,47 @@ POSTGRES_FILTER = "postgres"
 class ConsoleException(Exception):
     pass
 
-# Make sure all required pods are present
-def get_console_pods():
-    # create a mapping of expected services to an actual running pod
-    foundPods = dict()
-    try:
-        logger.debug("Getting list of pods in the services namespace.")
-        command_line = ['kubectl', 'get', 'pods', '-n', 'services', '-o', 'name']
-        result = subprocess.check_output(command_line, stderr=subprocess.STDOUT).decode("utf8")
-        for pod in result.splitlines():
-            for expected in EXPECTED_SERVICES:
-                if expected in pod.lower() and not POSTGRES_FILTER in pod.lower():
-                    # result is prefaced with "pod/". We want to strip that off.
-                    foundPods[expected] = pod[4:]
-                    break
-    except subprocess.CalledProcessError as err:
-        logger.error(f"Could not list service pods. Got exit code {err.returncode}. Msg: {err.output}")
-        raise ConsoleException
+def check_services_running():
+    # Configs can be set in Configuration class directly or using helper utility
+    config.load_kube_config()
 
-    # verify all expected services have a pod running
+    foundPods = dict()
+    v1 = client.CoreV1Api()
+    ret = v1.list_pod_for_all_namespaces(watch=False)
+    for i in ret.items:
+        podName = i.metadata.name.lower()
+        for expected in EXPECTED_SERVICES:
+            if expected in podName and not POSTGRES_FILTER in podName:
+                # record that we found a pod for the expected service
+                logger.debug(f"Checking {i.metadata.name} : {i.status.phase}")
+                foundPods[expected] = i.metadata.name
+
+                # need to look at that state of each container - the i.status.phase lies...
+                ok = True
+                for c in i.status.container_statuses:
+                    # Note: when a container is in back-off state, it may either be in
+                    #  'waiting' or 'terminated' state - consider either an error and
+                    #  gather what information we can.
+                    if c.ready != True:
+                        if c.state.terminated != None:
+                            logger.error(f"Pod: {i.metadata.name} Container Terminated: {c.name}, " + 
+                                            f"Exit Code: {c.state.terminated.exit_code}, " +
+                                            f"Reason: {c.state.terminated.reason}, " + 
+                                            f"Message: {c.state.terminated.message}")
+                            ok = False
+                        if c.state.waiting != None:
+                            logger.error(f"Pod: {i.metadata.name} Container: {c.name}, " +
+                                        f"{c.state.waiting.reason}: {c.state.waiting.message}")
+                            ok = False
+
+                if not ok:
+                    raise ConsoleException
+
+    # check that all expected services have been found
     if not len(foundPods) == len(EXPECTED_SERVICES):
         logger.error(f"The console pods in the services namespace did not match what was expected.")
         logger.error(f"Expected services: {EXPECTED_SERVICES}")
         logger.error(f"Found pods: {foundPods}")
-        raise ConsoleException
-
-    return foundPods
-
-def check_pod_status(pods):
-    # Make sure that each pod is running
-    try:
-        logger.debug("Checking status of console pods")
-        for k,v in pods.items():
-            # Get the current status of the pod
-            command_line = ['kubectl', 'get', 'pods', v, '-n', 'services', '--no-headers', '-o' ,'custom-columns=:status.phase']
-            result = subprocess.check_output(command_line, stderr=subprocess.STDOUT).decode("utf8").strip()
-
-            # check that it is running
-            if result.lower() != "running":
-                logger.error(f"Service not Ready: {k}:{v} - ,{result}")
-                raise ConsoleException
-    except subprocess.CalledProcessError as err:
-        logger.error(f"Could not list service pods. Got exit code {err.returncode}. Msg: {err.output}")
         raise ConsoleException
 
 def main():
@@ -93,10 +94,7 @@ def main():
         logger.info("Beginning verification that all console services are running")
 
         # Find that all services are present
-        pods = get_console_pods()
-
-        # Check the status of the pods
-        check_pod_status(pods)
+        pods = check_services_running()
 
         logger.info("Verification of console services succeeded")
         return 0
