@@ -8,8 +8,8 @@ command:
     exec: "podman images"
     stdout:
     - registry.local/ceph/ceph
-#    - registry.local/ceph/ceph-grafana
-#    - registry.local/prometheus/prometheus
-#    - registry.local/prometheus/alertmanager
-#    - registry.local/prometheus/node-exporter
+    - registry.local/ceph/ceph-grafana
+    - registry.local/prometheus/prometheus
+    - registry.local/prometheus/alertmanager
+    - registry.local/prometheus/node-exporter
     exit-status: 0
