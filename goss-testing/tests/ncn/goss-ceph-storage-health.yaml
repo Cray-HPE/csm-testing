@@ -1,13 +1,11 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
-  ceph_storage_health:
-    title: Ceph Service Healthy
+  ceph_services_health:
+    title: Ceph is healthy
     meta:
-      desc: Checks that the Ceph service is in a healthy state.
+      desc: Validates that Ceph services are running.  For more detailed output, navigate to '/opt/cray/tests/install/ncn/scripts' directory  and run ceph-service-status.sh  -v true or ceph-service-status.sh for additional options
       sev: 0
-    exec: "ceph -s"
-    stdout:
-    - HEALTH_OK
+    exec: "{{.Env.GOSS_BASE}}/scripts/ceph-service-status.sh -A true"
     exit-status: 0
-    timeout: 10000
+    timeout: 1000000
     skip: false
