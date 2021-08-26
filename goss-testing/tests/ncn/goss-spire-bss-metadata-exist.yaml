@@ -1,7 +1,7 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   spire_in_bss_cloudinit:
-    title: Kubernetes Query BSS Cloud-init for spire meta data
+    title: Kubernetes Query BSS Cloud-init for spire meta data. If this fails then check to verify that the spire-update-bss job in the spire namespace ran successfully and recreate the job if it failed.
     meta:
       desc: Kubernetes Query BSS Cloud-init for spire meta data
       sev: 0
