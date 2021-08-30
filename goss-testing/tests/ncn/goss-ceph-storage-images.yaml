@@ -3,7 +3,7 @@ command:
   ceph_storage_images:
     title: Validates the ceph storage images have been loaded into podman
     meta:
-      desc: If this test fails, inspect the '/var/log/cloud-init-output.log' to determine if there were errors loading the docker images.
+      desc: If this test fails, run "/srv/cray/scripts/common/pre-load-images.sh" on the failed node.
       sev: 0
     exec: "podman images"
     stdout:
