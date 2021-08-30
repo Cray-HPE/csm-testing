@@ -208,6 +208,11 @@ fi
 
 for node_num in $(seq 1 "$num_storage_nodes"); do
   nodename=$(printf "ncn-s%03d" "$node_num")
+  pdsh -N -w "$host" > ~/.ssh/known_hosts 2>&1
+done
+
+for node_num in $(seq 1 "$num_storage_nodes"); do
+  nodename=$(printf "ncn-s%03d" "$node_num")
   ssh-keyscan -H "$nodename" 2> /dev/null >> ~/.ssh/known_hosts
 done
 
