@@ -5,7 +5,7 @@ command:
     meta:
       desc: Validates that Ceph services are running.  For more detailed output, navigate to '/opt/cray/tests/install/ncn/scripts' directory  and run ceph-service-status.sh  -v true or ceph-service-status.sh for additional options
       sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/ceph-service-status.sh -A true"
+    exec: "{{.Env.GOSS_BASE}}/scripts/ceph-service-status.sh"
     exit-status: 0
     timeout: 1000000
     skip: false
