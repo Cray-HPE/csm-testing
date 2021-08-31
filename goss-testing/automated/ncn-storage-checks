@@ -29,13 +29,29 @@ source $GOSS_BASE/automated/run-ncn-tests.sh
 echo $'\e[1;33m'Storage Node Automated Tests$'\e[0m'
 echo $'\e[1;33m'----------------------------$'\e[0m'
 
-if [ ! -f "/etc/dnsmasq.d/statics.conf" ]; then
-  echo "ERROR: These tests can only be run from the LiveCD."
-  exit 1
+# find the storage node names and query the server endpoint
+if [ ! command -v ceph &> /dev/null ]
+then
+  mons=$(ceph status -f json-pretty|jq -r '.quorum_names[]')
+elif [ ! command -v kubectl &> /dev/null ]
+then
+  mons=$(kubectl get cm ceph-csi-config -o json|jq -r '.data[]'|jq -r '.[].monitors[]')
+else
+  mons="ncn-s001 ncn-s002 ncn-s003"
 fi
 
-# find the storage node names and query the server endpoint
-cat /etc/dnsmasq.d/statics.conf | grep -ohE "ncn-s([0-3]{3})" | awk '!a[$0]++' | \
-  while read node ; do run_ncn_tests "$node" "8997" "ncn-storage-tests" ; done
+(( counter=0 ))
 
-exit
+for node in $mons; do
+  nodename=$(echo $node|cut -d":" -f1)
+  if [[ $(nc -z -w 10 $node 22) ]] || [[ $counter -lt 3 ]]
+  then
+    run_ncn_tests "$nodename" "8997" "ncn-storage-tests"
+    exit 0
+  else
+    (( counter+1 ))
+  elseif [[ $counter -ge 3 ]]
+    echo "Unable to perform test due to missing command or unable to access ceph monitor nodes"
+    exit 1
+  fi
+done
