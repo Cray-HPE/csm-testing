@@ -4,6 +4,8 @@ gossfile:
   ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
   ../tests/goss-spire-healthcheck.yaml: {}
   ../tests/goss-k8s-vault-cluster-health.yaml: {}
+  ../tests/goss-kea-has-active-dhcp-leases.yaml: {}
+  ../tests/goss-resolve-external.dns.yaml: {}
 
 ## HMS
 
