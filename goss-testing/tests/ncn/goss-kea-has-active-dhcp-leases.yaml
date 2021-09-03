@@ -1,0 +1,31 @@
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+command:
+  kea_has_active_dhcp_leases:
+    title: Kea has Active DHCP Leases
+    meta:
+      desc: Validates KEA has active DHCP leases. If the test fails, no leases were found. Check the DHCP Troubleshooting guide.
+      sev: 0
+    exec: |-
+          TOKEN=$(curl -s -S -d grant_type=client_credentials \
+                 -d client_id=admin-client \
+                 -d client_secret=`kubectl get secrets admin-client-auth \
+                 -o jsonpath='{.data.client-secret}' | base64 -d` \
+                  https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token')
+          if [[ ! $TOKEN ]]; then
+             echo "Unable to get a token so cannot check Kea for active DHCP Leases"
+             exit 1
+          fi
+          LEASES=$(curl -s -S -H "Authorization: Bearer ${TOKEN}" -X POST -H "Content-Type: application/json" \
+                 -d '{ "command": "lease4-get-all", "service": [ "dhcp4" ] }' https://api-gw-service-nmn.local/apis/dhcp-kea \
+                 | jq -r '.[] | .text' | cut -d ' ' -f 1)
+
+          if [[ ! $LEASES -ge 1 ]]; then
+            echo "Kea has no active DHCP Leases"
+            exit 1
+          fi
+          echo "PASS"
+    exit-status: 0
+    stdout:
+      - PASS
+    timeout: 10000
+    skip: false
