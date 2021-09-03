@@ -3,11 +3,11 @@ gossfile:
   ../tests/goss-etcd-service.yaml: {}
   ../tests/goss-weave-IPAM-health.yaml: {}
   ../tests/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
-# ../tests/goss-k8s-storage-configmaps.yaml: {}
-# ../tests/goss-k8s-verify-cluster.yaml: {}
+  ../tests/goss-k8s-storage-configmaps.yaml: {}
+  ../tests/goss-k8s-verify-cluster.yaml: {}
   ../tests/goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
   ../tests/goss-k8s-certmanager-certs-ready.yaml: {}
   ../tests/goss-k8s-certmanager-issuers-ready.yaml: {}
-# ../tests/goss-k8s-trustedcerts-configmaps-exist.yaml: {}
-# ../tests/goss-k8s-vault-cluster-health.yaml: {}
+  ../tests/goss-k8s-trustedcerts-configmaps-exist.yaml: {}
+  ../tests/goss-k8s-vault-cluster-health.yaml: {}
   ../tests/goss-etcdlvm-drive-master.yaml: {}
