@@ -9,5 +9,5 @@ command:
     exit-status: 0
     stdout:
     - "PASS"
-    timeout: 10000
+    timeout: 60000
     skip: false
