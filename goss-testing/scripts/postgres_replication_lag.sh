@@ -13,7 +13,7 @@ do
 
     for lag in $(kubectl -n $c_ns exec $first_member -- patronictl list --format json 2>/dev/null | jq '.[]."Lag in MB"')
     do
-        if [[ $lag != "\"\"" && $lag -gt 0 ]]; then failFlag=1; fi
+        if [[ $lag != "\"\"" ]] && [[ $lag == "unknown" || $lag -gt 0 ]]; then failFlag=1; fi
     done
 done
 

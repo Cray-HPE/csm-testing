@@ -12,7 +12,7 @@ do
     leader=$(kubectl -n $c_ns exec $first_member -- patronictl list --format json 2>/dev/null | jq '.[] | select ( .Role=="Leader" ) | .Member' | sed 's/\"//g')
     if [[ -z $leader ]]; then exit 1; fi
 
-    lock=$(kubectl logs -n $c_ns $leader postgres | awk '{$1="";$2=""; print $line}' | egrep "INFO|ERROR" | egrep -v "NewConnection|bootstrapping" | sort -u | grep 'i am the leader with the lock')
+    lock=$(kubectl logs -n $c_ns $leader postgres | awk '{$1="";$2=""; print $line}' | sort -u | grep 'i am the leader with the lock')
     if [[ -z $lock ]]; then exit 1; fi
 done
 
