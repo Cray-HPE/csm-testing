@@ -29,6 +29,9 @@ function k8s_local_tests {
   echo "Test Name: Kubernetes Nodes Have Valid Age"
   /usr/bin/goss -g $GOSS_BASE/tests/goss-k8s-nodes-age-valid.yaml v
   echo
+  echo "Test Name: Keycloak Users Localize Is Complete"
+  /usr/bin/goss -g $GOSS_BASE/tests/goss-k8s-keycloak-localize-job-completed.yaml v
+  echo
 }
 
 function run_ncn_tests {
