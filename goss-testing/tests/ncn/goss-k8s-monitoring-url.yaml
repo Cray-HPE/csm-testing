@@ -1,0 +1,74 @@
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+# example HOST=gamora.dev.cray.com
+http:
+  https://grafana.{{.Env.HOST}}/:
+    title: Grafana URL access
+    meta:
+      desc: Checks whether URL https://grafana.{{.Env.HOST}}/ is accessible. If the test fails, expected 200 status was not returned. Check the System Management Health information in the Operations section.
+      sev: 0
+    # required attributes
+    status: 200
+    # optional attributes
+    allow-insecure: false
+    no-follow-redirects: false # Setting this to true will NOT follow redirects
+    timeout: 1000
+
+  https://prometheus.{{.Env.HOST}}/:
+    title: Prometheus URL access
+    meta:
+      desc: Checks whether URL https://prometheus.{{.Env.HOST}}/ is accessible. If the test fails, expected 200 status was not returned. Check the System Management Health information in the Operations section.
+      sev: 0
+    # required attributes
+    status: 200
+    # optional attributes
+    allow-insecure: false
+    no-follow-redirects: false # Setting this to true will NOT follow redirects
+    timeout: 1000
+
+  https://alertmanager.{{.Env.HOST}}/:
+    title: Alertmanager URL access
+    meta:
+      desc: Checks whether URL https://alertmanager.{{.Env.HOST}}/ is accessible. If the test fails, expected 200 status was not returned. Check the System Management Health information in the Operations section.
+      sev: 0
+    # required attributes
+    status: 200
+    # optional attributes
+    allow-insecure: false
+    no-follow-redirects: false # Setting this to true will NOT follow redirects
+    timeout: 1000
+
+  https://kiali-istio.{{.Env.HOST}}/:
+    title: Kiali-istio URL access
+    meta:
+      desc: Checks whether URL https://kiali-istio.{{.Env.HOST}}/ is accessible. If the test fails, expected 200 status was not returned. Check the System Management Health information in the Operations section.
+      sev: 0
+    # required attributes
+    status: 200
+    # optional attributes
+    allow-insecure: false
+    no-follow-redirects: false # Setting this to true will NOT follow redirects
+    timeout: 1000
+
+  https://jaeger-istio.{{.Env.HOST}}/:
+    title: Jaeger-istio URL access
+    meta:
+      desc: Checks whether URL https://jaeger-istio.{{.Env.HOST}}/ is accessible. If the test fails, expected 200 status was not returned. Check the System Management Health information in the Operations section.
+      sev: 0
+    # required attributes
+    status: 200
+    # optional attributes
+    allow-insecure: false
+    no-follow-redirects: false # Setting this to true will NOT follow redirects
+    timeout: 1000
+
+  https://prometheus-istio.{{.Env.HOST}}/:
+    title: Prometheus-istio URL access
+    meta:
+      desc: Checks whether URL https://prometheus-istio.{{.Env.HOST}}/ is accessible. If the test fails, expected 200 status was not returned. Check the System Management Health information in the Operations section.
+      sev: 0
+    # required attributes
+    status: 200
+    # optional attributes
+    allow-insecure: false
+    no-follow-redirects: false # Setting this to true will NOT follow redirects
+    timeout: 1000
