@@ -1,0 +1,13 @@
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+command:
+  resolve_external_dns:
+    title: Resolve external DNS
+    meta:
+      desc: Validates external DNS name is resolvable. If the test fails, cray.com was not resolvable. Check the External DNS Troubleshooting guide.
+      sev: 0
+    exec: "nslookup cray.com | grep cray.com -A 1 | grep Address"
+    exit-status: 0
+    stdout:
+      - /^Address.*/
+    timeout: 10000
+    skip: false
