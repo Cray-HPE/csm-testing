@@ -5,9 +5,7 @@ command:
     meta:
       desc: Checks that the Ceph service is in a healthy state.
       sev: 0
-    exec: "ceph -s"
-    stdout:
-    - HEALTH_OK
+    exec: "{{.Env.GOSS_BASE}}/scripts/ceph-service-status.sh"
     exit-status: 0
     timeout: 10000
     skip: false
