@@ -1,0 +1,13 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  k8s_etcd_backups_check:
+    title: All Kubernetes Etcd Clusters have a Backup Created within the Last 24 Hours.
+    meta:
+      desc: If this test fails, check that backups are being created and cron jobs is running.
+      sev: 0
+    exec: "{{.Env.GOSS_BASE}}/scripts/etcd_backups_check.sh"
+    exit-status: 0
+    stdout:
+      - PASS
+    timeout: 10000
+    skip: false

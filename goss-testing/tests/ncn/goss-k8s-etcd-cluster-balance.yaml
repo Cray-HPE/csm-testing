@@ -1,0 +1,13 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  k8s_etcd_cluster_balance:
+    title: All Etcd Pods in a Cluster are Running on a Different Worker Node
+    meta:
+      desc: If this test fails, refer to 'Rebalance Healthy etcd Clusters'.
+      sev: 0
+    exec: "{{.Env.GOSS_BASE}}/scripts/etcd_cluster_balance.sh"
+    exit-status: 0
+    stdout:
+      - PASS
+    timeout: 10000
+    skip: false
