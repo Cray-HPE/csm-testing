@@ -1,7 +1,7 @@
 #!/bin/bash
 
 failFlag=0
-postgresClusters="$(kubectl get postgresql -A | awk '/postgres/ || NR==1' | grep -v NAME | awk '{print $1","$2}')"
+postgresClusters="$(kubectl get postgresql -A | grep -v NAME | awk '{print $1","$2}')"
 for c in $postgresClusters
 do
     # NameSpace and postgres cluster name
