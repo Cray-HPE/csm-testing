@@ -1,0 +1,13 @@
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+gossfile:
+## Platform services
+  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
+  ../tests/goss-spire-healthcheck.yaml: {}
+  ../tests/goss-k8s-vault-cluster-health.yaml: {}
+
+## HMS
+
+## CMS
+
+## UAI
+~
