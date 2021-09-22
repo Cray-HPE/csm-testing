@@ -1,0 +1,11 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  check_bios_baseline:
+    title: BIOS Baseline
+    meta:
+      desc: Validates BIOS settings (when available; dependent on vendor)
+      sev: 0
+    exit-status: 0
+    exec: /root/bin/bios-baseline --check
+    timeout: 1000
+    skip: false

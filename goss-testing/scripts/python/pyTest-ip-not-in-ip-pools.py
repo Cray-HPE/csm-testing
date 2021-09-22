@@ -5,7 +5,7 @@ import sys, ipaddress, logging, subprocess
 '''
 USAGE: pyTest-ip-not-in-ip-pools.py GOSS.VARS.ALL-INTERFACES
 Re-write of the original script
-This version of Goss passes the list in an ugly fashion "[bond0, vlan002...]" so
+This version of Goss passes the list in an ugly fashion "[bond0, bond0.nmn0...]" so
   the script needs to account for this and the prettier way future versions pass them
 This script will now get the ip pools from /etc/dnsmasq.d/*.conf
 The file names are in a hard-coded list in this script - this may be better done using goss variables
