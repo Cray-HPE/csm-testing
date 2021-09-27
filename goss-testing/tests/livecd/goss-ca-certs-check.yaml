@@ -1,0 +1,11 @@
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+command:
+  ca_certs_check:
+    title: ca-certs patched into data.json
+    meta:
+      desc: Validate that "csi patch ca" command executed. ca-certs are patched into data.json file on PIT node.
+      sev: 0
+    exec: cat /var/www/ephemeral/configs/data.json | jq | grep ca-certs
+    exit-status: 0
+    timeout: 1000
+    skip: false
