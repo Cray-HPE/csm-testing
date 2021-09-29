@@ -3,7 +3,7 @@ command:
   k8s_postgres_clusters_running:
     title: Kubernetes Postgres Check that All Clusters are in a Running State
     meta:
-      desc: If this test fails, refer to 'Troubleshoot Postgres Database' for more information on diagnosing and fixing clusters not being in a running state.
+      desc: If this test fails, run the command 'kubectl get postgresql -A' to look at all postgres clusters and thier statuses. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' for more information on diagnosing and fixing clusters not in a running state.
       sev: 0
     exec: "{{.Env.GOSS_BASE}}/scripts/postgres_clusters_running.sh"
     exit-status: 0
