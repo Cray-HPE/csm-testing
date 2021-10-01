@@ -5,7 +5,6 @@ gossfile:
   ../tests/goss-spire-healthcheck.yaml: {}
   ../tests/goss-k8s-vault-cluster-health.yaml: {}
   ../tests/goss-k8s-kea-has-active-dhcp-leases.yaml: {}
-  ../tests/goss-k8s-resolve-external-dns.yaml: {}
   ../tests/goss-k8s-monitoring-url.yaml: {}
 
 ## HMS
