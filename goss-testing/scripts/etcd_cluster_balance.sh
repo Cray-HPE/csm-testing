@@ -8,7 +8,7 @@ do
           h) echo "usage: etcd_cluster_balance.sh           # Only print 'PASS' upon success"
              echo "       etcd_cluster_balance.sh -p        # Print all results and errors if found. Use for manual check."
              exit 3;;
-	 \?) echo "usage: etcd_cluster_balance.sh           # Only print 'PASS' upon success"
+         \?) echo "usage: etcd_cluster_balance.sh           # Only print 'PASS' upon success"
              echo "       etcd_cluster_balance.sh -p        # Print all results and errors if found. Use for manual check."
              exit 3;;
     esac

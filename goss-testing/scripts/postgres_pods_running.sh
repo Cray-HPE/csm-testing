@@ -8,7 +8,7 @@ do
           h) echo "usage: postgres_pods_running.sh           # Only print 'PASS' upon success"
              echo "       postgres_pods_running.sh -p        # Print all results and errors if found. Use for manual check."
              exit 3;;
-	 \?) echo "usage: postgres_pods_running.sh           # Only print 'PASS' upon success"
+         \?) echo "usage: postgres_pods_running.sh           # Only print 'PASS' upon success"
              echo "       postgres_pods_running.sh -p        # Print all results and errors if found. Use for manual check."
              exit 3;;
     esac

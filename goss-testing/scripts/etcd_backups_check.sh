@@ -32,7 +32,7 @@ check_backup_within_day() {
             if [[ ! -z $backup_date ]]
             then
                 backup_sec=$(date -d "${backup_date}" "+%s" 2>/dev/null)
-                if [[ ! -z $backup_sec && $(( $current_date_sec - $backup_sec )) -lt $one_day_sec ]] # check if backup is less that 24 hour old
+                if [[ ! -z $backup_sec && $(( $current_date_sec - $backup_sec )) -lt $one_day_sec ]] # check if backup is less that 24 hours old
                 then
                     backup_within_day=1
                     if [[ $print_results -eq 1 ]]
@@ -61,6 +61,8 @@ do
                 if [[ $print_results -eq 1 ]]; then echo "Error: No recent backup found for $cluster."; error_flag=1; 
                 else exit 1; fi
             fi
+        else
+            if [[ $print_results -eq 1 ]]; then echo "$cluster is less than 24 hours old. Did not check if recent backups exist."; fi            
         fi
     else
         if [[ $print_results -eq 1 ]]; then echo "Error: could not find age of $cluster."; error_flag=1;
