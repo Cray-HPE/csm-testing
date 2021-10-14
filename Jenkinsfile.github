@@ -1,5 +1,7 @@
 @Library('csm-shared-library') _
 
+def promotionToken = ~"(master|main|release\\/.*)"
+def isStable = env.TAG_NAME != null || env.BRANCH_NAME ==~ promotionToken ? true : false
 pipeline {
     agent {
         label "metal-gcp-builder"
@@ -11,10 +13,9 @@ pipeline {
     }
 
     environment {
-        NAME = "csm-testing"
         DESCRIPTION = "CSM automated testing"
-        IS_STABLE = getBuildIsStable()
-        BUILD_METADATA = getRpmRevision(isStable: env.IS_STABLE)
+        IS_STABLE = "${isStable}"
+        BUILD_METADATA = getRpmRevision(isStable: isStable)
     }
 
     stages {
@@ -39,8 +40,8 @@ pipeline {
         stage('Publish ') {
             steps {
                 script {
-                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/noarch/*.rpm", arch: "noarch", isStable: env.IS_STABLE)
-                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/SRPMS/*.rpm", arch: "src", isStable: env.IS_STABLE)
+                    publishCsmRpms(component: getRepoName(), pattern: "dist/rpmbuild/RPMS/noarch/*.rpm", arch: "noarch", isStable: isStable)
+                    publishCsmRpms(component: getRepoName(), pattern: "dist/rpmbuild/SRPMS/*.rpm", arch: "src", isStable: isStable)
                 }
             }
         }
