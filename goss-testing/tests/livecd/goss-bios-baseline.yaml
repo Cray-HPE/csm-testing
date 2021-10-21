@@ -6,6 +6,6 @@ command:
       desc: Validates BIOS settings (when available; dependent on vendor)
       sev: 0
     exit-status: 0
-    exec: /root/bin/bios-baseline --check
+    exec: /root/bin/bios-baseline.sh --check
     timeout: 1000
     skip: false
