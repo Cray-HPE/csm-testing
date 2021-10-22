@@ -32,6 +32,9 @@ function set_vars() {
 
   fi
 
+  # Set a sane default username
+  BMC_USERNAME=${USERNAME:-$(whoami)}
+
   if [[ -z ${IPMI_PASSWORD} ]] || [[ -z ${BMC_USERNAME} ]]; then
 
     echo "\$BMC_USERNAME and \$IPMI_PASSWORD must be set"
@@ -130,7 +133,9 @@ enable_ilo_creds() {
   if command -v ilorest > /dev/null; then
     
     if [[ -f "$cfgfile" ]]; then
-    
+
+      chmod 600 "$cfgfile"
+      
       # Enable the username, uncommenting if needed
       sed -i "/^\(#username =\).*/s/^#//" "$cfgfile"
       sed -i "s/^\(username =\).*/username = $bmc_username/" "$cfgfile"
