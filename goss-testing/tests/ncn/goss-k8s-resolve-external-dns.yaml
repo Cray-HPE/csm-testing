@@ -3,11 +3,53 @@ command:
   resolve_external_dns:
     title: Resolve external DNS
     meta:
-      desc: Validates external DNS name is resolvable. If the test fails, cray.com was not resolvable. Check the External DNS Troubleshooting guide.
+      desc: Validates external DNS name resolves. If the test fails, the configured LDAP server was not pingable. Refer to 'operations/network/dns/Troubleshoot_Common_DNS_Issues.md' to troubleshoot external DNS issues.
       sev: 0
-    exec: "nslookup cray.com | grep cray.com -A 1 | grep Address"
+    exec: |-
+          # External DNS resolution is best tested by checking if the configured LDAP server is pingable.
+          # Pass if the test requirements are not met:
+          # - Unbound forward-addr is not configured.
+          # - LDAP providerId is not configured.
+          # Fail if the LDAP providerId is configured but the LDAP connectionURL is not.
+          # Pass/Fail based on exit code from ping of the LDAP server.
+
+          function get_master_token {
+
+              MASTER_USERNAME=$(kubectl get secret -n services keycloak-master-admin-auth -ojsonpath='{.data.user}' | base64 -d)
+              MASTER_PASSWORD=$(kubectl get secret -n services keycloak-master-admin-auth -ojsonpath='{.data.password}' | base64 -d)
+
+              curl -ks -d client_id=admin-cli -d username=$MASTER_USERNAME -d password=$MASTER_PASSWORD \
+                   -d grant_type=password https://api-gw-service-nmn.local/keycloak/realms/master/protocol/openid-connect/token | jq -r '.access_token'; 
+           }
+   
+           FORWARD_ADDR=$(kubectl -n services get cm cray-dns-unbound -o jsonpath='{.data.unbound\.conf}' \
+                          | grep "forward-zone:" -A 5 | yq r  - '"forward-zone"."forward-addr"')
+
+           LDAP_PROVIDER=$(curl -s -H "Authorization: Bearer $(get_master_token)" \
+                          https://api-gw-service-nmn.local/keycloak/admin/realms/shasta/components | jq -r '.[] | select(.providerId=="ldap")')
+
+           if [[ ! $FORWARD_ADDR ]]; then 
+              echo "Unbound must be configured for this test."
+              exit 0
+           fi
+
+           if [[ ! $LDAP_PROVIDER ]]; then 
+              echo "LDAP must be configured for this test."
+              exit 0
+           fi
+
+           echo "Unbound and LDAP are configured" 
+           CONNECTION_URL=$(curl -s -H "Authorization: Bearer $(get_master_token)" \
+                        https://api-gw-service-nmn.local/keycloak/admin/realms/shasta/components \
+                        | jq -r '.[] | select(.providerId=="ldap").config.connectionUrl[]' | cut -d / -f 3)
+
+           if [[ ! $CONNECTION_URL ]]; then
+              echo "LDAP provider is configured, but the connectionURL is missing from LDAP configuration."
+              exit 1
+           else
+              ping -q -c 1 $CONNECTION_URL
+           fi 
+
     exit-status: 0
-    stdout:
-      - /^Address.*/
     timeout: 10000
     skip: false
