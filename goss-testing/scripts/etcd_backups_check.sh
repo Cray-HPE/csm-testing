@@ -46,7 +46,7 @@ check_backup_within_day() {
 }
 
 error_flag=0
-for cluster in cray-bos cray-bss cray-crus cray-externaldns cray-fas
+for cluster in cray-bos cray-bss cray-crus cray-fas
 do
     # look at age of cluster
     age=$(kubectl get etcd ${cluster}-etcd -n services -o jsonpath='{.metadata.creationTimestamp}')
