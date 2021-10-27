@@ -139,6 +139,13 @@ echo "starting ncn-smoke-tests in background"
   --max-concurrent 4 \
   --listen-addr $ip:9002 &
 
+echo "starting ncn-spire-healthchecks in background"
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-spire-healthchecks.yaml --vars $tmpvars serve \
+  --format json \
+  --max-concurrent 4 \
+  --endpoint /ncn-spire-healthchecks \
+  --listen-addr $ip:9003 &
+
 echo "Goss servers started in background"
 
 # Keep process running so systemd can kill and monitor background jobs as needed
