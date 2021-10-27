@@ -38,6 +38,11 @@ else
     "ncn-spire-healthchecks" ; done
 fi
 
+# Specify the spire postgres clusters and call the postgres tests.
+# This only needs to be done once on the NCN that this script is
+# executing on as the postgres tests include all of the members of
+# the cluster.
+
 export CLUSTER_NAME=spire-postgres
 export CLUSTER_NS=spire
 
