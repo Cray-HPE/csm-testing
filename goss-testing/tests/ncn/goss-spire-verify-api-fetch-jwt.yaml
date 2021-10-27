@@ -1,0 +1,11 @@
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+command:
+  spire_verify_api_fetch_jwt:
+    title: Verify spire api fetch of jwt
+    meta:
+      desc: Verify spire api fetch of jwt.
+      sev: 0
+    exec: /usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /root/spire/agent.sock -audience goss-test >/dev/null
+    exit-status: 0
+    timeout: 1000
+    skip: false

@@ -15,6 +15,11 @@ gossfile:
   ../tests/goss-dns-nodes.yaml: {}
   ../tests/goss-spire-healthcheck.yaml: {}
   ../tests/goss-spire-bss-metadata-exist.yaml: {}
+  ../tests/goss-spire-verify-pods.yaml: {}
+  ../tests/goss-spire-agent-service-running.yaml: {}
+  ../tests/goss-spire-check-key-id-in-jwks.yaml: {}
+  ../tests/goss-spire-verify-api-fetch-jwt.yaml: {}
   ../tests/goss-default-gateway-points-to-CAN-gateway.yaml: {}
   ../tests/goss-cray-service-etcd-health-check.yaml: {}
   ../tests/goss-platform-ca-certs-match-cloud-init.yaml: {}
+  ../tests/goss-k8s-resolve-external-dns.yaml: {}

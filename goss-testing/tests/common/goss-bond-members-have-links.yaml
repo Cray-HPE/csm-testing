@@ -7,7 +7,7 @@ command:
       sev: 0
     stdout:
     - "!DOWN"
-    exec: "cat /etc/sysconfig/network/ifcfg-bond0 | awk -F \"'\" '/BONDING_SLAVE/{print $2}' | while read member ; do ip link show dev $member ; done"
+    exec: "awk -F '=' '/BONDING_SLAVE/{print $2}' /etc/sysconfig/network/ifcfg-bond0 | while read member ; do ip link show dev $member ; done"
     exit-status: 0
     timeout: 1000
     skip: false

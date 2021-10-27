@@ -1,0 +1,8 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+gossfile:
+  ../tests/goss-spire-healthcheck.yaml: {}
+  ../tests/goss-spire-bss-metadata-exist.yaml: {}
+  ../tests/goss-spire-verify-pods.yaml: {}
+  ../tests/goss-spire-verify-api-fetch-jwt.yaml: {}
+  ../tests/goss-spire-check-key-id-in-jwks.yaml: {}
+  ../tests/goss-spire-agent-service-running.yaml: {}
