@@ -26,3 +26,5 @@ gossfile:
   ../tests/goss-k8s-psp-enabled.yaml: {}
   ../tests/goss-platform-ca-certs-match-cloud-init.yaml: {}
   ../tests/goss-k8s-resolve-external-dns.yaml: {}
+  ../tests/goss-k8s-kea-has-active-dhcp-leases.yaml: {}
+  ../tests/goss-k8s-etcd-*.yaml: {}

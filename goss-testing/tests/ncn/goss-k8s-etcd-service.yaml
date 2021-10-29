@@ -10,14 +10,17 @@ service:
 
 file:
   /etc/kubernetes/pki/etcd/ca.crt:
+    title: etcd ca.crt file exists
     meta:
       desc: This file should be created when the master is initialized or joins the Kubernetes cluster.
     exists: true
   /etc/kubernetes/pki/apiserver-etcd-client.crt:
+    title: etcd client crt file exists
     meta:
       desc: This file should be created when the master is initialized or joins the Kubernetes cluster.
     exists: true
   /etc/kubernetes/pki/apiserver-etcd-client.key:
+    title: etcd client key file exists
     meta:
       desc: This file should be created when the master is initialized or joins the Kubernetes cluster.
     exists: true

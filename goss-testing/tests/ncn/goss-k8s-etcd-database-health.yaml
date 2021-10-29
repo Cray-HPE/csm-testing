@@ -1,7 +1,7 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   etcd_database_health:
-    title: Ectd Database Health
+    title: Etcd Database Health
     meta:
       desc: Checks the health of the etcd service databases.
       sev: 0
