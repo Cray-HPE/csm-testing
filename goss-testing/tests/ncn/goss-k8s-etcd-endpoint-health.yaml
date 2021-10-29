@@ -1,7 +1,7 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 command:
   etcd_database_health:
-    title: Ectd Cluster Endpoint Health
+    title: Etcd Cluster Endpoint Health
     meta:
       desc: Checks the endpoint health of the etcd clusters.
       sev: 0
