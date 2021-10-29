@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
 # (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
-# Author: Forrest Jadick
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -37,5 +36,19 @@ else
   cat /etc/hosts | grep -ohE "ncn-[w]([0-9]{3})" | awk '!a[$0]++' | while read node ; do run_ncn_tests "$node" "9000" \
     "ncn-healthcheck-worker" ; done
 fi
+
+# Specify the switch passwords and call the switch BGP neighbors tests.
+# This only needs to be done once on the NCN that this script is
+# executing on as the bgp status tests check all switches in
+# the cluster.
+
+export SW_ARUBA_PASSWORD="${SW_ARUBA_PASSWORD:-\!nitial0}"
+export SW_MELLANOX_PASSWORD="${SW_MELLANOX_PASSWORD:-\!nitial0}"
+
+echo $'\n\e[1;33m'---------------$'\e[0m'
+echo $'\e[1;33m'Switch BGP Neighbors$'\e[0m'
+echo "Test Name: goss-switch-bgp-neighbor-aruba-or-mellanox.yaml"
+echo "Description: Validates connection to the BGP neighbors of a switch. Check Admin Guide "Check BGP Status and Reset Sessions" for more details on how to fix this issue."
+goss -g /opt/cray/tests/install/ncn/tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml validate
 
 exit
