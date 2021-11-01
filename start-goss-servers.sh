@@ -2,7 +2,6 @@
 # Goss server start up commands to serve health check endpoints
 #
 # (C) Copyright 2020 Hewlett Packard Enterprise Development LP.
-# Author: Forrest Jadick
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -81,7 +80,7 @@ ip=$(host $(hostname).hmn | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{
 [[ -z $ip ]] && exit 2
 
 # start servers with NCN test suites
-# designated goss-servers port range: 8994-9002
+# designated goss-servers port range: 8994-9006
 
 echo "starting ncn-preflight-tests in background"
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-preflight-tests.yaml --vars $tmpvars serve \
@@ -145,6 +144,27 @@ nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-spire-healthchecks
   --max-concurrent 4 \
   --endpoint /ncn-spire-healthchecks \
   --listen-addr $ip:9003 &
+
+echo "starting ncn-afterpitreboot-healthcheck-master in background"
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-healthcheck-master.yaml --vars $tmpvars serve \
+  --format json \
+  --max-concurrent 4 \
+  --endpoint /ncn-afterpitreboot-healthcheck-master \
+  --listen-addr $ip:9004 &
+
+echo "starting ncn-afterpitreboot-healthcheck-worker in background"
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-healthcheck-worker.yaml --vars $tmpvars serve \
+  --format json \
+  --max-concurrent 4 \
+  --endpoint /ncn-afterpitreboot-healthcheck-worker \
+  --listen-addr $ip:9005 &
+
+echo "starting ncn-afterpitreboot-healthcheck-storage in background"
+nohup /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-healthcheck-storage.yaml --vars $tmpvars serve \
+  --format json \
+  --max-concurrent 4 \
+  --endpoint /ncn-afterpitreboot-healthcheck-storage \
+  --listen-addr $ip:9006 &
 
 echo "Goss servers started in background"
 
