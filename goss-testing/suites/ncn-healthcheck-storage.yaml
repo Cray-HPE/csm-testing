@@ -9,4 +9,3 @@ gossfile:
   ../tests/goss-bond-members-have-correct-mtu.yaml: {}
   ../tests/goss-dns-nodes.yaml: {}
   ../tests/goss-default-gateway-points-to-CAN-gateway.yaml: {}
-  ../tests/goss-storage-spire-healthcheck.yaml: {}
