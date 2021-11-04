@@ -1,4 +1,4 @@
-# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Copyright 2021 Hewlett Packard Enterprise Development LP
 gossfile:
   ../tests/goss-boot-parameter-check-no-wipe.yaml: {}
   ../tests/goss-storage-spire-healthcheck.yaml: {}
