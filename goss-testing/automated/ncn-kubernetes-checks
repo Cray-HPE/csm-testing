@@ -81,6 +81,7 @@ echo
 
 for node in $nodes; do
   run_ncn_tests "$node" "8996" "ncn-kubernetes-tests-master"
+  run_ncn_tests "$node" "9007" "ncn-afterpitreboot-kubernetes-tests-master"
 done
 
 # worker nodes
@@ -96,6 +97,7 @@ fi
 
 for node in $nodes; do
   run_ncn_tests "$node" "8998" "ncn-kubernetes-tests-worker"
+  run_ncn_tests "$node" "9008" "ncn-afterpitreboot-kubernetes-tests-worker"
 done
 
 exit

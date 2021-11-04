@@ -7,7 +7,5 @@ gossfile:
   ../tests/goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
   ../tests/goss-k8s-certmanager-certs-ready.yaml: {}
   ../tests/goss-k8s-certmanager-issuers-ready.yaml: {}
-  ../tests/goss-k8s-trustedcerts-configmaps-exist.yaml: {}
-  ../tests/goss-k8s-vault-cluster-health.yaml: {}
   ../tests/goss-unbound-dns-entries.yaml: {}
   ../tests/goss-dedicated-drive-worker.yaml: {}
