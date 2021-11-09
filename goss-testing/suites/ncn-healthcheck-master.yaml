@@ -21,7 +21,7 @@ gossfile:
   ../tests/goss-spire-check-key-id-in-jwks.yaml: {}
   ../tests/goss-spire-verify-api-fetch-jwt.yaml: {}
   ../tests/goss-k8s-etcd-service.yaml: {}
-  ../tests/goss-default-gateway-points-to-CAN-gateway.yaml: {}
+  ../tests/goss-default-gateway-points-to-CMN-gateway.yaml: {}
   ../tests/goss-check-clock-skew.yaml: {}
   ../tests/goss-k8s-psp-enabled.yaml: {}
   ../tests/goss-platform-ca-certs-match-cloud-init.yaml: {}
