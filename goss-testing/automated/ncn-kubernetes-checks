@@ -74,15 +74,17 @@ echo $'\e[1;33m'-----------------------------$'\e[0m'
 # find the master node names and query the server endpoint
 if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
   nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE "ncn-m([0-9]{3})" | grep -v ncn-m001 | awk '!a[$0]++')
+  for node in $nodes ; do \
+    run_ncn_tests "$node" "8996" "ncn-kubernetes-tests-master" ; \
+  done
 else
   nodes=$(cat /etc/hosts | grep -ohE "ncn-m([0-9]{3})" | grep -v ncn-m001 | awk '!a[$0]++')
+  for node in $nodes ; do \
+    run_ncn_tests "$node" "8996" "ncn-kubernetes-tests-master" ; \
+    run_ncn_tests "$node" "9007" "ncn-afterpitreboot-kubernetes-tests-master" ; \
+  done
 fi
 echo
-
-for node in $nodes; do
-  run_ncn_tests "$node" "8996" "ncn-kubernetes-tests-master"
-  run_ncn_tests "$node" "9007" "ncn-afterpitreboot-kubernetes-tests-master"
-done
 
 # worker nodes
 echo $'\e[1;33m'Worker Node Kubernetes Checks$'\e[0m'
@@ -91,13 +93,15 @@ echo $'\e[1;33m'-----------------------------$'\e[0m'
 # find the worker node names and query the server endpoint
 if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
   nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE "ncn-w([0-9]{3})" | grep -v ncn-m001 | awk '!a[$0]++')
+  for node in $nodes ; do \
+    run_ncn_tests "$node" "8998" "ncn-kubernetes-tests-worker"; \
+  done
 else
   nodes=$(cat /etc/hosts | grep -ohE "ncn-w([0-9]{3})" | grep -v ncn-m001 | awk '!a[$0]++')
+  for node in $nodes ; do \
+    run_ncn_tests "$node" "8998" "ncn-kubernetes-tests-worker" ; \
+    run_ncn_tests "$node" "9008" "ncn-afterpitreboot-kubernetes-tests-worker" ; \
+  done
 fi
-
-for node in $nodes; do
-  run_ncn_tests "$node" "8998" "ncn-kubernetes-tests-worker"
-  run_ncn_tests "$node" "9008" "ncn-afterpitreboot-kubernetes-tests-worker"
-done
 
 exit
