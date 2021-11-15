@@ -30,3 +30,4 @@ gossfile:
   ../tests/goss-k8s-etcd-endpoint-health.yaml: {}
   ../tests/goss-k8s-postgres-*.yaml: {}
   ../tests/goss-k8s-monitoring-url.yaml: {}
+  ../tests/goss-k8s-precache-images-health.yaml: {}
