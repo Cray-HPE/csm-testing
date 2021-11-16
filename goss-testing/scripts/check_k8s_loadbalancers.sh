@@ -3,6 +3,8 @@
 # Checks that all Kubernetes LoadBalancer resources have an IP address
 # Author: Chris Spiller <christian.spiller@hpe.com>
 
+set -eu
+
 print_results=0
 while getopts ph options
 do
