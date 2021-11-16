@@ -23,6 +23,7 @@ network_interfaces:
   - bond0.nmn0
   - bond0.hmn0
   - bond0.can0
+  - bond0.cmn0
 
 services_enabled:
   - dnsmasq
