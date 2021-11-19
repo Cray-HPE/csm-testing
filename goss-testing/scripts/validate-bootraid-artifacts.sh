@@ -47,9 +47,11 @@ else
 		ncn="${i%%:*}"
 		xname="${i##*:}"
 
-		# Check the path listed in s3 based on this xname
-		kernel_path=$(cray bss bootparameters list --hosts "${xname}" | awk -F '"' '/kernel = / {print $2}')
-		initrd_path=$(cray bss bootparameters list --hosts "${xname}" | awk -F '"' '/initrd = / {print $2}')
+    # Check the path listed in s3 based on this xname, forcing toml output when running the cray command for easy parsing
+    # shellcheck disable=SC2034
+    CRAY_FORMAT=toml kernel_path=$(cray bss bootparameters list --hosts "${xname}" | awk -F '"' '/kernel = / {print $2}')
+    # shellcheck disable=SC2034
+    CRAY_FORMAT=toml initrd_path=$(cray bss bootparameters list --hosts "${xname}" | awk -F '"' '/initrd = / {print $2}')
 
 		echo "==> $ncn..."
 		# copy over the library
