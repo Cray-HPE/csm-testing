@@ -12,10 +12,10 @@ do
     m_ns="$(echo $m | awk -F, '{print $1}')"
     m_url="$(echo $m | awk -F, '{print $2}' | sed 's/[][]//g' | tr -d '"')"
 
-    # Check for 307 redirects (location oauth and keycloak)
-    response=$(curl -i -s -S -L --max-redirs 2 https://$m_url/ | grep -c "HTTP/2 307")
+    # Check for 302 redirect from oauth2-proxy to the Keycloak login page
+    response=$(curl -i -s -S -L --max-redirs 1 https://$m_url/ | grep -c "HTTP/1.1 302")
 
-    if [[ $response -ne 2 ]]; then
+    if [[ $response -ne 1 ]]; then
         echo "Monitoring url https://$m_url/ in namespace $m_ns failed to redirect for auth."
         failFlag=1
     fi
