@@ -1,27 +1,31 @@
 #!/bin/bash
 
 print_results=0
-while getopts pm:a:w:h stack
+exit_on_failure=0
+while getopts pem:a:w:h stack
 do
     case "${stack}" in
           p) print_results=1;;
+          e) exit_on_failure=1;;
           m) POSTGRES_MAX_LAG=$OPTARG;;
           a) POSTGRES_MAX_ATTEMPTS=$OPTARG;;
           w) POSTGRES_WAIT_SECONDS_BETWEEN_ATTEMPTS=$OPTARG;;
-          h) echo "usage: postgres_replication_lag.sh           # Print 'OK' and 'PASS' upon success"
+          h) echo "usage: postgres_replication_lag.sh           # Print 'PASS' upon success"
              echo "       postgres_replication_lag.sh -p        # Print all results and errors if found. Use for manual check."
+             echo "       postgres_replication_lag.sh -p -e     # Print all results and errors if found. Exit if failure is encountered."
              echo "       postgres_replication_lag.sh -p -m <max_allowed_lag> -a <number_attempts> -w <wait_seconds_between_attempts>"
              echo "default parameters: -m 0  -a 10  -w 10"
-             exit 3;;
-         \?) echo "usage: postgres_replication_lag.sh           # Print 'OK' and 'PASS' upon success"
+             exit 4;;
+         \?) echo "usage: postgres_replication_lag.sh           # Print 'PASS' upon success"
              echo "       postgres_replication_lag.sh -p        # Print all results and errors if found. Use for manual check."
+             echo "       postgres_replication_lag.sh -p -e     # Print all results and errors if found. Exit if failure is encountered."
              echo "       postgres_replication_lag.sh -p -m <max_allowed_lag> -a <number_attempts> -w <wait_seconds_between_attempts>"
              echo "default parameters: -m 0  -a 10  -w 10"
-             exit 3;;
+             exit 4;;
     esac
 done
 
-# The POSTGRES_MAX_LAG may be exported by the user to control
+# The POSTGRES_MAX_LAG environment variable may be exported by the user to control
 # the maximum lag value permitted by this script. Setting its value to
 # a negative number or a non-integer value has the effect of skipping the
 # maximum lag check. In other words, if one wishes to skip this check,
@@ -30,7 +34,7 @@ done
 POSTGRES_MAX_LAG=${POSTGRES_MAX_LAG:-'0'}
 
 # POSTGRES_MAX_ATTEMPTS specifies the maximum number of times the
-# postgres check will be performed on a given cluster before failing. Note that
+# PostgreSQL check will be performed on a given cluster before failing. Note that
 # failures other than due to maximum lag are always fatal and are not retried.
 # If unset or set to a non-positive integer, default to 10
 if [[ ! $POSTGRES_MAX_ATTEMPTS =~ ^[1-9][0-9]*$ ]]; then
@@ -38,31 +42,31 @@ if [[ ! $POSTGRES_MAX_ATTEMPTS =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 # POSTGRES_WAIT_SECONDS_BETWEEN_ATTEMPTS specifies the time (in seconds)
-# between postgres checks on a given cluster.
+# between PostgreSQL checks on a given cluster.
 # If unset or set to a non-positive integer, default to 10
 if [[ ! $POSTGRES_WAIT_SECONDS_BETWEEN_ATTEMPTS =~ ^[1-9][0-9]*$ ]]; then
     POSTGRES_WAIT_SECONDS_BETWEEN_ATTEMPTS=10
 fi
 
 if [[ ! $POSTGRES_MAX_LAG =~ ^[0-9][0-9]*$ ]]; then
-    echo "Skipping postgres cluster max lag checks because of POSTGRES_MAX_LAG setting"
+    echo "Skipping PostgreSQL cluster max lag checks because of POSTGRES_MAX_LAG setting"
     exit 0
 else
-    echo "Postgres cluster checks may take several minutes, depending on latency"
+    echo "PostgreSQL cluster checks may take several minutes, depending on the number of attempts per cluster."
 fi
 
 failFlag=0
 postgresClusters="$(kubectl get postgresql -A | grep -v NAME | awk '{print $1","$2}')"
 for c in $postgresClusters
 do
-    # NameSpace and postgres cluster name
+    # NameSpace and PostgreSQL cluster name
     c_ns="$(echo $c | awk -F, '{print $1;}')"
     c_name="$(echo $c | awk -F, '{print $2;}')"
 
     first_member="$(kubectl get pod -n $c_ns -l "cluster-name=$c_name,application=spilo" \
                   -o custom-columns=NAME:.metadata.name --no-headers | head -1)"
 
-    echo -n "$c_name - "
+    if [[ $print_results -eq 1 ]]; then echo -n "$c_name - "; fi
     c_attempt=0
     c_lag_history=""
     while [ true ]; do
@@ -84,29 +88,29 @@ do
 
         #check lag:unknown
         if [[ $c_unknown_lag -gt 0 ]]; then
-            echo -e "\n--- ERROR --- $c_name cluster has lag: unknown"
             if [[ $print_results -eq 1 ]]
-            then failFlag=1
+            then 
+                echo -e "\n--- ERROR --- $c_name cluster has lag: unknown"
                 kubectl -n $c_ns exec $first_member -- patronictl list 2>/dev/null
+                if [[ $exit_on_failure -eq 1 ]]; then exit 1; else failFlag=1; fi
                 break;
             else exit 1; fi
         fi
 
-        if [[ $POSTGRES_MAX_LAG =~ ^[0-9][0-9]*$ ]]; then
-            #check max_lag is <= $POSTGRES_MAX_LAG
-            if [[ $c_max_lag -gt $POSTGRES_MAX_LAG ]]; then
-                # If we have not exhausted our number of attempts, retry
-                [[ $c_attempt -ge $POSTGRES_MAX_ATTEMPTS ]] || continue
+        #check max_lag is <= $POSTGRES_MAX_LAG
+        if [[ $c_max_lag -gt $POSTGRES_MAX_LAG ]]; then
+            # If we have not exhausted our number of attempts, retry
+            [[ $c_attempt -ge $POSTGRES_MAX_ATTEMPTS ]] || continue
 
+            if [[ $print_results -eq 1 ]]
+            then 
                 echo -e "\n--- ERROR --- $c cluster has lag history: $c_lag_history"
-                if [[ $print_results -eq 1 ]]
-                then failFlag=1
-                    kubectl -n $c_ns exec $first_member -- patronictl list 2>/dev/null
-                    break;
-                else exit 2; fi
-            fi
+                kubectl -n $c_ns exec $first_member -- patronictl list 2>/dev/null
+                if [[ $exit_on_failure -eq 1 ]]; then exit 2; else failFlag=1; fi
+                break;
+            else exit 2; fi
         fi
-        echo " OK"
+        if [[ $print_results -eq 1 ]]; then echo " OK"; fi
         break
     done
 done
