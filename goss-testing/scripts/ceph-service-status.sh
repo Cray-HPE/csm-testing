@@ -208,10 +208,7 @@ then
   echo "Updating ssh keys.."
 fi
 
-for node_num in $(seq 1 "$num_storage_nodes"); do
-  nodename=$(printf "ncn-s%03d" "$node_num")
-  pdsh -N -w "$nodename" truncate --size=0 ~/.ssh/known_hosts  2>&1 
-done
+truncate --size=0 ~/.ssh/known_hosts  2>&1
 
 for node_num in $(seq 1 "$num_storage_nodes"); do
   nodename=$(printf "ncn-s%03d" "$node_num")
