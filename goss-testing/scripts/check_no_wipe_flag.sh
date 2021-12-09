@@ -14,7 +14,7 @@ function get_client_secret() {
     sshOptions="-q -o StrictHostKeyChecking=no"
     
     # If executing on a storage node, determine an active NCN Kubernetes node:
-    hostNodeType=$(echo $(hostname) | awk '/s/ {print "storage"}')
+    hostNodeType=$(echo $(hostname) | awk '/ncn-s/ {print "storage"}')
     if [[ $hostNodeType == "storage" ]]
     then
         # Determine active non-storage NCN node:
