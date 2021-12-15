@@ -40,7 +40,8 @@ pipeline {
         stage('Publish ') {
             steps {
                 script {
-                    publishCsmRpms(component: getRepoName(), pattern: "dist/rpmbuild/RPMS/noarch/*.rpm", arch: "noarch", isStable: isStable)
+                    publishCsmRpms(component: getRepoName(), pattern: "dist/rpmbuild/RPMS/noarch/csm-testing*.rpm", arch: "noarch", isStable: isStable)
+                    publishCsmRpms(component: getRepoName(), pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm", arch: "noarch", isStable: isStable)
                     publishCsmRpms(component: getRepoName(), pattern: "dist/rpmbuild/SRPMS/*.rpm", arch: "src", isStable: isStable)
                 }
             }
