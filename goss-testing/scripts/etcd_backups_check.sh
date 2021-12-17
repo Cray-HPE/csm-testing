@@ -28,7 +28,7 @@ check_backup_within_day() {
     then
         for backup in $backups
         do
-            backup_date=$(echo ${backup: -20} | sed "s/-/ /3")
+            backup_date=$(echo ${backup##*_} | sed "s/-/ /3")
             if [[ ! -z $backup_date ]]
             then
                 backup_sec=$(date -d "${backup_date}" "+%s" 2>/dev/null)
