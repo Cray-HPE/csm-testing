@@ -1,0 +1,11 @@
+# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+command:
+  ip_dns_check:
+    title: Check for dupe and DNS entries for NCN and Uans
+    meta:
+      desc: Checks for dupe IPs in SMD EthernetInterface table and NCN/UAN management network DNS entries resolve to only 1 IP.
+      sev: 0
+    exec: "{{.Env.GOSS_BASE}}/scripts/check_ncn_uan_ip_dns.sh"
+    exit-status: 0
+    timeout: 30000
+    skip: false
