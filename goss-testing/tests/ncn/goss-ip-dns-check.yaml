@@ -3,7 +3,7 @@ command:
   ip_dns_check:
     title: Check for dupe and DNS entries for NCN and Uans
     meta:
-      desc: Checks for dupe IPs in SMD EthernetInterface table and NCN/UAN management network DNS entries resolve to only 1 IP.
+      desc: Checks for dupe IPs in SMD EthernetInterface table and NCN/UAN management network DNS entries resolve to only 1 IP. To manually run test.  Navigate to '/opt/cray/tests/install/ncn/scripts' directory and run check_ncn_uan_ip_dns.sh
       sev: 0
     exec: "{{.Env.GOSS_BASE}}/scripts/check_ncn_uan_ip_dns.sh"
     exit-status: 0
