@@ -4,7 +4,6 @@ gossfile:
   ../tests/goss-check-mounts-worker.yaml: {}
   ../tests/goss-dedicated-drive-worker.yaml: {}
   ../tests/goss-k8s-nodes-have-running-pods.yaml: {}
-  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
   ../tests/goss-check-clock-skew.yaml: {}
   ../tests/goss-cray-service-etcd-health-check.yaml: {}
   ../tests/goss-k8s-nexus-pods-running.yaml: {}
