@@ -26,6 +26,11 @@ vars_file="/opt/cray/tests/install/livecd/vars/variables-livecd.yaml"
 nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE 'ncn-[m,w,s]([0-9]{3})' | awk '!a[$0]++')
 tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
 
+if [[ -z "$SW_ADMIN_PASSWORD" ]]; then
+  echo "Error: Managment switch admin password not provided via SW_ADMIN_PASSWORD enviroment varaible."
+  exit 1
+fi
+
 # add node names from statics.conf to temp variables file
 if [ `echo $nodes | wc -w` -ne 0 ];then
   echo "nodes:" >> $tmpvars
