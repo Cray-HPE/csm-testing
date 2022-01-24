@@ -5,7 +5,7 @@ command:
     meta:
       desc: Validates connection to the BGP neighbors of a switch. Check Admin Guide "Check BGP Status and Reset Sessions" for more details on how to fix this issue
       sev: 0
-    exec: /usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/bgp-neighbors-established-aruba-or-mellanox.py {{.Env.SW_ARUBA_PASSWORD}} {{.Env.SW_MELLANOX_PASSWORD}}
+    exec: /usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/bgp-neighbors-established-aruba-or-mellanox.py {{.Env.SW_ADMIN_PASSWORD}} {{.Env.SW_ADMIN_PASSWORD}}
     exit-status: 0
     stdout:
       - "!FAIL"
