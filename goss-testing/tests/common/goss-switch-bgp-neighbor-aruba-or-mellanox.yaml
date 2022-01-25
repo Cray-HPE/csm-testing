@@ -3,11 +3,11 @@ command:
   bgp_neighbors_established:
     title: Switch BGP Neighbors
     meta:
-      desc: Validates connection to the BGP neighbors of a switch. Check Admin Guide "Check BGP Status and Reset Sessions" for more details on how to fix this issue
+      desc: Validates connection to the BGP neighbors of a switch.
       sev: 0
-    exec: /usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/bgp-neighbors-established-aruba-or-mellanox.py {{.Env.SW_ADMIN_PASSWORD}} {{.Env.SW_ADMIN_PASSWORD}}
+    exec: canu validate network bgp --password {{.Env.SW_ADMIN_PASSWORD}}
     exit-status: 0
     stdout:
       - "!FAIL"
-    timeout: 10000
+    timeout: 20000
     skip: false
