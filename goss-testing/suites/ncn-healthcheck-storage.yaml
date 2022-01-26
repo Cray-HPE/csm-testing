@@ -1,4 +1,4 @@
-# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Copyright 2014-2022 Hewlett Packard Enterprise Development LP
 gossfile:
   ../tests/goss-command-available.yaml: {}
   ../tests/goss-interface-has-ip.yaml: {}
@@ -9,3 +9,4 @@ gossfile:
   ../tests/goss-bond-members-have-correct-mtu.yaml: {}
   ../tests/goss-dns-nodes.yaml: {}
   ../tests/goss-default-gateway-points-to-CMN-gateway.yaml: {}
+  ../tests/goss-cfs-state-reporter.yaml: {}
