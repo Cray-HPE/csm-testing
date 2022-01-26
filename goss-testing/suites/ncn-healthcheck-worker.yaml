@@ -1,4 +1,4 @@
-# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Copyright 2014-2022 Hewlett Packard Enterprise Development LP
 gossfile:
   ../tests/goss-command-available.yaml: {}
   ../tests/goss-interface-has-ip.yaml: {}
@@ -31,3 +31,4 @@ gossfile:
   ../tests/goss-k8s-postgres-*.yaml: {}
   ../tests/goss-k8s-monitoring-url.yaml: {}
   ../tests/goss-k8s-precache-images-health.yaml: {}
+  ../tests/goss-cfs-state-reporter.yaml: {}
