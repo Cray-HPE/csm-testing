@@ -1,6 +1,5 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 gossfile:
-  ../tests/goss-any-switch-mtu-spine-port.yaml: {}
   ../tests/goss-bmc-check.yaml: {}
   ../tests/goss-bios-baseline.yaml: {}
   ../tests/goss-command-available.yaml: {}
