@@ -1,0 +1,13 @@
+# Copyright 2022 Hewlett Packard Enterprise Development LP
+command:
+  cfs_state_reporter_check:
+    title: cfs-state-reporter service ran successfully
+    meta:
+      desc: If this test fails, run {{.Env.GOSS_BASE}}/scripts/python/cfs_state_reporter_check.py on the target node for more information
+      sev: 0
+    exec: "{{.Env.GOSS_BASE}}/scripts/python/cfs_state_reporter_check.py"
+    exit-status: 0
+    stdout:
+      - PASS
+    timeout: 10000
+    skip: false
