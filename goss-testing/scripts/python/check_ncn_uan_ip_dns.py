@@ -178,7 +178,7 @@ def main():
         dig_cmd = subprocess.Popen(('dig', hostname, '+short'), stdout=subprocess.PIPE)
         wc_cmd = subprocess.check_output(('wc', '-l'), stdin=dig_cmd.stdout)
         result = int(wc_cmd.decode('ascii').strip())
-        if result > 0:
+        if result > 1:
             error_found = True
             log.error(f'ERROR: {hostname} has more than 1 DNS entry')
             nslookup_cmd = subprocess.Popen(('nslookup', hostname), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
