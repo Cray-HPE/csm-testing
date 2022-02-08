@@ -1,7 +1,6 @@
 # This file is sourced by the NCN automated testing scripts.
 #
-# (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
-# Author: Forrest Jadick
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -28,6 +27,9 @@ function k8s_local_tests {
   echo
   echo "Test Name: Kubernetes Nodes Have Valid Age"
   /usr/bin/goss -g $GOSS_BASE/tests/goss-k8s-nodes-age-valid.yaml v
+  echo
+  echo "Test Name: Ceph CSI Kubernetes Requirements Exist"
+  /usr/bin/goss -g $GOSS_BASE/tests/goss-ceph-csi-k8s-requirements.yaml v
   echo
   # Skip this check if on PIT node. Services being checked may not yet be
   # installed/ready:
