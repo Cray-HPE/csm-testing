@@ -1,0 +1,28 @@
+# Copyright 2022 Hewlett Packard Enterprise Development LP
+{{ $kubectl := index .Vars "kubectl" }}
+file:
+    {{$kubectl}}:
+        meta:
+            desc: "Check that {{$kubectl}} command exists"
+            sev: 0
+        exists: true
+        filetype: file
+command:
+    {{range $configmap := index .Vars "k8s_ceph_csi_configmaps"}}
+    k8s_cm_{{$configmap}}:
+        meta:
+            desc: "Check that Kubernetes configmap {{$configmap}} exists"
+            sev: 0
+        exec: "{{$kubectl}} get configmap {{$configmap}}"
+        exit-status: 0
+        timeout: 10000
+    {{end}}
+    {{range $secret := index .Vars "k8s_ceph_csi_secrets"}}
+    k8s_secret_{{$secret}}:
+        meta:
+            desc: "Check that Kubernetes secret {{$secret}} exists"
+            sev: 0
+        exec: "{{$kubectl}} get secret {{$secret}}"
+        exit-status: 0
+        timeout: 10000
+    {{end}}
