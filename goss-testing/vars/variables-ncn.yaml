@@ -72,6 +72,23 @@ k8s_istio_services:
   - istio-ingressgateway
   - istio-ingressgateway-local
 
+k8s_ceph_csi_configmaps:
+  - ceph-csi-config
+  - cephfs-csi-sc
+  - kube-csi-sc
+  - sma-csi-sc
+  - sts-rados-config
+
+k8s_ceph_csi_secrets:
+  - csi-cephfs-secret
+  - csi-kube-secret
+  - csi-sma-secret
+
+ceph_files:
+  - /usr/bin/ceph
+  - /etc/cray/ceph/ceph_k8s_initialized
+  - /etc/cray/ceph/csi_initialized
+
 datajson:
   - "/mnt/configs/data.json"
 
@@ -84,6 +101,8 @@ ceph_services:
   - mds
   - osd
   - rgw
+
+kubectl: "/usr/bin/kubectl"
 
 commands:
   - 'kubectl version --client'
