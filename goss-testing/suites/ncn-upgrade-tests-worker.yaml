@@ -1,5 +1,6 @@
 # Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 gossfile:
+  ../tests/goss-check-static-routes.yaml: {}
   ../tests/goss-k8s-nodes-ready.yaml: {}
   ../tests/goss-check-mounts-worker.yaml: {}
   ../tests/goss-dedicated-drive-worker.yaml: {}
