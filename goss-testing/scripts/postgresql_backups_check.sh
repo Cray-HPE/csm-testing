@@ -1,4 +1,25 @@
 #!/bin/bash
+# MIT License
+#
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
 
 print_results=0
 while getopts ph stack
@@ -60,12 +81,14 @@ do
 
     # NameSpace and PostgreSQL cluster name
     c_ns="$(echo $c | awk -F, '{print $1;}')"
-    c_name="$(echo $c | awk -F, '{print $2;}')"
-    c_name=${c_name%"ql-db-backup"}     # remove suffix 'ql-db-backup'
-    c_name=${c_name#"cray-"}            # remove prefix 'cray-'
+    c_cronjob_name="$(echo $c | awk -F, '{print $2;}')"
+    c_name=${c_cronjob_name%"ql-db-backup"}     # remove suffix 'ql-db-backup'
+    c_name=${c_name#"cray-"}                    # remove prefix 'cray-'
     c_name=$(kubectl get postgresql -n ${c_ns} | grep $c_name |awk '{print $1}')
 
-    c_age=$(kubectl get postgresql ${c_name} -n ${c_ns} -o jsonpath='{.metadata.creationTimestamp}')
+    # Base the c_age on the cronjob creation time instead of when the postgres resource was created.
+    # During upgrades, cronjobs may get re-created if they failed to start due to too many missed starts.
+    c_age=$(kubectl get cronjobs.batch ${c_cronjob_name} -n ${c_ns} -o jsonpath='{.metadata.creationTimestamp}')
     c_age_sec=$(date -d "${c_age}" "+%s")
 
     if [[ ! -z $c_age && ! -z $c_age_sec ]]
