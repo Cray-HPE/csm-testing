@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (C) 2021 Hewlett Packard Enterprise Development LP
+# Copyright (C) 2021-2022 Hewlett Packard Enterprise Development LP
 # Tests if BIOS and firmware versions meet or exceed the required versions
 # Author: Jacob Salmela <jacob.salmela@hpe.com>
 
@@ -13,9 +13,11 @@ usage() {
   grep '^#/' "$0" | cut -c4-
 }
 
-#/ Usage: check_bios_firmware_versions.sh [-h]
+#/ Usage: check_bios_firmware_versions.sh [-b | -h]
 #/
 #/    Checks the BIOS and firmware versions of all NCNs to see if they meet or exceed the requirements for a specific version of CSM
+#/
+#/    -b    Also execute /root/bin/bios-baseline.sh --check
 #/
 #/ Note: $BMC_USERNAME and $IPMI_PASSWORD must be set prior to running this script.
 #/ 
@@ -350,19 +352,30 @@ check_bios_version() {
   does_bios_meet_req "$bios_vers" "$bmc"
 }
 
-while getopts "h" opt; do
+USAGE=N
+BASELINE=N
+while getopts "bh" opt; do
   case ${opt} in
     h)
-      usage
-      exit 0
+      USAGE=Y
+      ;;
+   b)
+      BASELINE=Y
       ;;
    \? )
+     usage
+     echo
      echo "Invalid option: -$OPTARG" 1>&2
      exit 1
      ;;
   esac
 done
 shift $((OPTIND -1))
+
+if [[ $USAGE = Y ]]; then
+  usage
+  exit 0
+fi
 
 # Setup variables
 set_vars
@@ -383,3 +396,12 @@ do
     "$IPMI_PASSWORD"
     
 done
+
+if [[ $BASELINE = Y ]]; then
+  /root/bin/bios-baseline.sh --check
+  exit $?
+fi
+
+# We exit 0 because goss not only checks for our return code, but also checks stdout
+# to see if any BIOS or firmware versions are unsupported
+exit 0
