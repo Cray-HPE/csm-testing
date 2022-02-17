@@ -1,0 +1,15 @@
+# Copyright 2022 Hewlett Packard Enterprise Development LP
+command:
+  firmware_bios_versions:
+    title: Firmware and BIOS versions and baseline
+    meta:
+      desc: Validates the correct versions of BIOS and firmware; Validates BIOS settings (when available; dependent on vendor)
+      sev: 0
+    exec: "{{.Env.GOSS_BASE}}/scripts/check_bios_firmware_versions.sh -b"
+    # 10 minutes since ilorest and redfish calls for each ncn can take a while
+    timeout: 600000
+    # the script is a success if return code is 0 and there is no unspported firmware/bios
+    exit-status: 0
+    stdout:
+      - "!Unsupported"
+    skip: false

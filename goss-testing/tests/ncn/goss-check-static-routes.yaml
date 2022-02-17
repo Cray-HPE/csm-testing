@@ -24,7 +24,7 @@ command:
   check_static_routes:
     title: NCNs Have All Required Static Routes 
     meta:
-      desc: Validates all NCNs have the required static routes to support booting nodes. If this test fails, run the script "goss-testing/scripts/check_static_routes.sh -p" to see a printed description of the errors.
+      desc: Validates all NCNs have the required static routes to support booting nodes. If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/check_static_routes.sh -p" to see a printed description of the errors.
       sev: 0
     exec: "{{.Env.GOSS_BASE}}/scripts/check_static_routes.sh"
     stdout:

@@ -1,9 +1,9 @@
-# Copyright 2021 Hewlett Packard Enterprise Development LP
+# Copyright 2021-2022 Hewlett Packard Enterprise Development LP
 command:
   goss-k8s-monitoring-url:
     title: Check that all Kubernetes Monitoring URLs are Redirecting and Responding
     meta:
-      desc: Checks whether monitoring URLs are accessible. If the test fails, expected HTTP status was not returned. Check the System Management Health information in the Operations section. For more detailed output, navigate to '/opt/cray/tests/install/ncn/scripts' directory and run 'GOSS_BASE=/opt/cray/tests/install/ncn ./monitoring_check.sh'.
+      desc: Checks whether monitoring URLs are accessible. If the test fails, the expected HTTP status was not returned. Check the System Management Health information in the Operations section. For more detailed output, run 'GOSS_BASE={{.Env.GOSS_BASE}} {{.Env.GOSS_BASE}}/scripts/monitoring_check.sh'
       sev: 0
     exec: "{{.Env.GOSS_BASE}}/scripts/monitoring_check.sh"
     exit-status: 0

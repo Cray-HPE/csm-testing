@@ -3,7 +3,7 @@ command:
   k8s_postgres_replication_lag:
     title: Kubernetes Postgres Check for Replication Lag Across Pods in a Cluster
     meta:
-      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/postgres-replication-lag.sh -p" to see a printed description of the errors. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' for more information on diagnosing and fixing replication lag.
+      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/postgres-replication-lag.sh -p" to see a printed description of the errors. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing replication lag.
       sev: 0
     exec: "{{.Env.GOSS_BASE}}/scripts/postgres_replication_lag.sh"
     exit-status: 0

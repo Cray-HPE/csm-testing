@@ -3,7 +3,7 @@ command:
   k8s_postgres_clusters_have_leaders:
     title: Kubernetes Postgres Clusters Have Leaders
     meta:
-      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/postgres_clusters_leader.sh -p" to see printed descriptions of errors. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' for more information on diagnosing and fixing postgres clusters without a leader.
+      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/postgres_clusters_leader.sh -p" to see printed descriptions of errors. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing postgres clusters without a leader.
       sev: 0
     exec: "{{.Env.GOSS_BASE}}/scripts/postgres_clusters_leader.sh"
     exit-status: 0

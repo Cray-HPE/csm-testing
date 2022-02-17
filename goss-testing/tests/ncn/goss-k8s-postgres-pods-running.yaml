@@ -3,7 +3,7 @@ command:
   k8s_postgres_pods_per_cluster:
     title: Kubernetes Postgres Clusters have the  Correct Number of Pods 'Running'
     meta:
-      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/postgres_pods_running.sh -p" to see a  printed description of errors. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' for more information on diagnosing and fixing pods not in a running state. 
+      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/postgres_pods_running.sh -p" to see a  printed description of errors. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing pods not in a running state. 
       sev: 0
     exec: "{{.Env.GOSS_BASE}}/scripts/postgres_pods_running.sh"
     exit-status: 0
