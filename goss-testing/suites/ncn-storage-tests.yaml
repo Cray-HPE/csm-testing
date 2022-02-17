@@ -20,8 +20,9 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+# This suite is run during CSM installs before CSM services have been deployed
+
 gossfile:
   ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
   ../tests/goss-ceph-storage-health.yaml: {}
   ../tests/goss-ceph-storage-services.yaml: {}
-  ../tests/goss-check-static-routes.yaml: {}

@@ -20,8 +20,9 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+# This test suite is run during CSM installs before CSM services are deployed
+
 gossfile:
-  ../tests/goss-check-static-routes.yaml: {}
   ../tests/goss-weave-IPAM-health.yaml: {}
   ../tests/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
   ../tests/goss-k8s-storage-configmaps.yaml: {}

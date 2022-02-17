@@ -10,3 +10,4 @@ gossfile:
   ../tests/goss-dns-nodes.yaml: {}
   ../tests/goss-default-gateway-points-to-CMN-gateway.yaml: {}
   ../tests/goss-cfs-state-reporter.yaml: {}
+  ../tests/goss-check-static-routes.yaml: {}
