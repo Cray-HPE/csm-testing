@@ -26,7 +26,7 @@ done
 # If the CHN is not configured then the istio-ingressgateway-chn will not have an IP address and remain in a
 # <pending> state.
 chn_configured=0
-if $(kubectl -n metallb-system get cm config -o jsonpath='{.data.config}' | grep -q customer-high-speed); then
+if $(kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' | grep -q customer-high-speed); then
     chn_configured=1
 else
     chn_configured=0
@@ -37,7 +37,7 @@ if [[ ${chn_configured} -eq 1 ]]
 then
     if [[ ${print_results} -eq 1 ]]
     then 
-        echo 'INFO: CHN is configured, istio-ingressgateway-chn should have an IP address'
+        echo 'INFO: CHN is configured, istio-ingressgateway-chn and cray-oauth2-proxies-customer-high-speed-ingress should have an IP address'
         printf '\n%-16s %-35s %-15s %-4s\n' "NAMESPACE" "LOADBALANCER" "IPADDRESS" "STATUS"
     fi
     kubectl get service -A | grep LoadBalancer | awk '{print $1" "$2" "$5}' | \
@@ -55,10 +55,10 @@ else
 # CHN is not configured
     if [[ ${print_results} -eq 1 ]]
     then 
-        echo 'INFO: CHN is not configured, excluding istio-ingressgateway-chn LoadBalancer'
+        echo 'INFO: CHN is not configured, excluding istio-ingressgateway-chn and cray-oauth2-proxies-customer-high-speed-ingress LoadBalancers'
         printf '\n%-16s %-35s %-15s %-4s\n' "NAMESPACE" "LOADBALANCER" "IPADDRESS" "STATUS"
     fi
-    kubectl get service -A | grep LoadBalancer | grep -v istio-ingressgateway-chn | awk '{print $1" "$2" "$5}' | \
+    kubectl get service -A | grep LoadBalancer | grep -Ev "istio-ingressgateway-chn|cray-oauth2-proxies-customer-high-speed-ingress" | awk '{print $1" "$2" "$5}' | \
     while read namespace loadbalancer ip 
     do 
         if [[ ${print_results} -eq 1 ]]
