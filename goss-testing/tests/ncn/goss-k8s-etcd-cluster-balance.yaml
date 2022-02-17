@@ -3,7 +3,7 @@ command:
   k8s_etcd_cluster_balance:
     title: All Etcd Pods in a Cluster are Running on a Different Worker Node
     meta:
-      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/etcd_cluster_balance.sh -p" to see a printed description of the errors. Refer to '/operations/kubernetes/Rebalance_Healthy_etcd_Clusters.md' for instructions on fixing unbalanced clusters.
+      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/etcd_cluster_balance.sh -p" to see a printed description of the errors. Refer to 'operations/kubernetes/Rebalance_Healthy_etcd_Clusters.md' in the CSM documentation for instructions on fixing unbalanced clusters.
       sev: 0
     exec: "{{.Env.GOSS_BASE}}/scripts/etcd_cluster_balance.sh"
     exit-status: 0

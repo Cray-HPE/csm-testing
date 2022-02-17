@@ -1,9 +1,9 @@
-# Copyright 2021 Hewlett Packard Enterprise Development LP
+# Copyright 2021-2022 Hewlett Packard Enterprise Development LP
 command:
   resolve_external_dns:
     title: Resolve external DNS
     meta:
-      desc: Validates external DNS name resolves. If the test fails, the configured LDAP server was not pingable. Refer to 'operations/network/dns/Troubleshoot_Common_DNS_Issues.md' to troubleshoot external DNS issues.
+      desc: Validates external DNS name resolves. If the test fails, the configured LDAP server was not pingable. Refer to 'operations/network/dns/Troubleshoot_Common_DNS_Issues.md' in the CSM documentation to troubleshoot external DNS issues.
       sev: 0
     exec: |-
           # External DNS resolution is best tested by checking if the configured LDAP server is pingable.
