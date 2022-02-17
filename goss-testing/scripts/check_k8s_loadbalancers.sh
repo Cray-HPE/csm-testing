@@ -26,7 +26,7 @@ done
 # If the CHN is not configured then the istio-ingressgateway-chn will not have an IP address and remain in a
 # <pending> state.
 chn_configured=0
-if $(kubectl -n metallb-system get cm config -o jsonpath='{.data.config}' | grep -q customer-high-speed); then
+if $(kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' | grep -q customer-high-speed); then
     chn_configured=1
 else
     chn_configured=0
