@@ -21,27 +21,13 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 mount:
-  /var/lib/containerd:
-    title: /var/lib/containerd mount
+  {{range $kw_mount := index .Vars "k8s_worker_mounts"}}
+  {{$kw_mount}}:
+    title: {{$kw_mount}} mount
     meta:
-      desc: Validate that /var/lib/containerd mount exists and is < 75% full
+      desc: Validate that {{$kw_mount}} mount exists and is < 75% full
       sev: 0
     exists: true
     usage:
       lt: 75
-  /var/lib/kubelet:
-    title: /var/lib/kubelet mount
-    meta:
-      desc: Validate that /var/lib/kubelet mount exists and is < 75% full
-      sev: 0
-    exists: true
-    usage:
-      lt: 75
-  /run/containerd:
-    title: /run/containerd mount
-    meta:
-      desc: Validate that /run/containerd mount exists and is < 75% full
-      sev: 0
-    exists: true
-    usage:
-      lt: 75
+  {{end}}
