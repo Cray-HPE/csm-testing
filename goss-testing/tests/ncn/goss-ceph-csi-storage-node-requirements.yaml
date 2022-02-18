@@ -1,24 +1,28 @@
 # Copyright 2022 Hewlett Packard Enterprise Development LP
 package:
     ceph-common:
+        title: ceph-common package
         meta:
             desc: Check that Ceph is installed
             sev: 0
         installed: true
 file:
     /usr/bin/ceph:
+        title: /usr/bin/ceph file
         meta:
             desc: Check that ceph command exists
             sev: 0
         exists: true
         filetype: file
     /etc/cray/ceph/ceph_k8s_initialized:
+        title: /etc/cray/ceph/ceph_k8s_initialized file
         meta:
             desc: Check that /etc/cray/ceph/ceph_k8s_initialized file exists
             sev: 0
         exists: true
         filetype: file       
     /etc/cray/ceph/csi_initialized:
+        title: /etc/cray/ceph/csi_initialized file
         meta:
             desc: Check that /etc/cray/ceph/csi_initialized file exists
             sev: 0
@@ -26,6 +30,7 @@ file:
         filetype: file
 command:
     ceph_installed:
+        title: ceph -s
         meta:
             desc: Check that ceph -s successfully executes
             sev: 0
