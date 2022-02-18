@@ -95,6 +95,11 @@ k8s_ceph_csi_secrets:
   - csi-kube-secret
   - csi-sma-secret
 
+k8s_worker_mounts:
+  - /var/lib/containerd
+  - /var/lib/kubelet
+  - /run/containerd
+
 datajson:
   - "/mnt/configs/data.json"
 
