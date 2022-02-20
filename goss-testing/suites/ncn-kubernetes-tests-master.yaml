@@ -1,9 +1,9 @@
-# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Copyright 2014-2022 Hewlett Packard Enterprise Development LP
 gossfile:
   ../tests/goss-k8s-etcd-service.yaml: {}
   ../tests/goss-weave-IPAM-health.yaml: {}
   ../tests/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
-  ../tests/goss-k8s-storage-configmaps.yaml: {}
+  ../tests/goss-ceph-csi-k8s-requirements.yaml: {}
   ../tests/goss-k8s-verify-cluster.yaml: {}
   ../tests/goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
   ../tests/goss-k8s-certmanager-certs-ready.yaml: {}
