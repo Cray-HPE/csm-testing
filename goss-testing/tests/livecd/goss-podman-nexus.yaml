@@ -28,7 +28,6 @@ command:
       sev: 0
     exec: "/usr/bin/podman container ls -a"
     stdout:
-    - basecamp
     - nexus
     exit-status: 0
     timeout: 10000
