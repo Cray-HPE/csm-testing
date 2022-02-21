@@ -26,7 +26,7 @@ command:
     meta:
       desc: Confirm that each network interface has an IP address that is not within the defined DHCP pools.
       sev: 0
-    exec: "/usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/pyTest-ip-not-in-ip-pools.py {{ .Vars.network_interfaces }}"
+    exec: "{{.Env.GOSS_BASE}}/scripts/python/pyTest-ip-not-in-ip-pools.py {{ .Vars.network_interfaces }}"
     exit-status: 0
     stdout:
     - "PASS"

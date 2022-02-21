@@ -26,7 +26,7 @@ command:
     meta:
       desc: Checks the health of the etcd service databases.
       sev: 0
-    exec: /bin/sh {{.Env.GOSS_BASE}}/scripts/etcd_database_health.sh
+    exec: {{.Env.GOSS_BASE}}/scripts/etcd_database_health.sh
     stdout:
       - "!FAIL"
     exit-status: 0

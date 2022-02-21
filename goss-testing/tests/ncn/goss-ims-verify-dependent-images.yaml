@@ -26,7 +26,7 @@ command:
     meta:
       desc: Verify that the IMS dependent images are available from the local docker registry
       sev: 0
-    exec: "/usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/ims_validate_dependent_images_available.py"
+    exec: "{{.Env.GOSS_BASE}}/scripts/python/ims_validate_dependent_images_available.py"
     stdout:
     - "Validation of IMS dependent images succeeded"
     exit-status: 0

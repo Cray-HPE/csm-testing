@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # (C) Copyright 2022 Hewlett Packard Enterprise Development LP.
 #
