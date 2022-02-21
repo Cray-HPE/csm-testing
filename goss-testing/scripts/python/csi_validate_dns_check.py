@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 # (C) Copyright 2022 Hewlett Packard Enterprise Development LP.
 #
 # MIT License
@@ -56,5 +57,7 @@ for peer in peers:
 
 if PASSED == len(peers):
     print("PASS")
+    sys.exit(0)
 else:
     print("FAIL")
+    sys.exit(1)

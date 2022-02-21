@@ -26,7 +26,7 @@ command:
     meta:
       desc: Fail if the count of dns-server entries in data.json > 1.
       sev: 0
-    exec: "/usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/data_json-multiple-dns_server-entries.py {{.Vars.datajson}}"
+    exec: "{{.Env.GOSS_BASE}}/scripts/python/data_json-multiple-dns_server-entries.py {{.Vars.datajson}}"
     stdout:
     - 1
     exit-status: 0
