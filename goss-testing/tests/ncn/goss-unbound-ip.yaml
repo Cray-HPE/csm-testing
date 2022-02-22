@@ -27,7 +27,9 @@ command:
     meta:
       desc: Validates whether Unbound nameserver IP exists in resolv.conf.
       sev: 0
-    exec: "if [ $(cat /etc/resolv.conf | grep {{.Vars.unbound_ip}}| wc -l) -gt 0 ]; then exit 0; else exit 1;fi"
+    # The fancy grep argument is to ensure that we don't have an IP in there which 
+    # contains the Unbound IP address as a substring.
+    exec: "if [ $(cat /etc/resolv.conf | grep -E '[[:space:]]{{.Vars.unbound_ip}}([[:space:]]|$)' | wc -l) -gt 0 ]; then exit 0; else exit 1;fi"
     exit-status: 0
     timeout: 10000
     skip: false

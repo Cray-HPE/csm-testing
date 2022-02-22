@@ -28,7 +28,7 @@ command:
     meta:
       desc: Validates the DHCP router IP for interface '{{$interface}}' is different from the interface's IP.
       sev: 0
-    exec: '/bin/sh {{$path}}/scripts/dhcp_router_ip_check.sh {{$interface}}'
+    exec: '{{$path}}/scripts/dhcp_router_ip_check.sh {{$interface}}'
     stdout:
     - PASS
     exit-status: 0
