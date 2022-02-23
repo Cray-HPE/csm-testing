@@ -26,7 +26,7 @@ command:
     meta:
       desc: Validates connection to the BGP neighbors of a switch.  If this test fails run 'canu validate network bgp --verbose' to see the status of all BGP neighbors.
       sev: 0
-    exec: if $(kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' | grep -q customer-management | wc -l); then     canu validate network bgp --network all --password {{.Env.SW_ADMIN_PASSWORD}}; else     canu validate network bgp --network nmn --password {{.Env.SW_ADMIN_PASSWORD}}; fi
+    exec: if $(kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' | grep -q customer-management | wc -l) -gt 1; then     canu validate network bgp --network all --password {{.Env.SW_ADMIN_PASSWORD}}; else     canu validate network bgp --network nmn --password {{.Env.SW_ADMIN_PASSWORD}}; fi
     exit-status: 0
     stdout:
       - "!FAIL"
