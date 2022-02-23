@@ -10,4 +10,7 @@ jobs:
     runs-on: self-hosted
     if: github.event.issue.pull_request
     steps:
+      - run: |
+          echo "Modified action!"
+          echo "Runs on: ${RUNNER_NAME}"
       - uses: Cray-HPE/backport-command-action@main
