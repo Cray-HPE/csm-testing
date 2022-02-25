@@ -29,7 +29,7 @@ command:
       sev: 0
     # The fancy grep argument is to ensure that we don't have an IP in there which 
     # contains the Unbound IP address as a substring.
-    exec: "if [ $(cat /etc/resolv.conf | grep -E '[[:space:]]{{.Vars.unbound_ip}}([[:space:]]|$)' | wc -l) -gt 0 ]; then exit 0; else exit 1;fi"
+    exec: grep -E '^nameserver[[:space:]][[:space:]]*{{.Vars.unbound_ip}}([[:space:]]|$)' /etc/resolv.conf
     exit-status: 0
     timeout: 10000
     skip: false

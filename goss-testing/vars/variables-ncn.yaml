@@ -103,8 +103,7 @@ k8s_worker_mounts:
 datajson:
   - "/mnt/configs/data.json"
 
-unbound_ip:
-  - 10.*.100.225
+unbound_ip: 10.*.100.225
 
 ceph_services:
   - mon
