@@ -20,3 +20,4 @@
 gossfile:
   ../tests/goss-boot-parameter-check-no-wipe.yaml: {}
   ../tests/goss-storage-spire-healthcheck.yaml: {}
+  ../tests/goss-cfs-state-reporter.yaml: {}
