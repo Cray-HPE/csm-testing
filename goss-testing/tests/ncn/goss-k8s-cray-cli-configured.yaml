@@ -28,5 +28,5 @@ command:
       sev: 0
     exec: "cray artifacts buckets list"
     exit-status: 0
-    timeout: 5000
+    timeout: 10000
     skip: false
