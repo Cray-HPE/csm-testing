@@ -28,9 +28,7 @@ command:
     meta:
       desc: Validates that interface '{{$interface}}' has same MAC address as bond0.
       sev: 0
-    stdout:
-    - good
-    exec: 'if [ `ip addr show dev {{$interface}} | grep "link/ether" | tr -s " " | cut -d " " -f 3` = `ip addr show dev bond0 | grep "link/ether" | tr -s " " | cut -d " " -f 3` ]; then echo good; else echo bad; fi'
+    exec: "{{.Env.GOSS_BASE}}/scripts/check_interface_mac_matches_bond.sh" "{{$interface}}"
     exit-status: 0
     timeout: 1000
     skip: false
