@@ -63,6 +63,47 @@ function get_client_secret() {
     echo $clientSecret
 }
 
+function get_client_secret() {
+    # Kubernetes is not installed on all storage nodes. If executing on a storage
+    # node, verify a functional master or worker node. Obtain client secret
+    # from identified NCN Kubernetes node.
+    
+    activeKubNcnNode=""
+    hostNodeType=""
+    clientSecret=""
+    listOfKubNcns=""
+    sshOptions="-q -o StrictHostKeyChecking=no"
+    
+    # If executing on a storage node, determine an active NCN Kubernetes node:
+    hostNodeType=$(echo $(hostname) | awk '/ncn-s/ {print "storage"}')
+    if [[ $hostNodeType == "storage" ]]
+    then
+        # Determine active non-storage NCN node:
+        listOfKubNcns=$(cat /etc/hosts | grep -ohE "ncn-[m,w]([0-9]{3})" | awk '!a[$0]++' | sort)
+        for node_i in $listOfKubNcns;
+        do
+            ssh $sshOptions $node_i 'kubectl get nodes' >/dev/null
+            if [[ $? -eq 0 ]]
+            then
+                activeKubNcnNode=$node_i
+                break
+            fi
+        done
+    fi
+
+    # Get client secret:
+    if [[ -z $activeKubNcnNode ]]
+    then
+        clientSecret=$(kubectl get secrets admin-client-auth \
+                               -o jsonpath='{.data.client-secret}' | base64 -d)
+    else
+        clientSecret=$(ssh $sshOptions $activeKubNcnNode \
+                           'kubectl get secrets admin-client-auth \
+                           -o jsonpath='{.data.client-secret}' | base64 -d')
+    fi
+    echo $clientSecret
+}
+
 function get_token() {
   cnt=0
   TOKEN=""
