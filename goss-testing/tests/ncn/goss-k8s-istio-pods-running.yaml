@@ -1,6 +1,6 @@
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP.
-#
 # MIT License
+#
+# (C) Copyright [2021-2022] Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -14,22 +14,21 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# Variable set: pods_istio
 command:
-  {{range $label := index .Vars "pods_istio"}}
-  k8s_service_{{$label}}_running:
-    title: Kubernetes Service '{{$label}}' Running
+  k8s-istio-pods-running:
+    title: Validate istio-ingressgateway pods are Running
     meta:
-      desc: Validates that Kubernetes service with label '{{$label}}' is running.
+      desc: Validates that istio-ingressgateway pods are running. If this test fails, run "kubectl get pods -n istio-system -o wide | awk '$1 ~ "istio-ingressgateway" && $3 != "Running"'" to see a list of failing pods to investigate.
       sev: 0
-    exec: kubectl get pods -n istio-system -l {{$label}} | awk '{ print $3 }' | grep Running
+    exec: kubectl get pods -n istio-system | awk '$1 ~ "istio-ingressgateway" { if ($3 != "Running") print "FAIL"; else print "PASS" }'
     exit-status: 0
-    timeout: 10000
+    stdout:
+    - "!FAIL"
+    timeout: 1000
     skip: false
-  {{end}}
