@@ -8,6 +8,7 @@ network_interfaces:
   - bond0.nmn0
   - bond0.hmn0
   - bond0.can0
+  - bond0.cmn0
 
 services_enabled:
   - cloud-config
@@ -71,11 +72,32 @@ k8s_istio_services:
   - istio-ingressgateway
   - istio-ingressgateway-local
 
+k8s_ceph_csi_configmaps:
+  - ceph-csi-config
+  - cephfs-csi-sc
+  - kube-csi-sc
+  - sma-csi-sc
+  - sts-rados-config
+
+k8s_ceph_csi_secrets:
+  - csi-cephfs-secret
+  - csi-kube-secret
+  - csi-sma-secret
+
+k8s_worker_mounts:
+  - /var/lib/containerd
+  - /var/lib/kubelet
+  - /run/containerd
+
+ceph_files:
+  - /usr/bin/ceph
+  - /etc/cray/ceph/ceph_k8s_initialized
+  - /etc/cray/ceph/csi_initialized
+
 datajson:
   - "/mnt/configs/data.json"
 
-unbound_ip:
-  - 10.*.100.225
+unbound_ip: 10.*.100.225
 
 ceph_services:
   - mon
@@ -83,6 +105,8 @@ ceph_services:
   - mds
   - osd
   - rgw
+
+kubectl: "/usr/bin/kubectl"
 
 commands:
   - 'kubectl version --client'

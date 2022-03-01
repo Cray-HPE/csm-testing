@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -20,10 +20,39 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-export GOSS_FILE="/opt/cray/tests/install/livecd/suites/livecd-preflight-tests.yaml"
-vars_file="/opt/cray/tests/install/livecd/vars/variables-livecd.yaml"
+set -e
 
-nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE 'ncn-[m,w,s]([0-9]{3})' | awk '!a[$0]++')
+# This script is run on the PIT node during CSM installs before management
+# nodes are deployed.
+
+# GOSS_BASE should already be set on the PIT node, but just in case we
+# will set it here
+# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
+[[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/livecd"
+
+# Print an error message and exit
+function err_exit
+{
+    echo "ERROR: $*"
+    exit 1
+}
+
+# Validates that a file exists and is a regular file
+function file_exists
+{
+    [[ -e "$1" ]] || err_exit "File does not exist: $1"
+    [[ -f "$1" ]] || err_exit "File exists but is not a regular file: $1"
+}
+
+export GOSS_FILE="$GOSS_BASE/suites/livecd-preflight-tests.yaml"
+vars_file="$GOSS_BASE/vars/variables-livecd.yaml"
+dnsmasq_statics=/etc/dnsmasq.d/statics.conf
+
+file_exists "$GOSS_FILE"
+file_exists "$vars_file"
+file_exists "$dnsmasq_statics"
+
+nodes=$(grep -ohE 'ncn-[m,w,s]([0-9]{3})' "$dnsmasq_statics" | awk '!a[$0]++')
 tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
 
 # add node names from statics.conf to temp variables file
@@ -34,8 +63,7 @@ if [ `echo $nodes | wc -w` -ne 0 ];then
     echo "" >> $tmpvars
   done
 else
-  echo "Node names could not be found in statics.conf file! Exiting now."
-  exit 1
+  err_exit "Node names could not be found in $dnsmasq_statics file!"
 fi
 cat $vars_file >> $tmpvars
 
@@ -46,8 +74,7 @@ export GOSS_VARS=$tmpvars
 results=$(/usr/bin/goss validate -f json)
 
 if ! `echo $results | jq -e > /dev/null 2>&1`; then
-  echo $'\e[1;31m'ERROR: Output not valid JSON$'\e[0m'
-  exit 1
+  err_exit $'\e[1;31m'Output not valid JSON$'\e[0m'
 fi
 
 echo $results | jq -c '.results | sort_by(.result) | .[]' | while read -r test; do
@@ -87,5 +114,12 @@ time=$(echo $results | jq -r '.summary."total-duration"')
 time=$(echo "scale=4; $time/1000000000" | bc | awk '{printf "%.4f\n", $0}')
 
 echo "Total Tests: $total, Total Passed: $((total-failed)), Total Failed: $failed, Total Execution Time: $time seconds"
+echo
 
-exit
+if [[ $total -eq 0 ]]; then
+    err_exit "No tests were run!"
+elif [[ $failed -ne 0 ]]; then
+    err_exit "Not all tests passed"
+fi
+echo "All tests passed!"
+exit 0

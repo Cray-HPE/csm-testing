@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -25,12 +25,18 @@
 
 export GOSS_VARS=/tmp/goss-variables-$(date +%s)-temp.yaml
 
-cat $GOSS_BASE/vars/variables-livecd.yaml > $GOSS_VARS
-echo "" >> $GOSS_VARS
-
 # files needed to run from livecd
 kube_creds=/root/.kube/config
 pit_file=/etc/pit-release
+
+if [ -f $pit_file ]; then
+  # running on a pit node
+  cat $GOSS_BASE/vars/variables-livecd.yaml > $GOSS_VARS
+else
+  # running on an NCN
+  cat $GOSS_BASE/vars/variables-ncn.yaml > $GOSS_VARS
+fi
+echo "" >> $GOSS_VARS
 
 if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
   k8s_nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE 'ncn-[m,w]([0-9]{3})' | grep -v ncn-m001 | awk '!a[$0]++')
@@ -54,11 +60,16 @@ source $GOSS_BASE/automated/run-ncn-tests.sh
 
 if [ -f $pit_file ]; then
   # running on a pit node
+  echo $'\e[1;33m'PIT Node Kubernetes Checks$'\e[0m'
+  echo $'\e[1;33m'--------------------------$'\e[0m'
   if [ -f $kube_creds ]; then
     # run livecd local kubernetes tests
-    echo $'\e[1;33m'PIT Node Kubernetes Checks$'\e[0m'
-    echo $'\e[1;33m'--------------------------$'\e[0m'
     k8s_local_tests
+  else
+    # We preface this warning with 'Total Tests:' to make it more visible, because the install documentation
+    # has the user grep for that string to review the results of the tests.
+    echo $'\e[1;31m'Total Tests: WARNING: Unable to run local Kubernetes checks because $kube_creds does not exist$'\e[0m'
+    echo
   fi
 else
   # run tests from an ncn

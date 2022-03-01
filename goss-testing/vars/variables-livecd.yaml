@@ -9,6 +9,7 @@ network_interfaces:
   - bond0.nmn0
   - bond0.hmn0
   - bond0.can0
+  - bond0.cmn0
 
 services_enabled:
   - dnsmasq
@@ -21,6 +22,18 @@ services_running:
   - nexus
   - basecamp
   - conman
+
+k8s_ceph_csi_configmaps:
+  - ceph-csi-config
+  - cephfs-csi-sc
+  - kube-csi-sc
+  - sma-csi-sc
+  - sts-rados-config
+
+k8s_ceph_csi_secrets:
+  - csi-cephfs-secret
+  - csi-kube-secret
+  - csi-sma-secret
 
 datajson:
   - "/var/www/ephemeral/configs/data.json"
@@ -72,5 +85,7 @@ unbound_hostnames:
   - api-gw-service-nmn.local
   - packages
   - registry
+
+kubectl: "/usr/local/bin/kubectl"
 
 bond_member_mtu: 1500

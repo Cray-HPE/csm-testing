@@ -1,9 +1,30 @@
-# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+
 command:
   k8s_etcd_backups_check:
     title: All Kubernetes Etcd Clusters have a Backup Created within the Last 24 Hours.
     meta:
-      desc: If this test fails, run the script "goss-testing/scripts/etcd_backups_check.sh -p" to see a printed description of the errors. Check that cron jobs are running and creating backups periodically with the command "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron". To see the last scheduled time, run the command "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron -o jsonpath='{.status}'". To restart the cronjob, execute "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | jq 'del(.status)' | kubectl replace --force -f -".
+      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/etcd_backups_check.sh -p" to see a printed description of the errors. Check that cron jobs are running and creating backups periodically with the command "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron". To see the last scheduled time, run the command "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron -o jsonpath='{.status}'". To restart the cronjob, execute "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | jq 'del(.status)' | kubectl replace --force -f -".
       sev: 0
     exec: "{{.Env.GOSS_BASE}}/scripts/etcd_backups_check.sh"
     exit-status: 0

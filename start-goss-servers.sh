@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Goss server start up commands to serve health check endpoints
 #
-# (C) Copyright 2020-2021 Hewlett Packard Enterprise Development LP.
+# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP.
+#
+# MIT License
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),

@@ -1,5 +1,26 @@
 #!/usr/bin/env bash
-# Copyright (C) 2021 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+
 # Tests if BIOS and firmware versions meet or exceed the required versions
 # Author: Jacob Salmela <jacob.salmela@hpe.com>
 
@@ -13,9 +34,11 @@ usage() {
   grep '^#/' "$0" | cut -c4-
 }
 
-#/ Usage: check_bios_firmware_versions.sh [-h]
+#/ Usage: check_bios_firmware_versions.sh [-b | -h]
 #/
 #/    Checks the BIOS and firmware versions of all NCNs to see if they meet or exceed the requirements for a specific version of CSM
+#/
+#/    -b    Also execute /root/bin/bios-baseline.sh --check
 #/
 #/ Note: $BMC_USERNAME and $IPMI_PASSWORD must be set prior to running this script.
 #/ 
@@ -350,19 +373,30 @@ check_bios_version() {
   does_bios_meet_req "$bios_vers" "$bmc"
 }
 
-while getopts "h" opt; do
+USAGE=N
+BASELINE=N
+while getopts "bh" opt; do
   case ${opt} in
     h)
-      usage
-      exit 0
+      USAGE=Y
+      ;;
+   b)
+      BASELINE=Y
       ;;
    \? )
+     usage
+     echo
      echo "Invalid option: -$OPTARG" 1>&2
      exit 1
      ;;
   esac
 done
 shift $((OPTIND -1))
+
+if [[ $USAGE = Y ]]; then
+  usage
+  exit 0
+fi
 
 # Setup variables
 set_vars
@@ -383,3 +417,12 @@ do
     "$IPMI_PASSWORD"
     
 done
+
+if [[ $BASELINE = Y ]]; then
+  /root/bin/bios-baseline.sh --check
+  exit $?
+fi
+
+# We exit 0 because goss not only checks for our return code, but also checks stdout
+# to see if any BIOS or firmware versions are unsupported
+exit 0

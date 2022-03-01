@@ -1,6 +1,67 @@
 #!/bin/bash
 
-# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+
+function get_client_secret() {
+    # Kubernetes is not installed on all storage nodes. If executing on a storage
+    # node, verify a functional master or worker node. Obtain client secret
+    # from identified NCN Kubernetes node.
+    
+    activeKubNcnNode=""
+    hostNodeType=""
+    clientSecret=""
+    listOfKubNcns=""
+    sshOptions="-q -o StrictHostKeyChecking=no"
+    
+    # If executing on a storage node, determine an active NCN Kubernetes node:
+    hostNodeType=$(echo $(hostname) | awk '/ncn-s/ {print "storage"}')
+    if [[ $hostNodeType == "storage" ]]
+    then
+        # Determine active non-storage NCN node:
+        listOfKubNcns=$(cat /etc/hosts | grep -ohE "ncn-[m,w]([0-9]{3})" | awk '!a[$0]++' | sort)
+        for node_i in $listOfKubNcns;
+        do
+            ssh $sshOptions $node_i 'kubectl get nodes' >/dev/null
+            if [[ $? -eq 0 ]]
+            then
+                activeKubNcnNode=$node_i
+                break
+            fi
+        done
+    fi
+
+    # Get client secret:
+    if [[ -z $activeKubNcnNode ]]
+    then
+        clientSecret=$(kubectl get secrets admin-client-auth \
+                               -o jsonpath='{.data.client-secret}' | base64 -d)
+    else
+        clientSecret=$(ssh $sshOptions $activeKubNcnNode \
+                           'kubectl get secrets admin-client-auth \
+                           -o jsonpath='{.data.client-secret}' | base64 -d')
+    fi
+    echo $clientSecret
+}
 
 function get_client_secret() {
     # Kubernetes is not installed on all storage nodes. If executing on a storage

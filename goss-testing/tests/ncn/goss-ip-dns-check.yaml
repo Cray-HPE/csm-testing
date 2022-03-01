@@ -1,11 +1,32 @@
-# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+
 command:
   ip_dns_check:
-    title: Check for dupe and DNS entries for NCN and Uans
+    title: Check for duplicate and DNS entries for NCN and UANs
     meta:
-      desc: Checks for dupe IPs in SMD EthernetInterface table and NCN/UAN management network DNS entries resolve to only 1 IP. To manually run test.  Navigate to '/opt/cray/tests/install/ncn/scripts' directory and run check_ncn_uan_ip_dns.sh
+      desc: Checks for duplicate IP addresses in the SMD EthernetInterface table and verifies that NCN/UAN management network DNS entries resolve to only 1 IP address. To manually run the test, execute {{.Env.GOSS_BASE}}/scripts/python/check_ncn_uan_ip_dns.py
       sev: 0
-    exec: "/usr/bin/env python3 {{.Env.GOSS_BASE}}/scripts/python/check_ncn_uan_ip_dns.py"
+    exec: "{{.Env.GOSS_BASE}}/scripts/python/check_ncn_uan_ip_dns.py"
     exit-status: 0
     timeout: 30000
     skip: false
