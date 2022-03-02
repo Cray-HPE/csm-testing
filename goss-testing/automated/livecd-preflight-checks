@@ -71,7 +71,9 @@ echo $'\e[1;33m'Running LiveCD preflight checks \(may take a few minutes to comp
 
 # Run the LiveCD preflight Goss test suite
 export GOSS_VARS=$tmpvars
+set +e
 results=$(/usr/bin/goss validate -f json)
+set -e
 
 if ! `echo $results | jq -e > /dev/null 2>&1`; then
   err_exit $'\e[1;31m'Output not valid JSON$'\e[0m'
