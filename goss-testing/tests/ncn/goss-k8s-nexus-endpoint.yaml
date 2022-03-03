@@ -20,16 +20,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
 command:
-  k8s_service_nexus_endpoint:
-    title: Kubernetes Service 'nexus' Has Endpoint
-    meta:
-      desc: Validates that Kubernetes service 'nexus' has an endpoint.
-      sev: 0
-    exec: endpoint=$(kubectl -n nexus get endpoints | grep nexus | awk '{ print $2 }');if [ "$endpoint" == '<none>' ]\
-      || [ -z "$endpoint" ]; then echo FAIL; fi
-    exit-status: 0
-    stdout:
-    - "!FAIL"
-    timeout: 10000
-    skip: false
+    k8s_service_nexus_endpoint:
+        title: Kubernetes Service 'nexus' Has Endpoint
+        meta:
+            desc: Validates that Kubernetes service 'nexus' has an endpoint.
+            sev: 0
+        exec: |-
+            endpoint=$(
+                "{{$kubectl}}" -n nexus get endpoints nexus --no-headers | 
+                awk '{ print $2 }')
+            [ "$endpoint" == '<none>' ] && exit 10
+            [ -z "$endpoint" ] && exit 20
+            exit 0
+        exit-status: 0
+        timeout: 10000
+        skip: false

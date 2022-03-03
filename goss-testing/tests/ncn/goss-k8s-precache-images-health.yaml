@@ -20,15 +20,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
 command:
-  precache-images-health:
-    title: Precaching of Docker Images on Workers is Healthy
-    meta:
-      desc: This test verifies the precache pods are successfully pulling the images referenced in the configmap (cray-precache-images) in the nexus namespace.  If this test fails, execute the following command to inspect the images that are failing to get pulled - 'kubectl -n nexus logs -l app.kubernetes.io/name=cray-precache-images --tail=100 | grep failed'.
-      sev: 0
-    exec: 'kubectl -n nexus logs -l app.kubernetes.io/name=cray-precache-images --tail=100 | grep failed | wc -l'
-    stdout:
-      - "0"
-    exit-status: 0
-    timeout: 1000
-    skip: false
+    precache-images-health:
+        title: Precaching of Docker Images on Workers is Healthy
+        meta:
+            desc: This test verifies the precache pods are successfully pulling the images referenced in the configmap (cray-precache-images) in the nexus namespace.  If this test fails, execute the following command to inspect the images that are failing to get pulled - 'kubectl -n nexus logs -l app.kubernetes.io/name=cray-precache-images --tail=100 | grep failed'.
+            sev: 0
+        exec: |-
+            "{{$kubectl}}" -n nexus logs -l app.kubernetes.io/name=cray-precache-images --tail=100 | 
+            grep failed | 
+            wc -l
+        stdout:
+            - /^0$/
+        exit-status: 0
+        timeout: 1000
+        skip: false
