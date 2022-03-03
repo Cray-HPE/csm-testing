@@ -34,22 +34,32 @@ file:
     title: etcd ca.crt file exists
     meta:
       desc: This file should be created when the master is initialized or joins the Kubernetes cluster.
+      sev: 0
     exists: true
   /etc/kubernetes/pki/apiserver-etcd-client.crt:
     title: etcd client crt file exists
     meta:
       desc: This file should be created when the master is initialized or joins the Kubernetes cluster.
+      sev: 0
     exists: true
   /etc/kubernetes/pki/apiserver-etcd-client.key:
     title: etcd client key file exists
     meta:
       desc: This file should be created when the master is initialized or joins the Kubernetes cluster.
+      sev: 0
     exists: true
-
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  k8s_etcd_endpoint_health:
-    title: Validate the Kubernetes etcd on this node is healthy.
-    meta:
-      desc: Checks that Kubernetes' etcd instance on this node must be healthy.
-    exec: "ETCDCTL_API=3 etcdctl endpoint health --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/apiserver-etcd-client.crt --key=/etc/kubernetes/pki/apiserver-etcd-client.key"
-    exit-status: 0
+    {{ $testlabel := "k8s_etcd_endpoint_health" }}
+    {{$testlabel}}:
+        title: Validate the Kubernetes etcd on this node is healthy.
+        meta:
+            desc: Checks that Kubernetes' etcd instance on this node must be healthy.
+            sev: 0
+        exec: |-
+            ETCDCTL_API=3 "{{$logrun}}" -l "{{$testlabel}}" \
+                etcdctl endpoint health \
+                    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+                    --cert=/etc/kubernetes/pki/apiserver-etcd-client.crt \
+                    --key=/etc/kubernetes/pki/apiserver-etcd-client.key
+        exit-status: 0

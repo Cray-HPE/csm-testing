@@ -20,15 +20,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  preflight_s4_checks:
-    title: S4 Preflight Checks
-    meta:
-      desc: Runs the S4 preflight checks shell script and evaluates the output.
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/s4_preflight_checks.sh"
-    exit-status: 0
-    timeout: 200000
-    skip: false
-    stdout:
-    - Success!
+    {{ $testlabel := "preflight_s4_checks" }}
+    {{$testlabel}}:
+        title: S4 Preflight Checks
+        meta:
+            desc: Runs the S4 preflight checks shell script and evaluates the output.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$scripts}}/s4_preflight_checks.sh"
+        exit-status: 0
+        timeout: 200000
+        skip: false
+        stdout:
+            - Success!

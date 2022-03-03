@@ -20,15 +20,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  dnsmasq-lease-count:
-    title: Controller Lease Count
-    meta:
-      desc: Validates that dnsmasq has the correct number of controller leases.
-      sev: 0
-    exec: "grep -Eo ncn-.*-mgmt /var/lib/misc/dnsmasq.leases | wc -l"
-    stdout:
-    - >7
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    {{ $testlabel := "dnsmasq-lease-count" }}
+    {{$testlabel}}:
+        title: Controller Lease Count
+        meta:
+            desc: Validates that dnsmasq has the correct number of controller leases.
+            sev: 0
+        exec: |-
+            set -e
+            num_leases=$(
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    grep --count -E ncn-.*-mgmt /var/lib/misc/dnsmasq.leases)
+            [[ $num_leases -gt 7 ]]
+        exit-status: 0
+        timeout: 10000
+        skip: false

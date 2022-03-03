@@ -20,13 +20,17 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  spire-healthcheck:
-    title: Spire Health Check
-    meta:
-      desc: Validates that the spire healthcheck runs successfully. If this fails, run `kubectl rollout restart -n spire daemonset request-ncn-join-token` to fix the issue.
-      sev: 0
-    exec: "spire-agent healthcheck -socketPath /root/spire/agent.sock"
-    exit-status: 0
-    timeout: 1000
-    skip: false
+    {{ $testlabel := "spire-healthcheck" }}
+    {{$testlabel}}:
+        title: Spire Health Check
+        meta:
+            desc: Validates that the spire healthcheck runs successfully. If this fails, run `kubectl rollout restart -n spire daemonset request-ncn-join-token` to fix the issue.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                spire-agent healthcheck -socketPath /root/spire/agent.sock
+        exit-status: 0
+        timeout: 1000
+        skip: false

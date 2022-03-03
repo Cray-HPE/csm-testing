@@ -20,15 +20,27 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+{{ $cacert := "/etc/kubernetes/pki/etcd/ca.crt" }}
+# cakey sounds delicious
+{{ $cakey := "/etc/kubernetes/pki/etcd/ca.key" }}
 command:
-  k8s_etcd_members:
-    title: Validate the kubernetes etcd cluster has three active members
-    meta:
-      desc: If this test fails, inspect the output from 'etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/ca.crt --key=/etc/kubernetes/pki/etcd/ca.key --endpoints=localhost:2379 member list' to determine which node is not a member of the cluster.
-      sev: 0
-    exec: "etcdctl --cacert=/etc/kubernetes/pki/etcd/ca.crt --cert=/etc/kubernetes/pki/etcd/ca.crt --key=/etc/kubernetes/pki/etcd/ca.key --endpoints=localhost:2379 member list | grep started | wc -l"
-    exit-status: 0
-    stdout:
-      - "3"
-    timeout: 5000
-    skip: false
+    {{ $testlabel := "k8s_etcd_members" }}
+    {{$testlabel}}:
+        title: Validate the kubernetes etcd cluster has three active members
+        meta:
+            desc: If this test fails, inspect the output from 'etcdctl --cacert={{$cacert}} --cert={{$cacert}} --key={{$cakey}} --endpoints=localhost:2379 member list' to determine which node is not a member of the cluster.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                etcdctl --cacert={{$cacert}} \
+                    --cert={{$cacert}} \
+                    --key={{$cakey}} \
+                    --endpoints=localhost:2379 member list | 
+                grep started | 
+                wc -l
+        exit-status: 0
+        stdout:
+            - /^3$/
+        timeout: 5000
+        skip: false

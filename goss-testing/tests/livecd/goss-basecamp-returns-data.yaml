@@ -20,17 +20,24 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  basecamp_returns_data:
-    title: Basecamp returns data
-    meta:
-      desc: Checks if Basecamp is returning data
-      sev: 0
-    # pose as m002 and see if it returns 200/json
-    exec: curl -sS -i --header "X-Forwarded-For: $(host ncn-m002.nmn | awk '{print $4}')" http://pit.nmn:8888/meta-data | head -n2
-    stdout:
-    - "200 OK"
-    - "application/json"
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    {{ $testlabel := "basecamp_returns_data" }}
+    {{$testlabel}}:
+        title: Basecamp returns data
+        meta:
+            desc: Checks if Basecamp is returning data
+            sev: 0
+        # pose as m002 and see if it returns 200/json
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                curl -sS -i \
+                    --header "X-Forwarded-For: $(host ncn-m002.nmn | awk '{print $4}')" \
+                    http://pit.nmn:8888/meta-data | 
+                head -n2
+        stdout:
+            - "200 OK"
+            - "application/json"
+        exit-status: 0
+        timeout: 10000
+        skip: false

@@ -20,17 +20,22 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  k8s_verify_spire_pods:
-    title: Spire Pods
-    meta:
-      desc: Kubernetes spire namespace pods are running.
-      sev: 0
-    exec: "kubectl get po -n spire"
-    stdout:
-    - /^request-ncn-join-token.*Running/
-    - /^spire-agent.*Running/
-    - /^spire-jwks.*Running/
-    - /^spire-postgres.*Running/
-    - /^spire-server.*Running/
-    exit-status: 0
+    {{ $testlabel := "k8s_verify_spire_pods" }}
+    {{$testlabel}}:
+        title: Spire Pods
+        meta:
+            desc: Kubernetes spire namespace pods are running.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" get po -n spire -o custom-columns=:.metadata.name,:status.phase --no-headers
+        stdout:
+            - /^request-ncn-join-token-.*Running/
+            - /^spire-agent-.*Running/
+            - /^spire-jwks-.*Running/
+            - /^spire-postgres-.*Running/
+            - /^spire-server-.*Running/
+        exit-status: 0

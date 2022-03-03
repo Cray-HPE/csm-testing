@@ -20,15 +20,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $postgres_pods_running := $scripts | printf "%s/postgres_pods_running.sh" }}
 command:
-  k8s_postgres_pods_per_cluster:
-    title: Kubernetes Postgres Clusters have the  Correct Number of Pods 'Running'
-    meta:
-      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/postgres_pods_running.sh -p" to see a  printed description of errors. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing pods not in a running state. 
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/postgres_pods_running.sh"
-    exit-status: 0
-    stdout:
-      - PASS
-    timeout: 60000
-    skip: false
+    {{ $testlabel := "k8s_postgres_pods_per_cluster" }}
+    {{$testlabel}}:
+        title: Kubernetes Postgres Clusters have the  Correct Number of Pods 'Running'
+        meta:
+            desc: If this test fails, run the script "{{$postgres_pods_running}} -p" to see a  printed description of errors. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing pods not in a running state. 
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$postgres_pods_running}}"
+        exit-status: 0
+        stdout:
+            - PASS
+        timeout: 60000
+        skip: false

@@ -20,18 +20,22 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  {{$path := .Env.GOSS_BASE}}
-  {{range $interface := index .Vars "network_interfaces"}}
-  dhcp_router_ip_distinct_{{$interface}}:
-    title: DHCP Router IP is Distinct
-    meta:
-      desc: Validates the DHCP router IP for interface '{{$interface}}' is different from the interface's IP.
-      sev: 0
-    exec: '{{$path}}/scripts/dhcp_router_ip_check.sh {{$interface}}'
-    stdout:
-    - PASS
-    exit-status: 0
-    timeout: 1000000
-    skip: false
-  {{end}}
+    {{range $interface := index .Vars "network_interfaces"}}
+        {{ $testlabel := $interface | printf "dhcp_router_ip_distinct_%s" }}
+        {{$testlabel}}:
+            title: DHCP Router IP is Distinct
+            meta:
+                desc: Validates the DHCP router IP address for interface '{{$interface}}' is different from the interface's IP address.
+                sev: 0
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    "{{$scripts}}/dhcp_router_ip_check.sh" "{{$interface}}"
+            stdout:
+                - PASS
+            exit-status: 0
+            timeout: 1000000
+            skip: false
+    {{end}}
