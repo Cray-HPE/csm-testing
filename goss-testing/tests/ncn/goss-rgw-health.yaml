@@ -20,13 +20,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $rgw_health_check := $scripts | printf "%s/rgw_health_check.sh" }}
 command:
-  verify_rgw_health:
-    title: Verify rgw is healthy
-    meta:
-      desc: Check that rgw-vip and all storage nodes are up. Check rgw endpoint health by uploading and downloading a file from a bucket. For more detailed output, run 'GOSS_BASE={{.Env.GOSS_BASE}} {{.Env.GOSS_BASE}}/scripts/rgw_health_check.sh'
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/rgw_health_check.sh"
-    exit-status: 0
-    timeout: 180000
-    skip: false
+    {{ $testlabel := "verify_rgw_health" }}
+    {{$testlabel}}:
+        title: Verify rgw is healthy
+        meta:
+            desc: Check that rgw-vip and all storage nodes are up. Check rgw endpoint health by uploading and downloading a file from a bucket. For more detailed output, run 'GOSS_BASE={{.Env.GOSS_BASE}} {{$rgw_health_check}}'
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$rgw_health_check}}"
+        exit-status: 0
+        timeout: 180000
+        skip: false

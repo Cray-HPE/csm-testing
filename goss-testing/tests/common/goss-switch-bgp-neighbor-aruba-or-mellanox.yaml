@@ -20,16 +20,31 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  bgp_neighbors_established:
-    title: Switch BGP Neighbors
-    meta:
-      desc: Validates connection to the BGP neighbors of a switch.  If this test fails run 'canu validate network bgp --verbose' to see the status of all BGP neighbors.
-      sev: 0
-    exec: if $(kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' | grep -q customer-management); then     canu validate network bgp --network all --password {{.Env.SW_ADMIN_PASSWORD}}; else     canu validate network bgp --network nmn --password {{.Env.SW_ADMIN_PASSWORD}}; fi
-    exit-status: 0
-    stdout:
-      - "!FAIL"
-    timeout: 20000
-    skip: false
+    {{ $testlabel := "bgp_neighbors_established" }}
+    {{$testlabel}}:
+        title: Switch BGP Neighbors
+        meta:
+            desc: Validates connection to the BGP neighbors of a switch.  If this test fails run 'canu validate network bgp --verbose' to see the status of all BGP neighbors.
+            sev: 0
+        exec: |-
+            # We really shouldn't be calling a test with a password in plaintext on the command line, but as long as we are, at least
+            # we won't also include it in the log file for the test. Therefore when calling canu, we call log_run.sh with the --no-args option.
+            if "{{$logrun}}" -l "{{$testlabel}}_kubectl" \
+                "{{$kubectl}}" -n metallb-system get cm metallb -o jsonpath='{.data.config}' 2>/dev/null | 
+                grep -q customer-management
+            then
+                "{{$logrun}}" -l "{{$testlabel}}_canu_all" --no-args \
+                    canu validate network bgp --network all --password '{{.Env.SW_ADMIN_PASSWORD}}'
+            else
+                "{{$logrun}}" -l "{{$testlabel}}_canu_nmn" --no-args \
+                    canu validate network bgp --network nmn --password '{{.Env.SW_ADMIN_PASSWORD}}'
+            fi
+        exit-status: 0
+        stdout:
+            - "!FAIL"
+        timeout: 20000
+        skip: false
  

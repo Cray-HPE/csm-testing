@@ -86,6 +86,8 @@ cp -a goss-testing/suites/ncn-*         %{buildroot}%{ncn}/suites
 chmod +x -R %{buildroot}%{ncn}/scripts/
 chmod +x -R %{buildroot}%{livecd}/scripts/
 chmod +x -R %{buildroot}%{ncn}/automated/
+# Create default test log directory
+mkdir -p %{buildroot}/opt/cray/tests/logs
 
 # Install goss-servers files
 mkdir -p %{buildroot}/usr/sbin

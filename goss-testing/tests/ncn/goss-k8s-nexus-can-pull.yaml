@@ -20,13 +20,17 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  k8s_nexus_can_pull:
-    title: Validate nexus (registry.local) can pull images
-    meta:
-      desc: If this test fails, look at the state of the nexus pods (kubectl get po -n nexus) to determine why the test was unable to pull a docker image.
-      sev: 0
-    exec: "crictl pull registry.local/k8s.gcr.io/pause:3.2"
-    exit-status: 0
-    timeout: 5000
-    skip: false
+    {{ $testlabel := "k8s_nexus_can_pull" }}
+    {{$testlabel}}:
+        title: Validate nexus (registry.local) can pull images
+        meta:
+            desc: If this test fails, look at the state of the nexus pods (kubectl get po -n nexus) to determine why the test was unable to pull a docker image.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                crictl pull registry.local/k8s.gcr.io/pause:3.2
+        exit-status: 0
+        timeout: 5000
+        skip: false

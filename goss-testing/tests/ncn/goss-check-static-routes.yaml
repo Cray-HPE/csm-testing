@@ -20,15 +20,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $check_static_routes := $scripts | printf "%s/check_static_routes.sh" }}
 command:
-  check_static_routes:
-    title: NCNs Have All Required Static Routes 
-    meta:
-      desc: Validates all NCNs have the required static routes to support booting nodes. If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/check_static_routes.sh -p" to see a printed description of the errors.
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/check_static_routes.sh"
-    stdout:
-      - "!FAIL"
-    exit-status: 0
-    timeout: 5000
-    skip: false
+    {{ $testlabel := "check_static_routes" }}
+    {{$testlabel}}:
+        title: NCNs Have All Required Static Routes 
+        meta:
+            desc: Validates all NCNs have the required static routes to support booting nodes. If this test fails, run the script "{{$check_static_routes}} -p" to see a printed description of the errors.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                {{$check_static_routes}}
+        stdout:
+            - "!FAIL"
+        exit-status: 0
+        timeout: 5000
+        skip: false

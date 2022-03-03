@@ -20,15 +20,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  ncns_have_dnsmasq_lease:
-    title: NCNs Have dnsmasq Lease
-    meta:
-      desc: Checks that all ncns in data.json have a dnsmasq lease.
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/python/csi_validate_dns_check.py {{.Vars.datajson}}"
-    stdout:
-    - PASS
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    {{ $testlabel := "ncns_have_dnsmasq_lease" }}
+    {{$testlabel}}:
+        title: NCNs Have dnsmasq Lease
+        meta:
+            desc: Checks that all NCNs in data.json have a dnsmasq lease.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$scripts}}/python/csi_validate_dns_check.py" "{{.Vars.datajson}}"
+        stdout:
+            - PASS
+        exit-status: 0
+        timeout: 10000
+        skip: false

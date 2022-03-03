@@ -20,13 +20,17 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  k8s_cray_cli_configured:
-    title: Validate that the cray cli is configured
-    meta:
-      desc: If this test fails, follow instructions in the admin guide for how to initially configure the cray cli.
-      sev: 0
-    exec: "cray artifacts buckets list"
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    {{ $testlabel := "k8s_cray_cli_configured" }}
+    {{$testlabel}}:
+        title: Validate that the cray CLI is configured
+        meta:
+            desc: If this test fails, follow instructions in the admin guide for how to initially configure the cray CLI.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                cray artifacts buckets list
+        exit-status: 0
+        timeout: 10000
+        skip: false

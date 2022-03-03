@@ -20,15 +20,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  dnsmasq_dhcp_pools_are_correctly_defined:
-    title: Directives for dhcp-range Correct
-    meta:
-      desc: Ensures the dhcp-range directive in the /etc/dnsmasq.d/<net>.conf files are formed correctly.
-      sev: 0
-    exec: {{.Env.GOSS_BASE}}/scripts/python/pyTest-ips-in-dnsmasq_d-in-correct-order.py
-    exit-status: 0
-    stdout:
-      - "!FAIL"
-    timeout: 10000
-    skip: false
+    {{ $testlabel := "dnsmasq_dhcp_pools_are_correctly_defined" }}
+    {{$testlabel}}:
+        title: Directives for dhcp-range Correct
+        meta:
+            desc: Ensures the dhcp-range directive in the /etc/dnsmasq.d/<net>.conf files are formed correctly.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$scripts}}/python/pyTest-ips-in-dnsmasq_d-in-correct-order.py"
+        exit-status: 0
+        stdout:
+            - "!FAIL"
+        timeout: 10000
+        skip: false

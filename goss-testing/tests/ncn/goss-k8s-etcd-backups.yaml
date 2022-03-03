@@ -20,15 +20,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $etcd_backups_check := $scripts | printf "%s/etcd_backups_check.sh" }}
 command:
-  k8s_etcd_backups_check:
-    title: All Kubernetes Etcd Clusters have a Backup Created within the Last 24 Hours.
-    meta:
-      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/etcd_backups_check.sh -p" to see a printed description of the errors. Check that cron jobs are running and creating backups periodically with the command "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron". To see the last scheduled time, run the command "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron -o jsonpath='{.status}'". To restart the cronjob, execute "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | jq 'del(.status)' | kubectl replace --force -f -".
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/etcd_backups_check.sh"
-    exit-status: 0
-    stdout:
-      - PASS
-    timeout: 10000
-    skip: false
+    {{ $testlabel := "k8s_etcd_backups_check" }}
+    {{$testlabel}}:
+        title: All Kubernetes Etcd Clusters have a Backup Created within the Last 24 Hours.
+        meta:
+            desc: If this test fails, run the script "{{$etcd_backups_check}} -p" to see a printed description of the errors. Check that cron jobs are running and creating backups periodically with the command "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron". To see the last scheduled time, run the command "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron -o jsonpath='{.status}'". To restart the cronjob, execute "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | jq 'del(.status)' | kubectl replace --force -f -".
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$etcd_backups_check}}"
+        exit-status: 0
+        stdout:
+            - PASS
+        timeout: 10000
+        skip: false

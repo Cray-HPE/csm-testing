@@ -20,15 +20,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  k8s_storageclasses:
-    title: Kubernetes StorageClasses
-    meta:
-      desc: Validates Kubernetes has correct StorageClasses.
-      sev: 0
-    exec: "kubectl get storageclass"
-    stdout:
-    - ceph-cephfs-external
-    - k8s-block-replicated
-    - sma-block-replicated
-    exit-status: 0
+    {{ $testlabel := "k8s_storageclasses" }}
+    {{$testlabel}}:
+        title: Kubernetes StorageClasses
+        meta:
+            desc: Validates Kubernetes has correct StorageClasses.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" get storageclass
+        stdout:
+            - ceph-cephfs-external
+            - k8s-block-replicated
+            - sma-block-replicated
+        exit-status: 0

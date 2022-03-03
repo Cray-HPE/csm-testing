@@ -20,13 +20,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  k8s_service_kea_running:
-    title: Kubernetes Service 'cray-dhcp-kea' Is Running
-    meta:
-      desc: If this test fails, look at the state of the dhcp-kea pod (kubectl get po -n services | grep cray-dhcp-kea) to investigate.
-      sev: 0
-    exec: kubectl get pods -n services -l 'app.kubernetes.io/name=cray-dhcp-kea' | awk '{ print $3 }' | grep Running
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    {{ $testlabel := "k8s_service_kea_running" }}
+    {{$testlabel}}:
+        title: Kubernetes Service 'cray-dhcp-kea' Is Running
+        meta:
+            desc: If this test fails, look at the state of the dhcp-kea pod (kubectl get po -n services | grep cray-dhcp-kea) to investigate.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" get pods -n services -l 'app.kubernetes.io/name=cray-dhcp-kea' | 
+                awk '{ print $3 }' | 
+                grep Running
+        exit-status: 0
+        timeout: 10000
+        skip: false

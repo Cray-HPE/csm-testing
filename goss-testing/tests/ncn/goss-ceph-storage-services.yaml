@@ -21,14 +21,18 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 # Variable set: ceph_services
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  ceph_services_status:
-    title: Ceph Services are healthy
-    meta:
-      desc: Validates that Ceph services are running.  For more detailed output, navigate to '/opt/cray/tests/install/ncn/scripts' directory  and run ceph-service-status.sh -A true -v true or ceph-service-status.sh for additional options
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/ceph-service-status.sh -A true"
-    exit-status: 0
-    timeout: 1000000
-    skip: false
-
+    {{ $testlabel := "ceph_services_status" }}
+    {{$testlabel}}:
+        title: Ceph Services are healthy
+        meta:
+            desc: Validates that Ceph services are running. For more detailed output, navigate to '{{$scripts}}' directory  and run ceph-service-status.sh -A true -v true or ceph-service-status.sh for additional options
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$scripts}}/ceph-service-status.sh" -A true
+        exit-status: 0
+        timeout: 1000000
+        skip: false
