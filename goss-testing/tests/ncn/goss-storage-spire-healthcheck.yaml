@@ -32,5 +32,5 @@ command:
             "{{$logrun}}" -l "{{$testlabel}}" \
                 spire-agent healthcheck -socketPath /root/spire/agent.sock
         exit-status: 0
-        timeout: 1000
+        timeout: 5000
         skip: false

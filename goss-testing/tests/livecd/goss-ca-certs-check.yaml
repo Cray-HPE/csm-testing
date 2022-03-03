@@ -34,5 +34,5 @@ command:
                 jq . /var/www/ephemeral/configs/data.json | 
                 grep ca-certs
         exit-status: 0
-        timeout: 1000
+        timeout: 5000
         skip: false
