@@ -27,7 +27,6 @@ set -e
 
 # GOSS_BASE should already be set on the PIT node, but just in case we
 # will set it here
-# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
 [[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/livecd"
 
 export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
