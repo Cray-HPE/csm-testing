@@ -42,9 +42,9 @@ command:
                 "{{$logrun}}" -l "{{$testlabel}}_canu_nmn" --no-args \
                     canu validate network bgp --network nmn --password '{{.Env.SW_ADMIN_PASSWORD}}'
             fi
-    exit-status: 0
-    stdout:
-      - "!FAIL"
-    timeout: 20000
-    skip: false
+        exit-status: 0
+        stdout:
+            - "!FAIL"
+        timeout: 20000
+        skip: false
  
