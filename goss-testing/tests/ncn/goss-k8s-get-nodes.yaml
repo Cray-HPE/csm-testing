@@ -36,5 +36,5 @@ command:
         exit-status: 0
         stdout:
             - "!FAIL"
-        timeout: 1000
+        timeout: 5000
         skip: false
