@@ -20,15 +20,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
 command:
-  check_k8s_pods_ips_in_nmn_pool:
-    title: Kubernetes Pod IPs in NMN Pool
-    meta:
-      desc: Correct pods in kube-system namespace exist and are on the right network.
-      sev: 0
-    exec: "kubectl -n kube-system get pods -o wide | grep -E '^kube-apiserver|^kube-controller-manager|^kube-multus-ds|^kube-proxy|^kube-scheduler|^weave-net' | awk '{print $6}' | grep -v '10\\.252\\.' || echo PASS"
-    stdout:
-      - PASS
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    check_k8s_pods_ips_in_nmn_pool:
+        title: Kubernetes Pod IPs in NMN Pool
+        meta:
+            desc: Correct pods in kube-system namespace exist and are on the right network.
+            sev: 0
+        exec: |-
+            "{{$kubectl}}" -n kube-system get pods -o wide | 
+            grep -E '^(kube-apiserver|kube-controller-manager|kube-multus-ds|kube-proxy|kube-scheduler|weave-net)' | 
+            awk '{print $6}' | 
+            grep -v '10\\.252\\.' || exit 0
+            exit 1
+        exit-status: 0
+        timeout: 10000
+        skip: false

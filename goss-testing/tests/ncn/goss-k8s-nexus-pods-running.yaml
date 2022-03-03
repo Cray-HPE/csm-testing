@@ -20,13 +20,16 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
 command:
-  k8s_service_nexus_running:
-    title: Kubernetes Service 'nexus' Is Running
-    meta:
-      desc: If this test fails, look at the state of the nexus pods (kubectl get po -n nexus) to investigate.
-      sev: 0
-    exec: kubectl get pods -n nexus -l app=nexus | awk '{ print $3 }' | grep Running
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    k8s_service_nexus_running:
+        title: Kubernetes Service 'nexus' Is Running
+        meta:
+            desc: If this test fails, look at the state of the nexus pods (kubectl get po -n nexus) to investigate.
+            sev: 0
+        exec: "{{$kubectl}}" get pods -n nexus -l app=nexus -o custom-columns=:status.phase --no-headers
+        exit-status: 0
+        stdout:
+            - /^Running$/
+        timeout: 10000
+        skip: false
