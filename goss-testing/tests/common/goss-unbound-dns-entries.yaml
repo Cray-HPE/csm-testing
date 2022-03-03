@@ -30,6 +30,6 @@ command:
       sev: 0
     exec: "kubectl get cm -n services cray-dns-unbound -o yaml | grep '\"hostname\": \"{{$hostname}}\"'"
     exit-status: 0
-    timeout: 1000
+    timeout: 5000
     skip: false
   {{end}}
