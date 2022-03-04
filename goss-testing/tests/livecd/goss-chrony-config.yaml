@@ -22,12 +22,12 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 file:
-  /etc/chrony.d/cray.conf:
-    title: chrony config exists
-    meta:
-      desc: Validates that chrony config for NCNs exists
-      sev: 0
-    exists: true
-    owner: root
-    group: root
-    filetype: file
+    /etc/chrony.d/cray.conf:
+        title: chrony config exists
+        meta:
+            desc: Validates that chrony config for NCNs exists
+            sev: 0
+        exists: true
+        owner: root
+        group: root
+        filetype: file

@@ -22,14 +22,18 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 command:
-  NCN-default-gateway-points-to-CMN-gateway:
-    title: Default Gateway Same as CMN Gateway
-    meta:
-      desc: Fails if the default gateway does not match CMN gateway on NCNs.
-      sev: 0
-    exec: "if [[ $(ip route show default | awk '{print $3}') != $(craysys metadata get --level node ipam | jq .cmn.gateway | tr -d '\"') ]]; then echo FAIL;fi"
-    exit-status: 0
-    stdout:
-      - "!FAIL"
-    timeout: 10000
-    skip: false
+    NCN-default-gateway-points-to-CMN-gateway:
+        title: Default Gateway Same as CMN Gateway
+        meta:
+            desc: Fails if the default gateway does not match CMN gateway on NCNs.
+            sev: 0
+        exec: |-
+            if [[ $(ip route show default | awk '{print $3}') != $(craysys metadata get --level node ipam | jq .cmn.gateway | tr -d '"') ]]
+            then
+                echo FAIL
+            fi
+        exit-status: 0
+        stdout:
+            - "!FAIL"
+        timeout: 10000
+        skip: false

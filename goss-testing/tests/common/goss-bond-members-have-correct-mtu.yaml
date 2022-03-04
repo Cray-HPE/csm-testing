@@ -22,14 +22,21 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 command:
-  bond_members_have_correct_mtu:
-    title: Bond Members Have Correct MTU
-    meta:
-      desc: Validates that the bond0 interface members have an MTU of {{.Vars.bond_member_mtu}}.
-      sev: 0
-    exec: "cat /etc/sysconfig/network/ifcfg-bond0 | awk -F \"'\" '/BONDING_SLAVE/{print $2}' | while read member ; do ip addr show $member | grep mtu | awk '{print $5}' ; done"
-    stdout:
-    - {{.Vars.bond_member_mtu}}
-    exit-status: 0
-    timeout: 5000
-    skip: false
+    bond_members_have_correct_mtu:
+        title: Bond Members Have Correct MTU
+        meta:
+            desc: Validates that the bond0 interface members have an MTU of {{.Vars.bond_member_mtu}}.
+            sev: 0
+        exec: |-
+            cat /etc/sysconfig/network/ifcfg-bond0 | 
+            awk -F "'" '/BONDING_SLAVE/{print $2}' | 
+            while read member ; do
+                ip addr show $member | 
+                grep mtu | 
+                awk '{print $5}'
+            done
+        stdout:
+            - {{.Vars.bond_member_mtu}}
+        exit-status: 0
+        timeout: 5000
+        skip: false

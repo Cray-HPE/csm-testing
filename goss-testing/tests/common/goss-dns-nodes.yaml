@@ -23,13 +23,13 @@
 #
 # Variable set: nodes
 dns:
-{{range $name := index .Vars "nodes"}}
-  {{$name}}:
-    title: Node '{{$name}}' DNS Resolvable
-    meta:
-      desc: Validates node name '{{$name}}' is resolvable in DNS.
-      sev: 0
-    resolvable: true
-    timeout: 10000
-    skip: false
-{{end}}
+    {{range $name := index .Vars "nodes"}}
+        {{$name}}:
+            title: Node '{{$name}}' DNS Resolvable
+            meta:
+                desc: Validates node name '{{$name}}' is resolvable in DNS.
+                sev: 0
+            resolvable: true
+            timeout: 10000
+            skip: false
+    {{end}}

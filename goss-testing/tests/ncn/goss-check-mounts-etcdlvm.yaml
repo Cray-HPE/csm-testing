@@ -22,11 +22,11 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 mount:
-  /var/lib/etcd:
-    title: /var/lib/etcd mount
-    meta:
-      desc: Validate that /var/lib/etcd mount exists and is < 75% full
-      sev: 0
-    exists: true
-    usage:
-      lt: 75
+    /var/lib/etcd:
+        title: /var/lib/etcd mount
+        meta:
+            desc: Validate that /var/lib/etcd mount exists and is < 75% full
+            sev: 0
+        exists: true
+        usage:
+            lt: 75

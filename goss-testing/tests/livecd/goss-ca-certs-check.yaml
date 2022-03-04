@@ -22,12 +22,15 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 command:
-  ca_certs_check:
-    title: ca-certs patched into data.json
-    meta:
-      desc: Validate that - csi patch ca - command executed. ca-certs are patched into data.json file on PIT node.
-      sev: 0
-    exec: cat /var/www/ephemeral/configs/data.json | jq | grep ca-certs
-    exit-status: 0
-    timeout: 5000
-    skip: false
+    ca_certs_check:
+        title: ca-certs patched into data.json
+        meta:
+            desc: Validate that - csi patch ca - command executed. ca-certs are patched into data.json file on PIT node.
+            sev: 0
+        exec: |-
+            cat /var/www/ephemeral/configs/data.json | 
+            jq | 
+            grep ca-certs
+        exit-status: 0
+        timeout: 5000
+        skip: false

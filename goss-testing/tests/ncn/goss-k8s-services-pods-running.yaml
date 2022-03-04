@@ -23,14 +23,17 @@
 #
 # Variable set: pods_services
 command:
-  {{range $label := index .Vars "pods_services"}}
-  k8s_service_{{$label}}_running:
-    title: Kubernetes Service '{{$label}}' Running
-    meta:
-      desc: Validates that Kubernetes service with label '{{$label}}' is running.
-      sev: 0
-    exec: kubectl get pods -n services -l {{$label}} | awk '{ print $3 }' | grep Running
-    exit-status: 0
-    timeout: 10000
-    skip: false
-  {{end}}
+    {{range $label := index .Vars "pods_services"}}
+        k8s_service_{{$label}}_running:
+            title: Kubernetes Service '{{$label}}' Running
+            meta:
+                desc: Validates that Kubernetes service with label '{{$label}}' is running.
+                sev: 0
+            exec: |-
+                kubectl get pods -n services -l {{$label}} | 
+                awk '{ print $3 }' | 
+                grep Running
+            exit-status: 0
+            timeout: 10000
+            skip: false
+    {{end}}

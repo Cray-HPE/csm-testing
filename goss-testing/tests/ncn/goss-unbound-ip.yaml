@@ -22,15 +22,17 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Variable set: unbound_ip
+{{ $unbound_ip := .Vars.unbound_ip }}
 command:
-  unbound_ip_in_resolveconf:
-    title: Unbound Nameserver In resolv.conf
-    meta:
-      desc: Validates whether Unbound nameserver IP exists in resolv.conf.
-      sev: 0
-    # The fancy grep argument is to ensure that we don't have an IP in there which 
-    # contains the Unbound IP address as a substring.
-    exec: grep -E '^nameserver[[:space:]][[:space:]]*{{.Vars.unbound_ip}}([[:space:]]|$)' /etc/resolv.conf
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    unbound_ip_in_resolveconf:
+        title: Unbound Nameserver In resolv.conf
+        meta:
+            desc: Validates whether Unbound nameserver IP address ({{$unbound_ip}}) exists in /etc/resolv.conf.
+            sev: 0
+        # The fancy grep argument is to ensure that we don't have an IP address in there which 
+        # contains the Unbound IP address as a substring.
+        exec: |-
+            grep -E '^nameserver[[:space:]][[:space:]]*{{$unbound_ip}}([[:space:]]|$)' /etc/resolv.conf
+        exit-status: 0
+        timeout: 10000
+        skip: false

@@ -23,14 +23,16 @@
 #
 # Variable set: unbound_hostnames
 command:
-  {{range $hostname := index .Vars "unbound_hostnames"}}
-  unbound_hostname_{{$hostname}}:
-    title: Unbound Hostname '{{$hostname}}' Exists
-    meta:
-      desc: Validates the Unbound DNS hostname '{{$hostname}}' exists in the service configmap.
-      sev: 0
-    exec: "kubectl get cm -n services cray-dns-unbound -o yaml | grep '\"hostname\": \"{{$hostname}}\"'"
-    exit-status: 0
-    timeout: 5000
-    skip: false
-  {{end}}
+    {{range $hostname := index .Vars "unbound_hostnames"}}
+        unbound_hostname_{{$hostname}}:
+            title: Unbound Hostname '{{$hostname}}' Exists
+            meta:
+                desc: Validates the Unbound DNS hostname '{{$hostname}}' exists in the service configmap.
+                sev: 0
+            exec: |-
+                kubectl get cm -n services cray-dns-unbound -o yaml | 
+                grep '"hostname": "{{$hostname}}"'
+            exit-status: 0
+            timeout: 5000
+            skip: false
+    {{end}}

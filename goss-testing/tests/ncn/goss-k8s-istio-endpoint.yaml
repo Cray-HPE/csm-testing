@@ -21,18 +21,24 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $kubectl := .Vars.kubectl }}
 # Variable set: k8s_istio_services
 command:
-  {{range $service := index .Vars "k8s_istio_services"}}
-  k8s_istio_service_{{$service}}_endpoint:
-    title: Kubernetes Service '{{$service}}' Has Endpoint
-    meta:
-      desc: Validates that Kubernetes Istio service '{{$service}}' has an endpoint.
-      sev: 0
-    exec: endpoint=$(kubectl -n istio-system get endpoints | grep {{$service}} | awk '{ print $2 }'); if [ "$endpoint" == '<none>' ] || [ -z "$endpoint" ]; then echo FAIL; fi
-    exit-status: 0
-    stdout:
-    - "!FAIL"
-    timeout: 10000
-    skip: false
-  {{end}}
+    {{range $service := index .Vars "k8s_istio_services"}}
+        k8s_istio_service_{{$service}}_endpoint:
+            title: Kubernetes Service '{{$service}}' Has Endpoint
+            meta:
+                desc: Validates that Kubernetes Istio service '{{$service}}' has an endpoint.
+                sev: 0
+            exec: |-
+                endpoint=$("{{$kubectl}}" -n istio-system get endpoints | grep {{$service}} | awk '{ print $2 }')
+                if [ "$endpoint" == '<none>' ] || [ -z "$endpoint" ]; then
+                    echo FAIL
+                fi
+            exit-status: 0
+            stdout:
+                - "!FAIL"
+            timeout: 10000
+            skip: false
+    {{end}}

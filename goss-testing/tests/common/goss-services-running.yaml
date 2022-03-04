@@ -23,12 +23,12 @@
 #
 # Variable set: services_running
 service:
-  {{range $service := index .Vars "services_running"}}
-  {{$service}}:
-    title: Service '{{$service}}' Running
-    meta:
-      desc: Checks whether service '{{$service}}' is running.
-      sev: 0
-    running: true
-    enabled: true
-  {{end}}
+    {{range $service := index .Vars "services_running"}}
+        {{$service}}:
+            title: Service '{{$service}}' Running
+            meta:
+                desc: Checks whether service '{{$service}}' is running.
+                sev: 0
+            running: true
+            enabled: true
+    {{end}}

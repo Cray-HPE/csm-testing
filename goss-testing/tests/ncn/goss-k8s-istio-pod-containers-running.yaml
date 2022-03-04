@@ -22,14 +22,16 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 command:
-  k8s-istio-pod-containers-running:
-    title: Validate istio-ingressgateway pod containers are Running
-    meta:
-      desc: Validates that all istio-ingressgateway pod containers are running. If this test fails, run "kubectl get pods -n istio-system -o wide  | awk '$1 ~ "istio-ingressgateway" && $3 == "Running" && split($2,count,"/") && (count[1] != count[2])'" to see a list of failing pods to investigate.
-      sev: 0
-    exec: kubectl get pods -n istio-system | awk '$1 ~ "istio-ingressgateway" && $3 == "Running" && split($2,count,"/") { if (count[1] != count[2])  print "FAIL"; else print "PASS" }'
-    exit-status: 0
-    stdout:
-    - "!FAIL"
-    timeout: 5000
-    skip: false
+    k8s-istio-pod-containers-running:
+        title: Validate istio-ingressgateway pod containers are Running
+        meta:
+            desc: Validates that all istio-ingressgateway pod containers are running. If this test fails, run "kubectl get pods -n istio-system -o wide  | awk '$1 ~ "istio-ingressgateway" && $3 == "Running" && split($2,count,"/") && (count[1] != count[2])'" to see a list of failing pods to investigate.
+            sev: 0
+        exec: |-
+            kubectl get pods -n istio-system | 
+            awk '$1 ~ "istio-ingressgateway" && $3 == "Running" && split($2,count,"/") { if (count[1] != count[2])  print "FAIL"; else print "PASS" }'
+        exit-status: 0
+        stdout:
+            - "!FAIL"
+        timeout: 5000
+        skip: false

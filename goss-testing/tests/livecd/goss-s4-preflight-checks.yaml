@@ -22,14 +22,15 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 command:
-  preflight_s4_checks:
-    title: S4 Preflight Checks
-    meta:
-      desc: Runs the S4 preflight checks shell script and evaluates the output.
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/s4_preflight_checks.sh"
-    exit-status: 0
-    timeout: 200000
-    skip: false
-    stdout:
-    - Success!
+    preflight_s4_checks:
+        title: S4 Preflight Checks
+        meta:
+            desc: Runs the S4 preflight checks shell script and evaluates the output.
+            sev: 0
+        exec: |-
+            "{{.Env.GOSS_BASE}}/scripts/s4_preflight_checks.sh"
+        exit-status: 0
+        timeout: 200000
+        skip: false
+        stdout:
+            - Success!

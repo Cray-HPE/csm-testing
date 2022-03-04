@@ -22,11 +22,11 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 command:
-  etcdlvm_drive_master:
-    title: Validates the dedicated drive for ETCD is set up correctly on master nodes (ETCDLVM FS Label)
-    meta:
-      desc: If this test fails, inspect the '/var/log/cloud-init-output.log' to determine why the lvm creation failed.
-      sev: 0
-    exec: blkid -L ETCDLVM
-    # blkid will return non-zero if no block device has the ETCDLVM label
-    exit-status: 0
+    etcdlvm_drive_master:
+        title: Validates the dedicated drive for ETCD is set up correctly on master nodes (ETCDLVM FS Label)
+        meta:
+            desc: If this test fails, inspect the '/var/log/cloud-init-output.log' to determine why the lvm creation failed.
+            sev: 0
+        # blkid will return non-zero if no block device has the ETCDLVM label
+        exec: blkid -L ETCDLVM
+        exit-status: 0

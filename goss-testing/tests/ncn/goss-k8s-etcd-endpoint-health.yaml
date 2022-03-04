@@ -21,16 +21,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $kubectl := .Vars.kubectl }}
 command:
-  etcd_database_health:
-    title: Etcd Cluster Endpoint Health
-    meta:
-      desc: Checks the endpoint health of the etcd clusters.
-      sev: 0
-    exec: for pod in $(kubectl get pods -l app=etcd -n services -o jsonpath='{.items[*].metadata.name}');do
-      kubectl -n services exec ${pod} -- /bin/sh -c "ETCDCTL_API=3 etcdctl endpoint health"; done
-    stdout:
-      - "!unhealthy"
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    etcd_database_health:
+        title: Etcd Cluster Endpoint Health
+        meta:
+            desc: Checks the endpoint health of the etcd clusters.
+            sev: 0
+        exec: |-
+            for pod in $("{{$kubectl}}" get pods -l app=etcd -n services -o jsonpath='{.items[*].metadata.name}'); do
+                "{{$kubectl}}" -n services exec ${pod} -- /bin/sh -c "ETCDCTL_API=3 etcdctl endpoint health"
+            done
+        stdout:
+            - "!unhealthy"
+        exit-status: 0
+        timeout: 10000
+        skip: false
