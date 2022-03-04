@@ -21,6 +21,8 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $kubectl := .Vars.kubectl }}
 command:
     k8s_certs_in_bss_cloudinit:
         title: Kubernetes Query BSS Cloud-init for ca-certs
@@ -28,6 +30,6 @@ command:
             desc: Kubernetes Query BSS Cloud-init for ca-certs
             sev: 0
         exec: |-
-            curl $(kubectl -n istio-system get svc istio-ingressgateway -o jsonpath="{.spec.clusterIP}"):8888/meta-data | 
+            curl $("{{$kubectl}}" -n istio-system get svc istio-ingressgateway -o jsonpath="{.spec.clusterIP}"):8888/meta-data | 
             jq -e '.Global["ca-certs"]'
         exit-status: 0

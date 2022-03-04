@@ -22,6 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Variable set: k8s_nodes
+{{ $kubectl := .Vars.kubectl }}
 command:
     {{range $node := index .Vars "k8s_nodes"}}
         k8s_node_{{$node}}_age_valid:
@@ -30,7 +31,7 @@ command:
                 desc: Validates that Kubernetes node '{{$node}}' has valid age.
                 sev: 0
             exec: |-
-                kubectl get nodes | 
+                "{{$kubectl}}" get nodes | 
                 grep {{$node}} | 
                 awk '{ print $4 }' | 
                 grep -v '<invalid>'

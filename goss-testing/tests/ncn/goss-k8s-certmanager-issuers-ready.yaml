@@ -21,6 +21,8 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $kubectl := .Vars.kubectl }}
 command:
     k8s_certmgr_issuers:
         title: Kubernetes Cert-manager Issuers Ready
@@ -28,7 +30,7 @@ command:
             desc: Validates All Cert-manager Issuers are Ready
             sev: 0
         exec: |-
-            kubectl get issuer -A -o json | 
+            "{{$kubectl}}" get issuer -A -o json | 
             jq '.items[].status.conditions[] | select(.type=="Ready") | select(.status=="False")' | 
             wc -l
         stdout:

@@ -21,6 +21,8 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $kubectl := .Vars.kubectl }}
 # Variable set: pods_services
 command:
     {{range $label := index .Vars "pods_services"}}
@@ -30,7 +32,7 @@ command:
                 desc: Validates that Kubernetes service with label '{{$label}}' is running.
                 sev: 0
             exec: |-
-                kubectl get pods -n services -l {{$label}} | 
+                "{{$kubectl}}" get pods -n services -l {{$label}} | 
                 awk '{ print $3 }' | 
                 grep Running
             exit-status: 0

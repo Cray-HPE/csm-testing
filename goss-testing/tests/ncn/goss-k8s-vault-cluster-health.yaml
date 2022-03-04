@@ -21,6 +21,8 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $kubectl := .Vars.kubectl }}
 command:
     k8s_vault_cluster:
         title: Kubernetes Check cray-vault Vault Cluster Status
@@ -29,7 +31,7 @@ command:
             sev: 0
         exec: |-
             for n in $(seq 0 2); do
-                kubectl exec -it -n vault -c vault cray-vault-${n} -- sh -c 'export VAULT_ADDR=http://localhost:8200; vault status'
+                "{{$kubectl}}" exec -it -n vault -c vault cray-vault-${n} -- sh -c 'export VAULT_ADDR=http://localhost:8200; vault status'
             done | 
             egrep 'Initialized|Sealed|HA Mode' | 
             sort -u"

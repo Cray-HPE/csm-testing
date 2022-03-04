@@ -21,6 +21,8 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $kubectl := .Vars.kubectl }}
 command:
     k8s_nodes_ready:
         title: Validate PodSecurityPolicy is enabled
@@ -28,8 +30,8 @@ command:
             desc: If this test fails run the enable-psp.sh script to enable PodSecurityPolicy.
             sev: 0
         exec: |-
-            for pod in $(kubectl get pods -n kube-system -l component=kube-apiserver -o custom-columns=:metadata.name --no-headers=true); do
-                if ! kubectl describe -n kube-system pod $pod | grep -Eq -- '--enable-admission-plugins=.*PodSecurityPolicy'; then
+            for pod in $("{{$kubectl}}" get pods -n kube-system -l component=kube-apiserver -o custom-columns=:metadata.name --no-headers=true); do
+                if ! "{{$kubectl}}" describe -n kube-system pod $pod | grep -Eq -- '--enable-admission-plugins=.*PodSecurityPolicy'; then
                     exit 1
                 fi
             done

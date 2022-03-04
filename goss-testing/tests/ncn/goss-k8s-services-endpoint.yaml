@@ -21,6 +21,8 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $kubectl := .Vars.kubectl }}
 # Variable set: k8s_services
 command:
     {{range $service := index .Vars "k8s_services"}}
@@ -30,7 +32,7 @@ command:
                 desc: Validates that Kubernetes service '{{$service}}' has an endpoint.
                 sev: 0
             exec: |-
-                endpoint=$(kubectl -n services get endpoints | grep {{$service}} | awk '{ print $2 }')
+                endpoint=$("{{$kubectl}}" -n services get endpoints | grep {{$service}} | awk '{ print $2 }')
                 if [ "$endpoint" == '<none>' ] || [ -z "$endpoint" ]; then
                     echo FAIL
                 fi
