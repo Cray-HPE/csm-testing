@@ -33,10 +33,10 @@ pit_file=/etc/pit-release
 
 if [ -f $pit_file ]; then
   # running on a pit node
-  cat $GOSS_BASE/vars/variables-livecd.yaml > $GOSS_VARS
+  cat "$GOSS_BASE/vars/variables-livecd.yaml" > $GOSS_VARS
 else
   # running on an NCN
-  cat $GOSS_BASE/vars/variables-ncn.yaml > $GOSS_VARS
+  cat "$GOSS_BASE/vars/variables-ncn.yaml" > $GOSS_VARS
 fi
 echo "" >> $GOSS_VARS
 
@@ -58,7 +58,7 @@ else
   exit 1
 fi
 
-source $GOSS_BASE/automated/run-ncn-tests.sh
+source "$GOSS_BASE/automated/run-ncn-tests.sh"
 
 if [ -f $pit_file ]; then
   # running on a pit node

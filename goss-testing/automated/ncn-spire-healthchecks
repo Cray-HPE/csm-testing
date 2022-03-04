@@ -25,7 +25,9 @@
 
 export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
 
-source $GOSS_BASE/automated/run-ncn-tests.sh
+vars_file="$GOSS_BASE/vars/variables-ncn.yaml"
+
+source "$GOSS_BASE/automated/run-ncn-tests.sh"
 
 echo $'\e[1;33m'Spire Health Checks$'\e[0m'
 echo $'\e[1;33m'-------------------$'\e[0m'
@@ -51,12 +53,12 @@ echo $'\n\e[1;33m'---------------$'\e[0m'
 echo $'\e[1;33m'NCN Spire Postgres Pods Running$'\e[0m'
 echo "Test Name: goss-k8s-postgres-pods-running"
 echo "Description: Validate that spire postgres pods are running."
-goss -g  /opt/cray/tests/install/ncn/tests/goss-k8s-postgres-pods-running.yaml  validate
+goss -g  "$GOSS_BASE/tests/goss-k8s-postgres-pods-running.yaml" --vars "$vars_file"  validate --format documentation
 echo $'\n\e[1;33m'---------------$'\e[0m'
 echo $'\e[1;33m'NCN Spire Postgres Pods Have a Leader$'\e[0m'
 echo "Test Name: goss-k8s-postgres-leader"
 echo "Description: Validate that spire postgres pods have a leader."
-goss -g  /opt/cray/tests/install/ncn/tests/goss-k8s-postgres-leader.yaml  validate
+goss -g  "$GOSS_BASE/tests/goss-k8s-postgres-leader.yaml" --vars "$vars_file" validate --format documentation
 
 echo $'\n\e[1;33m'-------------------$'\e[0m'
 echo $'\e[1;33m'Spire Health Checks Completed$'\e[0m\n'

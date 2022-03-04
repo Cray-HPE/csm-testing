@@ -26,8 +26,8 @@
 
 export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
 
-export GOSS_FILE="/opt/cray/tests/install/livecd/suites/livecd-provisioning-tests.yaml"
-vars_file="/opt/cray/tests/install/livecd/vars/variables-livecd.yaml"
+export GOSS_FILE="$GOSS_BASE/suites/livecd-provisioning-tests.yaml"
+vars_file="$GOSS_BASE/vars/variables-livecd.yaml"
 
 nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE 'ncn-[mws]([0-9]{3})' | awk '!a[$0]++')
 tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml

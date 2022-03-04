@@ -31,6 +31,6 @@ if [[ -z "$SW_ADMIN_PASSWORD" ]]; then
   exit 1
 fi
 
-$GOSS_BASE/automated/ncn-healthcheck-storage
-$GOSS_BASE/automated/ncn-healthcheck-master
-$GOSS_BASE/automated/ncn-healthcheck-worker
+"$GOSS_BASE/automated/ncn-healthcheck-storage"
+"$GOSS_BASE/automated/ncn-healthcheck-master"
+"$GOSS_BASE/automated/ncn-healthcheck-worker'
