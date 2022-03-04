@@ -36,7 +36,7 @@ if [ ! -f "/etc/dnsmasq.d/statics.conf" ]; then
 fi
 
 # find the ncn node names and query the server endpoint
-nodes=$(grep -ohE "ncn-[m,w,s]([0-9]{3})" /etc/dnsmasq.d/statics.conf | grep -v ncn-m001 | awk '!a[$0]++')
+nodes=$(grep -ohE "ncn-[mws]([0-9]{3})" /etc/dnsmasq.d/statics.conf | grep -v ncn-m001 | awk '!a[$0]++')
 
 for node in $nodes; do
   run_ncn_tests $node 8995 ncn-preflight-tests
