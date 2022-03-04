@@ -22,15 +22,16 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $dhcp_router_ip_check := .Env.GOSS_BASE | printf "%s/scripts/dhcp_router_ip_check.sh" }}
+{{ $network_interfaces := .Vars.network_interfaces }}
 command:
-    {{$path := .Env.GOSS_BASE}}
     dhcp_router_ip_distinct:
         title: DHCP Router IP is Distinct
         meta:
-            desc: Validates the DHCP router IP for each interface is different from the interface's IP. If this test fails, run "{{.Env.GOSS_BASE}}/scripts/dhcp_router_ip_check.sh {{.Vars.network_interfaces}}" to see which interfaces are failing.
+            desc: Validates the DHCP router IP address for each interface is different from the interface's IP address. If this test fails, run "{{$dhcp_router_ip_check}} {{$network_interfaces}}" to see which interfaces are failing.
             sev: 0
         exec: |-
-            "{{$path}}/scripts/dhcp_router_ip_check.sh" "{{.Vars.network_interfaces}}"
+            "{{$dhcp_router_ip_check}}" "{{$network_interfaces}}"
         stdout:
             - PASS
         exit-status: 0

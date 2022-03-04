@@ -20,14 +20,17 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $check_remote_mac_against_configs := .Env.GOSS_BASE | printf "%s/scripts/python/check-remote-mac-against-configs.py" }}
+{{ $datajson := .Vars.datajson }}
+{{ $staticsconf := .Vars.staticsconf }}
 command:
     check_remote_mac:
         title: Remote NCN MAC
         meta:
-            desc: Checks that remote NCN MAC is in both data.json and statics.conf.
+            desc: Checks that remote NCN MAC is in both data.json and statics.conf. If the test fails, you may get more information by running it manually: "{{$check_remote_mac_against_configs}} {{$datajson}} {{$staticsconf}}"
             sev: 0
         exec: |-
-            "{{.Env.GOSS_BASE}}/scripts/python/check-remote-mac-against-configs.py" "{{.Vars.datajson}}" "{{ .Vars.staticsconf}}"
+            "{{$check_remote_mac_against_configs}}" "{{$datajson}}" "{{$staticsconf}}"
         exit-status: 0
         stdout:
             - PASS
