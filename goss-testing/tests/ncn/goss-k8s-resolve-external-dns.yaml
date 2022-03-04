@@ -20,6 +20,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
 command:
     resolve_external_dns:
         title: Resolve external DNS
@@ -36,14 +37,14 @@ command:
 
           function get_master_token {
 
-              MASTER_USERNAME=$(kubectl get secret -n services keycloak-master-admin-auth -ojsonpath='{.data.user}' | base64 -d)
-              MASTER_PASSWORD=$(kubectl get secret -n services keycloak-master-admin-auth -ojsonpath='{.data.password}' | base64 -d)
+              MASTER_USERNAME=$("{{$kubectl}}" get secret -n services keycloak-master-admin-auth -ojsonpath='{.data.user}' | base64 -d)
+              MASTER_PASSWORD=$("{{$kubectl}}" get secret -n services keycloak-master-admin-auth -ojsonpath='{.data.password}' | base64 -d)
 
               curl -ks -d client_id=admin-cli -d username=$MASTER_USERNAME -d password=$MASTER_PASSWORD \
                    -d grant_type=password https://api-gw-service-nmn.local/keycloak/realms/master/protocol/openid-connect/token | jq -r '.access_token'; 
            }
    
-           FORWARD_ADDR=$(kubectl -n services get cm cray-dns-unbound -o jsonpath='{.data.unbound\.conf}' \
+           FORWARD_ADDR=$("{{$kubectl}}" -n services get cm cray-dns-unbound -o jsonpath='{.data.unbound\.conf}' \
                           | grep "forward-zone:" -A 5 | yq r  - '"forward-zone"."forward-addr"')
 
            LDAP_PROVIDER=$(curl -s -H "Authorization: Bearer $(get_master_token)" \

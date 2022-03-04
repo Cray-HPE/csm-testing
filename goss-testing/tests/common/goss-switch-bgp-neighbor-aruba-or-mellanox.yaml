@@ -20,6 +20,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
 command:
     bgp_neighbors_established:
         title: Switch BGP Neighbors
@@ -27,7 +28,7 @@ command:
             desc: Validates connection to the BGP neighbors of a switch.  If this test fails run 'canu validate network bgp --verbose' to see the status of all BGP neighbors.
             sev: 0
         exec: |-
-            if $(kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' | grep -q customer-management); then
+            if $("{{$kubectl}}" -n metallb-system get cm metallb -o jsonpath='{.data.config}' | grep -q customer-management); then
                 canu validate network bgp --network all --password {{.Env.SW_ADMIN_PASSWORD}}
             else
                 canu validate network bgp --network nmn --password {{.Env.SW_ADMIN_PASSWORD}}

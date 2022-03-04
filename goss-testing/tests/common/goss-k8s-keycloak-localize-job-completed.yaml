@@ -20,6 +20,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
 command:
     keycloak_users_localize_job_completed:
         title: Keycloak Users Localize Job Completed 
@@ -27,10 +28,10 @@ command:
             desc: If this test fails, see /usr/share/doc/csm/troubleshooting/known_issues/craycli_403_forbidden_errors.md 
             sev: 0
         exec: |-
-            kubectl -n services wait \
+            "{{$kubectl}}" -n services wait \
                 --for=condition=complete \
                 --timeout=3s \
-                job/$(kubectl -n services get jobs | 
+                job/$("{{$kubectl}}" -n services get jobs | 
                     grep users-localize | 
                     awk '{print $1}')
         exit-status: 0

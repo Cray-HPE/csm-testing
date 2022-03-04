@@ -20,6 +20,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
 command:
     k8s_service_tftp_running:
         title: Kubernetes Service 'cray-tftp' Is Running
@@ -27,7 +28,7 @@ command:
             desc: If this test fails, look at the state of the cray-tftp pods (kubectl get po -n services | grep cray-tftp) to investigate.
             sev: 0
         exec: |-
-            kubectl get pods -n services -l 'app.kubernetes.io/name=cray-tftp' | 
+            "{{$kubectl}}" get pods -n services -l 'app.kubernetes.io/name=cray-tftp' | 
             awk '{ print $3 }' | 
             grep Running
         exit-status: 0

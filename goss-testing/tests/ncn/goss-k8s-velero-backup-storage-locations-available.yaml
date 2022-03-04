@@ -20,6 +20,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
 command:
     k8s_velero_backupstoragelocations:
         title: Kubernetes Velero Backup Storage Locations Ready
@@ -27,7 +28,7 @@ command:
             desc: Validates All Velero Backup Storage Locations are Ready
             sev: 0
         exec: |-
-            kubectl get backupstoragelocation -A -o json | 
+            "{{$kubectl}}" get backupstoragelocation -A -o json | 
             jq '.items[].status | select(.phase=="Unavailable")' | 
             wc -l
         stdout:

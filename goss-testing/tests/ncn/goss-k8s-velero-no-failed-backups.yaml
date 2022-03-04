@@ -20,6 +20,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
 command:
     k8s_velero_failed_backups:
         title: Kubernetes Velero No Failed Backups
@@ -27,6 +28,6 @@ command:
             desc: Validates there are no failed Velero backups. To cleanup backups that are known to have been interrupted, run the following to find the failed backup `kubectl get backups -A -o json | jq -e '.items[] | select(.status.phase == "PartiallyFailed") | .metadata.name'`.  To then delete the backup, run `velero backup delete <backup> --confirm` (on a master or worker node).
             sev: 0
         exec: |-
-            kubectl get backups -A -o json | 
+            "{{$kubectl}}" get backups -A -o json | 
             jq -e '.items[].status.phase | contains("Failed") | not'
         exit-status: 0
