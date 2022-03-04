@@ -21,12 +21,19 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 command:
-  spire_check_key_id_in_jwks:
-    title: Validate token key ID exists in spire jwks
-    meta:
-      desc: Validate token key ID exists in spire jwks. If this fails, try running kubectl rollout restart -n spire daemonset spire-agent and kubectl rollout restart -n spire deployment spire-jwks
-      sev: 0
-    exec: kubectl exec -itn spire spire-postgres-0 -c postgres -- curl http://spire-jwks/keys | jq -r '.[][].kid' | grep $(/usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /root/spire/agent.sock -audience goss-test | head -n2 | awk -F. 'FNR==2{sub(/^[ \t]+/, ""); print $1}' | base64 -d 2>/dev/null| jq -r .kid)
-    exit-status: 0
-    timeout: 5000
-    skip: false
+    spire_check_key_id_in_jwks:
+        title: Validate token key ID exists in spire jwks
+        meta:
+            desc: Validate token key ID exists in spire jwks. If this fails, try running kubectl rollout restart -n spire daemonset spire-agent and kubectl rollout restart -n spire deployment spire-jwks
+            sev: 0
+        exec: |-
+            kubectl exec -itn spire spire-postgres-0 -c postgres -- curl http://spire-jwks/keys | 
+                jq -r '.[][].kid' | 
+                grep $(/usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /root/spire/agent.sock -audience goss-test | 
+                    head -n2 | 
+                    awk -F. 'FNR==2{sub(/^[ \t]+/, ""); print $1}' |
+                    base64 -d 2>/dev/null | 
+                    jq -r .kid)
+        exit-status: 0
+        timeout: 5000
+        skip: false

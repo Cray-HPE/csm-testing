@@ -21,13 +21,13 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 mount:
-  {{range $kw_mount := index .Vars "k8s_worker_mounts"}}
-  {{$kw_mount}}:
-    title: {{$kw_mount}} mount
-    meta:
-      desc: Validate that {{$kw_mount}} mount exists and is < 75% full
-      sev: 0
-    exists: true
-    usage:
-      lt: 75
-  {{end}}
+    {{range $kw_mount := index .Vars "k8s_worker_mounts"}}
+        {{$kw_mount}}:
+            title: {{$kw_mount}} mount
+            meta:
+                desc: Validate that {{$kw_mount}} mount exists and is < 75% full
+                sev: 0
+            exists: true
+            usage:
+                lt: 75
+    {{end}}

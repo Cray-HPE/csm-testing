@@ -21,9 +21,10 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 service:
-  spire-agent:
-    title: Verify spire-agent is enabled and running
-    meta:
-      desc: Verify spire-agent is enabled and running
-    enabled: true
-    running: true
+    spire-agent:
+        title: Verify spire-agent is enabled and running
+        meta:
+            desc: Verify spire-agent is enabled and running
+            sev: 0
+        enabled: true
+        running: true

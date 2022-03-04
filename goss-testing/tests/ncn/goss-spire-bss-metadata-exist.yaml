@@ -21,10 +21,12 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 command:
-  spire_in_bss_cloudinit:
-    title: Kubernetes Query BSS Cloud-init for spire meta data
-    meta:
-      desc: Kubernetes Query BSS Cloud-init for spire meta data
-      sev: 0
-    exec: "curl api-gw-service-nmn.local:8888/meta-data | jq -e '.Global.spire.fqdn'"
-    exit-status: 0
+    spire_in_bss_cloudinit:
+        title: Kubernetes Query BSS Cloud-init for spire meta data
+        meta:
+            desc: Kubernetes Query BSS Cloud-init for spire meta data
+            sev: 0
+        exec: |-
+            curl api-gw-service-nmn.local:8888/meta-data | 
+                jq -e '.Global.spire.fqdn'
+        exit-status: 0

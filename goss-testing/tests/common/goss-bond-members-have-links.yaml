@@ -21,14 +21,14 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 command:
-  bond_members_have_links:
-    title: Bond Members Have Links
-    meta:
-      desc: Validates that the bond0 interface members from the ifcfg-bond0 config file have active links.
-      sev: 0
-    stdout:
-    - "!DOWN"
-    exec: "awk -F '=' '/BONDING_SLAVE/{print $2}' /etc/sysconfig/network/ifcfg-bond0 | tr -d \\' | while read member ; do ip link show dev $member ; done"
-    exit-status: 0
-    timeout: 5000
-    skip: false
+    bond_members_have_links:
+        title: Bond Members Have Links
+        meta:
+            desc: Validates that the bond0 interface members from the ifcfg-bond0 config file have active links.
+            sev: 0
+        stdout:
+            - "!DOWN"
+        exec: "awk -F '=' '/BONDING_SLAVE/{print $2}' /etc/sysconfig/network/ifcfg-bond0 | tr -d \\' | while read member ; do ip link show dev $member ; done"
+        exit-status: 0
+        timeout: 5000
+        skip: false

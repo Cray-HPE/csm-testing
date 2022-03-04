@@ -21,14 +21,20 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 command:
-  goss_platform_ca_certs_match_cloud_init:
-    title: Validate that the local platform CA bundle matches the one in cloud-init
-    meta:
-      desc: Validates that the local platform CA bundle matches the one in cloud-init
-      sev: 0
-    exec: "curl -s http://10.92.100.71:8888/meta-data | jq -r '.Global.\"ca-certs\".trusted[]' | sed '/^$/d' | sort > /tmp/goss-sorted-meta-cert.txt;\
-           cat /etc/pki/trust/anchors/platform-ca-certs.crt | sed '/^$/d' | sort > /tmp/goss-sorted-cert.txt;\
-           diff /tmp/goss-sorted-cert.txt /tmp/goss-sorted-meta-cert.txt"
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    goss_platform_ca_certs_match_cloud_init:
+        title: Validate that the local platform CA bundle matches the one in cloud-init
+        meta:
+            desc: Validates that the local platform CA bundle matches the one in cloud-init
+            sev: 0
+        exec: |-
+            curl -s http://10.92.100.71:8888/meta-data | 
+                jq -r '.Global."ca-certs".trusted[]' | 
+                sed '/^$/d' | 
+                sort > /tmp/goss-sorted-meta-cert.txt
+            cat /etc/pki/trust/anchors/platform-ca-certs.crt | 
+                sed '/^$/d' | 
+                sort > /tmp/goss-sorted-cert.txt
+            diff /tmp/goss-sorted-cert.txt /tmp/goss-sorted-meta-cert.txt
+        exit-status: 0
+        timeout: 10000
+        skip: false

@@ -21,14 +21,19 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 command:
-  postgresql_check_SyncFailed:
-    title: Postgresql SyncFailed status check
-    meta:
-      desc: Checks if any posgresql have status SyncFailed. If this fails, investigate postgresql statuses.
-      sev: 0
-    exec: "if [[ -z $(kubectl get postgresql -A -o jsonpath='{.items[*].status.PostgresClusterStatus}' | grep SyncFailed ) ]]; then echo 'PASS'; else echo 'FAIL'; fi"
-    stdout:
-      - "!FAIL"
-    exit-status: 0
-    timeout: 5000
-    skip: false
+    postgresql_check_SyncFailed:
+        title: Postgresql SyncFailed status check
+        meta:
+            desc: Checks if any posgresql have status SyncFailed. If this fails, investigate postgresql statuses.
+            sev: 0
+        exec: |-
+            if [[ -z $(kubectl get postgresql -A -o jsonpath='{.items[*].status.PostgresClusterStatus}' | grep SyncFailed ) ]]; then
+                echo PASS
+            else
+                echo FAIL
+            fi
+        stdout:
+            - "!FAIL"
+        exit-status: 0
+        timeout: 5000
+        skip: false

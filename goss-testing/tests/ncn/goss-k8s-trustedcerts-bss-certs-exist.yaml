@@ -21,10 +21,12 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 command:
-  k8s_certs_in_bss_cloudinit:
-    title: Kubernetes Query BSS Cloud-init for ca-certs
-    meta:
-      desc: Kubernetes Query BSS Cloud-init for ca-certs
-      sev: 0
-    exec: "curl $(kubectl -n istio-system get svc istio-ingressgateway -o jsonpath=\"{.spec.clusterIP}\"):8888/meta-data | jq -e '.Global[\"ca-certs\"]'"
-    exit-status: 0
+    k8s_certs_in_bss_cloudinit:
+        title: Kubernetes Query BSS Cloud-init for ca-certs
+        meta:
+            desc: Kubernetes Query BSS Cloud-init for ca-certs
+            sev: 0
+        exec: |-
+            curl $(kubectl -n istio-system get svc istio-ingressgateway -o jsonpath="{.spec.clusterIP}"):8888/meta-data | 
+            jq -e '.Global["ca-certs"]'
+        exit-status: 0

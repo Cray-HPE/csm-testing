@@ -21,12 +21,15 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 command:
-  k8s_velero_backupstoragelocations:
-    title: Kubernetes Velero Backup Storage Locations Ready
-    meta:
-      desc: Validates All Velero Backup Storage Locations are Ready
-      sev: 0
-    exec: "kubectl get backupstoragelocation -A -o json | jq '.items[].status | select(.phase==\"Unavailable\")' | wc -l"
-    stdout:
-    - "/^0$/"
-    exit-status: 0
+    k8s_velero_backupstoragelocations:
+        title: Kubernetes Velero Backup Storage Locations Ready
+        meta:
+            desc: Validates All Velero Backup Storage Locations are Ready
+            sev: 0
+        exec: |-
+            kubectl get backupstoragelocation -A -o json | 
+            jq '.items[].status | select(.phase=="Unavailable")' | 
+            wc -l
+        stdout:
+            - "/^0$/"
+        exit-status: 0

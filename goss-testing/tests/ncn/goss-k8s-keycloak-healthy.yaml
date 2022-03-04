@@ -20,13 +20,23 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
 command:
-  k8s_keycloak_healthy:
-    title: Validate the keycloak service in kubernetes is in healthy state
-    meta:
-      desc: If this test fails, look at the state of the keycloak pods (kubectl get po -n services | grep keycloak) to determine why the test was unable to get a token.
-      sev: 0
-    exec: "curl -k -s -d grant_type=client_credentials -d client_id=admin-client -d client_secret=$(kubectl get secrets admin-client-auth -ojsonpath='{.data.client-secret}' | base64 -d) https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token"
-    exit-status: 0
-    timeout: 5000
-    skip: false
+    k8s_keycloak_healthy:
+        title: Validate the keycloak service in kubernetes is in healthy state
+        meta:
+            desc: If this test fails, look at the state of the keycloak pods (kubectl get po -n services | grep keycloak) to determine why the test was unable to get a token.
+            sev: 0
+        exec: |-
+            set -eo pipefail
+            secret=$(
+                "{{$kubectl}}" get secrets admin-client-auth -ojsonpath='{.data.client-secret}' | 
+                base64 -d
+            )
+            curl -k -s -d grant_type=client_credentials \
+                -d client_id=admin-client \
+                -d client_secret="$secret" \
+                https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token
+        exit-status: 0
+        timeout: 5000
+        skip: false

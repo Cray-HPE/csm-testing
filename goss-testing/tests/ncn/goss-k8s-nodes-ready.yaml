@@ -20,13 +20,17 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $kubectl := .Vars.kubectl }}
 command:
-  k8s_nodes_ready:
-    title: Validate kubernetes nodes are in Ready state
-    meta:
-      desc: If this test fails run 'kubectl get nodes' to determine which node is not in a ready state. 
-      sev: 0
-    exec: "kubectl get nodes | grep ^ncn | grep -v ' Ready '"
-    exit-status: 1
-    timeout: 5000
-    skip: false
+    k8s_nodes_ready:
+        title: Validate kubernetes nodes are in Ready state
+        meta:
+            desc: If this test fails run 'kubectl get nodes' to determine which node is not in a ready state. 
+            sev: 0
+        exec: |-
+            "{{$kubectl}}" get nodes | 
+            grep ^ncn | 
+            grep -v ' Ready '
+        exit-status: 1
+        timeout: 5000
+        skip: false

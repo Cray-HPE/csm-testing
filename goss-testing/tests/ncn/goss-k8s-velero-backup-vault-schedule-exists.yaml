@@ -21,12 +21,14 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 command:
-  k8s_velero_vault_daily_schedule:
-    title: Kubernetes Velero Daily Vault Backup Schedule Exists
-    meta:
-      desc: Kubernetes Velero Daily Vault Backup Schedule Exists
-      sev: 0
-    exec: "kubectl get schedule -A -o json | jq '.items[].metadata.name | contains(\"vault-daily-backup\")'"
-    stdout:
-    - "/^true$/"
-    exit-status: 0
+    k8s_velero_vault_daily_schedule:
+        title: Kubernetes Velero Daily Vault Backup Schedule Exists
+        meta:
+            desc: Kubernetes Velero Daily Vault Backup Schedule Exists
+            sev: 0
+        exec: |-
+            kubectl get schedule -A -o json | 
+            jq '.items[].metadata.name | contains("vault-daily-backup")'
+        stdout:
+            - "/^true$/"
+        exit-status: 0

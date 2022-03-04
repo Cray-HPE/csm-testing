@@ -21,9 +21,9 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 file:
-  /etc/pki/trust/anchors/platform-ca-certs.crt:
-    title: Validate that the local platform CA bundle exists
-    meta:
-      desc: Validates that the local platform CA bundle (/etc/pki/trust/anchors/platform-ca-certs.crt) exists
-      sev: 0
-    exists: true
+    /etc/pki/trust/anchors/platform-ca-certs.crt:
+        title: Validate that the local platform CA bundle exists
+        meta:
+            desc: Validates that the local platform CA bundle (/etc/pki/trust/anchors/platform-ca-certs.crt) exists
+            sev: 0
+        exists: true

@@ -21,12 +21,14 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 command:
-  rgw_cert_valid:
-    title: RGW Cert is Valid
-    meta:
-      desc: Validates RGW TLS certificate is installed and valid.
-      sev: 0
-    exec: 'curl --insecure -vvI https://rgw-vip.nmn 2>&1 | grep "expire date:"'
-    exit-status: 0
-    timeout: 5000
-    skip: false
+    rgw_cert_valid:
+        title: RGW Cert is Valid
+        meta:
+            desc: Validates RGW TLS certificate is installed and valid.
+            sev: 0
+        exec: |-
+            curl --insecure -vvI https://rgw-vip.nmn 2>&1 | 
+            grep "expire date:"
+        exit-status: 0
+        timeout: 5000
+        skip: false

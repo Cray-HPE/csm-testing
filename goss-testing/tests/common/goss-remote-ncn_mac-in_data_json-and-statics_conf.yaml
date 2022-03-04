@@ -21,12 +21,13 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 command:
-  check_remote_mac:
-    title: Remote NCN MAC
-    meta:
-      desc: Checks that remote NCN MAC is in both data.json and statics.conf.
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/python/check-remote-mac-against-configs.py {{.Vars.datajson}} {{ .Vars.staticsconf}}"
-    exit-status: 0
-    stdout:
-    - PASS
+    check_remote_mac:
+        title: Remote NCN MAC
+        meta:
+            desc: Checks that remote NCN MAC is in both data.json and statics.conf.
+            sev: 0
+        exec: |-
+            "{{.Env.GOSS_BASE}}/scripts/python/check-remote-mac-against-configs.py" "{{.Vars.datajson}}" "{{ .Vars.staticsconf}}"
+        exit-status: 0
+        stdout:
+            - PASS

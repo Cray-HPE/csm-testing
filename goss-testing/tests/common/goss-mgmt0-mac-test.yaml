@@ -21,14 +21,19 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 command:
-  check_mac_mgmt0:
-    title: mgmt0 MAC Address
-    meta:
-      desc: On instances with a mgmt0 interface, checks if they have a MAC address.
-      sev: 0
-    exec: 'if [ `ip addr show dev mgmt0 | grep "link/ether" | tr -s " " | cut -d " " -f 3` = `ip addr show dev bond0 | grep "link/ether" | tr -s " " | cut -d " " -f 3` ]; then echo good; else echo bad; fi'
-    exit-status: 0
-    stdout:
-    - good
-    timeout: 10000
-    skip: false
+    check_mac_mgmt0:
+        title: mgmt0 MAC Address
+        meta:
+            desc: On instances with a mgmt0 interface, checks if they have a MAC address.
+            sev: 0
+        exec: |-
+            if [ `ip addr show dev mgmt0 | grep "link/ether" | tr -s " " | cut -d " " -f 3` = `ip addr show dev bond0 | grep "link/ether" | tr -s " " | cut -d " " -f 3` ]; then
+                echo good
+            else
+                echo bad
+            fi
+        exit-status: 0
+        stdout:
+            - good
+        timeout: 10000
+        skip: false
