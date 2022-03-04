@@ -21,14 +21,16 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $s4_preflight_checks := .Env.GOSS_BASE | printf "%s/scripts/s4_preflight_checks.sh" }}
 command:
     preflight_s4_checks:
         title: S4 Preflight Checks
         meta:
-            desc: Runs the S4 preflight checks shell script and evaluates the output.
+            desc: Runs the S4 preflight checks shell script and evaluates the output. If the test fails, you may get more information by running it manually: {{$s4_preflight_checks}}
             sev: 0
         exec: |-
-            "{{.Env.GOSS_BASE}}/scripts/s4_preflight_checks.sh"
+            "{{$s4_preflight_checks}}"
         exit-status: 0
         timeout: 200000
         skip: false
