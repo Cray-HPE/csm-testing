@@ -28,7 +28,7 @@
 # Temporary file to store command output
 NCN_STORAGE_CHECKS_TMPFILE=/tmp/.ncn-storage-checks.tmp.$$.$RANDOM
 
-source $GOSS_BASE/automated/run-ncn-tests.sh
+source "$GOSS_BASE/automated/run-ncn-tests.sh"
 
 echo $'\e[1;33m'Storage Node Automated Tests$'\e[0m'
 echo $'\e[1;33m'----------------------------$'\e[0m'
