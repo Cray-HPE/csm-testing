@@ -22,15 +22,19 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $pyTest_ips_in_dnsmasq_d_in_correct_order := .Env.GOSS_BASE | printf "%s/scripts/python/pyTest-ips-in-dnsmasq_d-in-correct-order.py" }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $pyTest_ips_in_dnsmasq_d_in_correct_order := $scripts | printf "%s/python/pyTest-ips-in-dnsmasq_d-in-correct-order.py" }}
 command:
-    dnsmasq_dhcp_pools_are_correctly_defined:
+    {{ $testlabel := "dnsmasq_dhcp_pools_are_correctly_defined" }}
+    {{$testlabel}}:
         title: Directives for dhcp-range Correct
         meta:
             desc: Ensures the dhcp-range directive in the /etc/dnsmasq.d/<net>.conf files are formed correctly. If the test fails, you may get more information by running it manually: "{{$pyTest_ips_in_dnsmasq_d_in_correct_order}}"
             sev: 0
         exec: |-
-            "{{$pyTest_ips_in_dnsmasq_d_in_correct_order}}"
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$pyTest_ips_in_dnsmasq_d_in_correct_order}}"
         exit-status: 0
         stdout:
             - "!FAIL"

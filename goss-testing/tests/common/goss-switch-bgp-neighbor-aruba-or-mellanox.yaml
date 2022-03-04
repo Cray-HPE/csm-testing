@@ -22,22 +22,21 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $kubectl := .Vars.kubectl }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $check_bgp_neighbors_established := $scripts | printf "%s/check_bgp_neighbors_established.sh" }}
 command:
-    bgp_neighbors_established:
+    {{ $testlabel := "bgp_neighbors_established" }}
+    {{$testlabel}}:
         title: Switch BGP Neighbors
         meta:
             desc: Validates connection to the BGP neighbors of a switch.  If this test fails run 'canu validate network bgp --verbose' to see the status of all BGP neighbors.
             sev: 0
         exec: |-
-            if $("{{$kubectl}}" -n metallb-system get cm metallb -o jsonpath='{.data.config}' | grep -q customer-management); then
-                canu validate network bgp --network all --password {{.Env.SW_ADMIN_PASSWORD}}
-            else
-                canu validate network bgp --network nmn --password {{.Env.SW_ADMIN_PASSWORD}}
-            fi
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                {{$check_bgp_neighbors_established}}
         exit-status: 0
         stdout:
             - "!FAIL"
         timeout: 20000
         skip: false
- 

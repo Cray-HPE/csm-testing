@@ -22,20 +22,28 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Variable set: k8s_nodes
+# The k8s_nodes variable is not present in the hard-coded variable files, but is 
+# dynamically generated either by start-goss-servers.sh or the script 
+# which invokes this test (for example, automated/ncn-kubernetes-checks).
+
 {{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
     {{range $node := index .Vars "k8s_nodes"}}
-        k8s_node_{{$node}}_age_valid:
+        {{ $testlabel := $node | printf "k8s_node_%s_age_valid" }}
+        {{$testlabel}}:
             title: Kubernetes Node '{{$node}}' Valid Age
             meta:
                 desc: Validates that Kubernetes node '{{$node}}' has valid age.
                 sev: 0
             exec: |-
-                "{{$kubectl}}" get nodes | 
-                grep {{$node}} | 
-                awk '{ print $4 }' | 
-                grep -v '<invalid>'
+                set -o pipefail
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    "{{$kubectl}}" get nodes "{{$node}}" --no-headers | 
+                    awk '{ print $4 }'
             exit-status: 0
+            stdout:
+                - "!invalid"
             timeout: 10000
             skip: false
     {{end}}

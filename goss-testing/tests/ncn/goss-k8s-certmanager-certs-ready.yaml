@@ -23,16 +23,19 @@
 #
 
 {{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-    k8s_certmgr_certificates:
+    {{ $testlabel := "k8s_certmgr_certificates" }}
+    {{$testlabel}}:
         title: Kubernetes Cert-manager Certificates Ready
         meta:
             desc: Validates All Cert-manager Certificates are Ready
             sev: 0
         exec: |-
-            "{{$kubectl}}" get certificate -A -o json | 
-            jq '.items[].status.conditions[] | select(.type=="Ready") | select(.status=="False")' | 
-            wc -l
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" get certificate -A -o json | 
+                jq '.items[].status.conditions[] | select(.type=="Ready") | select(.status=="False")' | 
+                wc -l
         stdout:
             - "/^0$/"
         exit-status: 0

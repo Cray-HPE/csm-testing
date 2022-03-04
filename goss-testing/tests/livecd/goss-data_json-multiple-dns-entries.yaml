@@ -22,16 +22,20 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $data_json_multiple_dns_server_entries := .Env.GOSS_BASE | printf "%s/scripts/python/data_json-multiple-dns_server-entries.py" }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $data_json_multiple_dns_server_entries := $scripts | printf "%s/python/data_json-multiple-dns_server-entries.py" }}
 {{ $datajson := .Vars.datajson }}
 command:
-    check_for_multiple_dns-server_entries:
+    {{ $testlabel := "check_for_multiple_dns-server_entries" }}
+    {{$testlabel}}:
         title: Single DNS Server Entry
         meta:
             desc: Fail if the count of dns-server entries in data.json > 1. If the test fails, you may get more information by running it manually: "{{$data_json_multiple_dns_server_entries}}" "{{$datajson}}"
             sev: 0
         exec: |-
-            "{{$data_json_multiple_dns_server_entries}}" "{{$datajson}}"
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$data_json_multiple_dns_server_entries}}" "{{$datajson}}"
         stdout:
             - 1
         exit-status: 0

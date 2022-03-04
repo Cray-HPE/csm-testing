@@ -21,28 +21,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-    conrun_label_worker:
-        title: Worker Node CONRUN FS Label
-        meta:
-            desc: Validates the CONRUN FS Label is set up correctly on worker nodes.
-            sev: 0
-        # blkid will return non-zero if no block device has the CONRUN label
-        exec: blkid -L CONRUN
-        exit-status: 0
-    conlib_label_worker:
-        title: Worker Node CONLIB FS Label
-        meta:
-            desc: Validates the CONLIB FS Label is set up correctly on worker nodes.
-            sev: 0
-        # blkid will return non-zero if no block device has the CONLIB label
-        exec: blkid -L CONLIB
-        exit-status: 0
-    k8slet_label_worker:
-        title: Worker Node K8SLET FS Label
-        meta:
-            desc: Validates the K8SLET FS Label is set up correctly on worker nodes.
-            sev: 0
-        # blkid will return non-zero if no block device has the K8SLET label
-        exec: blkid -L K8SLET
-        exit-status: 0
+    {{range $fslabel := index .Vars "k8s_worker_fs_labels"}}
+        {{ $testlabel := $fslabel | toLower | printf "%s_label_worker" }}
+        {{$testlabel}}:
+            title: Worker Node {{$fslabel}} FS Label
+            meta:
+                desc: Validates the {{$fslabel}} FS Label is set up correctly on worker nodes. If this test fails, inspect the '/var/log/cloud-init-output.log' to determine why the lvm creation failed.
+                sev: 0
+            # blkid will return non-zero if no block device has the $fslabel label
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    blkid -L "{{$fslabel}}"
+            exit-status: 0
+            timeout: 5000
+    {{end}}
