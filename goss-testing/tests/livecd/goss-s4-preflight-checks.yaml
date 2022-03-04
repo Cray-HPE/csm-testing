@@ -20,15 +20,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-{{ $s4_preflight_checks := .Env.GOSS_BASE | printf "%s/scripts/s4_preflight_checks.sh" }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $s4_preflight_checks := $scripts | printf "%s/s4_preflight_checks.sh" }}
 command:
-    preflight_s4_checks:
+    {{ $testlabel := "preflight_s4_checks" }}
+    {{$testlabel}}:
         title: S4 Preflight Checks
         meta:
             desc: Runs the S4 preflight checks shell script and evaluates the output. If the test fails, you may get more information by running it manually: {{$s4_preflight_checks}}
             sev: 0
         exec: |-
-            "{{$s4_preflight_checks}}"
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$s4_preflight_checks}}"
         exit-status: 0
         timeout: 200000
         skip: false

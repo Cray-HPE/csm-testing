@@ -20,15 +20,18 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-    rgw_cert_valid:
+    {{ $testlabel := "rgw_cert_valid" }}
+    {{$testlabel}}:
         title: RGW Cert is Valid
         meta:
             desc: Validates RGW TLS certificate is installed and valid.
             sev: 0
         exec: |-
-            curl --insecure -vvI https://rgw-vip.nmn 2>&1 | 
-            grep "expire date:"
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                curl --insecure -vvI https://rgw-vip.nmn 2>&1 | 
+                grep "expire date:"
         exit-status: 0
         timeout: 5000
         skip: false

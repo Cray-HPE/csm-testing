@@ -20,16 +20,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-    ca_certs_check:
+    {{ $testlabel := "ca_certs_check" }}
+    {{$testlabel}}:
         title: ca-certs patched into data.json
         meta:
             desc: Validate that - csi patch ca - command executed. ca-certs are patched into data.json file on PIT node.
             sev: 0
         exec: |-
-            cat /var/www/ephemeral/configs/data.json | 
-            jq | 
-            grep ca-certs
+            set -o pipefail
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                jq . /var/www/ephemeral/configs/data.json | 
+                grep ca-certs
         exit-status: 0
         timeout: 5000
         skip: false

@@ -20,16 +20,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-{{ $csi_validate_dns_check := .Env.GOSS_BASE | printf "%s/scripts/python/csi_validate_dns_check.py" }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $csi_validate_dns_check := $scripts | printf "%s/python/csi_validate_dns_check.py" }}
 {{ $datajson := .Vars.datajson }}
 command:
-    ncns_have_dnsmasq_lease:
+    {{ $testlabel := "ncns_have_dnsmasq_lease" }}
+    {{$testlabel}}:
         title: NCNs Have dnsmasq Lease
         meta:
             desc: Checks that all ncns in data.json have a dnsmasq lease. If the test fails, you may get more information by running it manually: "{{$csi_validate_dns_check}} {{$datajson}}"
             sev: 0
         exec: |-
-            "{{$csi_validate_dns_check}}" "{{$datajson}}"
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$csi_validate_dns_check}}" "{{$datajson}}"
         stdout:
             - PASS
         exit-status: 0

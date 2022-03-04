@@ -20,13 +20,17 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-    basecamp_valid_json_ncns:
+    {{ $testlabel := "basecamp_valid_json_ncns" }}
+    {{$testlabel}}:
         title: Basecamp JSON Payload
         meta:
             desc: Validates PIT Basecamp endpoint returns valid JSON payload when queried from NCNs.
             sev: 0
-        exec: curl http://pit:8888/meta-data | jq -e
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                curl http://pit:8888/meta-data | jq -e
         exit-status: 0
         timeout: 5000
         skip: false

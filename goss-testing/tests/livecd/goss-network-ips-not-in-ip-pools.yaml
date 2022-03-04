@@ -20,16 +20,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $pyTest_ip_not_in_ip_pools := $scripts | printf "%s/python/pyTest-ip-not-in-ip-pools.py" }}
 {{ $network_interfaces := .Vars.network_interfaces }}
-{{ $pyTest_ip_not_in_ip_pools := .Env.GOSS_BASE | printf "%s/scripts/python/pyTest-ip-not-in-ip-pools.py" }}
 command:
-    check_interface_ips_not_in_dns_ip_pool:
+    {{ $testlabel := "check_interface_ips_not_in_dns_ip_pool" }}
+    {{$testlabel}}:
         title: Interfaces Not in DHCP Pool
         meta:
             desc: Confirm that each network interface has an IP address that is not within the defined DHCP pools. If the test fails, you may get more information by running it manually: {{$pyTest_ip_not_in_ip_pools}} {{$network_interfaces}}
             sev: 0
         exec: |-
-            "{{$pyTest_ip_not_in_ip_pools}}" "{{$network_interfaces}}"
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$pyTest_ip_not_in_ip_pools}}" "{{$network_interfaces}}"
         exit-status: 0
         stdout:
             - "PASS"

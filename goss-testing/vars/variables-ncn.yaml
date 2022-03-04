@@ -118,3 +118,13 @@ staticsconf:
   - ""
 
 bond_member_mtu: 9000
+
+k8s_worker_fs_labels:
+  - CONRUN
+  - CONLIB
+  - K8SLET
+
+storage_fs_labels:
+  - CEPHETC
+  - CEPHVAR
+  - CONTAIN

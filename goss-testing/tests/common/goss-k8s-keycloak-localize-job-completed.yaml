@@ -21,19 +21,22 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 {{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-    keycloak_users_localize_job_completed:
+    {{ $testlabel := "keycloak_users_localize_job_completed" }}
+    {{$testlabel}}:
         title: Keycloak Users Localize Job Completed 
         meta:
             desc: If this test fails, see /usr/share/doc/csm/troubleshooting/known_issues/craycli_403_forbidden_errors.md 
             sev: 0
         exec: |-
-            "{{$kubectl}}" -n services wait \
-                --for=condition=complete \
-                --timeout=3s \
-                job/$("{{$kubectl}}" -n services get jobs | 
-                    grep users-localize | 
-                    awk '{print $1}')
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" -n services wait \
+                    --for=condition=complete \
+                    --timeout=3s \
+                    job/$("{{$kubectl}}" -n services get jobs | 
+                            grep users-localize | 
+                            awk '{print $1}')
         exit-status: 0
         timeout: 10000
         skip: false
