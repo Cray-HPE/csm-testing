@@ -20,13 +20,18 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  spire_verify_api_fetch_jwt:
-    title: Verify spire api fetch of jwt
-    meta:
-      desc: Verify spire api fetch of jwt.
-      sev: 0
-    exec: /usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /root/spire/agent.sock -audience goss-test >/dev/null
-    exit-status: 0
-    timeout: 1000
-    skip: false
+    {{ $testlabel := "spire_verify_api_fetch_jwt" }}
+    {{$testlabel}}:
+        title: Verify spire api fetch of jwt
+        meta:
+            desc: Verify spire api fetch of jwt.
+            sev: 0
+        # We do not want to log stdout from this command, so we call log_run with --no-stdout
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" --no-stdout \
+                /usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /root/spire/agent.sock -audience goss-test >/dev/null
+        exit-status: 0
+        timeout: 1000
+        skip: false

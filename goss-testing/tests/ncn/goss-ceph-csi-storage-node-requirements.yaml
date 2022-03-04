@@ -20,6 +20,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 package:
     ceph-common:
         title: ceph-common package
@@ -29,20 +30,23 @@ package:
         installed: true
 file:
     {{range $ceph_file := index .Vars "ceph_files"}}
-    {{$ceph_file}}:
-        title: {{$ceph_file}} file
-        meta:
-            desc: "Check that {{$ceph_file}} file exists"
-            sev: 0
-        exists: true
-        filetype: file
+        {{$ceph_file}}:
+            title: {{$ceph_file}} file
+            meta:
+                desc: "Check that {{$ceph_file}} file exists"
+                sev: 0
+            exists: true
+            filetype: file
     {{end}}
 command:
-    ceph_installed:
+    {{ $testlabel := "ceph_installed" }}
+    {{$testlabel}}:
         title: ceph -s
         meta:
             desc: Check that ceph -s successfully executes
             sev: 0
-        exec: "/usr/bin/ceph -s"
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                /usr/bin/ceph -s
         exit-status: 0
         timeout: 10000

@@ -21,15 +21,27 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 # Variable set: k8s_nodes
+# The k8s_nodes variable is not present in the hard-coded variable files, but is 
+# dynamically generated either by start-goss-servers.sh or the script 
+# which invokes this test (for example, automated/ncn-kubernetes-checks).
+
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  {{range $node := index .Vars "k8s_nodes"}}
-  k8s_node_{{$node}}_joined_cluster:
-    title: Kubernetes Node '{{$node}}' Ready
-    meta:
-      desc: Validates that Kubernetes node '{{$node}}' joined cluster and is in ready state.
-      sev: 0
-    exec: kubectl get nodes | grep {{$node}} | grep Ready | grep -v NotReady
-    exit-status: 0
-    timeout: 10000
-    skip: false
-  {{end}}
+    {{range $node := index .Vars "k8s_nodes"}}
+        {{ $testlabel := $node | printf "k8s_node_%s_joined_cluster" }}
+        {{$testlabel}}:
+            title: Kubernetes Node '{{$node}}' Ready
+            meta:
+                desc: Validates that Kubernetes node '{{$node}}' joined cluster and is in ready state.
+                sev: 0
+            exec: |-
+                set -o pipefail
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    "{{$kubectl}}" get nodes "{{$node}}" --no-headers | 
+                    awk '{ print $2 }' | 
+                    grep '^Ready$'
+            exit-status: 0
+            timeout: 10000
+            skip: false
+    {{end}}

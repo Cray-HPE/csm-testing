@@ -20,15 +20,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $postgres_replication_lag := $scripts | printf "%s/postgres_replication_lag.sh" }}
 command:
-  k8s_postgres_replication_lag:
-    title: Kubernetes Postgres Check for Replication Lag Across Pods in a Cluster
-    meta:
-      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/postgres-replication-lag.sh -p" to see a printed description of the errors. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing replication lag.
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/postgres_replication_lag.sh"
-    exit-status: 0
-    stdout:
-      - PASS
-    timeout: 600000
-    skip: false
+    {{ $testlabel := "k8s_postgres_replication_lag" }}
+    {{$testlabel}}:
+        title: Kubernetes Postgres Check for Replication Lag Across Pods in a Cluster
+        meta:
+            desc: If this test fails, run the script "{{$postgres_replication_lag}} -p" to see a printed description of the errors. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing replication lag.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$postgres_replication_lag}}"
+        exit-status: 0
+        stdout:
+            - PASS
+        timeout: 600000
+        skip: false

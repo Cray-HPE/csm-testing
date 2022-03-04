@@ -86,6 +86,8 @@ cp -a goss-testing/suites/ncn-*         %{buildroot}%{ncn}/suites
 chmod +x -R %{buildroot}%{ncn}/scripts/
 chmod +x -R %{buildroot}%{livecd}/scripts/
 chmod +x -R %{buildroot}%{ncn}/automated/
+# Create default test log directories
+mkdir -p %{buildroot}/opt/cray/tests/install/logs
 
 # Install goss-servers files
 mkdir -p %{buildroot}/usr/sbin
@@ -96,6 +98,8 @@ install -m 755 goss-servers.service %{buildroot}/etc/systemd/system/
 %clean
 rm -rf %{buildroot}%{livecd}
 rm -rf %{buildroot}%{ncn}
+# Remove log directories only if empty
+rmdir %{buildroot}/opt/cray/tests/install/logs || true
 
 %files
 %defattr(755, root, root)

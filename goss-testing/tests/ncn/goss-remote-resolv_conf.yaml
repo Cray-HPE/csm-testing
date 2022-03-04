@@ -20,17 +20,22 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  check_remote_resolv_conf_against_data_json:
-    title: Correct DNS Server
-    meta:
-      desc: Checks that remote NCN resovl.conf has a nameserver same as dns-server from data.json.
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/python/check-remote-resolv_conf-against-data_json.py {{.Vars.datajson}}"
-    stdout:
-    - PASS
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    {{ $testlabel := "check_remote_resolv_conf_against_data_json" }}
+    {{$testlabel}}:
+        title: Correct DNS Server
+        meta:
+            desc: Checks that remote NCN resovl.conf has a nameserver same as dns-server from data.json.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$scripts}}/python/check-remote-resolv_conf-against-data_json.py" "{{.Vars.datajson}}"
+        stdout:
+            - PASS
+        exit-status: 0
+        timeout: 10000
+        skip: false
 
 
