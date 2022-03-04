@@ -1,4 +1,4 @@
-@Library('csm-shared-library') _
+@Library('csm-shared-library@feature/rpm-signing-5.0') _
 
 def promotionToken = ~"(master|main|release\\/.*)"
 def isStable = env.TAG_NAME != null || env.BRANCH_NAME ==~ promotionToken ? true : false
@@ -40,7 +40,7 @@ pipeline {
         stage('Publish ') {
             steps {
                 script {
-                    publishCsmRpms(component: getRepoName(), pattern: "dist/rpmbuild/RPMS/noarch/csm-testing*.rpm", arch: "noarch", isStable: isStable)
+                    publishCsmRpms(component: getRepoName(), pattern: "dist/rpmbuild/RPMS/noarch/csm-testing*.rpm", arch: "noarch", isStable: isStable, alwaysSignRpms: true)
                     publishCsmRpms(component: getRepoName(), pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm", arch: "noarch", isStable: isStable)
                     publishCsmRpms(component: getRepoName(), pattern: "dist/rpmbuild/SRPMS/*.rpm", arch: "src", isStable: isStable)
                 }
