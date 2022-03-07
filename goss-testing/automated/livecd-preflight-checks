@@ -55,7 +55,7 @@ file_exists "$GOSS_FILE"
 file_exists "$vars_file"
 file_exists "$dnsmasq_statics"
 
-nodes=$(grep -ohE 'ncn-[m,w,s]([0-9]{3})' "$dnsmasq_statics" | awk '!a[$0]++')
+nodes=$(grep -ohE 'ncn-[msw]([0-9]{3})' "$dnsmasq_statics" | awk '!a[$0]++')
 tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
 
 # add node names from statics.conf to temp variables file

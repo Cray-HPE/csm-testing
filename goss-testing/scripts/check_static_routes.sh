@@ -42,7 +42,7 @@ function get_client_secret() {
     if [[ $hostNodeType == "storage" ]]
     then
         # Determine active non-storage NCN node:
-        listOfKubNcns=$(cat /etc/hosts | grep -ohE "ncn-[m,w]([0-9]{3})" | awk '!a[$0]++' | sort)
+        listOfKubNcns=$(cat /etc/hosts | grep -ohE "ncn-[mw]([0-9]{3})" | awk '!a[$0]++' | sort)
         for node_i in $listOfKubNcns;
         do
             ssh $sshOptions $node_i 'kubectl get nodes' >/dev/null
