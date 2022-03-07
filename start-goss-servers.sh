@@ -24,6 +24,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 export GOSS_BASE=/opt/cray/tests/install/ncn
+export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
 
 # necessary for kubectl commands to run
 export KUBECONFIG=/etc/kubernetes/admin.conf
