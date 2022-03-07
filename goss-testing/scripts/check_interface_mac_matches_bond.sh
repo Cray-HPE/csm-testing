@@ -44,7 +44,7 @@ function error
     rc=$1
     shift
     echo "ERROR: $*" 1>&2
-    exit $rc
+    exit "$rc"
 }
 
 # usage <exit code> <error message>
@@ -63,20 +63,22 @@ Exits 0 if this is the case. Exits non-0 if not, or if there are any errors.
 # cmdfail <script exit code> <command exit code> <command + args>
 function cmdfail
 {
-    error $1 "Command failed (exit code $2): $3"
+    error "$1" "Command failed (exit code $2): $3"
 }
 
-if [[ $# -eq 0 ]]; then
-    usage 5 "No interface specified"
-elif [[ $# -gt 1 ]]; then
-    usage 10 "Too many arguments"
-elif [[ -z $1 ]]; then
-    usage 15 "Interface argument may not be null"
-fi
+
 
 TMPFILE=/tmp/check_interface_mac_matches_bound.$$.$RANDOM.tmp
-INTERFACE="$1"
+INTERFACES=( "$@" )
 
+if [[ ${#INTERFACES[@]} -eq 0 ]]; then
+    usage 5 "No interface specified"
+elif [[ -z ${#INTERFACES[@]} ]]; then
+    usage 15 "Interface argument(s) may not be null"
+fi
+
+for INTERFACE in "${INTERFACES[@]}"
+do
 echo "Checking that MAC address of interface '$INTERFACE' matches MAC address of bond0..."
 echo
 
@@ -115,12 +117,13 @@ echo
 [[ -n $BND_MAC ]] || error 75 "No MAC address found for bond0"
 
 # Finally, validate that they match
-[[ $INT_MAC == $BND_MAC ]] || error 90 "MAC address of $INTERFACE does not match MAC address of bond0"
+[[ $INT_MAC == "$BND_MAC" ]] || error 90 "MAC address of $INTERFACE does not match MAC address of bond0"
 
 # Clean up the temporary file
 cleanup
 
 # Looks good!
-echo ""MAC address of $INTERFACE matches MAC address of bond0""
+echo ""MAC address of "$INTERFACE" matches MAC address of bond0""
 echo "Test passed!"
+done
 exit 0

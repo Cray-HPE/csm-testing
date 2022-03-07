@@ -22,14 +22,12 @@
 
 # Variable set: network_interfaces
 command:
-  {{range $interface := index .Vars "network_interfaces"}}
-  check_mac_{{$interface}}:
+  check_mac:
     title: Interfaces Have Same MAC
     meta:
-      desc: Validates that interface '{{$interface}}' has same MAC address as bond0.
+      desc: Validates that interface has same MAC address as bond0.
       sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/check_interface_mac_matches_bond.sh" "{{$interface}}"
+    exec: "{{.Env.GOSS_BASE}}/scripts/check_interface_mac_matches_bond.sh {{range.Vars.network_interfaces}}{{.}} {{end}}"
     exit-status: 0
     timeout: 1000
     skip: false
-  {{end}}
