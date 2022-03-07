@@ -22,14 +22,17 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 command:
-  hostnames_match_dns_names:
-    title: Validate Hostname
-    meta:
-      desc: Checks that the hostname on the node matches the DNS name.
-      sev: 0
-    exec: "grep -ohE \"ncn-[s/w/m]([0-3]{3})\" /etc/dnsmasq.d/statics.conf | awk '!a[$0]++' | while read node; \
-      do hostname=$(/usr/bin/ssh -o StrictHostKeyChecking=no $node hostname < /dev/null) && if [[ \"$hostname\" != \"$node\" ]]; \
-      then echo FAIL; fi; done"
-    exit-status: 0
-    stdout:
-    - !FAIL
+    hostnames_match_dns_names:
+        title: Validate Hostname
+        meta:
+            desc: Checks that the hostname on the node matches the DNS name.
+            sev: 0
+        exec: |-
+            grep -ohE "ncn-[msw]([0-3]{3})" /etc/dnsmasq.d/statics.conf | awk '!a[$0]++' | while read node ; do
+                hostname=$(/usr/bin/ssh -o StrictHostKeyChecking=no $node hostname < /dev/null) && if [[ "$hostname" != "$node" ]]; then
+                    echo FAIL
+                fi
+            done
+        exit-status: 0
+        stdout:
+            - !FAIL

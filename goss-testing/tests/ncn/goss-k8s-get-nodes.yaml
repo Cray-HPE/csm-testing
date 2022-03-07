@@ -21,15 +21,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
 command:
-  k8s_nodes_exist:
-    title: Kubernetes Nodes Exist
-    meta:
-      desc: Validates expected Kubernetes nodes exist via kubectl command based on node names pulled from /etc/hosts file.
-      sev: 0
-    exec: "cat /etc/hosts | grep -ohE 'ncn-[m,w,s]([0-9]{3})' | awk '!a[$0]++' | while read node ; do kubectl get nodes | grep $node; if [[ $? != 0 ]]; then echo 'FAIL'; fi; done"
-    exit-status: 0
-    stdout:
-      - "!FAIL"
-    timeout: 5000
-    skip: false
+    k8s_nodes_exist:
+        title: Kubernetes Nodes Exist
+        meta:
+            desc: Validates expected Kubernetes nodes exist using the kubectl command based on node names pulled from /etc/hosts file.
+            sev: 0
+        exec: |-
+            grep -ohE 'ncn-[mw]([0-9]{3})' /etc/hosts | 
+            awk '!a[$0]++' | 
+            while read node ; do
+                kubectl get nodes $node || echo 'FAIL'
+            done
+        exit-status: 0
+        stdout:
+            - "!FAIL"
+        timeout: 5000
+        skip: false
