@@ -29,5 +29,5 @@ command:
       sev: 0
     exec: curl http://pit:8888/meta-data | jq -e
     exit-status: 0
-    timeout: 1000
+    timeout: 5000
     skip: false

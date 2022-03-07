@@ -31,5 +31,5 @@ command:
     - "!DOWN"
     exec: "awk -F '=' '/BONDING_SLAVE/{print $2}' /etc/sysconfig/network/ifcfg-bond0 | tr -d \\' | while read member ; do ip link show dev $member ; done"
     exit-status: 0
-    timeout: 1000
+    timeout: 5000
     skip: false

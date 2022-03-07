@@ -29,5 +29,5 @@ command:
       sev: 0
     exec: /usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /root/spire/agent.sock -audience goss-test >/dev/null
     exit-status: 0
-    timeout: 1000
+    timeout: 5000
     skip: false
