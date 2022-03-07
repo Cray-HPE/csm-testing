@@ -28,5 +28,5 @@ command:
       sev: 0
     exec: kubectl exec -itn spire spire-postgres-0 -c postgres -- curl http://spire-jwks/keys | jq -r '.[][].kid' | grep $(/usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /root/spire/agent.sock -audience goss-test | head -n2 | awk -F. 'FNR==2{sub(/^[ \t]+/, ""); print $1}' | base64 -d 2>/dev/null| jq -r .kid)
     exit-status: 0
-    timeout: 1000
+    timeout: 5000
     skip: false
