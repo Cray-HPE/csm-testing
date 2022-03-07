@@ -30,6 +30,6 @@ command:
       sev: 0
     exec: "{{.Env.GOSS_BASE}}/scripts/check_interface_mac_matches_bond.sh" "{{$interface}}"
     exit-status: 0
-    timeout: 1000
+    timeout: 5000
     skip: false
   {{end}}
