@@ -22,15 +22,20 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Variable set: network_interfaces
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  {{range $interface := index .Vars "network_interfaces"}}
-  check_mac_{{$interface}}:
-    title: Interfaces Have Same MAC
-    meta:
-      desc: Validates that interface '{{$interface}}' has same MAC address as bond0.
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/check_interface_mac_matches_bond.sh" "{{$interface}}"
-    exit-status: 0
-    timeout: 5000
-    skip: false
-  {{end}}
+    {{range $interface := index .Vars "network_interfaces"}}
+        {{ $testlabel := $interface | printf "check_mac_%s" }}
+        {{$testlabel}}:
+            title: Interfaces Have Same MAC
+            meta:
+                desc: Validates that interface '{{$interface}}' has same MAC address as bond0.
+                sev: 0
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    "{{$scripts}}/check_interface_mac_matches_bond.sh" "{{$interface}}"
+            exit-status: 0
+            timeout: 5000
+            skip: false
+    {{end}}

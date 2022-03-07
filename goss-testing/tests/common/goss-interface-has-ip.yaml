@@ -22,17 +22,23 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Variable set: network_interfaces
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-{{range $interface := index .Vars "network_interfaces"}}
-  check_interface_ip_{{$interface}}:
-    title: Interface '{{$interface}}' Has IP
-    meta:
-      desc: Validates that interface '{{$interface}}' has an IP address
-      sev: 0
-    exec: "ip addr show dev {{$interface}} scope global | grep 'inet ' | awk '{print $2}'"
-    exit-status: 0
-    stdout:
-    - /[1-9]/
-    timeout: 10000
-    skip: false
-{{end}}
+    {{range $interface := index .Vars "network_interfaces"}}
+        {{ $testlabel := $interface | printf "check_interface_ip_%s" }}
+        {{$testlabel}}:
+            title: Interface '{{$interface}}' Has IP
+            meta:
+                desc: Validates that interface '{{$interface}}' has an IP address
+                sev: 0
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    ip addr show dev {{$interface}} scope global | 
+                    grep 'inet ' | 
+                    awk '{print $2}'
+            exit-status: 0
+            stdout:
+                - /[1-9]/
+            timeout: 10000
+            skip: false
+    {{end}}

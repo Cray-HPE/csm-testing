@@ -21,15 +21,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  verify_dependent_images:
-    title: Verify IMS dependent images
-    meta:
-      desc: Verify that the IMS dependent images are available from the local docker registry
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/python/ims_validate_dependent_images_available.py"
-    stdout:
-    - "Validation of IMS dependent images succeeded"
-    exit-status: 0
-    timeout: 180000
-    skip: false
+    {{ $testlabel := "verify_dependent_images" }}
+    {{$testlabel}}:
+        title: Verify IMS dependent images
+        meta:
+            desc: Verify that the IMS dependent images are available from the local docker registry
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$scripts}}/python/ims_validate_dependent_images_available.py"
+        stdout:
+            - "Validation of IMS dependent images succeeded"
+        exit-status: 0
+        timeout: 180000
+        skip: false

@@ -21,15 +21,22 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $postgresql_backups_check := $scripts | printf "%s/postgresql_backups_check.sh" }}
 command:
-  k8s_postgresql_backups_check:
-    title: Kubernetes Postgresql Check that Automated Backups are Working
-    meta:
-      desc: If this test fails, run the script "{{.Env.GOSS_BASE}}/scripts/postgresql_backups_check.sh -p" to see a printed description of the errors. Check that cron jobs are running and creating postgresql backups periodically with the command "kubectl get cronjob -A | grep postgresql". To see a last scheduled time, run the command "kubectl -n <namespace> get cronjob <cron_job_name> -o jsonpath='{.status}'".
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/postgresql_backups_check.sh"
-    exit-status: 0
-    stdout:
-      - PASS
-    timeout: 600000
-    skip: false
+    {{ $testlabel := "k8s_postgresql_backups_check" }}
+    {{$testlabel}}:
+        title: Kubernetes Postgresql Check that Automated Backups are Working
+        meta:
+            desc: If this test fails, run the script "{{$postgresql_backups_check}} -p" to see a printed description of the errors. Check that cron jobs are running and creating postgresql backups periodically with the command "kubectl get cronjob -A | grep postgresql". To see a last scheduled time, run the command "kubectl -n <namespace> get cronjob <cron_job_name> -o jsonpath='{.status}'".
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$postgresql_backups_check}}"
+        exit-status: 0
+        stdout:
+            - PASS
+        timeout: 600000
+        skip: false

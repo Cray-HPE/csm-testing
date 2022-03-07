@@ -21,14 +21,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  zypper_lr_repo_count:
-    title: No repos exist
-    meta:
-      desc: No repos exist
-      sev: 0
-    # List repos, exlcuding the meta on top, and count how many there are
-    exec: "zypper lr | grep -c ^[0-9]"
-    stdout:
-    - 0
-    exit-status: 1
+    {{ $testlabel := "zypper_lr_repo_count" }}
+    {{$testlabel}}:
+        title: No repos exist
+        meta:
+            desc: No repos exist
+            sev: 0
+        # List repos, exlcuding the meta on top, and count how many there are
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                zypper lr | 
+                grep -c ^[0-9]
+        stdout:
+            - 0
+        exit-status: 1

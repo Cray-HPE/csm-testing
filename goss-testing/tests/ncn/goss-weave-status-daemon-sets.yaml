@@ -21,13 +21,18 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-command:
-  k8s_check_weave_net_daemon_set:
-    title: Weave Net Daemon Set
-    meta:
-      desc: Validates status of Weave Net daemonset.
-      sev: 0
-    exec: kubectl rollout status -n kube-system daemonset.apps/weave-net
-    exit-status: 0
-    timeout: 10000
 
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+command:
+    {{ $testlabel := "k8s_check_weave_net_daemon_set" }}
+    {{$testlabel}}:
+        title: Weave Net Daemon Set
+        meta:
+            desc: Validates status of Weave Net daemonset.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" rollout status -n kube-system daemonset.apps/weave-net
+        exit-status: 0
+        timeout: 10000

@@ -21,13 +21,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $monitoring_check := $scripts | printf "%s/monitoring_check.sh" }}
 command:
-  goss-k8s-monitoring-url:
-    title: Check that all Kubernetes Monitoring URLs are Redirecting and Responding
-    meta:
-      desc: Checks whether monitoring URLs are accessible. If the test fails, the expected HTTP status was not returned. Check the System Management Health information in the Operations section. For more detailed output, run 'GOSS_BASE={{.Env.GOSS_BASE}} {{.Env.GOSS_BASE}}/scripts/monitoring_check.sh'
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/monitoring_check.sh"
-    exit-status: 0
-    timeout: 20000
-    skip: false
+    {{ $testlabel := "goss-k8s-monitoring-url" }}
+    {{$testlabel}}:
+        title: Check that all Kubernetes Monitoring URLs are Redirecting and Responding
+        meta:
+            desc: Checks whether monitoring URLs are accessible. If the test fails, the expected HTTP status was not returned. Check the System Management Health information in the Operations section. For more detailed output, run 'GOSS_BASE={{.Env.GOSS_BASE}} {{$monitoring_check}}'
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$monitoring_check}}"
+        exit-status: 0
+        timeout: 20000
+        skip: false

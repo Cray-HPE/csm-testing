@@ -21,15 +21,22 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $kubectl := .Vars.kubectl }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  k8s_postgres_clusters_running:
-    title: Kubernetes Postgres Check that All Clusters are in a Running State
-    meta:
-      desc: If this test fails, run the command 'kubectl get postgresql -A' to look at all postgres clusters and thier statuses. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing clusters not in a running state.
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/postgres_clusters_running.sh"
-    exit-status: 0
-    stdout:
-      - PASS
-    timeout: 60000
-    skip: false
+    {{ $testlabel := "k8s_postgres_clusters_running" }}
+    {{$testlabel}}:
+        title: Kubernetes Postgres Check that All Clusters are in a Running State
+        meta:
+            desc: If this test fails, run the command 'kubectl get postgresql -A' to look at all postgres clusters and thier statuses. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing clusters not in a running state.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$scripts}}/postgres_clusters_running.sh"
+        exit-status: 0
+        stdout:
+            - PASS
+        timeout: 60000
+        skip: false
