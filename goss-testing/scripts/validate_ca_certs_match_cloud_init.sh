@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP.
+# (C) Copyright 2014-22 Hewlett Packard Enterprise Development LP.
 #
 # MIT License
 #
@@ -16,7 +16,7 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
@@ -26,7 +26,6 @@
 # BSS. Since the meta-data request may return the certificates in a different
 # order than what was originally provided this will check against multiple
 # order differences.
-# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
 
 set -euo pipefail
 
