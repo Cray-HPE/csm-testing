@@ -1,0 +1,78 @@
+#
+# MIT License
+#
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+
+# Define custom types for our script files which should have licenses
+# but do not match a default pattern. Use yaml for .spec and .service
+# files -- they are not in YAML, but as far as license checking is
+# concerned, they can be considered the same.
+
+file_types:
+  - pattern: "*.service"
+    type: yaml
+  - pattern: "*.spec"
+    type: yaml
+  - pattern: "*.sh"
+    type: shell_or_python
+  - pattern: "*.bash"
+    type: shell_or_python
+  - pattern: "*.py"
+    type: shell_or_python
+  - pattern: "Dockerfile*"
+    type: docker
+  - pattern: "*/Dockerfile*"
+    type: docker
+  - pattern: "*.java"
+    type: java
+  - pattern: "*.groovy"
+    type: java
+  - pattern: "*.css"
+    type: java
+  - pattern: "*.js"
+    type: java
+  - pattern: "Jenkinsfile*"
+    type: java
+  - pattern: "*.go"
+    type: go
+  - pattern: "*.xml"
+    type: xml
+  - pattern: "*.html"
+    type: html
+  - pattern: "*/templates/*.yaml"
+    type: go_template
+  - pattern: "*.yaml"
+    type: yaml
+  - pattern: "*.yml"
+    type: yaml
+  - pattern: LICENSE
+    type: plain
+  - pattern: "Makefile*"
+    type: docker
+  - pattern: "*/Makefile*"
+    type: docker
+  - pattern: "goss-testing/automated/*"
+    type: shell_or_python
+  - pattern: "build-testing/*"
+    type: shell_or_python
+
+

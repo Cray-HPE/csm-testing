@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
+#
 # MIT License
 #
-# (C) Copyright [2022] Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -20,7 +21,7 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-
+#
 # Checks that expected static routes are on the NCNs. 
 
 set -eu
@@ -41,7 +42,7 @@ function get_client_secret() {
     if [[ $hostNodeType == "storage" ]]
     then
         # Determine active non-storage NCN node:
-        listOfKubNcns=$(cat /etc/hosts | grep -ohE "ncn-[m,w]([0-9]{3})" | awk '!a[$0]++' | sort)
+        listOfKubNcns=$(cat /etc/hosts | grep -ohE "ncn-[mw]([0-9]{3})" | awk '!a[$0]++' | sort)
         for node_i in $listOfKubNcns;
         do
             ssh $sshOptions $node_i 'kubectl get nodes' >/dev/null

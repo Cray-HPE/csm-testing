@@ -1,6 +1,7 @@
+#
 # MIT License
 #
-# (C) Copyright [2021-2022] Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -19,12 +20,22 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
 
+{{ $kubectl := .Vars.kubectl }}
 command:
-  k8s_velero_failed_backups:
-    title: Kubernetes Velero No Failed Backups
-    meta:
-      desc: Validates there are no failed Velero backups. To cleanup backups that are known to have been interrupted, run the following to find the failed backup `kubectl get backups -A -o json | jq -e '.items[] | select(.status.phase == "PartiallyFailed") | .metadata.name'`.  To then delete the backup, run `velero backup delete <backup> --confirm` (on a master or worker node).
-      sev: 0
-    exec: "kubectl get backups -A -o json | jq -e '.items[].status.phase | contains(\"Failed\") | not'"
-    exit-status: 0
+    k8s_velero_failed_backups:
+        title: Kubernetes Velero No Failed Backups
+        meta:
+            desc: Validates there are no failed Velero backups. To cleanup backups that are known to have been interrupted, run the following to find the failed backup `kubectl get backups -A -o json | jq -e '.items[] | select(.status.phase == "PartiallyFailed") | .metadata.name'`.  To then delete the backup, run `velero backup delete <backup> --confirm` (on a master or worker node).
+            sev: 0
+        exec: |-
+            set -eo pipefail
+            # Print the status phase of every backup
+            "{{$kubectl}}" get backups -A -o json | 
+            jq '.items[].status.phase'
+        # Neither the kubectl nor jq command are expected to fail, so we verify that they do not
+        exit-status: 0
+        # If any backups failed, then the output will contain the string Failed. So we verify that this is not the case.
+        stdout:
+            - "!Failed"

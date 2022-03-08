@@ -1,6 +1,7 @@
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP.
 #
 # MIT License
+#
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -14,23 +15,28 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-
+#
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  firmware_bios_versions:
-    title: Firmware and BIOS versions and baseline
-    meta:
-      desc: Validates the correct versions of BIOS and firmware; Validates BIOS settings (when available; dependent on vendor)
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/check_bios_firmware_versions.sh -b"
-    # 10 minutes since ilorest and redfish calls for each ncn can take a while
-    timeout: 600000
-    # the script is a success if return code is 0 and there is no unspported firmware/bios
-    exit-status: 0
-    stdout:
-      - "!Unsupported"
-    skip: false
+    {{ $testlabel := "firmware_bios_versions" }}
+    {{$testlabel}}:
+        title: Firmware and BIOS versions and baseline
+        meta:
+            desc: Validates the correct versions of BIOS and firmware; Validates BIOS settings (when available; dependent on vendor)
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$scripts}}/check_bios_firmware_versions.sh" -b
+        # 10 minutes since ilorest and redfish calls for each ncn can take a while
+        timeout: 600000
+        # the script is a success if return code is 0 and there is no unspported firmware/bios
+        exit-status: 0
+        stdout:
+            - "!Unsupported"
+        skip: false

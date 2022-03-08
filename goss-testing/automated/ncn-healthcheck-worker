@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 #
-# (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
+# MIT License
+#
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -14,7 +16,7 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
@@ -23,37 +25,48 @@
 # GOSS_BASE isn't set by default on the NCNs, just on LiveCD
 [[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
 
-source $GOSS_BASE/automated/run-ncn-tests.sh
+export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
+
+vars_file="$GOSS_BASE/vars/variables-ncn.yaml"
+
+source "$GOSS_BASE/automated/run-ncn-tests.sh"
 
 echo $'\e[1;33m'NCN Run-Time Checks$'\e[0m'
 echo $'\e[1;33m'-------------------$'\e[0m'
 
 # find the ncn node names and query the server endpoint
 if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
-  cat /etc/dnsmasq.d/statics.conf | grep -ohE "ncn-[w]([0-9]{3})" | grep -v ncn-m001 | awk '!a[$0]++' | \
-    while read node ; do run_ncn_tests "$node" "9000" "ncn-healthcheck-worker" ; done
+	cat /etc/dnsmasq.d/statics.conf | 
+	grep -ohE "ncn-[w]([0-9]{3})" | 
+	grep -v ncn-m001 | 
+	awk '!a[$0]++' |
+	while read node ; do
+		run_ncn_tests "$node" "9000" "ncn-healthcheck-worker"
+	done
 else
-  cat /etc/hosts | grep -ohE "ncn-[w]([0-9]{3})" | awk '!a[$0]++' | while read node ; do \
-    run_ncn_tests "$node" "9000" "ncn-healthcheck-worker" ; \
-    run_ncn_tests "$node" "9005" "ncn-afterpitreboot-healthcheck-worker" ; \
+	cat /etc/hosts | 
+	grep -ohE "ncn-[w]([0-9]{3})" | 
+	awk '!a[$0]++' | 
+	while read node ; do
+		run_ncn_tests "$node" "9000" "ncn-healthcheck-worker"
+		run_ncn_tests "$node" "9005" "ncn-afterpitreboot-healthcheck-worker"
     done
 fi
 
 # Specify the switch passwords and call the switch BGP neighbors tests.
 # This only needs to be done once on the NCN that this script is
-# executing on as the bgp status tests check all switches in
+# executing on as the BGP status tests check all switches in
 # the cluster.
 # If explicit Aruba or Mellanox switch passwords were not provided, then go with SW_ADMIN_PASSWORD
 if [[ -z "$SW_ADMIN_PASSWORD" ]]; then
-  echo "ERROR Management switch admin password must be provided via the SW_ADMIN_PASSWORD enviroment varaible"
-  echo "Example: export SW_ADMIN_PASSWORD='changeme'"
-  exit 1
+	echo "ERROR Management switch admin password must be provided via the SW_ADMIN_PASSWORD enviroment varaible"
+	echo "Example: export SW_ADMIN_PASSWORD='changeme'"
+	exit 1
 fi
 
 echo $'\n\e[1;33m'---------------$'\e[0m'
 echo $'\e[1;33m'Switch BGP Neighbors$'\e[0m'
 echo "Test Name: goss-switch-bgp-neighbor-aruba-or-mellanox.yaml"
 echo "Description: Validates connection to the BGP neighbors of a switch. Check Admin Guide \"Check BGP Status and Reset Sessions\" for more details on how to fix this issue."
-goss -g /opt/cray/tests/install/ncn/tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml validate
-
-exit
+goss -g "$GOSS_BASE/tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml" --vars "$vars_file" validate --format documentation
+exit $?
