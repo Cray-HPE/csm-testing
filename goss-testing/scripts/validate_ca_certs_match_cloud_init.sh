@@ -1,8 +1,8 @@
 #!/bin/bash
-
-# (C) Copyright 2014-22 Hewlett Packard Enterprise Development LP
 #
 # MIT License
+#
+# (C) Copyright 2014-22 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,6 +21,7 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
 
 # This script validates that the platform-ca-certs.crt file matches what is in
 # BSS. Since the meta-data request may return the certificates in a different
