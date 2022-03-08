@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# (C) Copyright 2014-22 Hewlett Packard Enterprise Development LP.
+# (C) Copyright 2014-22 Hewlett Packard Enterprise Development LP
 #
 # MIT License
 #

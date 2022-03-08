@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP.
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # MIT License
 #
