@@ -30,7 +30,7 @@ set -eu
 print_results=0
 while getopts ph options
 do
-    case "${options}" in 
+    case "${options}" in
         p) print_results=1
            ;;
         h) echo "usage: ${0}       # Only print 'PASS upon success"
@@ -44,11 +44,25 @@ do
     esac
 done
 
-# Check to see if the CHN is configured by checking for the existence of the customer-high-speed MetalLB pool
-# If the CHN is not configured then the istio-ingressgateway-chn will not have an IP address and remain in a
-# <pending> state.
+function get_default_net_from_sls() {
+  export TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=`kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d` https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token')
+
+  NETWORKSJSON=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks)
+
+  if [ -z "${NETWORKSJSON}" -o "${NETWORKSJSON}" == "" -o "${NETWORKSJSON}" == "null" ]; then
+      echo >&2 "error: failed to get Networks from SLS"
+      exit 1
+  fi
+
+  defaultRoute=$(echo "${NETWORKSJSON}" | jq -r --arg n "BICAN" '.[] | select(.Name == $n) | .ExtraProperties | .SystemDefaultRoute')
+  echo "$defaultRoute"
+}
+
+default_bican_net=$(get_default_net_from_sls)
+
+# Check to see if the CHN is configured by checking the BICAN toggle in SLS
 chn_configured=0
-if $(kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' | grep -q customer-high-speed); then
+if [ "$default_bican_net" == "CHN" ]; then
     chn_configured=1
 else
     chn_configured=0
@@ -58,13 +72,13 @@ if [[ ${chn_configured} -eq 1 ]]
 # CHN is configured
 then
     if [[ ${print_results} -eq 1 ]]
-    then 
-        echo 'INFO: CHN is configured, istio-ingressgateway-chn and cray-oauth2-proxies-customer-high-speed-ingress should have an IP address'
+    then
+        echo 'INFO: CHN is configured, excluding istio-ingressgateway-can and cray-oauth2-proxies-customer-access-ingress LoadBalancers'
         printf '\n%-16s %-35s %-15s %-4s\n' "NAMESPACE" "LOADBALANCER" "IPADDRESS" "STATUS"
     fi
-    kubectl get service -A | grep LoadBalancer | awk '{print $1" "$2" "$5}' | \
-    while read namespace loadbalancer ip 
-    do 
+    kubectl get service -A | grep LoadBalancer | grep -Ev "istio-ingressgateway-can|cray-oauth2-proxies-customer-access-ingress" | awk '{print $1" "$2" "$5}' | \
+    while read namespace loadbalancer ip
+    do
         if [[ ${print_results} -eq 1 ]]
         then
             if [[ $ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then status='PASS'; else status='*FAIL*'; fi
@@ -76,13 +90,13 @@ then
 else
 # CHN is not configured
     if [[ ${print_results} -eq 1 ]]
-    then 
+    then
         echo 'INFO: CHN is not configured, excluding istio-ingressgateway-chn and cray-oauth2-proxies-customer-high-speed-ingress LoadBalancers'
         printf '\n%-16s %-35s %-15s %-4s\n' "NAMESPACE" "LOADBALANCER" "IPADDRESS" "STATUS"
     fi
     kubectl get service -A | grep LoadBalancer | grep -Ev "istio-ingressgateway-chn|cray-oauth2-proxies-customer-high-speed-ingress" | awk '{print $1" "$2" "$5}' | \
-    while read namespace loadbalancer ip 
-    do 
+    while read namespace loadbalancer ip
+    do
         if [[ ${print_results} -eq 1 ]]
         then
             if [[ $ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then status='PASS'; else status='*FAIL*'; fi
@@ -92,5 +106,3 @@ else
         fi
     done
 fi
-
-
