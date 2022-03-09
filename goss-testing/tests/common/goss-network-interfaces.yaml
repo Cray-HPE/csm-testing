@@ -26,16 +26,18 @@
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
     {{range $interface := index .Vars "network_interfaces"}}
-        {{ $testlabel := $interface | printf "interface_%s" }}
-        {{$testlabel}}:
-            title: Interface '{{$interface}}' Has VLAN
-            meta:
-                desc: Ensures VLAN was created for network interface '{{$interface}}'.
-                sev: 0
-            exec: |-
-                "{{$logrun}}" -l "{{$testlabel}}" \
-                    ip link show dev "{{$interface}}"
-            exit-status: 0
-            timeout: 10000
-            skip: false
+        {{if ne $interface "bond0.can0"}}
+            {{ $testlabel := $interface | printf "interface_%s" }}
+            {{$testlabel}}:
+                title: Interface '{{$interface}}' Has VLAN
+                meta:
+                    desc: Ensures VLAN was created for network interface '{{$interface}}'.
+                    sev: 0
+                exec: |-
+                    "{{$logrun}}" -l "{{$testlabel}}" \
+                        ip link show dev "{{$interface}}"
+                exit-status: 0
+                timeout: 10000
+                skip: false
+        {{end}}
     {{end}}
