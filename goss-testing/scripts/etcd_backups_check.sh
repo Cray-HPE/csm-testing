@@ -44,7 +44,9 @@ one_day_sec=86400
 
 check_backup_within_day() {
     backup_within_day=0
-    backups=$(kubectl exec -it -n operators $(kubectl get pod -n operators | \
+    # We omit the often-seen '-it' flags from the kubectl call because we do not need to pass in stdin, and using
+    # those flags generates warning messages when this script is run in some contexts.
+    backups=$(kubectl exec -n operators $(kubectl get pod -n operators | \
         grep etcd-backup-restore | head -1 | awk '{print $1}') -c boto3 -- list_backups ${cluster})
     if [[ "$backups" != *"KeyError: 'Contents'"* ]] && [[ ! -z $backups ]] # check if any backups exist
     then
