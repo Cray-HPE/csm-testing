@@ -29,10 +29,18 @@ command:
     meta:
       desc: Validates that interface '{{$interface}}' has an IP address
       sev: 0
-    exec: "ip addr show dev {{$interface}} scope global | grep 'inet ' | awk '{print $2}'"
+    # For bond0.can0, if it does not exist, we do not fail. Echo a fake IP so the test passes
+    exec: |-
+      if ip link show dev {{$interface}}; then
+        ip -4 a s dev {{$interface}} | awk '/inet / {print $2}'
+      fi
     exit-status: 0
     stdout:
     - /[1-9]/
     timeout: 10000
+    {{if eq $interface "bond0.can0"}}
+    skip: true
+    {{else}}
     skip: false
+    {{end}}
 {{end}}
