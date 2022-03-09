@@ -34,8 +34,10 @@ command:
         Delay=10
         for member_i in $members
         do
+            # We omit the often-seen '-it' flags from the kubectl call because we do not need to pass in stdin, and using
+            # those flags generates warning messages when this is run in some contexts.
             patronictlVersion=$(timeout -k 4 --preserve-status --foreground $Delay \
-                                kubectl exec -it -n {{.Env.CLUSTER_NS}} -c postgres $member_i -- patronictl version | \
+                                kubectl exec -n {{.Env.CLUSTER_NS}} -c postgres $member_i -- patronictl version | \
                                 awk '{ sub("\r", "", $3); print $3 }'; )
             # If no response, check the next cluster member:
             if [[ -n $patronictlVersion ]]
