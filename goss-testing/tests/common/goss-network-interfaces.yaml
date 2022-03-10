@@ -24,6 +24,7 @@
 # Variable set: network_interfaces
 command:
 {{range $interface := index .Vars "network_interfaces"}}
+  {{if ne $interface "bond0.can0"}}
   interface_{{$interface}}:
     title: Interface '{{$interface}}' Has VLAN
     meta:
@@ -33,4 +34,5 @@ command:
     exit-status: 0
     timeout: 10000
     skip: false
+  {{end}}
 {{end}}
