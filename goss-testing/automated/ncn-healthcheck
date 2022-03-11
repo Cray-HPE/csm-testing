@@ -35,4 +35,4 @@ fi
 
 "$GOSS_BASE/automated/ncn-healthcheck-storage"
 "$GOSS_BASE/automated/ncn-healthcheck-master"
-"$GOSS_BASE/automated/ncn-healthcheck-worker'
+"$GOSS_BASE/automated/ncn-healthcheck-worker"
