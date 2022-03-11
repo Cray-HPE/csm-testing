@@ -99,7 +99,9 @@ do
             sleep $POSTGRES_WAIT_SECONDS_BETWEEN_ATTEMPTS
         fi
 
-        cluster_lag=$(kubectl exec $first_member -c postgres -it -n ${c_ns} -- curl -s http://localhost:8008/cluster | jq '[.members[] | .lag]')
+        # We omit the often-seen '-it' flags from the kubectl call because we do not need to pass in stdin, and using
+        # those flags generates warning messages when this script is run in some contexts.
+        cluster_lag=$(kubectl exec $first_member -c postgres -n ${c_ns} -- curl -s http://localhost:8008/cluster | jq '[.members[] | .lag]')
         c_max_lag=$(echo $cluster_lag | jq max)
         c_unknown_lag=$(echo $cluster_lag | grep "unknown" | wc -l)
         if [[ -n $c_lag_history ]]; then
