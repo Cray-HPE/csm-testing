@@ -86,22 +86,32 @@ function get_token() {
       break
     fi
   done
-  echo $TOKEN
+  if [[ $print_token -eq 1 ]]; then
+    echo $TOKEN
+  fi
+}
+
+function usage
+{
+  echo "usage: ${0}       # Only print 'PASS upon success"
+  echo "       ${0} -p    # Print all results and errors if found. Use for manual check."
+  echo "       ${0} -t    # Print all results and errors if found. Also print API token. Use for manual check."
+  exit 3
 }
 
 print_results=0
-while getopts ph options
+print_token=0
+while getopts hpt options
 do
     case "${options}" in 
+        h) usage
+           ;;
         p) print_results=1
            ;;
-        h) echo "usage: ${0}       # Only print 'PASS upon success"
-           echo "       ${0} -p    # Print all results and errors if found. Use for manual check."
-           exit 3
+        t) print_results=1
+           print_token=1
            ;;
-       \?) echo "usage: ${0}       # Only print 'PASS upon success"
-           echo "       ${0} -p    # Print all results and errors if found. Use for manual check."
-           exit 3
+       \?) usage
            ;;
     esac
 done
