@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# (C) Copyright 2021 Hewlett Packard Enterprise Development LP.
-# Author: Forrest Jadick
+# MIT License
+#
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -15,16 +16,20 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-export GOSS_FILE="/opt/cray/tests/install/livecd/suites/livecd-provisioning-tests.yaml"
-vars_file="/opt/cray/tests/install/livecd/vars/variables-livecd.yaml"
+# GOSS_BASE should already be set on the PIT node, but just in case we
+# will set it here
+[[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/livecd"
 
-nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE 'ncn-[m,w,s]([0-9]{3})' | awk '!a[$0]++')
+export GOSS_FILE="$GOSS_BASE/suites/livecd-provisioning-tests.yaml"
+vars_file="$GOSS_BASE/vars/variables-livecd.yaml"
+
+nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE 'ncn-[msw]([0-9]{3})' | awk '!a[$0]++')
 tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
 
 # add node names from statics.conf to temp variables file

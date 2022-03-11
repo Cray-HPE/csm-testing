@@ -1,6 +1,7 @@
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP.
 #
 # MIT License
+#
+# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -14,19 +15,21 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-
+#
 command:
   k8s_vault_cluster:
     title: Kubernetes Check cray-vault Vault Cluster Status
     meta:
       desc: Kubernetes Check cray-vault Vault Cluster Status
       sev: 0
-    exec: "for n in $(seq 0 2); do kubectl exec -it -n vault -c vault cray-vault-${n} -- sh -c 'export VAULT_ADDR=http://localhost:8200; vault status'; done | egrep 'Initialized|Sealed|HA Mode' | sort -u"
+    # We omit the often-seen '-it' flags from the kubectl call because we do not need to pass in stdin, and using
+    # those flags generates warning messages when this is run in some contexts.
+    exec: "for n in $(seq 0 2); do kubectl exec -n vault -c vault cray-vault-${n} -- sh -c 'export VAULT_ADDR=http://localhost:8200; vault status'; done | egrep 'Initialized|Sealed|HA Mode' | sort -u"
     stdout:
     - "/^HA Mode\\s+active$/"
     - "/^HA Mode\\s+standby$/"
