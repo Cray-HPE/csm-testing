@@ -56,6 +56,10 @@ function set_vars() {
 
   fi
 
+  # Allow for output of documentation when needed
+  FIRMWARE_DOCS=
+  BIOS_DOCS=
+
   # Set a sane default username
   BMC_USERNAME=${USERNAME:-$(whoami)}
 
@@ -195,6 +199,7 @@ does_fw_meet_req() {
     case "$fw_vers" in
       2.44) echo "=====> $bmc: FW: $fw_vers OK" ;;
       *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected 2.44)"
+         FIRMWARE_DOCS=1
           ;;
     esac
 
@@ -204,10 +209,11 @@ does_fw_meet_req() {
       12.84.09) echo "=====> $bmc: FW: $fw_vers OK" ;;
       12.84*) echo "=====> $bmc: FW: $fw_vers OK" ;;
       *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected 12.84*)"
+         FIRMWARE_DOCS=1
           ;;
     esac
 
-  fi 
+  fi
 }
 
 # check_firmware_version() gets a firmware version and then checks if it meets or exceeds requirements
@@ -220,14 +226,14 @@ check_firmware_version() {
   if [[ "$VENDOR" = *"Marvell"* ]] \
     || [[ "$VENDOR" = "HP"* ]] \
     || [[ "$VENDOR" = "Hewlett"* ]]; then
-    
+
     # add the credentials to the ilorest config file
     enable_ilo_creds "$bmc_username" "$ipmi_password"
 
     if [[ "$HOSTNAME" == *pit* ]] \
       || [[ "$bmc" == ncn-m001-mgmt ]]; then
-      
-      # login to the bmc locally if we're the pit or m001 
+
+      # login to the bmc locally if we're the pit or m001
       ilorest --nologo login 1>/dev/null
 
     else
@@ -243,7 +249,7 @@ check_firmware_version() {
         FirmwareVersion \
         | awk -F 'v' '{print $2}' \
         | sed '/^[[:space:]]*$/d')
-      
+
     # logout
     ilorest --nologo logout "$bmc" 1>/dev/null
 
@@ -284,6 +290,7 @@ does_bios_meet_req() {
       case "$bios_vers" in
         A43) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
         *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected A43)"
+           BIOS_DOCS=1
             ;;
       esac
 
@@ -293,6 +300,7 @@ does_bios_meet_req() {
         # these are the versions that are compatible
         A42) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
         *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected A42)"
+           BIOS_DOCS=1
             ;;
       esac
 
@@ -304,6 +312,7 @@ does_bios_meet_req() {
       C17) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
       C21) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
       *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected C17 or C21)"
+         BIOS_DOCS=1
           ;;
     esac
   fi
@@ -422,6 +431,10 @@ done
 if [[ $BASELINE = Y ]]; then
   /root/bin/bios-baseline.sh --check
   exit $?
+fi
+
+if [ -n "$BIOS_DOCS" ] || [ -n "$FIRMWARE_DOCS" ]; then
+  echo "Please see https://github.com/Cray-HPE/docs-csm/tree/release/1.2/operations/firmware for update documentation"
 fi
 
 # We exit 0 because goss not only checks for our return code, but also checks stdout
