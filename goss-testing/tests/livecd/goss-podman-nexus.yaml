@@ -21,15 +21,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  podman_container_nexus:
-    title: Nexus Podman Container
-    meta:
-      desc: Checks whether Podman is running a Nexus container.
-      sev: 0
-    exec: "/usr/bin/podman container ls -a"
-    stdout:
-    - nexus
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    {{ $testlabel := "podman_container_nexus" }}
+    {{$testlabel}}:
+        title: Nexus Podman Container
+        meta:
+            desc: Checks whether Podman is running a Nexus container.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                /usr/bin/podman container ls -a
+        stdout:
+            - nexus
+        exit-status: 0
+        timeout: 10000
+        skip: false
