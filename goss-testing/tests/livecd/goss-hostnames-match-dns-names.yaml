@@ -1,6 +1,7 @@
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP.
 #
 # MIT License
+#
+# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -14,21 +15,24 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-
+#
 command:
-  hostnames_match_dns_names:
-    title: Validate Hostname
-    meta:
-      desc: Checks that the hostname on the node matches the DNS name.
-      sev: 0
-    exec: "grep -ohE \"ncn-[s/w/m]([0-3]{3})\" /etc/dnsmasq.d/statics.conf | awk '!a[$0]++' | while read node; \
-      do hostname=$(/usr/bin/ssh -o StrictHostKeyChecking=no $node hostname < /dev/null) && if [[ \"$hostname\" != \"$node\" ]]; \
-      then echo FAIL; fi; done"
-    exit-status: 0
-    stdout:
-    - !FAIL
+    hostnames_match_dns_names:
+        title: Validate Hostname
+        meta:
+            desc: Checks that the hostname on the node matches the DNS name.
+            sev: 0
+        exec: |-
+            grep -ohE "ncn-[msw]([0-3]{3})" /etc/dnsmasq.d/statics.conf | awk '!a[$0]++' | while read node ; do
+                hostname=$(/usr/bin/ssh -o StrictHostKeyChecking=no $node hostname < /dev/null) && if [[ "$hostname" != "$node" ]]; then
+                    echo FAIL
+                fi
+            done
+        exit-status: 0
+        stdout:
+            - !FAIL

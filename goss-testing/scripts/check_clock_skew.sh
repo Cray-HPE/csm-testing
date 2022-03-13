@@ -1,8 +1,8 @@
-#!/bin/bash
-
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP.
+#!/usr/bin/env bash
 #
 # MIT License
+#
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -16,11 +16,12 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
 
 baseline=""
 #
@@ -49,6 +50,11 @@ for node in $nodes; do
   pdsh_node_args="$pdsh_node_args -w $node"
 done
 
+for try in {1..3}; do
+echo "Checking clock skew...attempt $try of 3..."
+# short delay between tries
+sleep 2
+
 node_times=$(pdsh $pdsh_node_args 'date -u "+%s"' 2>/dev/null)
 node_times_array=( $node_times )
 array_length=${#node_times_array[@]}
@@ -75,5 +81,5 @@ while [[ "$cnt" -lt "$array_length" ]]; do
     exit_code=1
   fi
 done
-
+done
 exit $exit_code

@@ -1,6 +1,7 @@
-# (C) Copyright 2020, 2022 Hewlett Packard Enterprise Development LP.
 #
 # MIT License
+#
+# (C) Copyright 2020, 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -14,12 +15,11 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-
 
 %define test_dir /opt/cray/tests
 %define install_dir %{test_dir}/install
@@ -86,6 +86,8 @@ cp -a goss-testing/suites/ncn-*         %{buildroot}%{ncn}/suites
 chmod +x -R %{buildroot}%{ncn}/scripts/
 chmod +x -R %{buildroot}%{livecd}/scripts/
 chmod +x -R %{buildroot}%{ncn}/automated/
+# Create default test log directories
+mkdir -p %{buildroot}/opt/cray/tests/install/logs
 
 # Install goss-servers files
 mkdir -p %{buildroot}/usr/sbin
@@ -96,6 +98,8 @@ install -m 755 goss-servers.service %{buildroot}/etc/systemd/system/
 %clean
 rm -rf %{buildroot}%{livecd}
 rm -rf %{buildroot}%{ncn}
+# Remove log directories only if empty
+rmdir %{buildroot}/opt/cray/tests/install/logs || true
 
 %files
 %defattr(755, root, root)
