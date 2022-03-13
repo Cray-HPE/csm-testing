@@ -1,8 +1,8 @@
-#!/bin/bash
-
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP.
+#!/usr/bin/env bash
 #
 # MIT License
+#
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -16,12 +16,12 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-
+#
 print_results=0
 while getopts ph stack
 do
@@ -44,7 +44,9 @@ one_day_sec=86400
 
 check_backup_within_day() {
     backup_within_day=0
-    backups=$(kubectl exec -it -n operators $(kubectl get pod -n operators | \
+    # We omit the often-seen '-it' flags from the kubectl call because we do not need to pass in stdin, and using
+    # those flags generates warning messages when this script is run in some contexts.
+    backups=$(kubectl exec -n operators $(kubectl get pod -n operators | \
         grep etcd-backup-restore | head -1 | awk '{print $1}') -c boto3 -- list_backups ${cluster})
     if [[ "$backups" != *"KeyError: 'Contents'"* ]] && [[ ! -z $backups ]] # check if any backups exist
     then

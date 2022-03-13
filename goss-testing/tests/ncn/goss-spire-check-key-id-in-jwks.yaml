@@ -1,6 +1,7 @@
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP.
 #
 # MIT License
+#
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -14,12 +15,12 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-
+#
 command:
   spire_check_key_id_in_jwks:
     title: Validate token key ID exists in spire jwks
@@ -28,5 +29,5 @@ command:
       sev: 0
     exec: kubectl exec -itn spire spire-postgres-0 -c postgres -- curl http://spire-jwks/keys | jq -r '.[][].kid' | grep $(/usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /root/spire/agent.sock -audience goss-test | head -n2 | awk -F. 'FNR==2{sub(/^[ \t]+/, ""); print $1}' | base64 -d 2>/dev/null| jq -r .kid)
     exit-status: 0
-    timeout: 1000
+    timeout: 5000
     skip: false

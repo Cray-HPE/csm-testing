@@ -1,8 +1,8 @@
-#!/bin/bash
-
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP.
+#!/usr/bin/env bash
 #
 # MIT License
+#
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -16,12 +16,12 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-
+#
 print_results=0
 exit_on_failure=0
 while getopts pem:a:w:h stack
@@ -99,7 +99,9 @@ do
             sleep $POSTGRES_WAIT_SECONDS_BETWEEN_ATTEMPTS
         fi
 
-        cluster_lag=$(kubectl exec $first_member -c postgres -it -n ${c_ns} -- curl -s http://localhost:8008/cluster | jq '[.members[] | .lag]')
+        # We omit the often-seen '-it' flags from the kubectl call because we do not need to pass in stdin, and using
+        # those flags generates warning messages when this script is run in some contexts.
+        cluster_lag=$(kubectl exec $first_member -c postgres -n ${c_ns} -- curl -s http://localhost:8008/cluster | jq '[.members[] | .lag]')
         c_max_lag=$(echo $cluster_lag | jq max)
         c_unknown_lag=$(echo $cluster_lag | grep "unknown" | wc -l)
         if [[ -n $c_lag_history ]]; then
