@@ -21,15 +21,34 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  {{range $command := index .Vars "commands"}}
-  command_{{$command}}:
-    title: Command '{{$command}}' Available
-    meta:
-      desc: Validates that '{{$command}}' is available on the local system.
-      sev: 0
-    exec: {{$command}}
-    exit-status: 0
-    timeout: 10000
-    skip: false
-{{end}}
+    {{range $index, $command := index .Vars "commands"}}
+        # Split the command path into a list, take the last field (the command base name), and convert it to lowercase
+        {{ $command_base_name := splitList "/" $command | last | toLower }}
+
+        # If there are any non-alphanumeric characters, convert them to underscores, and then strip away any
+        # leading or trailing underscores
+        {{ if regexMatch "[^a-z0-9]" $command_base_name }}
+            {{ $command_base_name = regexReplaceAll "[^a-z0-9]" $command_base_name "_" | trimAll "_" }}
+
+            # If there are any strings of one or more consecutive underscores, replace them with a single underscore
+            {{ if contains "__" $command_base_name }}
+                {{ $command_base_name = regexReplaceAll "_{2,}" $command_base_name "_" }}
+            {{end}}
+
+        {{end}}
+
+        {{ $testlabel := $command_base_name | printf "command_available_%d_%s" $index }}
+        {{$testlabel}}:
+            title: Command '{{$command}}' Available
+            meta:
+                desc: Validates that '{{$command}}' is available and executes successfully on the local system.
+                sev: 0
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" {{$command}}
+            exit-status: 0
+            timeout: 10000
+            skip: false
+    {{end}}
