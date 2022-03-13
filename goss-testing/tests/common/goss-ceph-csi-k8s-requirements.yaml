@@ -21,33 +21,41 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-{{ $kubectl := index .Vars "kubectl" }}
+
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 file:
     {{$kubectl}}:
         title: "{{$kubectl}} command"
         meta:
-            desc: "Check that {{$kubectl}} command exists"
+            desc: "Check that kubectl command exists"
             sev: 0
         exists: true
         filetype: file
 command:
     {{range $configmap := index .Vars "k8s_ceph_csi_configmaps"}}
-    k8s_cm_{{$configmap}}:
-        title: "Kubernetes configmap {{$configmap}}"
-        meta:
-            desc: "Check that Kubernetes configmap {{$configmap}} exists"
-            sev: 0
-        exec: "{{$kubectl}} get configmap {{$configmap}}"
-        exit-status: 0
-        timeout: 10000
+        {{ $testlabel := $configmap | printf "k8s_cm_%s" }}
+        {{$testlabel}}:
+            title: "Kubernetes configmap {{$configmap}}"
+            meta:
+                desc: "Check that Kubernetes configmap {{$configmap}} exists"
+                sev: 0
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    "{{$kubectl}}" get configmap "{{$configmap}}"
+            exit-status: 0
+            timeout: 10000
     {{end}}
     {{range $secret := index .Vars "k8s_ceph_csi_secrets"}}
-    k8s_secret_{{$secret}}:
-        title: "Kubernetes secret {{$secret}}"
-        meta:
-            desc: "Check that Kubernetes secret {{$secret}} exists"
-            sev: 0
-        exec: "{{$kubectl}} get secret {{$secret}}"
-        exit-status: 0
-        timeout: 10000
+        {{ $testlabel := $secret | printf "k8s_secret_%s" }}
+        {{$testlabel}}:
+            title: "Kubernetes secret {{$secret}}"
+            meta:
+                desc: "Check that Kubernetes secret {{$secret}} exists"
+                sev: 0
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    "{{$kubectl}}" get secret "{{$secret}}"
+            exit-status: 0
+            timeout: 10000
     {{end}}
