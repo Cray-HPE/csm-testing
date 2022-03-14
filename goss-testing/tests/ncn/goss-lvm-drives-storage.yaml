@@ -21,25 +21,23 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  cephetc_label_storage:
-    title: Validates the CEPHETC FS Label is set up correctly on storage nodes.
-    meta:
-      desc: If this test fails, inspect the '/var/log/cloud-init-output.log' to determine why the lvm creation failed.
-      sev: 0
-    exec: blkid -L CEPHETC
-    exit-status: 0
-  cephvar_label_storage:
-    title: Validates the CEPHVAR FS Label is set up correctly on storage nodes.
-    meta:
-      desc: If this test fails, inspect the '/var/log/cloud-init-output.log' to determine why the lvm creation failed.
-      sev: 0
-    exec: blkid -L CEPHVAR
-    exit-status: 0
-  contain_label_storage:
-    title: Validates the CONTAIN FS Label is set up correctly on storage nodes.
-    meta:
-      desc: If this test fails, inspect the '/var/log/cloud-init-output.log' to determine why the lvm creation failed.
-      sev: 0
-    exec: blkid -L CONTAIN
-    exit-status: 0
+    {{range $fslabel := index .Vars "storage_fs_labels"}}
+        {{ $testlabel := $fslabel | toLower | printf "%s_label_storage" }}
+        {{$testlabel}}:
+            title: Storage Node {{$fslabel}} FS Label
+            meta:
+                desc: Validates the {{$fslabel}} FS label is set up correctly on storage nodes. If this test fails, inspect the '/var/log/cloud-init-output.log' to determine why the lvm creation failed.
+                sev: 0
+            # blkid will return non-zero if no block device has the $fslabel label and
+            # will print to stdout the device with that label (i.e. /dev/whatever)
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    blkid -L "{{$fslabel}}"
+            exit-status: 0
+            stdout:
+                - /^\/dev\//
+            timeout: 5000
+    {{end}}
