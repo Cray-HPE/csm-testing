@@ -21,14 +21,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  ceph_storage_config_files:
-    title: Validates the ceph config files are in place.
-    meta:
-      desc: If this test fails, verify install/upgrade steps were completed properly without errors.
-      sev: 0
-    exec: "ls /etc/ceph"
-    stdout:
-    - ceph.client.admin.keyring
-    - ceph.conf
-    exit-status: 0
+    {{ $testlabel := "ceph_storage_config_files" }}
+    {{$testlabel}}:
+        title: Validates the ceph config files are in place.
+        meta:
+            desc: If this test fails, verify install/upgrade steps were completed properly without errors.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                ls -al /etc/ceph
+        stdout:
+            - ceph.client.admin.keyring
+            - ceph.conf
+        exit-status: 0
