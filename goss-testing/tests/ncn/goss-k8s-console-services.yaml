@@ -21,13 +21,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  k8s_service_console_running:
-    title: Kubernetes Pods 'cray-console-operator', 'cray-console-node', and 'cray-console-data' Are Running
-    meta:
-      desc: If this test fails, look at the state of the console pods (kubectl get po -n services | grep console) to investigate.
-      sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/python/console_verify_services.py"
-    exit-status: 0
-    timeout: 60000
-    skip: false
+    {{ $testlabel := "k8s_service_console_running" }}
+    {{$testlabel}}:
+        title: Kubernetes Pods 'cray-console-operator', 'cray-console-node', and 'cray-console-data' Are Running
+        meta:
+            desc: If this test fails, look at the state of the console pods (kubectl get po -n services | grep console) to investigate.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$scripts}}/python/console_verify_services.py"
+        exit-status: 0
+        timeout: 60000
+        skip: false
