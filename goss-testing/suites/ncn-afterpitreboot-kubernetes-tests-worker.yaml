@@ -22,5 +22,6 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 gossfile:
- ../tests/goss-k8s-trustedcerts-configmaps-exist.yaml: {}
- ../tests/goss-k8s-vault-cluster-health.yaml: {}
+  ../tests/goss-k8s-trustedcerts-configmaps-exist.yaml: {}
+  ../tests/goss-k8s-vault-cluster-health.yaml: {}
+  ../tests/goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
