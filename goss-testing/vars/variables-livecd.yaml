@@ -38,7 +38,6 @@ services_enabled:
   - dnsmasq
   - nexus
   - basecamp
-  - conman
 
 services_running:
   - dnsmasq
