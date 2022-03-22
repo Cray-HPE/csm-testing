@@ -49,19 +49,39 @@ function err_exit
     exit $rc
 }
 
-kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' > $TMPFILE ||
-    err_exit 10 "ERROR: Command failed (rc=$?): kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' > $TMPFILE"
+TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=`kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d` https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token')
+
+# Check for BiCAN configs in MetalLB configmap
+kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' | grep customer-management | wc -l > $TMPFILE ||
+    err_exit 10 "ERROR: Command failed (rc=$?): kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' | grep customer-management | wc -l" > TMPFILE
+metallb_check=$(kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' | grep customer-management | wc -l)
+
+# check SLS Networks data for BiCAN toggle
+curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN|jq -r .ExtraProperties.SystemDefaultRoute | grep -e CHN -e CAN |wc -l >> $TMPFILE ||
+    err_exit 20 "ERROR: Command failed (rc=$?): curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN|jq -r .ExtraProperties.SystemDefaultRoute | grep -e CHN -e CAN |wc -l" >> $TMPFILE
+sls_network_check=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN|jq -r .ExtraProperties.SystemDefaultRoute | grep -e CHN -e CAN |wc -l)
+
+# check spine switch motd for csm version
+ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no admin@sw-spine-001 "" 2>&1 | xargs | awk '{ print $5 }' >> $TMPFILE ||
+    err_exit 30 "ERROR: Command failed (rc=$?): ssh -o PasswordAuthentication=no admin@10.254.0.2 "" 2>&1|xargs |awk '{ print $5 }'" >> $TMPFILE
+switch_motd_check=$(ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no admin@sw-spine-001 "" 2>&1 | xargs | awk '{ print $5 }' )
+
+#kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' > $TMPFILE ||
+#    err_exit 10 "ERROR: Command failed (rc=$?): kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' > $TMPFILE"
 
 # We really shouldn't be passing a password in plaintext on the command line, but as long as we are, at least
 # we won't also include it in the error message on failure
-if grep -q customer-management $TMPFILE ; then
-    echo "Running: canu validate network bgp --network all --password XXXXXXXX"
-    canu validate network bgp --network all --password {{.Env.SW_ADMIN_PASSWORD}} ||
-        err_exit 20 "canu validate network bgp --network all failed (rc=$?)"
-else
+
+if [ "$metallb_check" -eq 0 ] && [ "sls_network_check" -eq 0 ] || [ "$switch_motd_check" -eq "1.0" ];then
+    # csm-1.0 networking
     echo "Running: canu validate network bgp --network nmn --password XXXXXXXX"
     canu validate network bgp --network nmn --password {{.Env.SW_ADMIN_PASSWORD}} ||
-        err_exit 30 "canu validate network bgp --network nmn failed (rc=$?)"
+        err_exit 40 "canu validate network bgp --network all failed (rc=$?)"
+else
+    # csm-1.2+ networking
+    echo "Running: canu validate network bgp --network all --password XXXXXXXX"
+    canu validate network bgp --network all --password {{.Env.SW_ADMIN_PASSWORD}} ||
+        err_exit 50 "canu validate network bgp --network nmn failed (rc=$?)"
 fi
 echo "PASS"
 cleanup
