@@ -66,11 +66,9 @@ ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no admin@sw-spine-001 
     err_exit 30 "ERROR: Command failed (rc=$?): ssh -o PasswordAuthentication=no admin@10.254.0.2 "" 2>&1|xargs |awk '{ print $5 }'" >> $TMPFILE
 switch_motd_check=$(ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no admin@sw-spine-001 "" 2>&1 | xargs | awk '{ print $5 }' )
 
-#kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' > $TMPFILE ||
-#    err_exit 10 "ERROR: Command failed (rc=$?): kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' > $TMPFILE"
-
 # We really shouldn't be passing a password in plaintext on the command line, but as long as we are, at least
 # we won't also include it in the error message on failure
+# RFE: https://jira-pro.its.hpecorp.net:8443/browse/CASMNET-880
 
 if [ "$metallb_check" -eq 0 ] && [ "sls_network_check" -eq 0 ] || [ "$switch_motd_check" -eq "1.0" ];then
     # csm-1.0 networking
