@@ -38,3 +38,4 @@ gossfile:
   ../tests/goss-k8s-tftp-pods-running.yaml: {}
   ../tests/goss-postgresql-syncfailed.yaml: {}
   ../tests/goss-ip-dns-check.yaml: {}
+  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
