@@ -50,6 +50,11 @@ for node in $nodes; do
   pdsh_node_args="$pdsh_node_args -w $node"
 done
 
+for try in {1..3}; do
+echo "Checking clock skew...attempt $try of 3..."
+# short delay between tries
+sleep 10
+
 node_times=$(pdsh $pdsh_node_args 'date -u "+%s"' 2>/dev/null)
 node_times_array=( $node_times )
 array_length=${#node_times_array[@]}
@@ -75,6 +80,7 @@ while [[ "$cnt" -lt "$array_length" ]]; do
     echo "ERROR: $node has drifted $diff second(s)"
     exit_code=1
   fi
+done
 done
 
 exit $exit_code
