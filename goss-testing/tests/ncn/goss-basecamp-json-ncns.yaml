@@ -25,9 +25,11 @@ command:
   basecamp_valid_json_ncns:
     title: Basecamp JSON Payload
     meta:
-      desc: Validates PIT Basecamp endpoint returns valid JSON payload when queried from NCNs.
-      sev: 0
-    exec: curl http://pit:8888/meta-data | jq -e
+        desc: Validates PIT Basecamp endpoint returns valid JSON payload when queried from NCNs.
+        sev: 0
+    exec: |-
+        set -eo pipefail   
+        curl http://pit:8888/meta-data | jq -e
     exit-status: 0
     timeout: 5000
     skip: false

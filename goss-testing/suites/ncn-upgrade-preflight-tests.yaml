@@ -25,7 +25,6 @@ gossfile:
   ../tests/goss-dns-nodes.yaml: {}
   ../tests/goss-k8s-nodes-ready.yaml: {}
   ../tests/goss-command-available.yaml: {}
-  ../tests/goss-basecamp-json-ncns.yaml: {}
   ../tests/goss-bond-members-have-links.yaml: {}
   ../tests/goss-unbound-ip.yaml: {}
   ../tests/goss-bond-members-have-correct-mtu.yaml: {}
