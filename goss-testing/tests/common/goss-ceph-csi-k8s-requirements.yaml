@@ -38,7 +38,7 @@ command:
         {{$testlabel}}:
             title: "Kubernetes configmap {{$configmap}}"
             meta:
-                desc: "Check that Kubernetes configmap {{$configmap}} exists"
+                desc: "Check that Kubernetes configmap {{$configmap}} exists. For failures please wait 5 minutes to ensure cloud-init has finished and run again"
                 sev: 0
             exec: |-
                 "{{$logrun}}" -l "{{$testlabel}}" \
@@ -51,7 +51,7 @@ command:
         {{$testlabel}}:
             title: "Kubernetes secret {{$secret}}"
             meta:
-                desc: "Check that Kubernetes secret {{$secret}} exists"
+                desc: "Check that Kubernetes secret {{$secret}} exists. For failures please wait 5 minutes to ensure cloud-init has finished and run again"
                 sev: 0
             exec: |-
                 "{{$logrun}}" -l "{{$testlabel}}" \
