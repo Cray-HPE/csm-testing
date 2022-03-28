@@ -35,7 +35,7 @@ command:
     k8s_cm_{{$configmap}}:
         title: "Kubernetes configmap {{$configmap}}"
         meta:
-            desc: "Check that Kubernetes configmap {{$configmap}} exists"
+            desc: "Check that Kubernetes configmap {{$configmap}} exists. For failures please wait 5 minutes to ensure cloud-init has finished and run again."
             sev: 0
         exec: "{{$kubectl}} get configmap {{$configmap}}"
         exit-status: 0
@@ -45,7 +45,7 @@ command:
     k8s_secret_{{$secret}}:
         title: "Kubernetes secret {{$secret}}"
         meta:
-            desc: "Check that Kubernetes secret {{$secret}} exists"
+            desc: "Check that Kubernetes secret {{$secret}} exists.  For failures please wait 5 minutes to ensure cloud-init has finished and run again"
             sev: 0
         exec: "{{$kubectl}} get secret {{$secret}}"
         exit-status: 0
