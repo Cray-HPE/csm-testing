@@ -49,8 +49,12 @@ function err_exit
     exit $rc
 }
 
-TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=`kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d` https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token')
-
+SECRET=$(kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d) ||
+    err_exit 10 "Command pipeline failed with return code $?: kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d"
+# We omit the client secret from the error message, so it is not recorded in the log.
+# Ideally we would not be passing it to curl on the command line either.
+TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret="$SECRET" https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token') ||
+    err_exit 15 "Command pipeline failed with return code $?: curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=XXXXXX https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token'"
 # check if metalLB configmap exists
 echo "Checking for cofigmap called metallb." > $TMPFILE
 kubectl -n metallb-system get cm metallb 2>&1 |grep -i error|wc -l >> $TMPFILE
@@ -72,7 +76,7 @@ if [ -z "$SW_ADMIN_PASSWORD" ]; then
     echo "******************************************"
     echo "******************************************"
     echo "**** Enter SSH password of switches: ****"
-    read -t180 -sp ""  SWITCH_PASSWORD
+    read -t180 -sp ""  SW_ADMIN_PASSWORD
     echo
 fi
 
