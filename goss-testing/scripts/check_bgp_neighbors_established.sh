@@ -88,12 +88,12 @@ if [ "$metallb_check" -gt "0" ] || [ "$sls_network_check" -gt "0" ];then
     # csm-1.0 networking
     echo "Running: canu validate network bgp --network nmn --password XXXXXXXX"
     canu validate network bgp --network nmn --password $SW_ADMIN_PASSWORD ||
-        err_exit 10 "canu validate network bgp --network nmn failed (rc=$?)"
+        err_exit 20 "canu validate network bgp --network nmn failed (rc=$?)"
 else
     # csm-1.2+ networking
     echo "Running: canu validate network bgp --network all --password XXXXXXXX"
     canu validate network bgp --network all --password $SW_ADMIN_PASSWORD ||
-        err_exit 20 "canu validate network bgp --network all failed (rc=$?)"
+        err_exit 25 "canu validate network bgp --network all failed (rc=$?)"
 fi
 echo "PASS"
 cleanup
