@@ -31,8 +31,6 @@ set -o pipefail
 
 TMPFILE=/tmp/check_bgp_neighbors_established.$$.$RANDOM.tmp
 
-SWITCH_PASSWORD={{.Env.SW_ADMIN_PASSWORD}}
-
 function cleanup
 {
     if [[ -f $TMPFILE ]]; then
@@ -70,7 +68,7 @@ echo "Checking for BiCAN toggle."  >> $TMPFILE
 curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN|jq -r .ExtraProperties.SystemDefaultRoute | grep -e CHN -e CAN |wc -l >> $TMPFILE
 sls_network_check=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN|jq -r .ExtraProperties.SystemDefaultRoute | grep -e CHN -e CAN |wc -l)
 
-if [ "$SWITCH_PASSWORD" == "{{.Env.SW_ADMIN_PASSWORD}}" ] || [ -z "$SWITCH_PASSWORD" ]; then
+if [ -z "$SW_ADMIN_PASSWORD" ]; then
     echo "******************************************"
     echo "******************************************"
     echo "**** Enter SSH password of switches: ****"
@@ -85,12 +83,12 @@ fi
 if [ "$metallb_check" -eq "0" ] || [ "$sls_network_check" -eq "0" ];then
     # csm-1.0 networking
     echo "Running: canu validate network bgp --network nmn --password XXXXXXXX"
-    canu validate network bgp --network nmn --password $SWITCH_PASSWORD ||
+    canu validate network bgp --network nmn --password $SW_ADMIN_PASSWORD ||
         err_exit 10 "canu validate network bgp --network nmn failed (rc=$?)"
 else
     # csm-1.2+ networking
     echo "Running: canu validate network bgp --network all --password XXXXXXXX"
-    canu validate network bgp --network all --password $SWITCH_PASSWORD ||
+    canu validate network bgp --network all --password $SW_ADMIN_PASSWORD ||
         err_exit 20 "canu validate network bgp --network all failed (rc=$?)"
 fi
 echo "PASS"
