@@ -57,7 +57,7 @@ TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client
     err_exit 15 "Command pipeline failed with return code $?: curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=XXXXXX https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token'"
 
 # check if metalLB configmap exists
-# Set metallb_check to 0 if we cannot get the metallb configmap from Kubernetes. Set to 1 otherwise.
+# Set metallb_check to 1 if we cannot get the metallb configmap from Kubernetes. Set to 0 otherwise.
 if kubectl -n metallb-system get cm metallb ; then
     metallb_check=0
 else
