@@ -55,22 +55,29 @@ SECRET=$(kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret
 # Ideally we would not be passing it to curl on the command line either.
 TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret="$SECRET" https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token') ||
     err_exit 15 "Command pipeline failed with return code $?: curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=XXXXXX https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token'"
-# check if metalLB configmap exists
-echo "Checking for cofigmap called metallb." > $TMPFILE
-kubectl -n metallb-system get cm metallb 2>&1 |grep -i error|wc -l >> $TMPFILE
-metallb_cm=$(kubectl -n metallb-system get cm metallb 2>&1 |grep -i error|wc -l)
 
-# If error checking for metallb configmap
-if [ "$metallb_cm" -gt "0" ];then
-	metallb_check="0"
+# check if metalLB configmap exists
+# Set metallb_check to 0 if we cannot get the metallb configmap from Kubernetes. Set to 1 otherwise.
+if kubectl -n metallb-system get cm metallb ; then
+    metallb_check=0
 else
-    metallb_check="1"
+    metallb_check=1
 fi
 
+## If error checking for metallb configmap
+#if [ "$metallb_cm" -gt "0" ];then
+#	metallb_check="0"
+#else
+#    metallb_check="1"
+#fi
+
 # check SLS Networks data for BiCAN toggle
-echo "Checking for BiCAN toggle."  >> $TMPFILE
-curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN|jq -r .ExtraProperties.SystemDefaultRoute | grep -e CHN -e CAN |wc -l >> $TMPFILE
-sls_network_check=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN|jq -r .ExtraProperties.SystemDefaultRoute | grep -e CHN -e CAN |wc -l)
+curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN |
+    jq -r .ExtraProperties.SystemDefaultRoute |
+    grep -e CHN -e CAN
+# Set sls_network_check to 1 if the BICAN endpoint responds and
+# has the CAN or CHN strings in its ExtraProperties.SystemDefaultRoute field. Otherwise set to 0
+[[ $? -eq 0 ]] && sls_network_check=0 || sls_network_check=1
 
 if [ -z "$SW_ADMIN_PASSWORD" ]; then
     echo "******************************************"
@@ -84,7 +91,7 @@ fi
 # we won't also include it in the error message on failure
 # RFE: https://jira-pro.its.hpecorp.net:8443/browse/CASMNET-880
 
-if [ "$metallb_check" -eq "0" ] || [ "$sls_network_check" -eq "0" ];then
+if [ "$metallb_check" -gt "0" ] || [ "$sls_network_check" -gt "0" ];then
     # csm-1.0 networking
     echo "Running: canu validate network bgp --network nmn --password XXXXXXXX"
     canu validate network bgp --network nmn --password $SW_ADMIN_PASSWORD ||
