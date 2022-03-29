@@ -64,13 +64,6 @@ else
     metallb_check=1
 fi
 
-## If error checking for metallb configmap
-#if [ "$metallb_cm" -gt "0" ];then
-#	metallb_check="0"
-#else
-#    metallb_check="1"
-#fi
-
 # check SLS Networks data for BiCAN toggle
 curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN |
     jq -r .ExtraProperties.SystemDefaultRoute |
