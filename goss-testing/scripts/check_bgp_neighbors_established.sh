@@ -68,8 +68,8 @@ fi
 curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN |
     jq -r .ExtraProperties.SystemDefaultRoute |
     grep -e CHN -e CAN
-# Set sls_network_check to 1 if the BICAN endpoint responds and
-# has the CAN or CHN strings in its ExtraProperties.SystemDefaultRoute field. Otherwise set to 0
+# Set sls_network_check to 0 if the BICAN endpoint responds and
+# has the CAN or CHN strings in its ExtraProperties.SystemDefaultRoute field. Otherwise set to 1
 [[ $? -eq 0 ]] && sls_network_check=0 || sls_network_check=1
 
 if [ -z "$SW_ADMIN_PASSWORD" ]; then
