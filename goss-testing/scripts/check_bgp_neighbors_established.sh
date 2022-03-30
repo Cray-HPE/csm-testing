@@ -29,14 +29,7 @@
 # fail (i.e. exit non-0) if any of the commands in the chain fail
 set -o pipefail
 
-TMPFILE=/tmp/check_bgp_neighbors_established.$$.$RANDOM.tmp
 
-function cleanup
-{
-    if [[ -f $TMPFILE ]]; then
-        rm -f $TMPFILE || echo "WARNING: Unable to remove temporary file $TMPFILE" 1>&2
-    fi
-}
 
 function err_exit
 {
@@ -44,7 +37,6 @@ function err_exit
     rc=$1
     shift
     echo "ERROR: $*" 1>&2
-    cleanup
     echo "FAIL"
     exit $rc
 }
@@ -96,5 +88,4 @@ else
         err_exit 25 "canu validate network bgp --network all failed (rc=$?)"
 fi
 echo "PASS"
-cleanup
 exit 0
