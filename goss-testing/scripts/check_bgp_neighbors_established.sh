@@ -29,14 +29,7 @@
 # fail (i.e. exit non-0) if any of the commands in the chain fail
 set -o pipefail
 
-TMPFILE=/tmp/check_bgp_neighbors_established.$$.$RANDOM.tmp
 
-function cleanup
-{
-    if [[ -f $TMPFILE ]]; then
-        rm -f $TMPFILE || echo "WARNING: Unable to remove temporary file $TMPFILE" 1>&2
-    fi
-}
 
 function err_exit
 {
@@ -44,25 +37,55 @@ function err_exit
     rc=$1
     shift
     echo "ERROR: $*" 1>&2
-    cleanup
     echo "FAIL"
     exit $rc
 }
 
-kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' > $TMPFILE ||
-    err_exit 10 "ERROR: Command failed (rc=$?): kubectl -n metallb-system get cm metallb -o jsonpath='{.data.config}' > $TMPFILE"
+SECRET=$(kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d) ||
+    err_exit 10 "Command pipeline failed with return code $?: kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d"
+# We omit the client secret from the error message, so it is not recorded in the log.
+# Ideally we would not be passing it to curl on the command line either.
+TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret="$SECRET" https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token') ||
+    err_exit 15 "Command pipeline failed with return code $?: curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=XXXXXX https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token'"
+
+# check if metalLB configmap exists
+# Set metallb_check to 1 if we cannot get the metallb configmap from Kubernetes. Set to 0 otherwise.
+if kubectl -n metallb-system get cm metallb ; then
+    metallb_check=0
+else
+    metallb_check=1
+fi
+
+# check SLS Networks data for BiCAN toggle
+curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN |
+    jq -r .ExtraProperties.SystemDefaultRoute |
+    grep -e CHN -e CAN
+# Set sls_network_check to 0 if the BICAN endpoint responds and
+# has the CAN or CHN strings in its ExtraProperties.SystemDefaultRoute field. Otherwise set to 1
+[[ $? -eq 0 ]] && sls_network_check=0 || sls_network_check=1
+
+if [ -z "$SW_ADMIN_PASSWORD" ]; then
+    echo "******************************************"
+    echo "******************************************"
+    echo "**** Enter SSH password of switches: ****"
+    read -t180 -sp ""  SW_ADMIN_PASSWORD
+    echo
+fi
 
 # We really shouldn't be passing a password in plaintext on the command line, but as long as we are, at least
 # we won't also include it in the error message on failure
-if grep -q customer-management $TMPFILE ; then
-    echo "Running: canu validate network bgp --network all --password XXXXXXXX"
-    canu validate network bgp --network all --password {{.Env.SW_ADMIN_PASSWORD}} ||
-        err_exit 20 "canu validate network bgp --network all failed (rc=$?)"
-else
+# RFE: https://jira-pro.its.hpecorp.net:8443/browse/CASMNET-880
+
+if [ "$metallb_check" -gt "0" ] || [ "$sls_network_check" -gt "0" ];then
+    # csm-1.0 networking
     echo "Running: canu validate network bgp --network nmn --password XXXXXXXX"
-    canu validate network bgp --network nmn --password {{.Env.SW_ADMIN_PASSWORD}} ||
-        err_exit 30 "canu validate network bgp --network nmn failed (rc=$?)"
+    canu validate network bgp --network nmn --password $SW_ADMIN_PASSWORD ||
+        err_exit 20 "canu validate network bgp --network nmn failed (rc=$?)"
+else
+    # csm-1.2+ networking
+    echo "Running: canu validate network bgp --network all --password XXXXXXXX"
+    canu validate network bgp --network all --password $SW_ADMIN_PASSWORD ||
+        err_exit 25 "canu validate network bgp --network all failed (rc=$?)"
 fi
 echo "PASS"
-cleanup
 exit 0
