@@ -74,8 +74,8 @@ expected_mtu=$1
 echo "Expected MTU: $expected_mtu"
 echo
 
-bond_members=$(awk -F "'" '/BONDING_SLAVE/{print $2}' $IFCFG_BOND0) ||
-    err_exit 45 "Command failed (rc $?): awk -F \"'\" '/BONDING_SLAVE/{print \$2}' $IFCFG_BOND0"
+bond_members=$(awk -F "=" '/BONDING_SLAVE/{print $2}' $IFCFG_BOND0 | tr -d "'") ||
+    err_exit 45 "Command failed (rc $?): awk -F \"=\" '/BONDING_SLAVE/{print \$2}' $IFCFG_BOND0"
 
 echo "bond0 members found: "$bond_members
 

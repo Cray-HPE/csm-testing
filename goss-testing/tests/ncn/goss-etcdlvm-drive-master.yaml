@@ -21,12 +21,23 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  etcdlvm_drive_master:
-    title: Validates the dedicated drive for ETCD is set up correctly on master nodes (ETCDLVM FS Label)
-    meta:
-      desc: If this test fails, inspect the '/var/log/cloud-init-output.log' to determine why the lvm creation failed.
-      sev: 0
-    exec: blkid -L ETCDLVM
-    # blkid will return non-zero if no block device has the ETCDLVM label
-    exit-status: 0
+    {{range $fslabel := index .Vars "k8s_master_fs_labels"}}
+        {{ $testlabel := $fslabel | toLower | printf "%s_label_master" }}
+        {{$testlabel}}:
+            title: Worker Node {{$fslabel}} FS Label
+            meta:
+                desc: Validates the {{$fslabel}} FS label is set up correctly on master nodes. If this test fails, inspect the '/var/log/cloud-init-output.log' to determine why the lvm creation failed.
+                sev: 0
+            # blkid will return non-zero if no block device has the $fslabel label and
+            # will print to stdout the device with that label (i.e. /dev/whatever)
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    blkid -L "{{$fslabel}}"
+            exit-status: 0
+            stdout:
+                - /^\/dev\//
+            timeout: 5000
+    {{end}}

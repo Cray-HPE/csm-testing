@@ -21,17 +21,22 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  ceph_storage_images:
-    title: Validates the ceph storage images have been loaded into podman
-    meta:
-      desc: If this test fails, run "/srv/cray/scripts/common/pre-load-images.sh" on the failed node.
-      sev: 0
-    exec: "podman images"
-    stdout:
-    - registry.local/ceph/ceph
-    - registry.local/ceph/ceph-grafana
-    - registry.local/quay.io/prometheus/prometheus
-    - registry.local/quay.io/prometheus/alertmanager
-    - registry.local/quay.io/prometheus/node-exporter
-    exit-status: 0
+    {{ $testlabel := "ceph_storage_images" }}
+    {{$testlabel}}:
+        title: Validates the ceph storage images have been loaded into podman
+        meta:
+            desc: If this test fails, run "/srv/cray/scripts/common/pre-load-images.sh" on the failed node.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                podman images
+        stdout:
+            - registry.local/ceph/ceph
+            - registry.local/ceph/ceph-grafana
+            - registry.local/quay.io/prometheus/prometheus
+            - registry.local/quay.io/prometheus/alertmanager
+            - registry.local/quay.io/prometheus/node-exporter
+        exit-status: 0
