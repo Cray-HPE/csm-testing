@@ -29,7 +29,9 @@ command:
     meta:
       desc: Validates that Kubernetes Istio service '{{$service}}' has an endpoint.
       sev: 0
-    exec: endpoint=$(kubectl -n istio-system get endpoints | grep {{$service}} | awk '{ print $2 }'); if [ "$endpoint" == '<none>' ] || [ -z "$endpoint" ]; then echo FAIL; fi
+    exec: |-
+      set -eo pipefail
+      endpoint=$(kubectl -n istio-system get endpoints | awk ' NF > 2 && $1 == "{{$service}}" { print $2 }'); if [ "$endpoint" == '<none>' ] || [ -z "$endpoint" ]; then echo FAIL; fi
     exit-status: 0
     stdout:
     - "!FAIL"
