@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,23 +21,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
-{{ $kubectl := .Vars.kubectl }}
-{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
-command:
-    {{ $testlabel := "k8s-istio-pods-running" }}
-    {{$testlabel}}:
-        title: Validate istio-ingressgateway pods are Running
-        meta:
-            desc: Validates that istio-ingressgateway pods are running. If this test fails, run "kubectl get pods -n istio-system -o wide | awk '$1 ~ "istio-ingressgateway" && $3 != "Running"'" to see a list of failing pods to investigate.
-            sev: 0
-        exec: |-
-            set -eo pipefail
-            "{{$logrun}}" -l "{{$testlabel}}" \
-                "{{$kubectl}}" get pods -n istio-system |
-                awk '$1 ~ "istio-ingressgateway" { if ($3 != "Running") print "FAIL"; else print "PASS" }'
-        exit-status: 0
-        stdout:
-            - "!FAIL"
-        timeout: 5000
-        skip: false
+gossfile:
+  ../tests/goss-dns-nodes.yaml: {}
+  ../tests/goss-k8s-nodes-ready.yaml: {}
+  ../tests/goss-ceph-storage-health.yaml: {}
+  ../tests/goss-k8s-cray-cli-configured.yaml: {}
+  ../tests/goss-rgw-health.yaml: {}
+  ../tests/goss-k8s-nexus-pods-running.yaml: {}
+  ../tests/goss-k8s-ipxe-pod-running.yaml: {}
+  ../tests/goss-k8s-kea-pod-running.yaml: {}
+  ../tests/goss-k8s-tftp-pods-running.yaml: {}
+  ../tests/goss-postgresql-syncfailed.yaml: {}
+  ../tests/goss-ip-dns-check.yaml: {}
+  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
+  ../tests/goss-k8s-istio-endpoint.yaml: {}
+  ../tests/goss-k8s-istio-pod-containers-running.yaml: {}
+  ../tests/goss-k8s-istio-pods-running.yaml: {}
