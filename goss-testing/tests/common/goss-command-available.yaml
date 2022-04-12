@@ -49,6 +49,10 @@ command:
             exec: |-
                 "{{$logrun}}" -l "{{$testlabel}}" {{$command}}
             exit-status: 0
-            timeout: 10000
+            # Under normal circumstances, these commands should not require such a long timeout value. However,
+            # some of them (for example, 'cray --version') are Python scripts which, on their first execution,
+            # must compile bytecode before executing. When this timeout was 10 seconds, we observed occasional
+            # timeouts because of this. Therefore, the timeout is now 30 seconds.
+            timeout: 30000
             skip: false
     {{end}}
