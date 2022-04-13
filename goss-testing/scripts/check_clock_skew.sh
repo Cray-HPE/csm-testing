@@ -1,8 +1,8 @@
-#!/bin/bash
-
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP.
+#!/usr/bin/env bash
 #
 # MIT License
+#
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -16,21 +16,19 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
 
-baseline=""
 #
 # Being a bit conservative here -- want to leave a bit
 # of room for ssh times, but not too much so we don't
 # allow real drift.
 #
 allowed_drift_seconds=1
-cnt=0
-exit_code=0
 pdsh_node_args=""
 
 function check_ssh() {
@@ -49,31 +47,42 @@ for node in $nodes; do
   pdsh_node_args="$pdsh_node_args -w $node"
 done
 
-node_times=$(pdsh $pdsh_node_args 'date -u "+%s"' 2>/dev/null)
-node_times_array=( $node_times )
-array_length=${#node_times_array[@]}
+for try in {1..3}; do
+  # Set/reset variables at the top of each attempt loop
+  cnt=0
+  exit_code=0
+  baseline=""
 
-echo "Epoch seconds by node (allowing $allowed_drift_seconds seconds of drift):"
-echo "$node_times"
-echo ""
+  echo "Checking clock skew...attempt $try of 3..."
+  # short delay between tries
+  sleep 10
 
-while [[ "$cnt" -lt "$array_length" ]]; do
-  node="${node_times_array[$cnt]}"
-  cnt=$((cnt+1))
-  epoch_secs="${node_times_array[$cnt]}"
-  cnt=$((cnt+1))
-  node=$(echo $node | sed 's/://g')
+  node_times=$(pdsh $pdsh_node_args 'date -u "+%s"' 2>/dev/null)
+  node_times_array=( $node_times )
+  array_length=${#node_times_array[@]}
 
-  if [ "$baseline" == "" ]; then
-    baseline=$epoch_secs
-    continue
-  fi
-  diff="$(($baseline-$epoch_secs))"
-  diff=${diff/-/} # absolute value
-  if [[ "$diff" -gt "$allowed_drift_seconds" ]]; then
-    echo "ERROR: $node has drifted $diff second(s)"
-    exit_code=1
-  fi
+  echo "Epoch seconds by node (allowing $allowed_drift_seconds seconds of drift):"
+  echo "$node_times"
+  echo ""
+
+  while [[ "$cnt" -lt "$array_length" ]]; do
+    node="${node_times_array[$cnt]}"
+    cnt=$((cnt+1))
+    epoch_secs="${node_times_array[$cnt]}"
+    cnt=$((cnt+1))
+    node=$(echo $node | sed 's/://g')
+
+    if [ "$baseline" == "" ]; then
+      baseline=$epoch_secs
+      continue
+    fi
+    diff="$(($baseline-$epoch_secs))"
+    diff=${diff/-/} # absolute value
+    if [[ "$diff" -gt "$allowed_drift_seconds" ]]; then
+      echo "ERROR: $node has drifted $diff second(s)"
+      exit_code=1
+    fi
+  done
+  [[ $exit_code -eq 0 ]] && exit 0
 done
-
 exit $exit_code
