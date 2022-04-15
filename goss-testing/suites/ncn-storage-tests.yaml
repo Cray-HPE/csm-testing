@@ -19,7 +19,8 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
+
 gossfile:
   ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
-  ../tests/goss-ceph-storage-health.yaml: {}
   ../tests/goss-ceph-storage-services.yaml: {}
