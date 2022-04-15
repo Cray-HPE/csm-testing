@@ -25,5 +25,4 @@
 
 gossfile:
   ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
-  ../tests/goss-ceph-storage-health.yaml: {}
   ../tests/goss-ceph-storage-services.yaml: {}
