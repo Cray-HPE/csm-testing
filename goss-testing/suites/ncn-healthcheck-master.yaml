@@ -52,3 +52,5 @@ gossfile:
   ../tests/goss-k8s-etcd-*.yaml: {}
   ../tests/goss-k8s-monitoring-url.yaml: {}
   ../tests/goss-cfs-state-reporter.yaml: {}
+  ../tests/goss-ncn-xname.yaml: {}
+  

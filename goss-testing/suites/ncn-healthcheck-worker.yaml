@@ -55,3 +55,4 @@ gossfile:
   ../tests/goss-k8s-precache-images-health.yaml: {}
   ../tests/goss-cfs-state-reporter.yaml: {}
   ../tests/goss-check-static-routes.yaml: {}
+  ../tests/goss-ncn-xname.yaml: {}
