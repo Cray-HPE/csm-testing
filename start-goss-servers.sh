@@ -24,7 +24,6 @@
 #
 # Goss server start up commands to serve health check endpoints
 
-
 export GOSS_BASE=/opt/cray/tests/install/ncn
 export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
 
@@ -40,6 +39,10 @@ cat $vars_file > $tmpvars
 echo "" >> $tmpvars
 
 echo "Using Goss vars: $tmpvars"
+
+source "$GOSS_BASE/automated/run-ncn-tests.sh"
+# Add local nodename as variable
+add_host_var "$tmpvars"
 
 nodes=""
 # add node names from basecamp or bss metadata to temp variables file
