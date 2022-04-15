@@ -19,11 +19,14 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
 
 # GOSS_BASE isn't set by default on the NCNs, just on LiveCD
 [[ -z $GOSS_BASE ]] && export GOSS_BASE=/opt/cray/tests/install/ncn
 
 export GOSS_VARS=/tmp/goss-variables-$(date +%s)-temp.yaml
+
+source "$GOSS_BASE/automated/run-ncn-tests.sh"
 
 # files needed to run from livecd
 kube_creds=/root/.kube/config
@@ -37,6 +40,9 @@ else
   cat $GOSS_BASE/vars/variables-ncn.yaml > $GOSS_VARS
 fi
 echo "" >> $GOSS_VARS
+
+# Add local nodename as variable
+add_host_var "$GOSS_VARS"
 
 if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
   k8s_nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE 'ncn-[m,w]([0-9]{3})' | grep -v ncn-m001 | awk '!a[$0]++')
@@ -55,8 +61,6 @@ else
   echo "Node names could not be found in files! Exiting now."
   exit 1
 fi
-
-source $GOSS_BASE/automated/run-ncn-tests.sh
 
 if [ -f $pit_file ]; then
   # running on a pit node

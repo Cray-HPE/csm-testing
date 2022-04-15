@@ -22,6 +22,8 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
+# Goss server start up commands to serve health check endpoints
 
 export GOSS_BASE=/opt/cray/tests/install/ncn
 
@@ -37,6 +39,10 @@ cat $vars_file > $tmpvars
 echo "" >> $tmpvars
 
 echo "Using Goss vars: $tmpvars"
+
+source "$GOSS_BASE/automated/run-ncn-tests.sh"
+# Add local nodename as variable
+add_host_var "$tmpvars"
 
 nodes=""
 # add node names from basecamp or bss metadata to temp variables file

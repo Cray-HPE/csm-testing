@@ -100,3 +100,27 @@ function run_ncn_tests {
   fi
   return 0
 }
+
+function add_host_var
+{
+    # $1 - goss variable file
+    if [[ $# -ne 1 ]]; then
+        echo "ERROR: add_host_var: Function requires exactly 1 argument but received $#: $*"
+        return 1
+    elif [[ -z $1 ]]; then
+        echo "ERROR: add_host_var: Argument may not be blank"
+        return 1
+    elif [[ ! -e $1 ]]; then
+        echo "ERROR: add_host_var: File '$1' does not exist"
+        return 1
+    elif [[ ! -f $1 ]]; then
+        echo "ERROR: add_host_var: File '$1' exists but is not a regular file"
+        return 1
+    fi
+
+    local myname
+    # Add local nodename as variable
+    myname=$(hostname -s | grep -Eo '(ncn-[msw][0-9]{3}|.*-pit)$')
+    echo -e "\nthisnode: \"$myname\"\n" >> $1
+    return $?
+}
