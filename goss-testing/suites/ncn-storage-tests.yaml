@@ -29,6 +29,7 @@
 {{ $thisnode := .Vars.thisnode }}
 gossfile:
     ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
+    ../tests/goss-ncn-xname.yaml: {}
     # This takes a while to run and does not need to be run on all of the
     # storage nodes, so we only run it on ncn-s001
     {{if eq $thisnode "ncn-s001"}}
