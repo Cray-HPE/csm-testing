@@ -33,3 +33,4 @@ gossfile:
     ../tests/goss-ceph-storage-services.yaml: {}
     {{end}}
     ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
+    ../tests/goss-ncn-xname.yaml: {}

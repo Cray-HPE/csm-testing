@@ -19,6 +19,8 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
+
 gossfile:
   ../tests/goss-command-available.yaml: {}
   ../tests/goss-interface-has-ip.yaml: {}
@@ -29,3 +31,4 @@ gossfile:
   ../tests/goss-bond-members-have-correct-mtu.yaml: {}
   ../tests/goss-dns-nodes.yaml: {}
   ../tests/goss-default-gateway-points-to-CAN-gateway.yaml: {}
+  ../tests/goss-ncn-xname.yaml: {}

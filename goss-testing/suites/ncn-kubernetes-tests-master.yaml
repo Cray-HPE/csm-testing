@@ -19,6 +19,8 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
+
 gossfile:
   ../tests/goss-etcd-service.yaml: {}
   ../tests/goss-weave-IPAM-health.yaml: {}
@@ -31,3 +33,4 @@ gossfile:
 # ../tests/goss-k8s-trustedcerts-configmaps-exist.yaml: {}
 # ../tests/goss-k8s-vault-cluster-health.yaml: {}
   ../tests/goss-etcdlvm-drive-master.yaml: {}
+  ../tests/goss-ncn-xname.yaml: {}
