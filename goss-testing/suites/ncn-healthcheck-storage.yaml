@@ -32,3 +32,4 @@ gossfile:
   ../tests/goss-dns-nodes.yaml: {}
   ../tests/goss-default-gateway-points-to-CMN-gateway.yaml: {}
   ../tests/goss-check-static-routes.yaml: {}
+  ../tests/goss-ncn-xname.yaml: {}

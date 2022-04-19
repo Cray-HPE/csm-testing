@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,15 +21,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-# This test suite is run during CSM installs before CSM services are deployed
 
-gossfile:
-  ../tests/goss-weave-IPAM-health.yaml: {}
-  ../tests/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
-  ../tests/goss-ceph-csi-k8s-requirements.yaml: {}
-  ../tests/goss-k8s-verify-cluster.yaml: {}
-  ../tests/goss-k8s-certmanager-certs-ready.yaml: {}
-  ../tests/goss-k8s-certmanager-issuers-ready.yaml: {}
-  ../tests/goss-unbound-dns-entries.yaml: {}
-  ../tests/goss-dedicated-drive-worker.yaml: {}
-  ../tests/goss-ncn-xname.yaml: {}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $check_ncn_xname := $scripts | printf "%s/check_ncn_xname.sh" }}
+command:
+    {{ $testlabel := "check_ncn_xname" }}
+    {{$testlabel}}:
+        title: Validates that the NCN knows its component name (xname).
+        meta:
+            desc: If this test fails, run {{$check_ncn_xname}} for details.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                {{$check_ncn_xname}}
+        exit-status: 0
+        timeout: 10000
