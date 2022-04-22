@@ -21,8 +21,17 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-# This suite is run during CSM installs before CSM services have been deployed
 
+#
+# This suite is run during CSM installs before CSM services have been deployed
+#
+
+{{ $thisnode := .Vars.thisnode }}
 gossfile:
-  ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
-  ../tests/goss-ceph-storage-services.yaml: {}
+    ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
+    ../tests/goss-ncn-xname.yaml: {}
+    # This takes a while to run and does not need to be run on all of the
+    # storage nodes, so we only run it on ncn-s001
+    {{if eq $thisnode "ncn-s001"}}
+        ../tests/goss-ceph-storage-services.yaml: {}
+    {{end}}
