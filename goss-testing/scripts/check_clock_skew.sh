@@ -30,20 +30,17 @@
 #
 allowed_drift_seconds=1
 pdsh_node_args=""
-
-function check_ssh() {
-  node=$1
-  output=$(pdsh -w $node 'ls /tmp' 2>&1 | grep -q 'verification failed')
-  if [[ "$?" -eq 0 ]]; then
-    echo "Adding key from $node to known_hosts"
-    ssh-keyscan -t rsa -H $node >> ~/.ssh/known_hosts
-  fi
-}
-
+mkdir -p ~/.ssh/sockets/
+export PDSH_SSH_ARGS_APPEND="-o ControlMaster=auto -o ControlPath=~/.ssh/sockets/%r@%h-%p -o ControlPersist=600 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 nodes=$(cloud-init query ds | jq -r ".meta_data[].host_records[] | select(.aliases[]? | contains(\"ncn\")) | .aliases[]"  2>/dev/null | sort | uniq | grep -v '\.' | grep -v 'mgmt')
 
 for node in $nodes; do
-  check_ssh $node
+    # setup the initial ssh connection to each node so it can be re-used below for a faster test
+    #shellcheck disable=SC2086
+  ssh $PDSH_SSH_ARGS_APPEND "$node" 'sleep 180' &
+done
+
+for node in $nodes; do
   pdsh_node_args="$pdsh_node_args -w $node"
 done
 
