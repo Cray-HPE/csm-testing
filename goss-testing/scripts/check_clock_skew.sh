@@ -22,67 +22,28 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+set -euf -o pipefail
 
-#
-# Being a bit conservative here -- want to leave a bit
-# of room for ssh times, but not too much so we don't
-# allow real drift.
-#
-allowed_drift_seconds=1
-pdsh_node_args=""
-
-function check_ssh() {
-  node=$1
-  output=$(pdsh -w $node 'ls /tmp' 2>&1 | grep -q 'verification failed')
-  if [[ "$?" -eq 0 ]]; then
-    echo "Adding key from $node to known_hosts"
-    ssh-keyscan -t rsa -H $node >> ~/.ssh/known_hosts
-  fi
-}
-
-nodes=$(cloud-init query ds | jq -r ".meta_data[].host_records[] | select(.aliases[]? | contains(\"ncn\")) | .aliases[]"  2>/dev/null | sort | uniq | grep -v '\.' | grep -v 'mgmt')
+if ! { [[ -f /var/www/ephemeral/configs/data.json ]] \
+  || [[ "$HOSTNAME" == *pit ]] ;}; then
+  # If this is runtime, check cloud-init
+  nodes=$(cloud-init query ds | jq -r ".meta_data[].host_records[] | select(.aliases[]? | contains(\"ncn\")) | .aliases[]"  2>/dev/null | sort | uniq | grep -v '\.' | grep -v 'mgmt')
+else
+  # If this is running on the PIT, check dnsmasq as the source of truth
+  nodes=$(grep -oP 'ncn-\w\d+' /etc/dnsmasq.d/statics.conf | sort -u)
+fi
 
 for node in $nodes; do
-  check_ssh $node
-  pdsh_node_args="$pdsh_node_args -w $node"
+  # waitsync
+  #    arg 1: maximum number of tries before giving up and returning a non-zero error code
+  #    arg 2: maximum allowed remaining correction of the system clock 
+  #    arg 3: maximum allowed skew (in ppm) as reported by the tracking command
+  #    arg 4: interval specified in seconds in which the check is repeated
+  #
+  # try 10 times and allow skew of up to 1 second before returning a non-zero error code
+  # remote chronyc commands require 'cmdallow' and 'bindcmdaddress' to be set in the chrony config
+  printf '%s: ' "$node"
+  chronyc -h "$node" waitsync 2 1.0 
+  printf "\n"
+  # printf "%d." $(echo 0AFC0107 | sed 's/../0x& /g' | tr ' ' '\n' | cat) | sed 's/\.$/\n/'
 done
-
-for try in {1..3}; do
-  # Set/reset variables at the top of each attempt loop
-  cnt=0
-  exit_code=0
-  baseline=""
-
-  echo "Checking clock skew...attempt $try of 3..."
-  # short delay between tries
-  sleep 10
-
-  node_times=$(pdsh $pdsh_node_args 'date -u "+%s"' 2>/dev/null)
-  node_times_array=( $node_times )
-  array_length=${#node_times_array[@]}
-
-  echo "Epoch seconds by node (allowing $allowed_drift_seconds seconds of drift):"
-  echo "$node_times"
-  echo ""
-
-  while [[ "$cnt" -lt "$array_length" ]]; do
-    node="${node_times_array[$cnt]}"
-    cnt=$((cnt+1))
-    epoch_secs="${node_times_array[$cnt]}"
-    cnt=$((cnt+1))
-    node=$(echo $node | sed 's/://g')
-
-    if [ "$baseline" == "" ]; then
-      baseline=$epoch_secs
-      continue
-    fi
-    diff="$(($baseline-$epoch_secs))"
-    diff=${diff/-/} # absolute value
-    if [[ "$diff" -gt "$allowed_drift_seconds" ]]; then
-      echo "ERROR: $node has drifted $diff second(s)"
-      exit_code=1
-    fi
-  done
-  [[ $exit_code -eq 0 ]] && exit 0
-done
-exit $exit_code
