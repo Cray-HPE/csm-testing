@@ -30,7 +30,7 @@ command:
     {{$testlabel}}:
         title: Check clock skew on k8s and storage nodes
         meta:
-            desc: If this test fails, see https://cray-hpe.github.io/docs-csm/en-12/operations/node_management/configure_ntp_on_ncns/#fix-broken-configs for steps to remediate clock skew."
+            desc: If this test fails, see "operations/node_management/Configure_NTP_on_NCNs.md#fix-broken-configs" in the CSM release documentation for steps to remediate clock skew.
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
