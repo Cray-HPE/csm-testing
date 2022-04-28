@@ -113,7 +113,6 @@ k8s_worker_mounts:
   - /run/containerd
 
 ceph_files:
-  - /usr/bin/ceph
   - /etc/cray/ceph/ceph_k8s_initialized
   - /etc/cray/ceph/csi_initialized
 
