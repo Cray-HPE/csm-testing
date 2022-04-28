@@ -22,6 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $thisnode := .Vars.thisnode }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 package:
     ceph-common:
@@ -30,16 +31,6 @@ package:
             desc: Check that Ceph is installed
             sev: 0
         installed: true
-file:
-    {{range $ceph_file := index .Vars "ceph_files"}}
-        {{$ceph_file}}:
-            title: {{$ceph_file}} file
-            meta:
-                desc: "Check that {{$ceph_file}} file exists"
-                sev: 0
-            exists: true
-            filetype: file
-    {{end}}
 command:
     {{ $testlabel := "ceph_installed" }}
     {{$testlabel}}:
@@ -52,3 +43,16 @@ command:
                 /usr/bin/ceph -s
         exit-status: 0
         timeout: 10000
+file:
+    # These files only are checked on ncn-s001
+    {{if eq $thisnode "ncn-s001"}}
+        {{range $ceph_file := index .Vars "ceph_files"}}
+            {{$ceph_file}}:
+                title: {{$ceph_file}} file
+                meta:
+                    desc: "Check that {{$ceph_file}} file exists"
+                    sev: 0
+                exists: true
+                filetype: file
+        {{end}}
+    {{end}}
