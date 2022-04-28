@@ -100,6 +100,10 @@ k8s_worker_mounts:
   - /var/lib/kubelet
   - /run/containerd
 
+ceph_files:
+  - /etc/cray/ceph/ceph_k8s_initialized
+  - /etc/cray/ceph/csi_initialized
+
 datajson:
   - "/mnt/configs/data.json"
 
