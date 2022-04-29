@@ -30,3 +30,4 @@ gossfile:
   ../tests/goss-k8s-certmanager-certs-ready.yaml: {}
   ../tests/goss-k8s-certmanager-issuers-ready.yaml: {}
   ../tests/goss-etcdlvm-drive-master.yaml: {}
+  ../tests/goss-ncn-xname.yaml: {}

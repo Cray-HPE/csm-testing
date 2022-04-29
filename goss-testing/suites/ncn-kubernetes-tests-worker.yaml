@@ -32,3 +32,4 @@ gossfile:
   ../tests/goss-k8s-certmanager-issuers-ready.yaml: {}
   ../tests/goss-unbound-dns-entries.yaml: {}
   ../tests/goss-dedicated-drive-worker.yaml: {}
+  ../tests/goss-ncn-xname.yaml: {}
