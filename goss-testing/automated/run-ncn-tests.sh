@@ -1,6 +1,7 @@
-# This file is sourced by the NCN automated testing scripts.
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP.
+# MIT License
+#
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -14,11 +15,14 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
+
+# This file is sourced by the NCN automated testing scripts.
 
 function k8s_local_tests {
   echo
@@ -99,4 +103,28 @@ function run_ncn_tests {
     echo $'\e[1;31m'ERROR: Server endpoint could not be reached$'\e[0m'
   fi
   return 0
+}
+
+function add_host_var
+{
+    # $1 - goss variable file
+    if [[ $# -ne 1 ]]; then
+        echo "ERROR: add_host_var: Function requires exactly 1 argument but received $#: $*"
+        return 1
+    elif [[ -z $1 ]]; then
+        echo "ERROR: add_host_var: Argument may not be blank"
+        return 1
+    elif [[ ! -e $1 ]]; then
+        echo "ERROR: add_host_var: File '$1' does not exist"
+        return 1
+    elif [[ ! -f $1 ]]; then
+        echo "ERROR: add_host_var: File '$1' exists but is not a regular file"
+        return 1
+    fi
+
+    local myname
+    # Add local nodename as variable
+    myname=$(hostname -s | grep -Eo '(ncn-[msw][0-9]{3}|.*-pit)$')
+    echo -e "\nthisnode: \"$myname\"\n" >> $1
+    return $?
 }
