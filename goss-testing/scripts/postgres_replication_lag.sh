@@ -77,6 +77,46 @@ else
     echo "PostgreSQL cluster checks may take several minutes, depending on the number of attempts per cluster."
 fi
 
+echo "Checking to see if any cluster members need a patroni service restart."
+
+postgresClusters="$(kubectl get postgresql -A | grep -v NAME | awk '{print $1","$2}')"
+for c in $postgresClusters
+do
+    # NameSpace and PostgreSQL cluster name
+    c_ns="$(echo $c | awk -F, '{print $1;}')"
+    c_name="$(echo $c | awk -F, '{print $2;}')"
+    # Get the postgres leader
+    c_leader=$(kubectl exec "${c_name}-0" -c postgres -n ${c_ns} -- patronictl list -f json 2>/dev/null | jq -r '.[] | select((.Role == "Leader") and (.State =="running")) | .Member')
+
+    if [[ -z $c_leader ]]; then
+        echo "No Leader exists for $c_name cluster - unable to restart patroni service."
+        continue
+    fi
+
+    # Get the cluster details from the leader
+    c_cluster_details=$(kubectl exec ${c_leader} -c postgres -it -n ${c_ns} -- patronictl list -f json)
+
+    # Determine the max lag across all members, unknown lag count across all members, list of lagging member by pod name
+    c_max_lag=$(echo $c_cluster_details | jq '[.[] | select((."Lag in MB" != "unknown"))."Lag in MB"] | max')
+    c_unknown_lag=$(echo $c_cluster_details | jq '.[] | ."Lag in MB"' | grep "unknown" | wc -l)
+    c_members_lagging=$(echo $c_cluster_details | jq -r '.[] | select(((."Lag in MB" > 0) or (."Lag in MB" == "unknown"))).Member')
+
+    # Exit with success if no lag is found
+    if [[ $c_unknown_lag -eq 0 ]] && [[ $c_max_lag -eq 0 ]]; then
+        echo "No lag was found for $c_name cluster - patroni service restart not needed."
+        continue
+    fi
+
+    # Restart patroni for any members found to be lagging ( >0 or "unknown" )
+    for member in $c_members_lagging
+    do
+        echo "Restarting patroni service on $member in $c_ns namespace"
+        kubectl exec $member -n $c_ns -c postgres -- /bin/sh -c 'sv stop patroni; sv start patroni'
+    done
+done
+
+echo "Done checking for patroni service restarts, validating lag."
+
 failFlag=0
 postgresClusters="$(kubectl get postgresql -A | grep -v NAME | awk '{print $1","$2}')"
 for c in $postgresClusters
@@ -84,9 +124,13 @@ do
     # NameSpace and PostgreSQL cluster name
     c_ns="$(echo $c | awk -F, '{print $1;}')"
     c_name="$(echo $c | awk -F, '{print $2;}')"
+    c_leader=$(kubectl exec "${c_name}-0" -c postgres -n ${c_ns} -- patronictl list -f json 2>/dev/null | jq -r '.[] | select((.Role == "Leader") and (.State =="running")) | .Member')
 
-    first_member="$(kubectl get pod -n $c_ns -l "cluster-name=$c_name,application=spilo" \
-                  -o custom-columns=NAME:.metadata.name --no-headers | head -1)"
+    if [[ -z $c_leader ]]; then
+        echo "No Leader exists for $c_name cluster - unable to check for lag."
+        failFlag=1
+        continue
+    fi
 
     if [[ $print_results -eq 1 ]]; then echo -n "$c_name - "; fi
     c_attempt=0
@@ -101,8 +145,9 @@ do
 
         # We omit the often-seen '-it' flags from the kubectl call because we do not need to pass in stdin, and using
         # those flags generates warning messages when this script is run in some contexts.
-        cluster_lag=$(kubectl exec $first_member -c postgres -n ${c_ns} -- curl -s http://localhost:8008/cluster | jq '[.members[] | .lag]')
-        c_max_lag=$(echo $cluster_lag | jq max)
+
+        c_cluster_details=$(kubectl exec ${c_leader} -c postgres -it -n ${c_ns} -- patronictl list -f json)
+        c_max_lag=$(echo $c_cluster_details | jq '[.[] | select((."Lag in MB" != "unknown"))."Lag in MB"] | max')
         c_unknown_lag=$(echo $cluster_lag | grep "unknown" | wc -l)
         if [[ -n $c_lag_history ]]; then
             c_lag_history="${c_lag_history}, $c_max_lag"
