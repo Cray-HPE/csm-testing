@@ -58,15 +58,20 @@ file_exists "$dnsmasq_statics"
 nodes=$(grep -ohE 'ncn-[msw]([0-9]{3})' "$dnsmasq_statics" | awk '!a[$0]++')
 tmpvars=/tmp/goss-variables-$(date +%s)-temp.yaml
 
-# add node names from statics.conf to temp variables file
-if [ `echo $nodes | wc -w` -ne 0 ];then
+# Add node names from statics.conf to temp variables file.
+# We expect there to be at least 9 nodes (3 each of masters,
+# storage, and workers).
+num_nodes=$(echo $nodes | wc -w)
+if [[ $num_nodes -ge 9 ]];then
   echo "nodes:" >> $tmpvars
   for node in $nodes; do
-    echo "  - $node" >> $tmpvars
-    echo "" >> $tmpvars
+    echo "  - $node" >> $tmpvars    
   done
-else
+  echo "" >> $tmpvars
+elif [[ $num_nodes -eq 0 ]]; then
   err_exit "Node names could not be found in $dnsmasq_statics file!"
+else
+  err_exit "Only $num_nodes node name(s) found in $dnsmasq_statics file!"
 fi
 cat $vars_file >> $tmpvars
 
