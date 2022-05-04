@@ -21,28 +21,65 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-# Variable sets: artifact_symlinks and artifact_dirs
+
+# This test is intended to be run as a pre-flight check on the PIT
+# node before the other NCNs are deployed. The test validates that
+# the kernel, kernel, and squashfs boot artifacts exist and (at least
+# from a cursory check) appear to be valid. In the case of the squashfs
+# image, we also validate that the target of its link begins with the
+# prefix "secure-", which indicates that it was customized using the
+# ncn-image-modification.sh script, as is required starting in 
+# CSM 1.2.
+
+# Variable sets: artifact_symlinks and nodes
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 file:
-  {{range $artifact_dirs := index .Vars "artifact_dirs"}}
-  {{range $dir := index $artifact_dirs "dirs"}}
-  /var/www/{{ $dir }}:
-    title: Directories in Place
-    meta:
-      desc: Validates the artifact directories exist in /var/www..
-      sev: 0
-    exists: true
-    filetype: directory
-    skip: false
-  {{range $dir_symlink := index $artifact_dirs "symlinks"}}
-  /var/www/{{ $dir }}/{{ $dir_symlink }}:
-    title: Symlinks in Directories
-    meta:
-      desc: Validates the artifact symlinks in the directories in /var/www exist and are valid links to real files.
-      sev: 0
-    exists: true
-    filetype: symlink
-    contains: [ " " ]
-    skip: false
-  {{end}}
-  {{end}}
-  {{end}}
+    {{range $dir := index .Vars "nodes"}}
+        # Do not do this for ncn-m001, since it does not boot from the PIT, thus
+        # it has no boot artifacts here.
+        {{if ne $dir "ncn-m001"}}
+            /var/www/{{ $dir }}:
+                title: Directories in Place
+                meta:
+                    desc: Validates the artifact directories exist in /var/www..
+                    sev: 0
+                exists: true
+                filetype: directory
+                skip: false
+            # The $ is required to access the artifact_symlinks variable
+            # because of our scope inside the loop.
+            {{range $dir_symlink := index $.Vars "artifact_symlinks"}}
+            /var/www/{{ $dir }}/{{ $dir_symlink }}:
+                title: Symlinks in Directories
+                meta:
+                    desc: Validates the artifact symlinks in the directories in /var/www exist and are valid links to real files.
+                    sev: 0
+                exists: true
+                filetype: symlink
+                contains: [ " " ]
+                skip: false
+            {{end}}
+        {{end}}
+    {{end}}
+command:
+    {{range $dir := index .Vars "nodes"}}
+        # Do not do this for ncn-m001, since it does not boot from the PIT, thus
+        # it has no boot artifacts here.
+        {{if ne $dir "ncn-m001"}}
+            {{ $testlabel := $dir | printf "%s_secure_squashfs" }}
+            {{$testlabel}}:
+                title: Squashfs Image Has Been Modified
+                meta:
+                    desc: Validates that the squashfs image filename has secure- prefix, indicating the ncn-image-modification.sh script has been run.
+                    sev: 0
+                exec: |-
+                    # We must look at the filename of the target of the symbolic link, not the link itself.
+                    # The readlink command is used to accomplish this.
+                    set -eo pipefail
+                    "{{$logrun}}" -l "{{$testlabel}}" \
+                        basename "$(readlink /var/www/{{ $dir }}/filesystem.squashfs)" | 
+                            grep "^secure-"
+                exit-status: 0
+                timeout: 5000
+        {{end}}
+    {{end}}

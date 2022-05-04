@@ -85,21 +85,6 @@ artifact_symlinks:
   - initrd.img.xz
   - kernel
 
-artifact_dirs:
-  - dirs:
-    - ncn-m002
-    - ncn-m003
-    - ncn-s001
-    - ncn-s002
-    - ncn-s003
-    - ncn-w001
-    - ncn-w002
-    - ncn-w003
-    symlinks:
-      - filesystem.squashfs
-      - initrd.img.xz
-      - kernel
-
 unbound_hostnames:
   - rgw-vip.nmn
   - rgw-vip.hmn
