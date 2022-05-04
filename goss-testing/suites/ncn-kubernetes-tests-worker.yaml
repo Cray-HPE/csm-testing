@@ -24,7 +24,7 @@
 # This test suite is run during CSM installs before CSM services are deployed
 
 gossfile:
-  ../tests/goss-weave-IPAM-health.yaml: {}
+  ../tests/goss-weave-health.yaml: {}
   ../tests/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
   ../tests/goss-ceph-csi-k8s-requirements.yaml: {}
   ../tests/goss-k8s-verify-cluster.yaml: {}
