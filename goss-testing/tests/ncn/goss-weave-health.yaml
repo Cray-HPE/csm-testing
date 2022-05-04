@@ -21,14 +21,24 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-command:
-  k8s_check_weave_IPAM_status:
-    title: Weave IPAM Health
-    meta:
-      desc: Check that weave IPAM is healthy.
-      sev: 0
-    exec: kubectl -n kube-system exec `kubectl -n kube-system get pods -l name=weave-net -o jsonpath='{.items[*].metadata.name}' | awk '{print $1}'` -c weave -- /home/weave/weave --local status ipam | grep "IP allocation was seeded by different peers"
-    exit-status:
-      gt: 0
-    timeout: 10000
 
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+command:
+    {{ $testlabel := "k8s_check_weave_status" }}
+    {{$testlabel}}:
+        title: Weave Health
+        meta:
+            desc: Check that Weave is healthy.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                weave --local status connections
+        # The command should succeed
+        exit-status: 0
+        # There should be nothing shown on stderr
+        stderr:
+            - "!/./"
+        # We fail if the following message shows up in stdout
+        stdout:
+            - "!IP allocation was seeded by different peers"
+        timeout: 15000
