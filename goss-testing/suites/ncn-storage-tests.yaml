@@ -28,13 +28,15 @@
 
 {{ $thisnode := .Vars.thisnode }}
 gossfile:
-    # This takes a while to run and does not need to be run on all of the
-    # storage nodes, so we only run it on ncn-s001
     {{if eq $thisnode "ncn-s001"}}
-    ../tests/goss-ceph-storage-services.yaml: {}
     # This test checks for the presence of files which indicate that
     # Ceph was successfully configured on ncn-s001
     ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
     {{end}}
     ../tests/goss-ceph-status.yaml: {}
+    {{if eq $thisnode "ncn-s001"}}
+    # This takes a while to run and does not need to be run on all of the
+    # storage nodes, so we only run it on ncn-s001
+    ../tests/goss-ceph-storage-services.yaml: {}
+    {{end}}
     ../tests/goss-ncn-xname.yaml: {}
