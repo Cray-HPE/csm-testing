@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,19 +22,29 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-#
-# This suite is run during CSM installs before CSM services have been deployed
-#
-
 {{ $thisnode := .Vars.thisnode }}
-gossfile:
-    # This takes a while to run and does not need to be run on all of the
-    # storage nodes, so we only run it on ncn-s001
-    {{if eq $thisnode "ncn-s001"}}
-    ../tests/goss-ceph-storage-services.yaml: {}
-    # This test checks for the presence of files which indicate that
-    # Ceph was successfully configured on ncn-s001
-    ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+package:
+    # This package is installed on all NCNs
+    ceph-common:
+        title: ceph-common package
+        meta:
+            desc: Check that Ceph is installed
+            sev: 0
+        installed: true
+command:
+    # We expect "ceph -s" to work on the first three storage nodes
+    # and any master node
+    {{if $thisnode | regexMatch "^ncn-(m|s00[1-3])" }}
+        {{ $testlabel := "ceph_s_runs" }}
+        {{$testlabel}}:
+            title: ceph -s
+            meta:
+                desc: Check that ceph -s successfully executes
+                sev: 0
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    /usr/bin/ceph -s
+            exit-status: 0
+            timeout: 10000
     {{end}}
-    ../tests/goss-ceph-status.yaml: {}
-    ../tests/goss-ncn-xname.yaml: {}
