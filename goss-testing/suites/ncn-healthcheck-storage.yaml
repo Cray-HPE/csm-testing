@@ -21,7 +21,15 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+#
+# This suite is run:
+# * During CSM Health Validation (after CSM services have been deployed), both
+#   before and after PIT redeployment
+#
+
 gossfile:
+  ../tests/goss-ceph-status.yaml: {}
   ../tests/goss-command-available.yaml: {}
   ../tests/goss-interface-has-ip.yaml: {}
   ../tests/goss-bond-members-have-links.yaml: {}
