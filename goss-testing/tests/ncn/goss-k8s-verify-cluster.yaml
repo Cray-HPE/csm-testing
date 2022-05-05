@@ -21,18 +21,38 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 command:
-  k8s_verify_cluster:
-    title: Kubernetes Pods
-    meta:
-      desc: Kubernetes kube-system namespace pods are running.
-      sev: 0
-    exec: "kubectl get po -n kube-system"
-    stdout:
-    - /^kube-apiserver.*Running/
-    - /^kube-controller-manager.*Running/
-    - /^kube-multus-ds.*Running/
-    - /^kube-proxy.*Running/
-    - /^kube-scheduler.*Running/
-    - /^weave-net.*Running/
-    - /^coredns.*Running/
-    exit-status: 0
+    k8s_verify_cluster_1:
+        title: Specific kube-system Pods Running
+        meta:
+            desc: Specific Kubernetes kube-system namespace pods are Running.
+            sev: 0
+        exec: |-
+            kubectl get po -n kube-system -o custom-columns=:.metadata.name,:status.phase --no-headers
+        stderr:
+            # Fail if any line of stderr contains any characters -- that is, fail if there is any output to stderr
+            - "!/./"
+        stdout:
+            - /^coredns-.*Running/
+            - /^kube-apiserver-.*Running/
+            - /^kube-controller-manager-.*Running/
+            - /^kube-multus-ds-.*Running/
+            - /^kube-proxy-.*Running/
+            - /^kube-scheduler-.*Running/
+            - /^weave-net-.*Running/
+        exit-status: 0
+        timeout: 10000
+    k8s_verify_cluster_2:
+        title: All kube-system Pods Running or Completed
+        meta:
+            desc: All Kubernetes kube-system namespace pods are Running or Completed.
+            sev: 0
+        exec:  |-
+            kubectl get po -n kube-system --no-headers | grep -Ev 'Running|Completed'
+        # We expect no output and for the grep command to return non-0
+        stdout:
+            - "!/./"
+        stderr:
+            - "!/./"
+        exit-status:
+            gt: 0
+        timeout: 10000
