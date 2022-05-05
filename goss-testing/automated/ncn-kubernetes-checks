@@ -70,7 +70,7 @@ if [ -f $pit_file ]; then
   echo $'\e[1;33m'PIT Node Kubernetes Checks$'\e[0m'
   echo $'\e[1;33m'--------------------------$'\e[0m'
   if [ -f $kube_creds ]; then
-    # run livecd local kubernetes tests
+    # run livecd local Kubernetes cluster tests
     k8s_local_tests
   else
     # We preface this warning with 'Total Tests:' to make it more visible, because the install documentation
@@ -96,7 +96,7 @@ if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
     run_ncn_tests "$node" "8996" "ncn-kubernetes-tests-master" ; \
   done
 else
-  nodes=$(cat /etc/hosts | grep -ohE "ncn-m([0-9]{3})" | grep -v ncn-m001 | awk '!a[$0]++')
+  nodes=$(cat /etc/hosts | grep -ohE "ncn-m([0-9]{3})" | awk '!a[$0]++')
   for node in $nodes ; do \
     run_ncn_tests "$node" "8996" "ncn-kubernetes-tests-master" ; \
     run_ncn_tests "$node" "9007" "ncn-afterpitreboot-kubernetes-tests-master" ; \

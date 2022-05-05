@@ -24,21 +24,15 @@
 # This file is sourced by the NCN automated testing scripts.
 
 function k8s_local_tests {
-  echo
-  echo "Test Name: Kubernetes Nodes in Ready State"
-  /usr/bin/goss -g $GOSS_BASE/tests/goss-k8s-nodes-joined-cluster.yaml v
-  echo
-  echo "Test Name: Kubernetes Nodes Have Valid Age"
-  /usr/bin/goss -g $GOSS_BASE/tests/goss-k8s-nodes-age-valid.yaml v
-  echo
-  echo "Test Name: Ceph CSI Kubernetes Requirements Exist"
-  /usr/bin/goss -g $GOSS_BASE/tests/goss-ceph-csi-k8s-requirements.yaml v
-  echo
-  # Skip this check if on PIT node. Services being checked may not yet be
-  # installed/ready:
   if [[ ! -f "/etc/dnsmasq.d/statics.conf" ]]; then
-    echo "Test Name: Keycloak Users Localize Is Complete"
-    /usr/bin/goss -g $GOSS_BASE/tests/goss-k8s-keycloak-localize-job-completed.yaml v
+    # Running on the PIT node -- run the PIT-appropriate suite
+    echo "Test Suite: Kubernetes Cluster Checks (on PIT node)"
+    /usr/bin/goss -g $GOSS_BASE/suites/common-kubernetes-tests-cluster.yaml v
+    echo
+  else
+    # Not on the PIT node
+    echo "Test Suite: Kubernetes Cluster Checks"
+    /usr/bin/goss -g $GOSS_BASE/suites/ncn-kubernetes-tests-cluster.yaml v
     echo
   fi
 }
