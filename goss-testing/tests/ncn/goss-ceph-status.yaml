@@ -24,16 +24,27 @@
 
 {{ $thisnode := .Vars.thisnode }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
-file:
-    # These files only are checked on ncn-s001
-    {{if eq $thisnode "ncn-s001"}}
-        {{range $ceph_file := index .Vars "ceph_files"}}
-            {{$ceph_file}}:
-                title: {{$ceph_file}} file
-                meta:
-                    desc: "Check that {{$ceph_file}} file exists"
-                    sev: 0
-                exists: true
-                filetype: file
-        {{end}}
+package:
+    # This package is installed on all NCNs
+    ceph-common:
+        title: ceph-common package
+        meta:
+            desc: Check that Ceph is installed
+            sev: 0
+        installed: true
+command:
+    # We expect "ceph -s" to work on the first three storage nodes
+    # and any master node
+    {{if $thisnode | regexMatch "^ncn-(m|s00[1-3])" }}
+        {{ $testlabel := "ceph_s_runs" }}
+        {{$testlabel}}:
+            title: ceph -s
+            meta:
+                desc: Check that ceph -s successfully executes
+                sev: 0
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    /usr/bin/ceph -s
+            exit-status: 0
+            timeout: 10000
     {{end}}
