@@ -22,18 +22,21 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $thisnode := .Vars.thisnode }}
-{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
-file:
-    # These files only are checked on ncn-s001
-    {{if eq $thisnode "ncn-s001"}}
-        {{range $ceph_file := index .Vars "ceph_files"}}
-            {{$ceph_file}}:
-                title: {{$ceph_file}} file
-                meta:
-                    desc: "Check that {{$ceph_file}} file exists"
-                    sev: 0
-                exists: true
-                filetype: file
-        {{end}}
-    {{end}}
+#
+# This suite is run:
+# * During CSM installs before CSM services have been deployed,
+# * During CSM Health Validation (after CSM services have been deployed), both
+#   before and after PIT redeployment
+#
+# This suite may be run on any NCN or the PIT node.
+#
+# This suite is run as part of the ncn_kubernetes_checks script. This suite is
+# only run locally on the NCN where the script is invokved (as opposed to
+# tests in the ncn-kubernetes-test-master/worker suites, which are run
+# on every master/worker node).
+#
+
+gossfile:
+  ../tests/goss-k8s-nodes-joined-cluster.yaml: {}
+  ../tests/goss-k8s-nodes-age-valid.yaml: {}
+  ../tests/goss-ceph-csi-k8s-requirements.yaml: {}
