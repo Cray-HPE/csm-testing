@@ -57,6 +57,8 @@ do
         etcd_clusters=$cluster_spec
     fi
 
+    #shellcheck disable=SC2046
+    #shellcheck disable=SC2086
     echo '###' $( echo $etcd_clusters | wc -w ) ' etcd clusters found in namespace ' $namespace
 
     for cluster in $etcd_clusters
@@ -87,6 +89,7 @@ do
         pods=$(kubectl get pods -l etcd_cluster=$cluster -n $namespace -o jsonpath='{.items[*].metadata.name}')
         for pod in $pods
         do
+            #shellcheck disable=SC2034
             temp=$(kubectl -n services exec ${pod} -- /bin/sh -c "ETCDCTL_API=3 etcdctl endpoint health -w json")
             if [[ $? != 0 ]]
             then

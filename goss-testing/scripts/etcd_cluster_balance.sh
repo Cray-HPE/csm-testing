@@ -37,6 +37,7 @@ do
 done
 
 failFlag=0
+#shellcheck disable=SC2043
 for ns in services
 do
     for cluster in $(kubectl get etcdclusters.etcd.database.coreos.com \

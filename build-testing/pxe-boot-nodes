@@ -50,6 +50,7 @@ type=$1 # options: s, m or w
 export IPMI_PASSWORD=$2
 export MAX_BOOT_RETRIES=$3
 
+#shellcheck disable=SC2155
 export NODE_COUNT=$(grep -ohE "ncn-$type([0-3]{3})" /etc/dnsmasq.d/statics.conf | awk '!a[$0]++' | wc -l)
 export NODE_NUM=1
 export IPMI_USERNAME=root

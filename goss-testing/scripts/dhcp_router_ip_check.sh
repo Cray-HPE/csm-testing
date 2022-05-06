@@ -32,9 +32,12 @@ for arg in "$@"
 do
   testif=$(echo $arg | sed 's/[][]//g')
   echo "Checking $testif"
+  #shellcheck disable=SC2034
   inet_ip=$(ip addr show $testif | awk '/inet / {gsub(/\/.*/,"",$2); print $2}')
+  #shellcheck disable=SC2034
   router_ip=$(nmap --script broadcast-dhcp-discover -e $testif 2>/dev/null | grep -i router | awk '{print $NF}')
 
+  #shellcheck disable=SC2050
   if [[ '$inet_ip' == '$router_ip' ]];then
       echo "Test failed for $testif"
       result="FAIL"

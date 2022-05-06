@@ -84,6 +84,7 @@ while [[ `echo $nodes | wc -w` -eq 0 || "$nodes" == "null" ]]; do
 done
 
 # for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
+#shellcheck disable=SC2046
 ip=$(host $(hostname).hmn | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 [[ -z $ip ]] && exit 2
 

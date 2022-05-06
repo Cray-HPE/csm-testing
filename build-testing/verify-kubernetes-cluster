@@ -28,6 +28,7 @@ nodes=$(grep -ohE 'ncn-[m,w,s]([0-9]{3})' /etc/dnsmasq.d/statics.conf  | awk '!a
 fail=0
 
 for node in $nodes; do
+  #shellcheck disable=SC2034
   test=$(kubectl get nodes | grep $node)
   if [[ $? != 0 ]]; then
     echo ERROR! Node not in cluster: $node

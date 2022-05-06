@@ -77,9 +77,11 @@ function file_exists_show_contents
 {
     local funcrc=1
     if [[ $# -ne 1 ]]; then
+        #shellcheck disable=SC2128
         err "PROGRAMMING LOGIC: $FUNCNAME requires exactly 1 argument, but received $#: $*"
         exit 2
     elif [[ -z "$1" ]]; then
+        #shellcheck disable=SC2128
         err "PROGRAMMING LOGIC: Argument to $FUNCNAME may not be blank"
         exit 3
     elif [[ ! -e "$1" ]]; then
@@ -129,6 +131,7 @@ if file_exists_show_contents /etc/cray/xname ; then
         if ! echo "${ETC_CRAY_XNAME}" | grep -Eq "^${xname_regex}$" ; then
             err "String from /etc/cray/xname not in expected xname format: ${ETC_CRAY_XNAME}"
         elif [[ -n ${PROC_CMDLINE_XNAME} ]]; then
+            #shellcheck disable=SC2053
             if [[ ${PROC_CMDLINE_XNAME} != ${ETC_CRAY_XNAME} ]]; then
                 err "xname from /proc/cmdline (${PROC_CMDLINE_XNAME}) does NOT MATCH xname from /etc/cray/xname (${ETC_CRAY_XNAME})"
             else

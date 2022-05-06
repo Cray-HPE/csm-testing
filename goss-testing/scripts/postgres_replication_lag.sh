@@ -148,6 +148,7 @@ do
 
         c_cluster_details=$(kubectl exec ${c_leader} -c postgres -it -n ${c_ns} -- patronictl list -f json)
         c_max_lag=$(echo $c_cluster_details | jq '[.[] | select((."Lag in MB" != "unknown"))."Lag in MB"] | max')
+        #shellcheck disable=SC2154
         c_unknown_lag=$(echo $cluster_lag | grep "unknown" | wc -l)
         if [[ -n $c_lag_history ]]; then
             c_lag_history="${c_lag_history}, $c_max_lag"
@@ -160,6 +161,7 @@ do
             if [[ $print_results -eq 1 ]]
             then 
                 echo -e "\n--- ERROR --- $c_name cluster has lag: unknown"
+                #shellcheck disable=SC2154
                 kubectl -n $c_ns exec $first_member -- patronictl list 2>/dev/null
                 if [[ $exit_on_failure -eq 1 ]]; then exit 1; else failFlag=1; fi
                 break;

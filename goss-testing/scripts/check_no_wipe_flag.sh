@@ -34,6 +34,7 @@ function get_client_secret() {
     sshOptions="-q -o StrictHostKeyChecking=no"
     
     # If executing on a storage node, determine an active NCN Kubernetes node:
+    #shellcheck disable=SC2046
     hostNodeType=$(echo $(hostname) | awk '/ncn-s/ {print "storage"}')
     if [[ $hostNodeType == "storage" ]]
     then
@@ -56,6 +57,7 @@ function get_client_secret() {
         clientSecret=$(kubectl get secrets admin-client-auth \
                                -o jsonpath='{.data.client-secret}' | base64 -d)
     else
+        #shellcheck disable=SC1083
         clientSecret=$(ssh $sshOptions $activeKubNcnNode \
                            'kubectl get secrets admin-client-auth \
                            -o jsonpath='{.data.client-secret}' | base64 -d')
@@ -75,6 +77,7 @@ function get_client_secret() {
     sshOptions="-q -o StrictHostKeyChecking=no"
     
     # If executing on a storage node, determine an active NCN Kubernetes node:
+    #shellcheck disable=SC2046
     hostNodeType=$(echo $(hostname) | awk '/ncn-s/ {print "storage"}')
     if [[ $hostNodeType == "storage" ]]
     then
@@ -97,6 +100,7 @@ function get_client_secret() {
         clientSecret=$(kubectl get secrets admin-client-auth \
                                -o jsonpath='{.data.client-secret}' | base64 -d)
     else
+        #shellcheck disable=SC1083
         clientSecret=$(ssh $sshOptions $activeKubNcnNode \
                            'kubectl get secrets admin-client-auth \
                            -o jsonpath='{.data.client-secret}' | base64 -d')
@@ -130,6 +134,7 @@ no_wipe_status() {
     echo "Note that before the PIT node has been rebooted into ncn-m001,"
     echo "metal.no-wipe status may not available which will cause this test to fail."
     noWipeFail=0
+    #shellcheck disable=SC2155
     export TOKEN=$(get_token)
     if [[ -z $TOKEN ]]
     then
@@ -174,6 +179,7 @@ no_wipe_status() {
     elif [[ $noWipeFail -eq 2 ]]
     then
         echo " --- FAILED --- Failed to get token or xname."
+        #shellcheck disable=SC2034
         failureMsg="FAIL: Failed to get token or xname, skipped metal.no-wipe check. Could not verify no-wipe status."
         exit_code=2
     else
