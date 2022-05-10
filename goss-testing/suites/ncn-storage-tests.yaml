@@ -32,9 +32,6 @@ gossfile:
     # storage nodes, so we only run it on ncn-s001
     {{if eq $thisnode "ncn-s001"}}
     ../tests/goss-ceph-storage-services.yaml: {}
-    # This test checks for the presence of files which indicate that
-    # Ceph was successfully configured on ncn-s001
-    ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
     {{end}}
-    ../tests/goss-ceph-status.yaml: {}
+    ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
     ../tests/goss-ncn-xname.yaml: {}
