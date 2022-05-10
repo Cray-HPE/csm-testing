@@ -25,18 +25,15 @@
 {{ $kubectl := .Vars.kubectl }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-    {{ $testlabel_1 := "k8s_verify_cluster_1" }}
-    {{$testlabel_1}}:
-        title: Specific kube-system Pods Running
+    {{ $testlabel := "k8s_verify_cluster" }}
+    {{$testlabel}}:
+        title: Kubernetes Pods
         meta:
-            desc: Specific Kubernetes kube-system namespace pods are Running.
+            desc: Kubernetes kube-system namespace pods are running.
             sev: 0
         exec: |-
-            "{{$logrun}}" -l "{{$testlabel_1}}" \
+            "{{$logrun}}" -l "{{$testlabel}}" \
                 "{{$kubectl}}" get po -n kube-system -o custom-columns=:.metadata.name,:status.phase --no-headers
-        stderr:
-            # Fail if any line of stderr contains any characters -- that is, fail if there is any output to stderr
-            - "!/./"
         stdout:
             - /^coredns-.*Running/
             - /^kube-apiserver-.*Running/
@@ -46,21 +43,3 @@ command:
             - /^kube-scheduler-.*Running/
             - /^weave-net-.*Running/
         exit-status: 0
-        timeout: 10000
-    {{ $testlabel_2 := "k8s_verify_cluster_2" }}
-    {{$testlabel_2}}:
-        title: All kube-system Pods Running or Completed
-        meta:
-            desc: All Kubernetes kube-system namespace pods are Running or Completed.
-            sev: 0
-        exec: |-
-            "{{$logrun}}" -l "{{$testlabel_2}}" \
-                "{{$kubectl}}" get po -n kube-system --no-headers | grep -Ev 'Running|Completed'
-        # We expect no output and for the grep command to return non-0
-        stdout:
-            - "!/./"
-        stderr:
-            - "!/./"
-        exit-status:
-            gt: 0
-        timeout: 10000
