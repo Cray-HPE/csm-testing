@@ -30,13 +30,13 @@
 #
 
 gossfile:
-  ../tests/goss-ceph-csi-k8s-requirements.yaml: {}
   ../tests/goss-ceph-status.yaml: {}
-  ../tests/goss-etcdlvm-drive-master.yaml: {}
+  ../tests/goss-k8s-etcd-service.yaml: {}
+  ../tests/goss-weave-health.yaml: {}
+  ../tests/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
+  ../tests/goss-ceph-csi-k8s-requirements.yaml: {}
+  ../tests/goss-k8s-verify-cluster.yaml: {}
   ../tests/goss-k8s-certmanager-certs-ready.yaml: {}
   ../tests/goss-k8s-certmanager-issuers-ready.yaml: {}
-  ../tests/goss-k8s-etcd-service.yaml: {}
-  ../tests/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
-  ../tests/goss-k8s-verify-cluster.yaml: {}
+  ../tests/goss-etcdlvm-drive-master.yaml: {}
   ../tests/goss-ncn-xname.yaml: {}
-  ../tests/goss-weave-health.yaml: {}
