@@ -39,30 +39,43 @@ function err_exit
     exit $rc
 }
 
+[ $# -eq 1 ] || err_exit 5 "Test requires exactly 1 argument but received $#: $*"
+[ -n "$1" ] || err_exit 7 "Argument to test may not be blank"
+
 TESTIF=$1
 
-SECRET=$(kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d) ||
-    err_exit 10 "Command pipeline failed with return code $?: kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d"
-if [ -z "$SECRET" ]; then
-    err_exit 12 "Failed to retrieve admin-client-auth secret"
+echo "Test interface: $TESTIF"
+
+if ! command -v kubectl > /dev/null || [ ! -r /etc/kubernetes/admin.conf ]; then
+    echo "Cannot determine the configured user network on this node."
+    USER_NETWORK="none"
+else
+    SECRET=$(kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d) ||
+        err_exit 10 "Command pipeline failed with return code $?: kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d"
+    if [ -z "$SECRET" ]; then
+        err_exit 12 "Failed to retrieve admin-client-auth secret"
+    fi
+
+    TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret="$SECRET" https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token') ||
+        err_exit 15 "Command pipeline failed with return code $?: curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=XXXXXX https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token'"
+    if [ -z "$TOKEN" ] || [ "$TOKEN" == null ]; then
+        err_exit 17 "Failed to retrieve token from https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token"
+    fi
+
+    # check SLS Networks data for BiCAN toggle
+    USER_NETWORK=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN | jq -r .ExtraProperties.SystemDefaultRoute | tr '[:upper:]' '[:lower:]')
+    if [ -z "$USER_NETWORK" ] || [ "$USER_NETWORK" == null ]; then
+        err_exit 18 "Failed to retrieve user network from SLS"
+    fi
 fi
 
-TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret="$SECRET" https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token') ||
-    err_exit 15 "Command pipeline failed with return code $?: curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=XXXXXX https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token'"
-if [ -z "$TOKEN" ] || [ "$TOKEN" == null ]; then
-    err_exit 17 "Failed to retrieve token from https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token"
-fi
-
-
-# check SLS Networks data for BiCAN toggle
-USER_NETWORK=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN | jq -r .ExtraProperties.SystemDefaultRoute | tr '[:upper:]' '[:lower:]')
-if [ -z "$USER_NETWORK" ] || [ "$USER_NETWORK" == null ]; then
-    err_exit 18 "Failed to retrieve user network from SLS"
-fi
+echo "USER_NETWORK = $USER_NETWORK"
 
 if [[ "$TESTIF" =~ .*can0 ]]; then
     if [[ "$TESTIF" =~ .*"$USER_NETWORK".* ]]; then
         ip link show dev $TESTIF || err_exit 20 "Command pipeline failed with return code $?: ip link show dev $TESTIF"
+    else
+        echo "Skipping test for $TESTIF because user network is $USER_NETWORK"
     fi
 else
     ip link show dev $TESTIF || err_exit 20 "Command pipeline failed with return code $?: ip link show dev $TESTIF"
