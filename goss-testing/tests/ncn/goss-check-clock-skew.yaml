@@ -24,7 +24,6 @@
 
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $check_clock_skew := $scripts | printf "%s/check_clock_skew.sh" }}
 command:
     {{ $testlabel := "check_clock_skew" }}
     {{$testlabel}}:
@@ -32,9 +31,14 @@ command:
         meta:
             desc: If this test fails, see "operations/node_management/Configure_NTP_on_NCNs.md#fix-broken-configs" in the CSM release documentation for steps to remediate clock skew.
             sev: 0
+        # check to see if chrony is in sync using a chronyc command
+        # up to 6 times
+        # with a max correction of 0.5ppm (50ms)
+        # and a max skew of 0.5ppm (50ms)
+        # retry every 10 seconds
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
-                "{{$check_clock_skew}}"
+              chronyc waitsync 6 0.5 0.5 10
         exit-status: 0
         timeout: 60000
         skip: false
