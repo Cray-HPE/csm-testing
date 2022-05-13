@@ -46,6 +46,7 @@ check_backup_within_day() {
     backup_within_day=0
     # We omit the often-seen '-it' flags from the kubectl call because we do not need to pass in stdin, and using
     # those flags generates warning messages when this script is run in some contexts.
+    #shellcheck disable=SC2046
     backups=$(kubectl exec -n operators $(kubectl get pod -n operators | \
         grep etcd-backup-restore | head -1 | awk '{print $1}') -c boto3 -- list_backups ${cluster})
     if [[ "$backups" != *"KeyError: 'Contents'"* ]] && [[ ! -z $backups ]] # check if any backups exist

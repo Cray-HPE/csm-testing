@@ -45,10 +45,14 @@ do
 done
 
 function get_default_net_from_sls() {
+  #shellcheck disable=SC2155
+  #shellcheck disable=SC2046
+  #shellcheck disable=SC2006
   export TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=`kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d` https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token')
 
   NETWORKSJSON=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks)
 
+  #shellcheck disable=SC2166
   if [ -z "${NETWORKSJSON}" -o "${NETWORKSJSON}" == "" -o "${NETWORKSJSON}" == "null" ]; then
       echo >&2 "error: failed to get Networks from SLS"
       exit 1

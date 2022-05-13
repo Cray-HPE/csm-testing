@@ -84,6 +84,7 @@ count=0
 for member in $bond_members ; do
     mtu=$(ip addr show $member | grep mtu | sed 's/^.*mtu \([0-9][0-9]*\) .*$/\1/') ||
         err_exit 50 "Command failed (rc $?): ip addr show $member | grep mtu | sed 's/^.*mtu \([0-9][0-9]*\) .*$/\1/'"
+    #shellcheck disable=SC2053
     if [[ $mtu == $expected_mtu ]]; then
         echo "MTU of $member matches expected value"
     else

@@ -57,6 +57,7 @@ function check_nodes_ready() {
 # NOTE: This does have the possibility of having false failures, we may need
 # to scale this back eventually. But right not it causes enough issues during
 # the installs to fail.
+#shellcheck disable=SC2120
 function check_kube_process_ok(){
     sleep_time=${1:-180}
     initial_sum=$(kubectl get pods -n kube-system --no-headers| awk '{sum += $4} END {print sum}')

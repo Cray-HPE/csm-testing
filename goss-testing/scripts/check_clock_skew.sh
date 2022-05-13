@@ -49,6 +49,7 @@ exit_code=0
 baseline=""
 
 node_times=$(pdsh $pdsh_node_args 'date -u "+%s"' 2>/dev/null)
+#shellcheck disable=SC2206
 node_times_array=( $node_times )
 array_length=${#node_times_array[@]}
 

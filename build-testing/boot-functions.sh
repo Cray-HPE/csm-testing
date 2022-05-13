@@ -1,4 +1,4 @@
-#
+#!/usr/bin/env bash
 # MIT License
 #
 # (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
@@ -35,6 +35,7 @@ function pxe_boot_check {
 function conman_log_prep {
   # renames the node's log file for conman so it can be replaced by a new log file
   node=$1
+  #shellcheck disable=SC2046
   mv $CONMAN_LOGS/console.$node-mgmt $CONMAN_LOGS/console.$node-mgmt.$(date +%s)
   /usr/bin/systemctl restart conman
 }

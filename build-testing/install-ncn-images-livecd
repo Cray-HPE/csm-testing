@@ -46,6 +46,7 @@ mv /var/www/ephemeral/data/k8s /var/www/ephemeral/data/k8s-rollback
 echo "Removing node directories..."
 rm -rf /var/www/ncn-*
 
+#shellcheck disable=SC2164
 cd /root
 
 echo "Pulling NCN image files..."

@@ -1,4 +1,4 @@
-#
+#!/usr/bin/env bash
 # MIT License
 #
 # (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
@@ -47,9 +47,12 @@ function run_ncn_tests {
   url=http://$NODE.hmn:$port/$endpoint
 
   echo Server URL: $url
-  results=`curl -s {$url}`
+  #shellcheck disable=SC2006
+  results=`curl -s $url`
 
   if [[ $? == 0 ]]; then
+  #shellcheck disable=SC2092
+  #shellcheck disable=SC2006
     if ! `echo $results | jq -e > /dev/null 2>&1`; then
       echo $'\e[1;31m'ERROR: Output not valid JSON$'\e[0m'
       return 1

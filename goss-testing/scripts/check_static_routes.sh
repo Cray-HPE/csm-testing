@@ -38,6 +38,7 @@ function get_client_secret() {
     sshOptions="-q -o StrictHostKeyChecking=no"
 
     # If executing on a storage node, determine an active NCN Kubernetes node:
+    #shellcheck disable=SC2046
     hostNodeType=$(echo $(hostname) | awk '/ncn-s/ {print "storage"}')
     if [[ $hostNodeType == "storage" ]]
     then
@@ -60,6 +61,7 @@ function get_client_secret() {
         clientSecret=$(kubectl get secrets admin-client-auth \
                                -o jsonpath='{.data.client-secret}' | base64 -d)
     else
+        #shellcheck disable=SC1083
         clientSecret=$(ssh $sshOptions $activeKubNcnNode \
                            'kubectl get secrets admin-client-auth \
                            -o jsonpath='{.data.client-secret}' | base64 -d')
