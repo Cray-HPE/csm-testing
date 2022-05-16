@@ -26,15 +26,15 @@
 # This suite is run during CSM installs before CSM services have been deployed
 #
 
-{{ $thisnode := .Vars.thisnode }}
+{{ $this_node_name := .Vars.this_node_name }}
 gossfile:
-    {{if eq $thisnode "ncn-s001"}}
+    {{if eq $this_node_name "ncn-s001"}}
     # This test checks for the presence of files which indicate that
     # Ceph was successfully configured on ncn-s001
     ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
     {{end}}
     ../tests/goss-ceph-status.yaml: {}
-    {{if eq $thisnode "ncn-s001"}}
+    {{if eq $this_node_name "ncn-s001"}}
     # This takes a while to run and does not need to be run on all of the
     # storage nodes, so we only run it on ncn-s001
     ../tests/goss-ceph-storage-services.yaml: {}
