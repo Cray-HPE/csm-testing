@@ -22,7 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $thisnode := .Vars.thisnode }}
+{{ $this_node_name := .Vars.this_node_name }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 package:
     # This package is installed on all NCNs
@@ -35,7 +35,7 @@ package:
 command:
     # We expect "ceph -s" to work on the first three storage nodes
     # and any master node
-    {{if $thisnode | regexMatch "^ncn-(m|s00[1-3])" }}
+    {{if $this_node_name | regexMatch "^ncn-(m|s00[1-3])" }}
         {{ $testlabel := "ceph_s_runs" }}
         {{$testlabel}}:
             title: ceph -s

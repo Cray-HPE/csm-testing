@@ -44,8 +44,8 @@ else
 fi
 echo "" >> $GOSS_VARS
 
-# Add local nodename as variable
-add_host_var "$GOSS_VARS"
+# Add variables based on local system
+add_local_vars "$GOSS_VARS"
 
 if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
   k8s_nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE 'ncn-[mw]([0-9]{3})' | grep -v ncn-m001 | awk '!a[$0]++')

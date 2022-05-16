@@ -41,8 +41,8 @@ echo "" >> $tmpvars
 echo "Using Goss vars: $tmpvars"
 
 source "$GOSS_BASE/automated/run-ncn-tests.sh"
-# Add local nodename as variable
-add_host_var "$tmpvars"
+# Add variables based on local system
+add_local_vars "$tmpvars"
 
 nodes=""
 # add node names from basecamp or bss metadata to temp variables file

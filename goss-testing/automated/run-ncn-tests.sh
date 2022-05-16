@@ -101,26 +101,35 @@ function run_ncn_tests {
   return 0
 }
 
-function add_host_var
+function add_local_vars
 {
     # $1 - goss variable file
     if [[ $# -ne 1 ]]; then
-        echo "ERROR: add_host_var: Function requires exactly 1 argument but received $#: $*"
+        echo "ERROR: add_local_vars: Function requires exactly 1 argument but received $#: $*"
         return 1
     elif [[ -z $1 ]]; then
-        echo "ERROR: add_host_var: Argument may not be blank"
+        echo "ERROR: add_local_vars: Argument may not be blank"
         return 1
     elif [[ ! -e $1 ]]; then
-        echo "ERROR: add_host_var: File '$1' does not exist"
+        echo "ERROR: add_local_vars: File '$1' does not exist"
         return 1
     elif [[ ! -f $1 ]]; then
-        echo "ERROR: add_host_var: File '$1' exists but is not a regular file"
+        echo "ERROR: add_local_vars: '$1' exists but is not a regular file"
         return 1
     fi
 
-    local myname
+    local this_node_name this_node_manufacturer var_string
+
     # Add local nodename as variable
-    myname=$(hostname -s | grep -Eo '(ncn-[msw][0-9]{3}|.*-pit)$')
-    echo -e "\nthisnode: \"$myname\"\n" >> $1
+    this_node_name=$(hostname -s | grep -Eo '(ncn-[msw][0-9]{3}|.*-pit)$')
+    var_string="\nthis_node_name: \"${this_node_name}\"\n"
+    
+    # Add hardware manufacturer as variable
+    this_node_manufacturer=$(ipmitool mc info | 
+        grep -E "^Manufacturer Name[[:space:]]{1,}:[[:space:]]*[^[:space:]]" |
+        sed -e 's/^Manufacturer Name[[:space:]]*:[[:space:]]*//' -e 's/[[:space:]]*$//')
+    var_string="${var_string}\nthis_node_manufacturer: \"${this_node_manufacturer}\"\n"
+
+    echo -e "${var_string}" >> $1
     return $?
 }
