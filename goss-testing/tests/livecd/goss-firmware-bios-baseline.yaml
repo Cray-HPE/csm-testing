@@ -28,7 +28,7 @@ command:
     {{$testlabel}}:
         title: Firmware and BIOS versions and baseline
         meta:
-            desc: Validates the correct versions of BIOS and firmware; Validates BIOS settings (when available; dependent on vendor)
+            desc: Validates the correct versions of BIOS and firmware; Validates BIOS settings (when available; dependent on vendor). If this test fails, run "{{$scripts}}/check_bios_firmware_versions.sh -b" for more information on the failure. On GigaByte NCNs, a value of "null" may indicate that the BIOS/Firmware needs to be reflashed or that a hard AC power cycle is needed.
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
