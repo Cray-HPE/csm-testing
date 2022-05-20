@@ -57,8 +57,38 @@ function set_vars() {
   fi
 
   # Allow for output of documentation when needed
+  rc=0
+
+  DL325_FW="2.46"
+  DL385_FW="2.46"
+
+  DL325_BIOS="v2.52"
+  DL385_BIOS="v2.52"
+
+  # Taken from HFP-firmware-22.05 but leaving here for reference in this code
+  # Appropriate versions to use for CSM v1.2 or HPCM as of 2/2/2022 unless otherwise indicated by your
+  # software installation manual:
+
+  #     HPE_EX425 4 node compute blades -   BIOS 1.6.3, MTN_CCNC 1.7.6.4 Node Controller (NC)
+  #     HPE_EX235N                          BIOS 1.2.1, MTN_CCNC 1.7.6.4 Node Controller (NC)
+  #     HPE_EX235a                          BIOS 1.3.6, MTN_CCNC 1.7.6.4 Node Controller (NC)
+  #     HPE_EX420				            BIOS 1.0.0, MTN_CCNC 1.7.6.4 Node Controller (NC)
+  #     HPE_EX235_NV                        FPGA NVIDIA 2.7.1
+  #     HPE_XL675d-Gen10Plus                BIOS 2.52, HPE_ILO5 version 2.46
+  #     HPE_XL645d-Gen10Plus                BIOS 2.52, HPE_ILO5 version 2.46
+  #     HPE_DL325_A43                       BIOS 2.52, HPE_ILO5 version 2.46
+  #     HPE_DL385_A42                       BIOS 2.52, HPE_ILO5 version 2.46
+  #     GB_SVR_1264UP_C17_C21 - Gigabyte NCN's, BIOS/BMC package C27  (Note: required upgrade prior to install of Shasta 1.4.0 or later)
+  #     GB_SVR_5264_C20 - Gigabyte UAN's, AN's BIOS/BMC package C27
+  #     GB_SVR_3264_C20 - Gigabyte Compute nodes, BIOS/BMC package C27
+
+  # Allow for output of documentation when needed, 1 is yes, 0 is no
+  DOCS=0
+  # Links for documentation
   FIRMWARE_DOCS=
   BIOS_DOCS=
+  CSM_DOCS="https://github.com/Cray-HPE/docs-csm/blob/release/1.2/operations/index.md#update-firmware-with-fas"
+  HFP_DOCS="Documentation in the HFP-firmware tarball"
 
   # Set a sane default username
   BMC_USERNAME=${USERNAME:-$(whoami)}
@@ -70,8 +100,22 @@ function set_vars() {
 
   fi
 
+  # get the fru info once since ipmi is slow
+  echo "Checking vendor..."
+  fru=
+  fru="$(ipmitool fru)"
+
   VENDOR=
   BOARD_PRODUCT=
+
+  # Detect the vendor so we can determine the correct firmware version needed
+  # We don't typically mix and match hardware vendors, so whatever node this is running on (usually ncn-m001)
+  # it's likely that the rest of the NCNs are of the same type
+  VENDOR="$(echo "$fru" \
+            | awk '/Board Mfg/ && !/Date/ {print $4}')"
+
+  BOARD_PRODUCT=$(echo "$fru" \
+                  | awk '/Board Product/')
 
   # if this is running in pit-mode, check dnsmasq
   if [[ $HOSTNAME == *pit* ]]; then
@@ -95,15 +139,6 @@ function set_vars() {
           && printf '\0')
 
   fi
-
-  # Detect the vendor so we can determine the correct firmware version needed
-  # We don't typically mix and match hardware vendors, so whatever node this is running on (usually ncn-m001)
-  # it's likely that the rest of the NCNs are of the same type
-  VENDOR="$(ipmitool fru \
-            | awk '/Board Mfg/ && !/Date/ {print $4}')"
-
-  BOARD_PRODUCT=$(ipmitool fru \
-                  | awk '/Board Product/')
 }
 
 # check_if_bmcs_are_reachable() performs a simple port scan to see if the bmcs are reachable
@@ -145,8 +180,7 @@ check_if_bmcs_are_reachable() {
 
       fi
 
-      echo "$i might be down, exiting..."
-      exit 1
+      >&2 echo "$i might be down..."
 
     fi
   done
@@ -196,12 +230,23 @@ does_fw_meet_req() {
     || [[ "$VENDOR" = HP* ]] \
     || [[ "$VENDOR" = Hewlett* ]]; then
 
-    case "$fw_vers" in
-      2.44) echo "=====> $bmc: FW: $fw_vers OK" ;;
-      *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected 2.44)"
-         FIRMWARE_DOCS=1
-          ;;
-    esac
+   if [[ "$BOARD_PRODUCT" == *"DL325"* ]]; then
+      case "$fw_vers" in
+        "${DL325_FW}") echo "=====> $bmc: FW: $fw_vers OK" ;;
+        *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected ${DL325_FW})"
+          DOCS=1
+          rc=1
+            ;;
+      esac
+    elif [[ "$BOARD_PRODUCT" == *"DL385"* ]]; then
+      case "$fw_vers" in
+        "${DL385_FW}") echo "=====> $bmc: FW: $fw_vers OK" ;;
+        *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected ${DL385_FW})"
+          DOCS=1
+          rc=1
+            ;;
+      esac
+    fi
 
   elif [[ "$VENDOR" == "GIGA"*"BYTE" ]]; then
 
@@ -209,7 +254,8 @@ does_fw_meet_req() {
       12.84.09) echo "=====> $bmc: FW: $fw_vers OK" ;;
       12.84*) echo "=====> $bmc: FW: $fw_vers OK" ;;
       *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected 12.84*)"
-         FIRMWARE_DOCS=1
+         DOCS=1
+         rc=1
           ;;
     esac
 
@@ -230,28 +276,16 @@ check_firmware_version() {
     # add the credentials to the ilorest config file
     enable_ilo_creds "$bmc_username" "$ipmi_password"
 
-    if [[ "$HOSTNAME" == *pit* ]] \
-      || [[ "$bmc" == ncn-m001-mgmt ]]; then
+    # get the firmware version, filter on the know name "iLO 5" 
+    fw_vers=$(ilorest --nologo \
+      get \
+      Version \
+      --selector SoftwareInventory \
+      --filter Name="iLO 5" \
+      | awk -F '=' '{print $2}' \
+      | sed '/^[[:space:]]*$/d' \
+      | awk '{print $1}')
 
-      # login to the bmc locally if we're the pit or m001
-      ilorest --nologo login 1>/dev/null
-
-    else
-
-      # login to the bmc
-      ilorest --nologo login "$bmc" 1>/dev/null
-
-    fi
-
-      fw_vers=$(ilorest --nologo \
-        get \
-        --selector Manager \
-        FirmwareVersion \
-        | awk -F 'v' '{print $2}' \
-        | sed '/^[[:space:]]*$/d')
-
-    # logout
-    ilorest --nologo logout "$bmc" 1>/dev/null
 
   elif [[ "$VENDOR" == "GIGA"*"BYTE" ]]; then
 
@@ -288,9 +322,10 @@ does_bios_meet_req() {
     if [[ "$BOARD_PRODUCT" == *"DL325"* ]]; then
 
       case "$bios_vers" in
-        A43) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-        *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected A43)"
-           BIOS_DOCS=1
+        "${DL325_BIOS}") echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+        *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected ${DL325_BIOS})"
+           DOCS=1
+           rc=1
             ;;
       esac
 
@@ -298,9 +333,10 @@ does_bios_meet_req() {
 
       case "$bios_vers" in
         # these are the versions that are compatible
-        A42) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-        *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected A42)"
-           BIOS_DOCS=1
+        "${DL385_BIOS}") echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+        *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected ${DL385_BIOS})"
+           DOCS=1
+           rc=1
             ;;
       esac
 
@@ -312,7 +348,8 @@ does_bios_meet_req() {
       C17) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
       C21) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
       *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected C17 or C21)"
-         BIOS_DOCS=1
+         DOCS=1
+         rc=1
           ;;
     esac
   fi
@@ -332,29 +369,15 @@ check_bios_version() {
     # add the credentials to the ilorest config file
     enable_ilo_creds "$bmc_username" "$ipmi_password"
 
-    if [[ "$HOSTNAME" == *pit* ]] \
-      || [[ "$bmc" == ncn-m001-mgmt ]]; then
-      
-      # login to the bmc locally if we're the pit or m001 
-      ilorest --nologo login 1>/dev/null
-
-    else
-
-      # login to the bmc
-      ilorest --nologo login "$bmc" 1>/dev/null
-
-    fi
-
-      # get the bios version
-      bios_vers=$(ilorest --nologo \
-        get \
-        --selector System \
-        Oem/Hpe/Bios/Current/Family \
-        | awk -F '=' '{print $2}' \
-        | sed '/^[[:space:]]*$/d')
-
-    # logout
-    ilorest --nologo logout "$bmc" 1>/dev/null
+    # get the bios version, filter on the know name "System ROM" 
+    bios_vers=$(ilorest --nologo \
+      get \
+      Version \
+      --selector SoftwareInventory \
+      --filter Name="System ROM" \
+      | awk -F '=' '{print $2}' \
+      | awk '{print $2}' \
+      | sed '/^[[:space:]]*$/d')
 
   elif [[ "$VENDOR" == "GIGA"*"BYTE" ]];then
 
@@ -417,7 +440,20 @@ check_if_bmcs_are_reachable
 # for each BMC
 for i in "${NCN_BMCS[@]}"
 do 
-  
+
+  if [[ "$VENDOR" = *"Marvell"* ]] \
+    || [[ "$VENDOR" = "HP"* ]] \
+    || [[ "$VENDOR" = "Hewlett"* ]]; then
+    if [[ "$i" == *"ncn-m001"* ]]; then
+      # login locally
+      ilorest --nologo login 1>/dev/null
+    else
+      # login to the remote bmc 
+      ilorest --nologo login "$i" 1>/dev/null
+    fi
+
+  fi
+
   check_firmware_version "$i" \
     "$BMC_USERNAME" \
     "$IPMI_PASSWORD"
@@ -425,18 +461,28 @@ do
   check_bios_version "$i" \
     "$BMC_USERNAME" \
     "$IPMI_PASSWORD"
-    
+
+  if [[ "$VENDOR" = *"Marvell"* ]] \
+    || [[ "$VENDOR" = "HP"* ]] \
+    || [[ "$VENDOR" = "Hewlett"* ]]; then
+    ilorest --nologo logout 1>/dev/null
+  fi
+
 done
 
 if [[ $BASELINE = Y ]]; then
-  /root/bin/bios-baseline.sh --check
-  exit $?
+  /root/bin/bios-baseline.sh --check || rc=1
 fi
 
-if [ -n "$BIOS_DOCS" ] || [ -n "$FIRMWARE_DOCS" ]; then
-  echo "Please see https://github.com/Cray-HPE/docs-csm/tree/release/1.2/operations/firmware for update documentation"
+if [[ "$DOCS" -ne 0 ]]; then
+  echo "See the following for documentation on firmware/BIOS updates:"
+  if [[ -n "${CSM_DOCS}" ]];then echo "- ${CSM_DOCS}";fi
+  if [[ -n "${HFP_DOCS}" ]];then echo "- ${HFP_DOCS}";fi
+  if [[ -n "${FIRMWARE_DOCS}" ]];then echo "- ${FIRMWARE_DOCS}";fi
+  if [[ -n "${BIOS_DOCS}" ]];then echo "- ${BIOS_DOCS}";fi
 fi
 
 # We exit 0 because goss not only checks for our return code, but also checks stdout
 # to see if any BIOS or firmware versions are unsupported
-exit 0
+[[ $rc -eq 0 ]] && echo "PASS" || echo "FAIL"
+exit $rc
