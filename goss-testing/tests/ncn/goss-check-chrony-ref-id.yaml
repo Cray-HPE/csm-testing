@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,21 +21,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-gossfile:
-  ../tests/goss-k8s-nodes-ready.yaml: {}
-  ../tests/goss-k8s-etcd-service.yaml: {}
-  ../tests/goss-k8s-etcd-members.yaml: {}
-  ../tests/goss-k8s-nexus-can-pull.yaml: {}
-  ../tests/goss-k8s-keycloak-healthy.yaml: {}
-  ../tests/goss-check-mounts-etcdlvm.yaml: {}
-  ../tests/goss-etcdlvm-drive-master.yaml: {}
-  ../tests/goss-k8s-nodes-have-running-pods.yaml: {}
-  ../tests/goss-check-clock-skew.yaml: {}
-  ../tests/goss-check-chrony-ref-id.yaml: {}
-  ../tests/goss-k8s-nexus-pods-running.yaml: {}
-  ../tests/goss-k8s-console-services.yaml: {}
-  ../tests/goss-k8s-ipxe-pod-running.yaml: {}
-  ../tests/goss-k8s-kea-pod-running.yaml: {}
-  ../tests/goss-k8s-tftp-pods-running.yaml: {}
-  ../tests/goss-k8s-istio-pods-running.yaml: {}
-  ../tests/goss-k8s-istio-pod-containers-running.yaml: {}
+
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $check_chrony_ref_id := $scripts | printf "%s/check_chrony_ref_id.sh" }}
+command:
+  {{ $testlabel := "check_chrony_ref_id" }}
+  {{$testlabel}}:
+    title: Check if the node is synchronised to a reasonable NTP source
+    meta:
+      desc: If this test fails, see "operations/node_management/Configure_NTP_on_NCNs.md#fix-broken-configs" in the CSM release documentation.
+      sev: 0
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" \
+        {{$check_chrony_ref_id}}
+    exit-status: 0
+    timeout: 60000
+    skip: false
