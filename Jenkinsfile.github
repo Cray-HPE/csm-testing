@@ -1,5 +1,6 @@
 @Library('csm-shared-library') _
 
+def sleVersion = '15.3'
 def promotionToken = ~"(master|main|release\\/.*)"
 def isStable = env.TAG_NAME != null || env.BRANCH_NAME ==~ promotionToken ? true : false
 pipeline {
@@ -9,6 +10,8 @@ pipeline {
 
     options {
         buildDiscarder(logRotator(numToKeepStr: "10"))
+        disableConcurrentBuilds()
+        timeout(time: 20, unit: 'MINUTES')
         timestamps()
     }
 
@@ -16,22 +19,46 @@ pipeline {
         DESCRIPTION = "CSM automated testing"
         IS_STABLE = "${isStable}"
         BUILD_METADATA = getRpmRevision(isStable: isStable)
+        GIT_REPO_NAME = getRepoName()
     }
 
     stages {
         stage("Prepare") {
+            // Make RPM MetaData in our target environment (SLE).
+            agent {
+                docker {
+                    label 'docker'
+                    reuseNode true
+                    image "artifactory.algol60.net/csm-docker/stable/csm-docker-sle:${sleVersion}"
+                }
+            }
             steps {
+                runLibraryScript("addRpmMetaData.sh", "${env.GIT_REPO_NAME}.spec")
                 sh "make rpm_prepare"
             }
         }
 
         stage("Build RPM 1") {
+            agent {
+                docker {
+                    label 'docker'
+                    reuseNode true
+                    image "artifactory.algol60.net/csm-docker/stable/csm-docker-sle:${sleVersion}"
+                }
+            }
             steps {
                 sh "make build-csm-testing"
             }
         }
 
         stage("Build RPM 2") {
+            agent {
+                docker {
+                    label 'docker'
+                    reuseNode true
+                    image "artifactory.algol60.net/csm-docker/stable/csm-docker-sle:${sleVersion}"
+                }
+            }
             steps {
                 sh "make build-goss-servers"
             }
