@@ -47,28 +47,6 @@ do
     esac
 done
 
-function postgres_leader()
-{
-    # Get the postgres leader
-    # If patronictl list fails, try the others member when attempting to determine the leader.
-    c_leader=""
-    for member in $(seq 0 $(( ${c_pods} -1 )))
-    do
-        p_list=$(kubectl exec "${c_name}-${member}" -c postgres -n ${c_ns} -- patronictl list -f json 2>/dev/null)
-
-        if [[ $? == 0 ]]; then
-            c_leader=$(echo $p_list | jq -r '.[] | select((.Role == "Leader") and (.State =="running")) | .Member')
-            echo "  Found leader ${c_leader} from ${c_name}-${member}."
-            break
-        else
-            echo "  Unable to determine the leader from ${c_name}-${member}, trying the next member."
-            continue
-        fi
-    done
-}
-
-
-
 # The POSTGRES_MAX_LAG environment variable may be exported by the user to control
 # the maximum lag value permitted by this script. Setting its value to
 # a negative number or a non-integer value has the effect of skipping the
@@ -101,25 +79,22 @@ fi
 
 echo "Checking to see if any cluster members need a patroni service restart."
 
-postgresClusters="$(kubectl get postgresql -A | grep -v NAME | awk '{print $1","$2","$5}')"
+postgresClusters="$(kubectl get postgresql -A | grep -v NAME | awk '{print $1","$2}')"
 for c in $postgresClusters
 do
     # NameSpace and PostgreSQL cluster name
     c_ns="$(echo $c | awk -F, '{print $1;}')"
     c_name="$(echo $c | awk -F, '{print $2;}')"
-    c_pods="$(echo $c | awk -F, '{print $3;}')"
-
-    echo "Cluster $c_name:"
-    # Get the postgres leader (c_leader)
-    postgres_leader
+    # Get the postgres leader
+    c_leader=$(kubectl exec "${c_name}-0" -c postgres -n ${c_ns} -- patronictl list -f json 2>/dev/null | jq -r '.[] | select((.Role == "Leader") and (.State =="running")) | .Member')
 
     if [[ -z $c_leader ]]; then
-        echo "  No Leader exists for $c_name cluster - unable to restart patroni service."
+        echo "No Leader exists for $c_name cluster - unable to restart patroni service."
         continue
     fi
 
     # Get the cluster details from the leader
-    c_cluster_details=$(kubectl exec ${c_leader} -c postgres -n ${c_ns} -- patronictl list -f json)
+    c_cluster_details=$(kubectl exec ${c_leader} -c postgres -it -n ${c_ns} -- patronictl list -f json)
 
     # Determine the max lag across all members, unknown lag count across all members, list of lagging member by pod name
     c_max_lag=$(echo $c_cluster_details | jq '[.[] | select((."Lag in MB" != "unknown"))."Lag in MB"] | max')
@@ -128,14 +103,14 @@ do
 
     # Exit with success if no lag is found
     if [[ $c_unknown_lag -eq 0 ]] && [[ $c_max_lag -eq 0 ]]; then
-        echo "  No lag was found for $c_name cluster - patroni service restart not needed."
+        echo "No lag was found for $c_name cluster - patroni service restart not needed."
         continue
     fi
 
     # Restart patroni for any members found to be lagging ( >0 or "unknown" )
     for member in $c_members_lagging
     do
-        echo "  Restarting patroni service on $member in $c_ns namespace"
+        echo "Restarting patroni service on $member in $c_ns namespace"
         kubectl exec $member -n $c_ns -c postgres -- /bin/sh -c 'sv stop patroni; sv start patroni'
     done
 done
@@ -143,17 +118,13 @@ done
 echo "Done checking for patroni service restarts, validating lag."
 
 failFlag=0
-postgresClusters="$(kubectl get postgresql -A | grep -v NAME | awk '{print $1","$2","$5}')"
+postgresClusters="$(kubectl get postgresql -A | grep -v NAME | awk '{print $1","$2}')"
 for c in $postgresClusters
 do
     # NameSpace and PostgreSQL cluster name
     c_ns="$(echo $c | awk -F, '{print $1;}')"
     c_name="$(echo $c | awk -F, '{print $2;}')"
-    c_pods="$(echo $c | awk -F, '{print $3;}')"
-
-    echo "Cluster $c_name:"
-    # Get the postgres leader (c_leader)
-    postgres_leader
+    c_leader=$(kubectl exec "${c_name}-0" -c postgres -n ${c_ns} -- patronictl list -f json 2>/dev/null | jq -r '.[] | select((.Role == "Leader") and (.State =="running")) | .Member')
 
     if [[ -z $c_leader ]]; then
         echo "No Leader exists for $c_name cluster - unable to check for lag."
@@ -161,7 +132,7 @@ do
         continue
     fi
 
-    if [[ $print_results -eq 1 ]]; then echo -n "  $c_name - "; fi
+    if [[ $print_results -eq 1 ]]; then echo -n "$c_name - "; fi
     c_attempt=0
     c_lag_history=""
     while [ true ]; do
@@ -175,9 +146,9 @@ do
         # We omit the often-seen '-it' flags from the kubectl call because we do not need to pass in stdin, and using
         # those flags generates warning messages when this script is run in some contexts.
 
-        c_cluster_details=$(kubectl exec ${c_leader} -c postgres -n ${c_ns} -- patronictl list -f json)
+        c_cluster_details=$(kubectl exec ${c_leader} -c postgres -it -n ${c_ns} -- patronictl list -f json)
         c_max_lag=$(echo $c_cluster_details | jq '[.[] | select((."Lag in MB" != "unknown"))."Lag in MB"] | max')
-        c_unknown_lag=$(echo $c_cluster_details | jq '.[] | ."Lag in MB"' | grep "unknown" | wc -l)
+        c_unknown_lag=$(echo $cluster_lag | grep "unknown" | wc -l)
         if [[ -n $c_lag_history ]]; then
             c_lag_history="${c_lag_history}, $c_max_lag"
         else
@@ -188,8 +159,8 @@ do
         if [[ $c_unknown_lag -gt 0 ]]; then
             if [[ $print_results -eq 1 ]]
             then 
-                echo -e "\n  --- ERROR --- $c_name cluster has lag: unknown"
-                kubectl -n $c_ns exec $c_leader -- patronictl list 2>/dev/null
+                echo -e "\n--- ERROR --- $c_name cluster has lag: unknown"
+                kubectl -n $c_ns exec $first_member -- patronictl list 2>/dev/null
                 if [[ $exit_on_failure -eq 1 ]]; then exit 1; else failFlag=1; fi
                 break;
             else exit 1; fi
@@ -202,8 +173,8 @@ do
 
             if [[ $print_results -eq 1 ]]
             then 
-                echo -e "\n  --- ERROR --- $c cluster has lag history: $c_lag_history"
-                kubectl -n $c_ns exec $c_leader -- patronictl list 2>/dev/null
+                echo -e "\n--- ERROR --- $c cluster has lag history: $c_lag_history"
+                kubectl -n $c_ns exec $first_member -- patronictl list 2>/dev/null
                 if [[ $exit_on_failure -eq 1 ]]; then exit 2; else failFlag=1; fi
                 break;
             else exit 2; fi
