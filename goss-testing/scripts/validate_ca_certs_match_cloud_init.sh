@@ -1,8 +1,8 @@
 #!/bin/bash
-
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP.
 #
 # MIT License
+#
+# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -16,17 +16,18 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
 
 # This script validates that the platform-ca-certs.crt file matches what is in
 # BSS. Since the meta-data request may return the certificates in a different
 # order than what was originally provided this will check against multiple
 # order differences.
-# Copyright 2014-2021 Hewlett Packard Enterprise Development LP
+# Copyright 2014-2022 Hewlett Packard Enterprise Development LP
 
 set -euo pipefail
 
@@ -49,7 +50,7 @@ for i in $(seq 0 $MAXARRAY); do
     TRUSTEDORDER[$((j + 1))]=$TMP
 
     STRING=$(echo "${TRUSTEDORDER[@]}" | tr -d " ")
-    if diff <(echo "$TRUSTEDDATA" | jq -r \""${STRING}"\" | sed '/^$/d') "$LOCALCA" >/dev/null; then
+    if diff <(echo "$TRUSTEDDATA" | jq -r \""${STRING}"\" | sed '/^$/d' | sort) <(cat "${LOCALCA}" | sed '/^$/d' | sort) >/dev/null; then
       exit 0
     fi
   done
