@@ -21,15 +21,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  postgresql_check_SyncFailed:
-    title: Postgresql SyncFailed status check
-    meta:
-      desc: Checks if any posgresql have status SyncFailed. If this fails, investigate postgresql statuses.
-      sev: 0
-    exec: "if [[ -z $(kubectl get postgresql -A -o jsonpath='{.items[*].status.PostgresClusterStatus}' | grep SyncFailed ) ]]; then echo 'PASS'; else echo 'FAIL'; fi"
-    stdout:
-      - "!FAIL"
-    exit-status: 0
-    timeout: 5000
-    skip: false
+    {{ $testlabel := "postgresql_check_SyncFailed" }}
+    {{$testlabel}}:
+        title: Postgresql SyncFailed status check
+        meta:
+            desc: Checks if any posgresql have status SyncFailed. If this fails, investigate postgresql statuses.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" get postgresql -A -o jsonpath='{.items[*].status.PostgresClusterStatus}'
+        stdout:
+        - "!SyncFailed"
+        exit-status: 0
+        timeout: 5000
+        skip: false
