@@ -34,6 +34,6 @@ command:
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
-                {{$check_ncn_xname}}
+                "{{$check_ncn_xname}}"
         exit-status: 0
         timeout: 10000
