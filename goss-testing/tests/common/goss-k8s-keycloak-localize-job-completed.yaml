@@ -21,13 +21,23 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  keycloak_users_localize_job_completed:
-    title: Keycloak Users Localize Job Completed 
-    meta:
-      desc: If this test fails, see /usr/share/doc/csm/troubleshooting/known_issues/craycli_403_forbidden_errors.md 
-      sev: 0
-    exec: kubectl -n services wait --for=condition=complete --timeout=3s job/`kubectl -n services get jobs | grep users-localize | awk '{print $1}'` 
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    {{ $testlabel := "keycloak_users_localize_job_completed" }}
+    {{$testlabel}}:
+        title: Keycloak Users Localize Job Completed 
+        meta:
+            desc: If this test fails, see /usr/share/doc/csm/troubleshooting/known_issues/craycli_403_forbidden_errors.md 
+            sev: 0
+        exec: |-
+            # Set pipefail so that if any commands in the command pipeline fail, the test will fail
+            set -eo pipefail
+            JOB=$("{{$kubectl}}" -n services get jobs | grep users-localize | awk '{print $1}')
+            # Log the output of the kubectl wait command
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" -n services wait --for=condition=complete --timeout=3s job/"$JOB"
+        exit-status: 0
+        timeout: 10000
+        skip: false

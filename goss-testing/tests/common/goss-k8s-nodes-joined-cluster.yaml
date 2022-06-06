@@ -21,16 +21,25 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
 # Variable set: k8s_nodes
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  {{range $node := index .Vars "k8s_nodes"}}
-  k8s_node_{{$node}}_joined_cluster:
-    title: Kubernetes Node '{{$node}}' Ready
-    meta:
-      desc: Validates that Kubernetes node '{{$node}}' joined cluster and is in ready state.
-      sev: 0
-    exec: kubectl get nodes | grep {{$node}} | grep Ready | grep -v NotReady
-    exit-status: 0
-    timeout: 10000
-    skip: false
-  {{end}}
+    {{range $node := index .Vars "k8s_nodes"}}
+    {{ $testlabel := $node | printf "k8s_node_%s_joined_cluster" }}
+    {{$testlabel}}:
+        title: Kubernetes Node '{{$node}}' Ready
+        meta:
+            desc: Validates that Kubernetes node '{{$node}}' joined cluster and is in ready state.
+            sev: 0
+        exec: |-
+            # The test should fail if the kubectl command fails
+            set -o pipefail
+            # The logrun command will log the output of the kubectl command, pre-grep
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" get nodes "{{$node}}" | grep Ready | grep -v NotReady
+        exit-status: 0
+        timeout: 10000
+        skip: false
+    {{end}}
