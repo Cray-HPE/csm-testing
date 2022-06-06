@@ -37,10 +37,11 @@ do
 done
 
 # checks age of cluster
-# if cluster is older than 24 hours, checks that a backup was created within the last 24 hours
+# given the cronjob creates etcd backup crd within one hour of the cluster being created and based on the config map, the backups currently run every 24 hours,
+# it can take up to 25 hours before a backup is created. The one_day_sec is now set to 25 hours to allow for the initial hour needed to create the backup crd.
 
 current_date_sec=$(date +"%s")
-one_day_sec=86400
+one_day_sec=90000 # 25 hours
 
 check_backup_within_day() {
     backup_within_day=0
@@ -57,7 +58,7 @@ check_backup_within_day() {
             if [[ ! -z $backup_date ]]
             then
                 backup_sec=$(date -d "${backup_date}" "+%s" 2>/dev/null)
-                if [[ ! -z $backup_sec && $(( $current_date_sec - $backup_sec )) -lt $one_day_sec ]] # check if backup is less that 24 hours old
+                if [[ ! -z $backup_sec && $(( $current_date_sec - $backup_sec )) -lt $one_day_sec ]] # check if backup is less that 25 hours old
                 then
                     backup_within_day=1
                     if [[ $print_results -eq 1 ]]
@@ -87,7 +88,7 @@ do
                 else exit 1; fi
             fi
         else
-            if [[ $print_results -eq 1 ]]; then echo "$cluster is less than 24 hours old. Did not check if recent backups exist."; fi            
+            if [[ $print_results -eq 1 ]]; then echo "$cluster etcd backup resource is less than 24 hours old. Did not check if recent backups exist."; fi            
         fi
     else
         if [[ $print_results -eq 1 ]]; then echo "Error: could not find age of $cluster."; error_flag=1;
