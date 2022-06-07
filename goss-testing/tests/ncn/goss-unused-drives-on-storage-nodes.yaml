@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,27 +22,20 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-#
-# This suite is run during CSM installs before CSM services have been deployed
-#
-
-{{ $this_node_name := .Vars.this_node_name }}
-gossfile:
-    {{if eq $this_node_name "ncn-s001"}}
-    # This test checks for the presence of files which indicate that
-    # Ceph was successfully configured on ncn-s001
-    ../tests/goss-ceph-csi-storage-node-requirements.yaml: {}
-    {{end}}
-    ../tests/goss-ceph-status.yaml: {}
-    {{if eq $this_node_name "ncn-s001"}}
-    # This takes a while to run and does not need to be run on all of the
-    # storage nodes, so we only run it on ncn-s001
-    ../tests/goss-ceph-storage-services.yaml: {}
-    {{end}}
-    ../tests/goss-ncn-xname.yaml: {}
-    {{if eq $this_node_name "ncn-s001"}}
-    # This is counting the OSDs for the storage nodes. It is counting the
-    # total OSDs across all of the nodes, so it only needs to run on one
-    # of them.
-    ../tests/goss-unused-drives-on-storage-nodes.yaml: {}
-    {{end}}
+{{ $num_storage_nodes := len .Vars.storage_nodes }}
+{{ $this_node_manufacturer := .Vars.this_node_manufacturer }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $check_for_unused_drives := $scripts | printf "%s/python/check_for_unused_drives.py" }}
+command:
+    {{ $testlabel := "unused_drives_on_storage_nodes" }}
+    {{$testlabel}}:
+        title: Check for unused drives on utility storage nodes
+        meta:
+            desc: Validate that the Ceph cluster contains the expected number of OSDs based on the hardware type and number of storage nodes. If the test fails, see the Deploy Management Nodes install procedure for remediation steps.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$check_for_unused_drives}}" "{{$num_storage_nodes}}" "{{$this_node_manufacturer}}"
+        exit-status: 0
+        timeout: 10000
