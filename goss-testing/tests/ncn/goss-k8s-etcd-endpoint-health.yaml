@@ -21,16 +21,28 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  etcd_database_health:
-    title: Etcd Cluster Endpoint Health
-    meta:
-      desc: Checks the endpoint health of the etcd clusters.
-      sev: 0
-    exec: for pod in $(kubectl get pods -l app=etcd -n services -o jsonpath='{.items[*].metadata.name}');do
-      kubectl -n services exec ${pod} -- /bin/sh -c "ETCDCTL_API=3 etcdctl endpoint health"; done
-    stdout:
-      - "!unhealthy"
-    exit-status: 0
-    timeout: 10000
-    skip: false
+    {{ $testlabel := "etcd_database_health" }}
+    {{$testlabel}}:
+        title: Etcd Cluster Endpoint Health
+        meta:
+            desc: Checks the endpoint health of the etcd clusters.
+            sev: 0
+        exec: |-
+            count=0
+            set -eo pipefail
+            for pod in $("{{$kubectl}}" get pods -l app=etcd -n services -o jsonpath='{.items[*].metadata.name}') ; do
+                "{{$logrun}}" -l "{{$testlabel}}_${pod}" \
+                    "{{$kubectl}}" -n services exec ${pod} -- /bin/sh -c "ETCDCTL_API=3 etcdctl endpoint health"
+                let count+=1
+            done
+            # Make sure we actually found clusters
+            [[ $count -gt 0 ]] || exit 57
+        stdout:
+          - "!unhealthy"
+        exit-status: 0
+        timeout: 10000
+        skip: false

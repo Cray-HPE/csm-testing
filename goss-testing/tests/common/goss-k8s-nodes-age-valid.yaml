@@ -38,7 +38,7 @@ command:
             set -o pipefail
             # The logrun command will log the output of the kubectl command, pre-grep and pre-awk
             "{{$logrun}}" -l "{{$testlabel}}" \
-                "{{$kubectl}}" get nodes | grep {{$node}} | awk '{ print $4 }' | grep -v '<invalid>'
+                "{{$kubectl}}" get nodes {{$node}} | awk '{ print $4 }' | grep -v '<invalid>'
         exit-status: 0
         timeout: 10000
         skip: false
