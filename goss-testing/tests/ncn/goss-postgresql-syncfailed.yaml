@@ -29,7 +29,7 @@ command:
     {{$testlabel}}:
         title: Postgresql SyncFailed status check
         meta:
-            desc: Checks if any posgresql have status SyncFailed. If this fails, investigate postgresql statuses.
+            desc: Checks if any posgresql have status SyncFailed. If this fails, investigate postgresql statuses. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing clusters in a SyncFailed state.
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
