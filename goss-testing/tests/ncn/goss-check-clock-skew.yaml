@@ -31,14 +31,10 @@ command:
         meta:
             desc: If this test fails, see "operations/node_management/Configure_NTP_on_NCNs.md#fix-broken-configs" in the CSM release documentation for steps to remediate clock skew.
             sev: 0
-        # check to see if chrony is in sync using a chronyc command
-        # up to 6 times
-        # with a max correction of 0.5ppm (50ms)
-        # and a max skew of 0.5ppm (50ms)
-        # retry every 10 seconds
+        # check to see if system time is in sync using the timedatectl command
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
-              chronyc waitsync 6 0.5 0.5 10
+                timedatectl | awk /synchronized:/'{print $NF}' | grep "yes"
         exit-status: 0
         timeout: 60000
         skip: false
