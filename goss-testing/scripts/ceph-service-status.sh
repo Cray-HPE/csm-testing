@@ -105,10 +105,10 @@ function check_service(){
       fi
       if [[ -n "$osd_id" ]] || [[ -n "$osd" ]]
       then
-        read -r -d "\n" service_unit status epoch < <(pdsh -N -w "$host" podman ps --format json 2>&1 |grep -v "Permanently added"|jq --arg osd "osd.$osd_id" -r '.[]|select(.Names[]|contains($osd))|.Names[], .State, .StartedAt')
+        read -r -d "\n" service_unit status epoch < <(pdsh -N -w "$host" podman ps --format json 2>&1 |grep -v "Permanently added"|jq --arg osd "osd-$osd_id" -r '.[]|select(.Names[]|contains($osd))|.Names[], .State, .StartedAt')
         (( tests++ ))
         #shellcheck disable=SC2076
-        if [[ "$service_unit" =~ "$FSID_STR-osd.$osd_id" ]]
+        if [[ "$service_unit" =~ "$FSID_STR-osd-$osd_id" ]]
         then
           (( passed++ ))
         fi
