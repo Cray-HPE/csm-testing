@@ -29,5 +29,5 @@ command:
       sev: 0
     exec: kubectl get pods -n nexus -l app=nexus | awk '{ print $3 }' | grep Running
     exit-status: 0
-    timeout: 10000
+    timeout: 20000
     skip: false

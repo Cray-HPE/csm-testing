@@ -29,5 +29,5 @@ command:
       sev: 0
     exec: "kubectl get nodes | grep ^ncn | grep -v ' Ready '"
     exit-status: 1
-    timeout: 5000
+    timeout: 20000
     skip: false

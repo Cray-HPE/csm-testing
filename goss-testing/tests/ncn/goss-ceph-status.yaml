@@ -46,5 +46,5 @@ command:
                 "{{$logrun}}" -l "{{$testlabel}}" \
                     /usr/bin/ceph -s
             exit-status: 0
-            timeout: 10000
+            timeout: 20000
     {{end}}

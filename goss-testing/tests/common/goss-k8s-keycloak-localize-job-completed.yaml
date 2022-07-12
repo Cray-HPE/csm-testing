@@ -39,5 +39,5 @@ command:
             "{{$logrun}}" -l "{{$testlabel}}" \
                 "{{$kubectl}}" -n services wait --for=condition=complete --timeout=3s job/"$JOB"
         exit-status: 0
-        timeout: 10000
+        timeout: 20000
         skip: false

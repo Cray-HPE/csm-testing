@@ -38,4 +38,4 @@ command:
             "{{$logrun}}" -l "{{$testlabel}}" \
                 "{{$check_for_unused_drives}}" "{{$num_storage_nodes}}" "{{$this_node_manufacturer}}"
         exit-status: 0
-        timeout: 10000
+        timeout: 20000

@@ -29,5 +29,5 @@ command:
       sev: 0
     exec: 'curl --insecure -vvI https://rgw-vip.nmn 2>&1 | grep "expire date:"'
     exit-status: 0
-    timeout: 5000
+    timeout: 20000
     skip: false

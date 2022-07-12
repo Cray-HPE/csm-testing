@@ -29,5 +29,5 @@ command:
       sev: 0
     exec: "ping -q -c 1 arti.dev.cray.com"
     exit-status: 0
-    timeout: 5000
+    timeout: 20000
     skip: false
