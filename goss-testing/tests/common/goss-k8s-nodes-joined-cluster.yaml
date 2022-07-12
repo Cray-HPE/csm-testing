@@ -40,6 +40,6 @@ command:
             "{{$logrun}}" -l "{{$testlabel}}" \
                 "{{$kubectl}}" get nodes "{{$node}}" | grep Ready | grep -v NotReady
         exit-status: 0
-        timeout: 10000
+        timeout: 20000
         skip: false
     {{end}}

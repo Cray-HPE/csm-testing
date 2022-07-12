@@ -44,7 +44,7 @@ command:
                 "{{$logrun}}" -l "{{$testlabel}}" \
                     "{{$kubectl}}" get configmap "{{$configmap}}"
             exit-status: 0
-            timeout: 10000
+            timeout: 20000
     {{end}}
     {{range $secret := index .Vars "k8s_ceph_csi_secrets"}}
         {{ $testlabel := $secret | printf "k8s_secret_%s" }}
@@ -57,5 +57,5 @@ command:
                 "{{$logrun}}" -l "{{$testlabel}}" \
                     "{{$kubectl}}" get secret "{{$secret}}"
             exit-status: 0
-            timeout: 10000
+            timeout: 20000
     {{end}}

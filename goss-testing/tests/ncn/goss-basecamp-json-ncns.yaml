@@ -35,5 +35,5 @@ command:
             "{{$logrun}}" -l "{{$testlabel}}" \
                 curl http://pit:8888/meta-data | jq -e
         exit-status: 0
-        timeout: 5000
+        timeout: 20000
         skip: false

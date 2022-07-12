@@ -36,4 +36,4 @@ command:
             "{{$logrun}}" -l "{{$testlabel}}" \
                 "{{$check_ncn_xname}}"
         exit-status: 0
-        timeout: 10000
+        timeout: 20000

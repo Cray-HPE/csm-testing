@@ -39,5 +39,5 @@ command:
             exit-status: 0
             stdout:
                 - /^\/dev\//
-            timeout: 5000
+            timeout: 20000
     {{end}}

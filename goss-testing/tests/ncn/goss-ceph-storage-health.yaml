@@ -35,5 +35,5 @@ command:
             "{{$logrun}}" -l "{{$testlabel}}" \
                 "{{$scripts}}/ceph-service-status.sh" -v true
         exit-status: 0
-        timeout: 10000
+        timeout: 20000
         skip: false

@@ -80,6 +80,6 @@ command:
                         basename "$(readlink /var/www/{{ $dir }}/filesystem.squashfs)" | 
                             grep "^secure-"
                 exit-status: 0
-                timeout: 5000
+                timeout: 20000
         {{end}}
     {{end}}
