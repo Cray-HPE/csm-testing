@@ -30,8 +30,8 @@ Name: csm-testing
 License: HPE Software License Agreement
 Summary: Goss tests to test out installation set-up
 Group: HPC
-Version: %(cat .rpm_version)
-Release: %(echo ${BUILD_METADATA})
+Version: %(echo $VERSION)
+Release: 1
 Source: %{name}-%{version}.tar.bz2
 Vendor: HPE
 BuildArchitectures: noarch
