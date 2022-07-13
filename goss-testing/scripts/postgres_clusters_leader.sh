@@ -46,14 +46,14 @@ do
 
     first_member="$(kubectl get pod -n $c_ns -l "cluster-name=$c_name,application=spilo" \
                   -o custom-columns=NAME:.metadata.name --no-headers | head -1)"
-    leader=$(kubectl -n $c_ns exec $first_member -- patronictl list --format json 2>/dev/null | jq '.[] | select ( .Role=="Leader" ) | .Member' | sed 's/\"//g')
+    leader=$(kubectl -n $c_ns exec $first_member -c postgres -- patronictl list --format json 2>/dev/null | jq '.[] | select ( .Role=="Leader" ) | .Member' | sed 's/\"//g')
     if [[ -z $leader ]]
     then
         if [[ $print_results -eq 1 ]]; 
         then 
             echo "$c_name has no Leader."
             failFlag=1
-            kubectl -n $c_ns exec $first_member -- patronictl list 2>/dev/null 
+            kubectl -n $c_ns exec $first_member -c postgres -- patronictl list 2>/dev/null 
             echo
         else exit 1; fi
     else
