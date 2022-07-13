@@ -81,7 +81,7 @@ pipeline {
                     publishCsmRpms(component: 'goss-servers', pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm", os: 'sle-15sp2', arch: "noarch", isStable: isStable)
                     publishCsmRpms(component: 'goss-servers', pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm", os: 'sle-15sp3',  arch: "noarch", isStable: isStable)
                     publishCsmRpms(component: env.GIT_REPO_NAME, pattern: "dist/rpmbuild/SRPMS/${env.GIT_REPO_NAME}*.rpm", os: 'sle-15sp2', arch: "src", isStable: isStable)
-                    publishCsmRpms(component: 'goss-servers', pattern: "dist/rpmbuild/SRPMS/goss-servers*.rpm", os: 'sle-15sp3', arch: "src", isStable: isStable)
+                    publishCsmRpms(component: env.GIT_REPO_NAME, pattern: "dist/rpmbuild/SRPMS/${env.GIT_REPO_NAME}*.rpm", os: 'sle-15sp3', arch: "src", isStable: isStable)
                 }
             }
         }
