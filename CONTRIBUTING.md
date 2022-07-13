@@ -1,6 +1,6 @@
 # Contributing
 
-The `.rpm_version` file follows semver (no prefixing or suffixing with anything, only `x.y.z`).
+The git-tags file follows semver (no prefixing or suffixing with anything, only `vX.Y.Z`).
 
 Incrementing is easy (X.Y.Z):
 - X when something dramatic occurs such as overhaul or changes that break compatibility on a large scale
