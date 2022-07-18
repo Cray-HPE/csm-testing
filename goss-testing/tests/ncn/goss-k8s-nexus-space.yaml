@@ -21,21 +21,13 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-gossfile:
-  ../tests/goss-dns-nodes.yaml: {}
-  ../tests/goss-k8s-nodes-ready.yaml: {}
-  ../tests/goss-command-available.yaml: {}
-  ../tests/goss-bond-members-have-links.yaml: {}
-  ../tests/goss-unbound-ip.yaml: {}
-  ../tests/goss-bond-members-have-correct-mtu.yaml: {}
-  ../tests/goss-ceph-storage-health.yaml: {}
-  ../tests/goss-k8s-cray-cli-configured.yaml: {}
-  ../tests/goss-rgw-health.yaml: {}
-  ../tests/goss-k8s-nexus-pods-running.yaml: {}
-  ../tests/goss-k8s-ipxe-pod-running.yaml: {}
-  ../tests/goss-k8s-kea-pod-running.yaml: {}
-  ../tests/goss-k8s-tftp-pods-running.yaml: {}
-  ../tests/goss-postgresql-syncfailed.yaml: {}
-  ../tests/goss-ip-dns-check.yaml: {}
-  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
-  ../tests/goss-k8s-nexus-space.yaml: {}
+command:
+  k8s_nexus_free_space:
+    title: Kubernetes Service 'nexus' Has Enough Free Space
+    meta:
+      desc: If this test fails, look at the the amount of free space in `nexus-data` PVC and refer to operations/package_repository_management/Nexus_Space_Cleanup.md in the docs-csm repository.
+      sev: 0
+    exec: freeSpace=$(kubectl exec -n nexus deploy/nexus -c nexus -- df -P /nexus-data | grep '/nexus-data' | awk '{printf "%.0f", ($4/1024/1024);}');if (( $freeSpace < 150 ));then return 0; fi
+    exit-status: 0
+    timeout: 20000
+    skip: false
