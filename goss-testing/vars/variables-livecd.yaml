@@ -94,6 +94,6 @@ unbound_hostnames:
   - packages
   - registry
 
-kubectl: "/usr/local/bin/kubectl"
+kubectl: "/usr/bin/kubectl"
 
 bond_member_mtu: 1500
