@@ -23,16 +23,16 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 # GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
+[[ -z ${GOSS_BASE} ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
 
 export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
 
-if [[ -z "$SW_ADMIN_PASSWORD" ]]; then
+if [[ -z ${SW_ADMIN_PASSWORD} ]]; then
   echo "ERROR Management switch admin password must be provided via the SW_ADMIN_PASSWORD enviroment varaible"
   echo "Example: export SW_ADMIN_PASSWORD='changeme'"
   exit 1
 fi
 
-"$GOSS_BASE/automated/ncn-healthcheck-storage"
-"$GOSS_BASE/automated/ncn-healthcheck-master"
-"$GOSS_BASE/automated/ncn-healthcheck-worker"
+"${GOSS_BASE}/automated/ncn-healthcheck-storage"
+"${GOSS_BASE}/automated/ncn-healthcheck-master"
+"${GOSS_BASE}/automated/ncn-healthcheck-worker"

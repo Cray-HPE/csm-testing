@@ -23,34 +23,31 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 # GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
+[[ -z ${GOSS_BASE} ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
 
 export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
 
-source "$GOSS_BASE/automated/run-ncn-tests.sh"
+source "${GOSS_BASE}/automated/run-ncn-tests.sh"
 
 echo $'\e[1;33m'Storage Node Automated Tests$'\e[0m'
 echo $'\e[1;33m'----------------------------$'\e[0m'
 
-# Find the storage node names
-if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
-	storage_nodes=$(grep -oE 'ncn-s[0-9]{3}' /etc/dnsmasq.d/statics.conf | sort -u)
-else
-	storage_nodes=$(grep -oE 'ncn-s[0-9]{3}' /etc/hosts | sort -u)
+# The get_storage_ncns function is defined in run-ncn-tests.sh
+storage_nodes=$(get_ncns --storage) || exit 1
+
+# Excluding storage_nodes from the parenthesis because it contains newlines (which we do not want to include in the echo)
+echo "List of storage NCNs: "${storage_nodes}
+
+# The get_ncns function should always give NCNs if its return code was 0, but better safe than sorry
+[[ -n ${storage_nodes} ]] || err_exit "No storage nodes found"
+
+# It is important that we ran on ncn-s001, since some of the tests only run from that node
+if ! echo ${storage_nodes} | grep -q ncn-s001 ; then
+	print_error "ncn-s001 not listed among the storage nodes"
 fi
 
-echo "List of storage NCNs: $storage_nodes"
-
-if [[ -z $storage_nodes ]]; then
-	echo "ERROR: No storage nodes found"
-	exit 1
-elif ! echo $storage_nodes | grep -q ncn-s001 ; then
-	# It is important that we ran on ncn-s001, since some of the tests only run from that node
-	echo "ERROR: ncn-s001 not listed among the storage nodes"
-fi
-
-for nodename in $storage_nodes ; do
-	run_ncn_tests "$nodename" "8997" "ncn-storage-tests"
+for node in ${storage_nodes} ; do
+	run_ncn_tests "${node}" "8997" "ncn-storage-tests"
 done
 
 # We always exit 0 -- this does not indicate that the tests passed.

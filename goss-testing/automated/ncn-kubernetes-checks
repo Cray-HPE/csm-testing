@@ -23,59 +23,27 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 
 # GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z $GOSS_BASE ]] && export GOSS_BASE=/opt/cray/tests/install/ncn
+[[ -z ${GOSS_BASE} ]] && export GOSS_BASE=/opt/cray/tests/install/ncn
 
 export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
 
-export GOSS_VARS=/tmp/goss-variables-$(date +%s)-temp.yaml
+source "${GOSS_BASE}/automated/run-ncn-tests.sh"
 
-source "$GOSS_BASE/automated/run-ncn-tests.sh"
-
-# files needed to run from livecd
+# file needed to run from livecd
 kube_creds=/root/.kube/config
-pit_file=/etc/pit-release
 
-if [ -f $pit_file ]; then
-  # running on a pit node
-  cat "$GOSS_BASE/vars/variables-livecd.yaml" > $GOSS_VARS
-else
-  # running on an NCN
-  cat "$GOSS_BASE/vars/variables-ncn.yaml" > $GOSS_VARS
-fi
-echo "" >> $GOSS_VARS
-
-# Add variables based on local system
-add_local_vars "$GOSS_VARS"
-
-if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
-  k8s_nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE 'ncn-[mw]([0-9]{3})' | grep -v ncn-m001 | awk '!a[$0]++')
-else
-  k8s_nodes=$(cat /etc/hosts | grep -ohE 'ncn-[mw]([0-9]{3})' | awk '!a[$0]++')
-fi
-
-# add node names from statics.conf to temp variables file
-if [ `echo $k8s_nodes | wc -w` -ne 0 ];then
-  echo "" >> $GOSS_VARS
-  echo "k8s_nodes:" >> $GOSS_VARS
-  for node in $k8s_nodes; do
-    echo "  - $node" >> $GOSS_VARS
-  done
-else
-  echo "Node names could not be found in files! Exiting now."
-  exit 1
-fi
-
-if [ -f $pit_file ]; then
+# is_pit_node is defined in run-ncn-tests.sh
+if is_pit_node; then
   # running on a pit node
   echo $'\e[1;33m'PIT Node Kubernetes Checks$'\e[0m'
   echo $'\e[1;33m'--------------------------$'\e[0m'
-  if [ -f $kube_creds ]; then
+  if [[ -f ${kube_creds} ]]; then
     # run livecd local Kubernetes cluster tests
     k8s_local_tests
   else
     # We preface this warning with 'Total Tests:' to make it more visible, because the install documentation
     # has the user grep for that string to review the results of the tests.
-    echo $'\e[1;31m'Total Tests: WARNING: Unable to run local Kubernetes checks because $kube_creds does not exist$'\e[0m'
+    echo $'\e[1;31m'Total Tests: WARNING: Unable to run local Kubernetes checks because ${kube_creds} does not exist$'\e[0m'
     echo
   fi
 else
@@ -89,37 +57,46 @@ fi
 echo $'\e[1;33m'Master Node Kubernetes Checks$'\e[0m'
 echo $'\e[1;33m'-----------------------------$'\e[0m'
 
-# find the master node names and query the server endpoint
-if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
-  nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE "ncn-m([0-9]{3})" | grep -v ncn-m001 | awk '!a[$0]++')
-  for node in $nodes ; do \
-    run_ncn_tests "$node" "8996" "ncn-kubernetes-tests-master" ; \
-  done
-else
-  nodes=$(cat /etc/hosts | grep -ohE "ncn-m([0-9]{3})" | awk '!a[$0]++')
-  for node in $nodes ; do \
-    run_ncn_tests "$node" "8996" "ncn-kubernetes-tests-master" ; \
-    run_ncn_tests "$node" "9007" "ncn-afterpitreboot-kubernetes-tests-master" ; \
-  done
+# The get_ncns function is defined in run-ncn-tests.sh
+if nodes=$(get_ncns --masters --exclude-pit); then
+
+	# The get_ncns function should always give NCNs if its return code was 0, but better safe than sorry
+	if [[ -z ${nodes} ]]; then
+		print_error "No master NCNs found"
+	else
+		# Query the server endpoints
+		for node in ${nodes} ; do
+			run_ncn_tests "${node}" "8996" "ncn-kubernetes-tests-master"
+			if ! is_pit_node ; then
+				run_ncn_tests "${node}" "9007" "ncn-afterpitreboot-kubernetes-tests-master"
+			fi
+		done
+	fi
+
 fi
+
 echo
 
 # worker nodes
 echo $'\e[1;33m'Worker Node Kubernetes Checks$'\e[0m'
 echo $'\e[1;33m'-----------------------------$'\e[0m'
 
-# find the worker node names and query the server endpoint
-if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
-  nodes=$(cat /etc/dnsmasq.d/statics.conf | grep -ohE "ncn-w([0-9]{3})" | awk '!a[$0]++')
-  for node in $nodes ; do \
-    run_ncn_tests "$node" "8998" "ncn-kubernetes-tests-worker"; \
-  done
-else
-  nodes=$(cat /etc/hosts | grep -ohE "ncn-w([0-9]{3})" | awk '!a[$0]++')
-  for node in $nodes ; do \
-    run_ncn_tests "$node" "8998" "ncn-kubernetes-tests-worker" ; \
-    run_ncn_tests "$node" "9008" "ncn-afterpitreboot-kubernetes-tests-worker" ; \
-  done
+# The get_ncns function is defined in run-ncn-tests.sh
+if nodes=$(get_ncns --workers); then
+
+	# The get_ncns function should always give NCNs if its return code was 0, but better safe than sorry
+	if [[ -z ${nodes} ]]; then
+		print_error "No worker NCNs found"
+	else
+		# Query the server endpoints
+		for node in ${nodes} ; do
+			run_ncn_tests "${node}" "8998" "ncn-kubernetes-tests-worker"
+			if ! is_pit_node ; then
+				run_ncn_tests "${node}" "9008" "ncn-afterpitreboot-kubernetes-tests-worker"
+			fi
+		done
+	fi
+
 fi
 
 exit
