@@ -97,3 +97,5 @@ unbound_hostnames:
 kubectl: "/usr/bin/kubectl"
 
 bond_member_mtu: 1500
+
+pit_node: true

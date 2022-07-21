@@ -153,3 +153,5 @@ storage_fs_labels:
   - CEPHETC
   - CEPHVAR
   - CONTAIN
+
+pit_node: false
