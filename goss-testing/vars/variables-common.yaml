@@ -47,54 +47,22 @@
 #       It starts with the livecd/ncn variable file that has been installed on the system, and appends to it some system-specific values (which are
 #       determined when the function is called).
 
-network_interfaces:
-  - bond0
-  - bond0.nmn0
-  - bond0.hmn0
-  - bond0.can0
-  - bond0.cmn0
+networks:
+  - "nmn"
+  - "hmn"
+  - "mtl"
+  - "can"
 
-services_enabled:
-  - dnsmasq
-  - nexus
-  - basecamp
-  - conman
+k8s_ceph_csi_configmaps:
+  - ceph-csi-config
+  - cephfs-csi-sc
+  - kube-csi-sc
+  - sma-csi-sc
+  - sts-rados-config
 
-services_running:
-  - dnsmasq
-  - nexus
-  - basecamp
-  - conman
+k8s_ceph_csi_secrets:
+  - csi-cephfs-secret
+  - csi-kube-secret
+  - csi-sma-secret
 
-datajson:
-  - "/var/www/ephemeral/configs/data.json"
-
-staticsconf:
-  - "/etc/dnsmasq.d/statics.conf"
-
-qnd:
-  - "/var/www/ephemeral/qnd-1.4.sh"
-
-commands:
-  - 'kubectl version --client'
-  - 'ipmitool -V'
-  - 'csi version'
-  - 'cray --version'
-
-artifact_symlinks:
-  - filesystem.squashfs
-  - initrd.img.xz
-  - kernel
-
-unbound_hostnames:
-  - rgw-vip.nmn
-  - rgw-vip.hmn
-  - api-gw-service
-  - api-gw-service.local
-  - api-gw-service-nmn.local
-  - packages
-  - registry
-
-bond_member_mtu: 1500
-
-pit_node: true
+kubectl: "/usr/bin/kubectl"

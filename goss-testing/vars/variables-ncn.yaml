@@ -21,11 +21,31 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-networks:
-  - "nmn"
-  - "hmn"
-  - "mtl"
-  - "can"
+# The following files in this repository govern the Goss test variables:
+#
+# - goss-testing\vars\variables-common.yaml 
+#       Definitions of variables that should have the same values when Goss tests are run on the LiveCD/PIT or on an NCN.
+#
+# - goss-testing\vars\variables-livecd.yaml 
+#       Definitions of variables for Goss tests run on the LiveCD/PIT. These could be variables only needed for tests run on
+#       the PIT, or these could be variables whose values need to be different when run on the PIT.
+#
+# - goss-testing\vars\variables-ncn.yaml 
+#       Definitions of variables for Goss tests run on the NCNs. These could be variables only needed for tests run on
+#       NCNs, or these could be variables whose values need to be different when run on NCNs.
+#
+# - csm-testing.spec
+#       When installing the test RPM on a system, the variables-livecd.yaml and variables-ncn.yaml files that are installed on
+#       the system are created by appending the livecd/ncn variable file from the repository to the common variable file from the repository.
+#       The common variable file itself is not installed on the system.
+#
+#       NOTE: No intelligence is included in the merging of the common file with the livecd/ncn file -- if a variable is defined in both the common
+#       file and the NCN or livecd file, then it will end up being defined twice in the final file.
+#
+# - goss-testing/automated/run-ncn-tests.sh
+#       This shared Bash library contains a function which dynamically generates a variable file before Goss tests are run.
+#       It starts with the livecd/ncn variable file that has been installed on the system, and appends to it some system-specific values (which are
+#       determined when the function is called).
 
 network_interfaces:
   - bond0.nmn0
@@ -95,18 +115,6 @@ k8s_istio_services:
   - istio-ingressgateway
   - istio-ingressgateway-local
 
-k8s_ceph_csi_configmaps:
-  - ceph-csi-config
-  - cephfs-csi-sc
-  - kube-csi-sc
-  - sma-csi-sc
-  - sts-rados-config
-
-k8s_ceph_csi_secrets:
-  - csi-cephfs-secret
-  - csi-kube-secret
-  - csi-sma-secret
-
 k8s_worker_mounts:
   - /var/lib/containerd
   - /var/lib/kubelet
@@ -127,8 +135,6 @@ ceph_services:
   - mds
   - osd
   - rgw
-
-kubectl: "/usr/bin/kubectl"
 
 commands:
   - 'kubectl version --client'

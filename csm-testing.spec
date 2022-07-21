@@ -58,12 +58,17 @@ install -d -m 755 %{buildroot}%{ncn}/vars
 install -m 755 goss-testing/automated/*         %{buildroot}%{livecd}/automated
 install -m 755 goss-testing/tests/livecd/*.yaml %{buildroot}%{livecd}/tests
 install -m 755 goss-testing/tests/common/*.yaml %{buildroot}%{livecd}/tests
-install -m 755 goss-testing/vars/*.yaml         %{buildroot}%{livecd}/vars
 install -m 755 build-testing/*                  %{buildroot}%{livecd}/build-testing
 install -m 755 goss-testing/automated/*         %{buildroot}%{ncn}/automated
 install -m 755 goss-testing/tests/ncn/*.yaml    %{buildroot}%{ncn}/tests
 install -m 755 goss-testing/tests/common/*.yaml %{buildroot}%{ncn}/tests
-install -m 755 goss-testing/vars/*.yaml         %{buildroot}%{ncn}/vars
+# Install variables files
+install -m 755 goss-testing/vars/vars-packages.yaml         %{buildroot}%{livecd}/vars
+install -T -m 755 goss-testing/vars/variables-common.yaml %{buildroot}%{livecd}/vars/variables-livecd.yaml
+cat goss-testing/vars/variables-livecd.yaml >> %{buildroot}%{livecd}/vars/variables-livecd.yaml
+install -T -m 755 goss-testing/vars/variables-common.yaml %{buildroot}%{ncn}/vars/variables-ncn.yaml
+cat goss-testing/vars/variables-ncn.yaml >> %{buildroot}%{ncn}/vars/variables-ncn.yaml
+install -m 755 goss-testing/vars/vars-packages.yaml         %{buildroot}%{ncn}/vars
 # Install script files
 install -d -m 755 %{buildroot}%{livecd}/scripts
 install -d -m 755 %{buildroot}%{livecd}/scripts/python
