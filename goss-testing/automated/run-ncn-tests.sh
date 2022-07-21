@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # MIT License
 #
 # (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
@@ -23,6 +22,10 @@
 #
 # This file is sourced by the NCN automated testing scripts.
 
+# No shebang line at the top of the file, because this is not intended to be executed, only included as a source in other Bash scripts.
+# The following line lets the linter know how to appripriately check this file.
+# shellcheck shell=bash
+
 function print_warn {
     echo "WARNING: $*" 1>&2
 }
@@ -44,6 +47,10 @@ function is_pit_node {
 
 # Prints a list of all NCNs
 # Prints warnings if there are fewer than expected
+#
+# Disable the following check because this function does get called with arguments, just
+# not from within this file.
+#shellcheck disable=SC2120
 function get_ncns {
     # Usage: get_ncns [--exclude-pit] [--masters] [--storage] [--workers]
     #
@@ -54,7 +61,7 @@ function get_ncns {
     # Regardless of the above, if --exclude-pit is specified, and this function is being called on the PIT node,
     # then ncn-m001 will be excluded from the results.
     # 
-    local ncns type_char_pattern type_string
+    local type_char_pattern type_string
 
     local masters=N
     local storage=N
@@ -67,7 +74,7 @@ function get_ncns {
             "--storage") storage=Y ;;
             "--workers") workers=Y ;;
             "--exclude-pit") if is_pit_node; then exclude_m001=Y ; fi ;;
-            *) err_exit"PROGRAMMING LOGIC ERROR: get_ncns: Invalid argument: '$1'"
+            *) err_exit "PROGRAMMING LOGIC ERROR: get_ncns: Invalid argument: '$1'"
         esac
         shift
     done
@@ -225,16 +232,13 @@ function run_ncn_tests {
     echo Running tests against node $'\e[1;33m'${NODE}$'\e[0m'
     url="http://${NODE}.hmn:${port}/${endpoint}"
 
-    echo Server URL: ${url}
-    #shellcheck disable=SC2006
+    echo "Server URL: ${url}"
     if ! results=`curl -s "${url}"` ; then
         echo $'\e[1;31m'ERROR: Server endpoint could not be reached$'\e[0m'
         return 1
     fi
 
-    #shellcheck disable=SC2092
-    #shellcheck disable=SC2006
-    if ! `echo ${results} | jq -e > /dev/null 2>&1`; then
+    if ! echo ${results} | jq -e > /dev/null 2>&1; then
         echo $'\e[1;31m'ERROR: Output not valid JSON$'\e[0m'
         return 1
     else
@@ -358,7 +362,7 @@ function create_tmpvars_file {
         return 1
     fi
 
-    tmpvars=$(mktemp /tmp/goss-variables-$(date +%s)-XXXXXX-temp.yaml)
+    tmpvars=$(mktemp "/tmp/goss-variables-$(date +%s)-XXXXXX-temp.yaml")
     if [[ $? -ne 0 ]]; then
         print_error "create_tmpvars_file: mktemp command failed"
         return 1
