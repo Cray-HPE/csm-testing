@@ -27,7 +27,7 @@ command:
     meta:
       desc: If this test fails, look at the the amount of free space in `nexus-data` PVC and refer to operations/package_repository_management/Nexus_Space_Cleanup.md in the docs-csm repository.
       sev: 0
-    exec: freeSpace=$(kubectl exec -n nexus deploy/nexus -c nexus -- df -P /nexus-data | grep '/nexus-data' | awk '{printf "%.0f", ($4/1024/1024);}');if (( $freeSpace < 150 ));then return 0; fi
+    exec: freeSpace=$(kubectl exec -n nexus deploy/nexus -c nexus -- df -P /nexus-data | grep '/nexus-data' | awk '{printf "%.0f", ($4/1024/1024);}');if (( $freeSpace < 130 ));then exit 1; fi
     exit-status: 0
     timeout: 20000
     skip: false
