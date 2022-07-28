@@ -34,7 +34,7 @@ echo $'\e[1;33m'-------------------$'\e[0m'
 
 # Find the NCN node names and query the server endpoint
 # The get_ncns function is defined in run-ncn-tests.sh
-nodes=$(get_ncns --master --exclude-pit) || exit 1
+nodes=$(get_ncns --masters --exclude-pit) || exit 1
 
 # The get_ncns function should always give NCNs if its return code was 0, but better safe than sorry
 [[ -n ${nodes} ]] || err_exit "No master NCNs found"
