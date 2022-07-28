@@ -32,9 +32,17 @@ source "${GOSS_BASE}/automated/run-ncn-tests.sh"
 # necessary for kubectl commands to run
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
-# The create_tmpvars_file function is defined in run-ncn-tests.sh
-# It creates the temporary variables file and saves the path to it in the $tmpvars variable
-create_tmpvars_file || exit 1
+# Default value for tmpvars file
+tmpvars="${GOSS_BASE}/vars/variables-ncn.yaml"
+
+while [ true ]; do
+    # The create_tmpvars_file function is defined in run-ncn-tests.sh
+    # It creates the temporary variables file and saves the path to it in the $tmpvars variable
+    create_tmpvars_file && [[ -n ${tmpvars} && -s ${tmpvars} ]] && break
+
+    # It failed for some reason, so sleep and retry
+    sleep 5
+done
 
 # for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
 ip=$(host "$(hostname).hmn" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
@@ -44,8 +52,6 @@ ip=$(host "$(hostname).hmn" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9
 # designated goss-servers port range: 8994-9008
 
 echo "starting ncn-preflight-tests in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-preflight-tests.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
@@ -53,8 +59,6 @@ echo "starting ncn-preflight-tests in background"
   --listen-addr "${ip}":8995 &
 
 echo "starting ncn-kubernetes-tests-master in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-master.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
@@ -62,8 +66,6 @@ echo "starting ncn-kubernetes-tests-master in background"
   --listen-addr "${ip}":8996 &
 
 echo "starting ncn-kubernetes-tests-worker in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-worker.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
@@ -71,8 +73,6 @@ echo "starting ncn-kubernetes-tests-worker in background"
   --listen-addr "${ip}":8998 &
 
 echo "starting ncn-storage-tests in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-storage-tests.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
@@ -80,8 +80,6 @@ echo "starting ncn-storage-tests in background"
   --listen-addr "${ip}":8997 &
 
 echo "starting ncn-healthcheck-master in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-master.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
@@ -89,8 +87,6 @@ echo "starting ncn-healthcheck-master in background"
   --listen-addr "${ip}":8994 &
 
 echo "starting ncn-healthcheck-worker in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-worker.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
@@ -98,8 +94,6 @@ echo "starting ncn-healthcheck-worker in background"
   --listen-addr "${ip}":9000 &
 
 echo "starting ncn-healthcheck-storage in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-storage.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
@@ -107,8 +101,6 @@ echo "starting ncn-healthcheck-storage in background"
   --listen-addr "${ip}":9001 &
 
 echo "starting ncn-smoke-tests in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-smoke-tests.yaml --vars "${tmpvars}" serve \
   --format json \
   --endpoint /ncn-smoke-tests \
@@ -116,8 +108,6 @@ echo "starting ncn-smoke-tests in background"
   --listen-addr "${ip}":9002 &
 
 echo "starting ncn-spire-healthchecks in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-spire-healthchecks.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
@@ -125,8 +115,6 @@ echo "starting ncn-spire-healthchecks in background"
   --listen-addr "${ip}":9003 &
 
 echo "starting ncn-afterpitreboot-healthcheck-master in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-healthcheck-master.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
@@ -134,8 +122,6 @@ echo "starting ncn-afterpitreboot-healthcheck-master in background"
   --listen-addr "${ip}":9004 &
 
 echo "starting ncn-afterpitreboot-healthcheck-worker in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-healthcheck-worker.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
@@ -143,8 +129,6 @@ echo "starting ncn-afterpitreboot-healthcheck-worker in background"
   --listen-addr "${ip}":9005 &
 
 echo "starting ncn-afterpitreboot-healthcheck-storage in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-healthcheck-storage.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
@@ -152,8 +136,6 @@ echo "starting ncn-afterpitreboot-healthcheck-storage in background"
   --listen-addr "${ip}":9006 &
 
 echo "starting ncn-afterpitreboot-kubernetes-tests-master in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-kubernetes-tests-master.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
@@ -161,8 +143,6 @@ echo "starting ncn-afterpitreboot-kubernetes-tests-master in background"
   --listen-addr "${ip}":9007 &
 
 echo "starting ncn-afterpitreboot-kubernetes-tests-worker in background"
-# $tmpvars is set by the create_tmpvars_file function earlier
-#shellcheck disable=SC2154
 /usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-kubernetes-tests-worker.yaml --vars "${tmpvars}" serve \
   --format json \
   --max-concurrent 4 \
