@@ -36,12 +36,12 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 tmpvars="${GOSS_BASE}/vars/variables-ncn.yaml"
 
 while [ true ]; do
-	# The create_tmpvars_file function is defined in run-ncn-tests.sh
-	# It creates the temporary variables file and saves the path to it in the $tmpvars variable
-	create_tmpvars_file && [[ -n ${tmpvars} && -s ${tmpvars} ]] && break
-	
-	# It failed for some reason, so sleep and retry
-	sleep 5
+    # The create_tmpvars_file function is defined in run-ncn-tests.sh
+    # It creates the temporary variables file and saves the path to it in the $tmpvars variable
+    create_tmpvars_file && [[ -n ${tmpvars} && -s ${tmpvars} ]] && break
+
+    # It failed for some reason, so sleep and retry
+    sleep 5
 done
 
 # for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
