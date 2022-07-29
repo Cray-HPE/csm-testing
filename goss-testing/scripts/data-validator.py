@@ -96,11 +96,7 @@ def is_valid_ip_mask(data, desired_key):
 
     for ip_mask in ntp_key:
       try:
-        ip, mask = ip_mask.split('/')
-        mask = int(mask)
-        if mask < 1 or  mask > 32:
-          raise ValueError
-        ipaddress.ip_address(ip)
+        ipaddress.IPv4Network(ip_mask, strict=False)
       except ValueError:
         print("%s: '%s' is not a valid ip/mask in the %s list" % (ntp_blob_hostname, ip_mask, desired_key))
 
