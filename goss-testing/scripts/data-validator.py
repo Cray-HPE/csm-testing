@@ -44,9 +44,7 @@ def get_data():
     else:
       print("\nRunning on node: %s. Querying BSS..." % (hostname))
       print("------------------------------------------------------------")
-      #command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
-      command = [ "cat", "/Users/jason/Desktop/mug-bss-data.json" ]
-      #command = [ "cat", "/Users/jason/Desktop/fanta-bss-data.json" 
+      command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
       json_data = bss_proc.stdout.read()
   except subprocess.CalledProcessError as e:
@@ -113,7 +111,7 @@ def is_valid_hostname(hostname):
   if len(hostname) > 253:
       return False
   if hostname[-1] == ".":
-      hostname = hostname[:-1] # strip exactly one dot from the right, if present
+      hostname = hostname[:-1]
   allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
   return all(allowed.match(x) for x in hostname.split("."))
 
@@ -144,12 +142,27 @@ def are_values_sane(data, desired_key):
      Needs to check more stuff.
   """
   filtered_data = user_data(data)
+  target_list = []
+  hosts_list = []
 
+  # Check that a node isn't using itself
   for blob in filtered_data:
+    hosts_list.append(blob['hostname'])
     for value in blob['ntp'][desired_key]:
+      target_list.append(value)
       if value == blob['hostname']:
         print("%s: should not use %s in %s" % (blob['hostname'], value, desired_key))
-        
+
+  target_list = set(target_list)
+  hosts_list = set(hosts_list)
+
+  diff = target_list.difference(hosts_list)
+  # Check that a host definition exists for nodes in peers/servers
+  # needs to be fixed to not show items like ntp.hpecorp.net
+  if diff:
+    for i in diff:
+      print("%s: defined in %s, but host not defined in BSS / Basecamp" % (i, desired_key))
+
 
 if __name__ == "__main__":
   data = get_data()
