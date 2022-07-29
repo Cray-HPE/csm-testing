@@ -32,30 +32,34 @@ import json
 
 def get_data():
   hostname = socket.gethostname()
+
   try:
     if re.search("pit", hostname):
-      print("Running on pit node: %s. Querying data.json..." % (hostname))
-      json_data_obj = open("/var/www/ephemeral/configs/data.json", 'r')
-      json_data = json_data_obj.read()
-      json_data_obj.close()
+      print("\nRunning on pit node: %s. Querying data.json..." % (hostname))
+      print("------------------------------------------------------------")
+      with open("/var/www/ephemeral/configs/data.json", 'r') as file:
+        json_data = file.read()
     else:
-      print("Running on node: %s. Querying BSS..." % (hostname))
-      command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
+      print("\nRunning on node: %s. Querying BSS..." % (hostname))
+      print("------------------------------------------------------------")
+      #command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
+      command = [ "cat", "/Users/jason/Desktop/mug-bss-data.json" ]
+      #command = [ "cat", "/Users/jason/Desktop/fanta-bss-data.json" ]
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
       json_data = bss_proc.stdout.read()
   except subprocess.CalledProcessError as e:
     print(e.stderr)
 
   try:
-    json_serialized = json.loads(json_data)
-    return json_serialized
+    json_deserialized = json.loads(json_data)
+    return json_deserialized
   except ValueError as e:
    print("Failed to parse json.")
    print(e)
 
 
 def user_data(data):
-  # returns the 'user-data' blob from BSS or basecamp
+  # returns the 'user-data' blobs from BSS or basecamp
   filtered_data = []
 
   # if we're using BSS data
@@ -66,7 +70,7 @@ def user_data(data):
             filtered_data.append(blob['cloud-init']['user-data'].copy())
 
   # if we're using basecamp data
-  elif isinstance(data, dict):
+  elif isinstance(data, dict) and "Global" in data:
     for blob in data:
       if blob != "Global":
         if "ntp" in data[blob]['user-data']:
@@ -75,16 +79,7 @@ def user_data(data):
   return filtered_data
 
 
-def is_valid_hostname(hostname):
-    if len(hostname) > 253:
-        return False
-    if hostname[-1] == ".":
-        hostname = hostname[:-1] # strip exactly one dot from the right, if present
-    allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
-    return all(allowed.match(x) for x in hostname.split("."))
-
-
-def is_valid_cidrs(data, desired_key):
+def is_valid_ip_mask(data, desired_key):
   filtered_data = user_data(data)
 
   for blob in filtered_data:
@@ -96,11 +91,24 @@ def is_valid_cidrs(data, desired_key):
       print("%s: '%s' is not defined" % (ntp_blob_hostname, desired_key))
       next
 
-    for cidr in ntp_key:
+    for ip_mask in ntp_key:
       try:
-        ipaddress.ip_network(cidr)
+        ip, mask = ip_mask.split('/')
+        mask = int(mask)
+        if mask < 1 or  mask > 32:
+          raise ValueError
+        ipaddress.ip_address(ip)
       except ValueError:
-        print("%s: '%s' is not a valid cidr in the %s list" % (ntp_blob_hostname, cidr, desired_key))
+        print("%s: '%s' is not a valid ip/mask in the %s list" % (ntp_blob_hostname, ip_mask, desired_key))
+
+
+def is_valid_hostname(hostname):
+    if len(hostname) > 253:
+        return False
+    if hostname[-1] == ".":
+        hostname = hostname[:-1] # strip exactly one dot from the right, if present
+    allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+    return all(allowed.match(x) for x in hostname.split("."))
 
 
 def is_valid_hostnames(data, desired_key):
@@ -122,9 +130,19 @@ def is_valid_hostnames(data, desired_key):
         print("%s: '%s' is not a valid hostname in the %s list." % (ntp_blob_hostname, item, desired_key))
 
 
+def are_values_sane(data, desired_key):
+  filtered_data = user_data(data)
+
+  for blob in filtered_data:
+    for value in blob['ntp']['servers']:
+      if value == blob['hostname']:
+        print("%s: should not use %s in %s" % (blob['hostname'], value, desired_key))
+        
+
 if __name__ == "__main__":
   data = get_data()
-  is_valid_cidrs(data, "allow")
+  is_valid_ip_mask(data, "allow")
   is_valid_hostnames(data, "servers")
   is_valid_hostnames(data, "peers")
-
+  are_values_sane(data, "peers")
+  are_values_sane(data, "servers")
