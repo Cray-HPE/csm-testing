@@ -31,6 +31,8 @@ import json
 
 
 def get_data():
+  """Get data from data.json or BSS.
+  """
   hostname = socket.gethostname()
 
   try:
@@ -42,9 +44,7 @@ def get_data():
     else:
       print("\nRunning on node: %s. Querying BSS..." % (hostname))
       print("------------------------------------------------------------")
-      #command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
-      command = [ "cat", "/Users/jason/Desktop/mug-bss-data.json" ]
-      #command = [ "cat", "/Users/jason/Desktop/fanta-bss-data.json" ]
+      command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
       json_data = bss_proc.stdout.read()
   except subprocess.CalledProcessError as e:
@@ -59,7 +59,8 @@ def get_data():
 
 
 def user_data(data):
-  # returns the 'user-data' blobs from BSS or basecamp
+  """Returns the 'user-data' blobs from data.json or BSS.
+  """
   filtered_data = []
 
   # if we're using BSS data
@@ -80,6 +81,8 @@ def user_data(data):
 
 
 def is_valid_ip_mask(data, desired_key):
+  """Checks that ip/mask is valid.
+  """
   filtered_data = user_data(data)
 
   for blob in filtered_data:
@@ -103,15 +106,19 @@ def is_valid_ip_mask(data, desired_key):
 
 
 def is_valid_hostname(hostname):
-    if len(hostname) > 253:
-        return False
-    if hostname[-1] == ".":
-        hostname = hostname[:-1] # strip exactly one dot from the right, if present
-    allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
-    return all(allowed.match(x) for x in hostname.split("."))
+  """Checks that a given hostname syntax is valid.
+  """  
+  if len(hostname) > 253:
+      return False
+  if hostname[-1] == ".":
+      hostname = hostname[:-1] # strip exactly one dot from the right, if present
+  allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+  return all(allowed.match(x) for x in hostname.split("."))
 
 
 def is_valid_hostnames(data, desired_key):
+  """Checks that a list of hostnames is defined and valid.
+  """
   filtered_data = user_data(data)
 
   for blob in filtered_data:
@@ -131,6 +138,9 @@ def is_valid_hostnames(data, desired_key):
 
 
 def are_values_sane(data, desired_key):
+  """Checks if a value is sane for a given system.
+     Needs to check more stuff.
+  """
   filtered_data = user_data(data)
 
   for blob in filtered_data:
