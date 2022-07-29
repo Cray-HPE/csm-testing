@@ -44,7 +44,9 @@ def get_data():
     else:
       print("\nRunning on node: %s. Querying BSS..." % (hostname))
       print("------------------------------------------------------------")
-      command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
+      #command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
+      command = [ "cat", "/Users/jason/Desktop/mug-bss-data.json" ]
+      #command = [ "cat", "/Users/jason/Desktop/fanta-bss-data.json" 
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
       json_data = bss_proc.stdout.read()
   except subprocess.CalledProcessError as e:
@@ -144,7 +146,7 @@ def are_values_sane(data, desired_key):
   filtered_data = user_data(data)
 
   for blob in filtered_data:
-    for value in blob['ntp']['servers']:
+    for value in blob['ntp'][desired_key]:
       if value == blob['hostname']:
         print("%s: should not use %s in %s" % (blob['hostname'], value, desired_key))
         
