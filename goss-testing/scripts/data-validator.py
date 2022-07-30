@@ -35,27 +35,24 @@ def get_data():
   """
   hostname = socket.gethostname()
 
-  try:
-    if re.search("pit", hostname):
-      print("\nRunning on pit node: %s. Querying data.json..." % (hostname))
-      print("------------------------------------------------------------")
-      with open("/var/www/ephemeral/configs/data.json", 'r') as file:
-        json_data = file.read()
-    else:
+  if re.search("pit", hostname):
+    try:
+        print("\nRunning on pit node: %s. Querying data.json..." % (hostname))
+        print("------------------------------------------------------------")
+        with open("/var/www/ephemeral/configs/data.json", 'r') as file:
+          return json.load(file)
+    except ValuError as e:
+      print(str(e))
+  else:
+    try:
       print("\nRunning on node: %s. Querying BSS..." % (hostname))
       print("------------------------------------------------------------")
       command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
-      json_data = bss_proc.stdout.read()
-  except subprocess.CalledProcessError as e:
-    print(e.stderr)
-
-  try:
-    json_deserialized = json.loads(json_data)
-    return json_deserialized
-  except ValueError as e:
-   print("Failed to parse json.")
-   print(e)
+      return json.loads(bss_proc.stdout.read())
+    except ValueError as e:
+      print("Failed to parse json.")
+      print(str(e))
 
 
 def user_data(data):
@@ -92,16 +89,15 @@ def is_valid_ip_mask(data, desired_key):
 
     if not ntp_key:
       print("%s: '%s' is not defined" % (ntp_blob_hostname, desired_key))
-      next
+    else:
+      for ip_mask in ntp_key:
+        try:
+          ipaddress.IPv4Network(ip_mask, strict=False)
+        except ValueError:
+          print("%s: '%s' is not a valid ip/mask in the %s list" % (ntp_blob_hostname, ip_mask, desired_key))
 
-    for ip_mask in ntp_key:
-      try:
-        ipaddress.IPv4Network(ip_mask, strict=False)
-      except ValueError:
-        print("%s: '%s' is not a valid ip/mask in the %s list" % (ntp_blob_hostname, ip_mask, desired_key))
 
-
-def is_valid_hostname(hostname):
+def check_hostname_syntax(hostname):
   """Checks that a given hostname syntax is valid.
   """  
   if len(hostname) > 253:
@@ -124,13 +120,10 @@ def is_valid_hostnames(data, desired_key):
 
     if not ntp_key:
       print("ntp -> %s not defined for: %s: " % (desired_key, ntp_blob_hostname))
-      next
-
-    for item in ntp_key:
-      if is_valid_hostname(item):
-        pass
-      else:
-        print("%s: '%s' is not a valid hostname in the %s list." % (ntp_blob_hostname, item, desired_key))
+    else:
+      for item in ntp_key:
+        if not check_hostname_syntax(item):
+          print("%s: '%s' is not a valid hostname in the %s list." % (ntp_blob_hostname, item, desired_key))
 
 
 def are_values_sane(data, desired_key):
@@ -141,6 +134,8 @@ def are_values_sane(data, desired_key):
   target_list = []
   hosts_list = []
 
+  is_valid_hostnames(data, desired_key)
+
   # Check that a node isn't using itself
   for blob in filtered_data:
     hosts_list.append(blob['hostname'])
@@ -149,21 +144,14 @@ def are_values_sane(data, desired_key):
       if value == blob['hostname']:
         print("%s: should not use %s in %s" % (blob['hostname'], value, desired_key))
 
-  target_list = set(target_list)
-  hosts_list = set(hosts_list)
-
-  diff = target_list.difference(hosts_list)
   # Check that a host definition exists for nodes in peers/servers
   # needs to be fixed to not show items like ntp.hpecorp.net
-  if diff:
-    for i in diff:
-      print("%s: defined in %s, but host not defined in BSS / Basecamp" % (i, desired_key))
+  for i in set(target_list).difference(set(hosts_list)):
+    print("%s: defined in %s, but host not defined in BSS / Basecamp" % (i, desired_key))
 
 
 if __name__ == "__main__":
   data = get_data()
   is_valid_ip_mask(data, "allow")
-  is_valid_hostnames(data, "servers")
-  is_valid_hostnames(data, "peers")
   are_values_sane(data, "peers")
   are_values_sane(data, "servers")
