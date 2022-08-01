@@ -22,11 +22,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z ${GOSS_BASE} ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
-
-export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
-
 source "${GOSS_BASE}/automated/run-ncn-tests.sh"
 
 echo $'\e[1;33m'NCN Run-Time Checks$'\e[0m'

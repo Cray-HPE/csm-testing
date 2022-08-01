@@ -45,6 +45,22 @@ function is_pit_node {
     return $?
 }
 
+# Set some default variables here, both because we use them in this library, and also to save
+# scripts from having to set them if they source this library.
+
+GOSS_INSTALL_BASE_DIR="/opt/cray/tests/install"
+
+if [[ -z ${GOSS_BASE} ]]; then
+    if is_pit_node ; then
+        GOSS_BASE="${GOSS_INSTALL_BASE_DIR}/livecd"
+    else
+        GOSS_BASE="${GOSS_INSTALL_BASE_DIR}/ncn"
+    fi
+fi
+export GOSS_BASE
+
+export GOSS_LOG_BASE_DIR=${GOSS_LOG_BASE_DIR-"${GOSS_INSTALL_BASE_DIR}/logs"}
+
 # Prints a list of all NCNs
 # Prints warnings if there are fewer than expected
 #
@@ -223,7 +239,7 @@ function k8s_local_tests {
 }
 
 function run_ncn_tests {
-    local NODE port endpoint
+    local NODE port endpoint url
     NODE=$1
     port=$2
     endpoint=$3
@@ -233,53 +249,14 @@ function run_ncn_tests {
     url="http://${NODE}.hmn:${port}/${endpoint}"
 
     echo "Server URL: ${url}"
-    if ! results=`curl -s "${url}"` ; then
-        echo $'\e[1;31m'ERROR: Server endpoint could not be reached$'\e[0m'
+
+    # Calling with override-rc means that the script will not exit non-0 just for test failures, but only for
+    # bigger issues (like unable to reach endpoint, invalid JSON format, etc)
+    if ! "${GOSS_BASE}/automated/print_goss_json_results" --input "${url}" --node "${NODE}" --override-rc ; then
+        echo $'\e[1;31m'"ERROR: Problem with tests on ${NODE}"$'\e[0m'
         return 1
     fi
 
-    if ! echo ${results} | jq -e > /dev/null 2>&1; then
-        echo $'\e[1;31m'ERROR: Output not valid JSON$'\e[0m'
-        return 1
-    else
-        echo ${results} | jq -c '.results | sort_by(.result) | .[]' | while read -r test; do
-            result=$(echo ${test} | jq -r '.result')
-
-            if [[ -z ${result} ]]; then
-                continue
-            elif [[ ${result} == 0 ]]; then
-                result=PASS
-                echo $'\e[1;32m'
-            else
-                result=FAIL
-                echo $'\e[1;31m'
-            fi
-
-            title=$(echo ${test} | jq -r '.title')
-            description=$(echo ${test} | jq -r '.meta.desc')
-            severity=$(echo ${test} | jq -r '.meta.sev')
-            summary=$(echo ${test} | jq -r '."summary-line"')
-            time=$(echo ${test} | jq -r '.duration')
-            time=$(echo "scale=8; ${time}/1000000000" | bc | awk '{printf "%.8f\n", $0}')
-
-            echo "Result: ${result}"
-            echo "Test Name: ${title}"
-            echo "Description: ${description}"
-            echo "Severity: ${severity}"
-            echo "Test Summary: ${summary}"
-            echo "Execution Time: ${time} seconds"
-            echo "Node: ${NODE}"
-        done
-    fi
-
-    echo $'\e[0m'
-
-    total=$(echo ${results} | jq -r '.summary."test-count"')
-    failed=$(echo ${results} | jq -r '.summary."failed-count"')
-    time=$(echo ${results} | jq -r '.summary."total-duration"')
-    time=$(echo "scale=4; ${time}/1000000000" | bc | awk '{printf "%.4f\n", $0}')
-
-    echo "Total Tests: ${total}, Total Passed: $((total-failed)), Total Failed: ${failed}, Total Execution Time: ${time} seconds"
     return 0
 }
 
