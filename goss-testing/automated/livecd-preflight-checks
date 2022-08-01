@@ -29,9 +29,7 @@ set -e
 
 # GOSS_BASE should already be set on the PIT node, but just in case we
 # will set it here
-[[ -z ${GOSS_BASE} ]] && export GOSS_BASE="/opt/cray/tests/install/livecd"
-
-export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
+export GOSS_BASE=${GOSS_BASE-"/opt/cray/tests/install/livecd"}
 
 source "${GOSS_BASE}/automated/run-ncn-tests.sh"
 
@@ -54,57 +52,9 @@ echo $'\e[1;33m'Running LiveCD preflight checks \(may take a few minutes to comp
 
 # Run the LiveCD preflight Goss test suite
 export GOSS_VARS=${tmpvars}
-set +e
-results=$(/usr/bin/goss validate -f json)
-set -e
 
-if ! `echo ${results} | jq -e > /dev/null 2>&1`; then
-  err_exit $'\e[1;31m'Output not valid JSON$'\e[0m'
-fi
+/usr/bin/goss validate -f json | "${GOSS_BASE}/automated/print_goss_json_results" --input - ||
+	err_exit $'\e[1;31m'"There were test errors"$'\e[0m'
 
-echo ${results} | jq -c '.results | sort_by(.result) | .[]' | while read -r test; do
-  result=$(echo ${test} | jq -r '.result')
-
-  if [[ -z ${result} ]]; then
-    continue
-  elif [[ ${result} == 0 ]]; then
-    result=PASS
-    echo $'\e[1;32m'
-  else
-    result=FAIL
-    echo $'\e[1;31m'
-  fi
-
-  title=$(echo ${test} | jq -r '.title')
-  description=$(echo ${test} | jq -r '.meta.desc')
-  severity=$(echo ${test} | jq -r '.meta.sev')
-  summary=$(echo ${test} | jq -r '."summary-line"')
-  time=$(echo ${test} | jq -r '.duration')
-  time=$(echo "scale=8; ${time}/1000000000" | bc | awk '{printf "%.8f\n", $0}')
-
-  echo "Result: ${result}"
-  echo "Test Name: ${title}"
-  echo "Description: ${description}"
-  echo "Severity: ${severity}"
-  echo "Test Summary: ${summary}"
-  echo "Execution Time: ${time} seconds"
-  echo "Node: ncn-m001"
-done
-
-echo $'\e[0m'
-
-total=$(echo ${results} | jq -r '.summary."test-count"')
-failed=$(echo ${results} | jq -r '.summary."failed-count"')
-time=$(echo ${results} | jq -r '.summary."total-duration"')
-time=$(echo "scale=4; ${time}/1000000000" | bc | awk '{printf "%.4f\n", $0}')
-
-echo "Total Tests: ${total}, Total Passed: $((total-failed)), Total Failed: ${failed}, Total Execution Time: ${time} seconds"
-echo
-
-if [[ ${total} -eq 0 ]]; then
-    err_exit "No tests were run!"
-elif [[ ${failed} -ne 0 ]]; then
-    err_exit "Not all tests passed"
-fi
 echo "All tests passed!"
 exit 0
