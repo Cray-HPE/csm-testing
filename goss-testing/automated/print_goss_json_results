@@ -89,10 +89,10 @@ class ScriptException(Exception):
     pass
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Print JSON-format Goss test results with pretty colors")
+    parser = argparse.ArgumentParser(description="Print JSON-format Goss test results with pretty colors.")
     parser.add_argument("--input", default="-", metavar="input_source", help="Source file or URL for test results. Defaults to stdin.")
-    parser.add_argument("--node_name", help="Node name to include in result stanzas ")
-    parser.add_argument("--override-rc", action="store_true", dest="override_rc", help="Make script exit code ignore test results")
+    parser.add_argument("--node_name", help="Node name to include in result stanzas.")
+    parser.add_argument("--override-rc", action="store_true", dest="override_rc", help="Make script exit code ignore test results.")
     args = parser.parse_args()
     input_source, node_name, override_rc = args.input, args.node_name, args.override_rc
     debug_log_values(input_source=input_source, node_name=node_name, override_rc=override_rc)
@@ -111,7 +111,7 @@ def read_and_decode_json(input_file):
             raise ScriptException(f"Problem reading input file {input_file}")
     try:
         return json.loads(input)
-    except json.decoder.JSONDecodeError:
+    except Exception:
         debug_log_values(input=input)
         logger.error(traceback.format_exc())
         traceback.print_exc()

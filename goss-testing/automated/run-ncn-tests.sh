@@ -59,7 +59,7 @@ if [[ -z ${GOSS_BASE} ]]; then
 fi
 export GOSS_BASE
 
-export GOSS_LOG_BASE_DIR=${GOSS_LOG_BASE_DIR-"${GOSS_INSTALL_BASE_DIR}/logs"}
+export GOSS_LOG_BASE_DIR=${GOSS_LOG_BASE_DIR:-"${GOSS_INSTALL_BASE_DIR}/logs"}
 
 # Prints a list of all NCNs
 # Prints warnings if there are fewer than expected

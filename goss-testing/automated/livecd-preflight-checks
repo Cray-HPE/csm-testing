@@ -29,7 +29,7 @@ set -e
 
 # GOSS_BASE should already be set on the PIT node, but just in case we
 # will set it here
-export GOSS_BASE=${GOSS_BASE-"/opt/cray/tests/install/livecd"}
+export GOSS_BASE=${GOSS_BASE:-"/opt/cray/tests/install/livecd"}
 
 source "${GOSS_BASE}/automated/run-ncn-tests.sh"
 
