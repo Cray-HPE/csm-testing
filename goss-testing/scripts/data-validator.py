@@ -30,6 +30,10 @@ import socket
 import json
 
 
+def print_err(*a):
+  print(*a, file = sys.stderr)
+
+
 def get_data():
   """Get data from data.json or BSS.
   """
@@ -42,7 +46,7 @@ def get_data():
         with open("/var/www/ephemeral/configs/data.json", 'r') as file:
           return json.load(file)
     except ValuError as e:
-      print(str(e))
+      print_err(str(e))
   else:
     try:
       print("\nRunning on node: %s. Querying BSS..." % (hostname))
@@ -51,8 +55,9 @@ def get_data():
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
       return json.loads(bss_proc.stdout.read())
     except ValueError as e:
-      print("Failed to parse json.")
-      print(str(e))
+      print_err("Failed to parse json.")
+      print_err(str(e))
+      return 1
 
 
 def user_data(data):
@@ -88,13 +93,13 @@ def is_valid_ip_mask(data, desired_key):
     ntp_blob_hostname = blob['hostname']
 
     if not ntp_key:
-      print("%s: '%s' is not defined" % (ntp_blob_hostname, desired_key))
+      print_err("%s: '%s' is not defined" % (ntp_blob_hostname, desired_key))
     else:
       for ip_mask in ntp_key:
         try:
           ipaddress.IPv4Network(ip_mask, strict=False)
         except ValueError:
-          print("%s: '%s' is not a valid ip/mask in the %s list" % (ntp_blob_hostname, ip_mask, desired_key))
+          print_err("%s: '%s' is not a valid ip/mask in the %s list" % (ntp_blob_hostname, ip_mask, desired_key))
 
 
 def check_hostname_syntax(hostname):
@@ -119,11 +124,11 @@ def is_valid_hostnames(data, desired_key):
     ntp_blob_hostname = blob['hostname']
 
     if not ntp_key:
-      print("ntp -> %s not defined for: %s: " % (desired_key, ntp_blob_hostname))
+      print_err("ntp -> %s not defined for: %s: " % (desired_key, ntp_blob_hostname))
     else:
       for item in ntp_key:
         if not check_hostname_syntax(item):
-          print("%s: '%s' is not a valid hostname in the %s list." % (ntp_blob_hostname, item, desired_key))
+          print_err("%s: '%s' is not a valid hostname in the %s list." % (ntp_blob_hostname, item, desired_key))
 
 
 def are_values_sane(data, desired_key):
@@ -142,12 +147,12 @@ def are_values_sane(data, desired_key):
     for value in blob['ntp'][desired_key]:
       target_list.append(value)
       if value == blob['hostname']:
-        print("%s: should not use %s in %s" % (blob['hostname'], value, desired_key))
+        print_err("%s: should not use %s in %s" % (blob['hostname'], value, desired_key))
 
   # Check that a host definition exists for nodes in peers/servers
   # needs to be fixed to not show items like ntp.hpecorp.net
   for i in set(target_list).difference(set(hosts_list)):
-    print("%s: defined in %s, but host not defined in BSS / Basecamp" % (i, desired_key))
+    print_err("%s: defined in %s, but host not defined in BSS / Basecamp" % (i, desired_key))
 
 
 if __name__ == "__main__":
