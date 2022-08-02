@@ -27,20 +27,41 @@
 export GOSS_BASE=/opt/cray/tests/install/ncn
 export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
 
-source "${GOSS_BASE}/automated/run-ncn-tests.sh"
-
 # necessary for kubectl commands to run
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
 # Default value for tmpvars file
 tmpvars="${GOSS_BASE}/vars/variables-ncn.yaml"
 
-while [ true ]; do
+# During the NCN image build, this service is started, even though the csm-testing RPM is not installed. In that
+# situation, the run-ncn-tests.sh file will not be present on the system, but we do not want the service to exit in
+# error (because this causes the NCN image build to think there is a real problem with the service). On live systems,
+# there is likewise a chance that this service is started just before the csm-testing RPM has been installed. In both
+# cases, the solution if the run-ncn-tests.sh file does not exist (or exists but is empty, for some weird reason)
+# is to sleep for a bit and check again.
+while [[ ! -s "${GOSS_BASE}/automated/run-ncn-tests.sh" ]]; do
+    sleep 5
+done
+
+source "${GOSS_BASE}/automated/run-ncn-tests.sh"
+
+while true ; do
     # The create_tmpvars_file function is defined in run-ncn-tests.sh
     # It creates the temporary variables file and saves the path to it in the $tmpvars variable
-    create_tmpvars_file && [[ -n ${tmpvars} && -s ${tmpvars} ]] && break
+    create_tmpvars_file
+    rc=$?
+    
+    if [[ ${rc} -eq 127 ]]; then
+        # In this specific case we want the error to be fatal, because that means that the create_tmpvars_file function is not defined, and
+        # no amount of retrying will alter that.
+        echo "ERROR: create_tmpvars_file function does not appear to be defined" 1>&2
+        exit 2
+    fi
 
-    # It failed for some reason, so sleep and retry
+    # Otherwise, if the function passed and generated a non-empty variable file, then proceed
+    [[ ${rc} -eq 0 && -n ${tmpvars} && -s ${tmpvars} ]] && break
+
+    # create_tmpvars_file failed for some reason, so sleep and retry
     sleep 5
 done
 
