@@ -66,9 +66,9 @@ if nodes=$(get_ncns --masters --exclude-pit); then
 	else
 		# Query the server endpoints
 		for node in ${nodes} ; do
-			run_ncn_tests "${node}" "8996" "ncn-kubernetes-tests-master"
+			run_ncn_tests "${node}" "ncn-kubernetes-tests-master"
 			if ! is_pit_node ; then
-				run_ncn_tests "${node}" "9007" "ncn-afterpitreboot-kubernetes-tests-master"
+				run_ncn_tests "${node}" "ncn-afterpitreboot-kubernetes-tests-master"
 			fi
 		done
 	fi
@@ -90,9 +90,9 @@ if nodes=$(get_ncns --workers); then
 	else
 		# Query the server endpoints
 		for node in ${nodes} ; do
-			run_ncn_tests "${node}" "8998" "ncn-kubernetes-tests-worker"
+			run_ncn_tests "${node}" "ncn-kubernetes-tests-worker"
 			if ! is_pit_node ; then
-				run_ncn_tests "${node}" "9008" "ncn-afterpitreboot-kubernetes-tests-worker"
+				run_ncn_tests "${node}" "ncn-afterpitreboot-kubernetes-tests-worker"
 			fi
 		done
 	fi

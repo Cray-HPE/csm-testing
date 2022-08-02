@@ -47,7 +47,7 @@ if ! echo ${storage_nodes} | grep -q ncn-s001 ; then
 fi
 
 for node in ${storage_nodes} ; do
-	run_ncn_tests "${node}" "8997" "ncn-storage-tests"
+	run_ncn_tests "${node}" "ncn-storage-tests"
 done
 
 # We always exit 0 -- this does not indicate that the tests passed.

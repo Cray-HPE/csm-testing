@@ -44,7 +44,7 @@ nodes=$(get_ncns --exclude-pit) || exit 1
 [[ -n ${nodes} ]] || err_exit "No NCNs found"
 
 for node in ${nodes}; do
-    run_ncn_tests "${node}" 8995 ncn-preflight-tests
+    run_ncn_tests "${node}" ncn-preflight-tests
 done
 
 exit

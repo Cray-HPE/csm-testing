@@ -41,9 +41,9 @@ nodes=$(get_ncns --masters --exclude-pit) || exit 1
 
 # Query the server endpoint
 for node in ${nodes} ; do
-	run_ncn_tests "${node}" "8994" "ncn-healthcheck-master"
+	run_ncn_tests "${node}" "ncn-healthcheck-master"
 	if ! is_pit_node ; then
-		run_ncn_tests "${node}" "9004" "ncn-afterpitreboot-healthcheck-master"
+		run_ncn_tests "${node}" "ncn-afterpitreboot-healthcheck-master"
 	fi
 done
 
