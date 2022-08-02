@@ -90,7 +90,7 @@ do
         for pod in $pods
         do
             #shellcheck disable=SC2034
-            temp=$(kubectl -n services exec ${pod} -- /bin/sh -c "ETCDCTL_API=3 etcdctl endpoint health -w json")
+            temp=$(kubectl -n services exec ${pod} -c etcd -- /bin/sh -c "ETCDCTL_API=3 etcdctl endpoint health -w json")
             if [[ $? != 0 ]]
             then
                 endpoint_msg="${endpoint_msg}Error with endpoint health of ${pod}.  "
@@ -107,7 +107,7 @@ do
         alarm_msg=""
         for pod in $pods
         do
-            alarm=$(kubectl -n $namespace exec ${pod} -- /bin/sh -c "ETCDCTL_API=3 etcdctl alarm list")
+            alarm=$(kubectl -n $namespace exec ${pod} -c etcd -- /bin/sh -c "ETCDCTL_API=3 etcdctl alarm list")
             if [ ! -z $alarm ]
             then
                 alarm_msg="${alarm_msg}Alarms for ${pod}: ${alarm}.  "
