@@ -43,9 +43,9 @@ if nodes=$(get_ncns --workers); then
 	else
 		# Query the server endpoints
 		for node in ${nodes} ; do
-			run_ncn_tests "${node}" "9000" "ncn-healthcheck-worker"
+			run_ncn_tests "${node}" "ncn-healthcheck-worker"
 			if ! is_pit_node ; then
-				run_ncn_tests "${node}" "9005" "ncn-afterpitreboot-healthcheck-worker"
+				run_ncn_tests "${node}" "ncn-afterpitreboot-healthcheck-worker"
 			fi
 		done
 	fi

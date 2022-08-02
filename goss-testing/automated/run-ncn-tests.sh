@@ -48,7 +48,7 @@ function is_pit_node {
 # Set some default variables here, both because we use them in this library, and also to save
 # scripts from having to set them if they source this library.
 
-GOSS_INSTALL_BASE_DIR="/opt/cray/tests/install"
+GOSS_INSTALL_BASE_DIR=${GOSS_INSTALL_BASE_DIR:-"/opt/cray/tests/install"}
 
 if [[ -z ${GOSS_BASE} ]]; then
     if is_pit_node ; then
@@ -60,6 +60,40 @@ fi
 export GOSS_BASE
 
 export GOSS_LOG_BASE_DIR=${GOSS_LOG_BASE_DIR:-"${GOSS_INSTALL_BASE_DIR}/logs"}
+
+# These do not need to be exported -- they are only used by the functions in this file, or
+# by files sourcing this file.
+GOSS_SERVERS_CONFIG=${GOSS_SERVERS_CONFIG:-"${GOSS_INSTALL_BASE_DIR}/dat/goss-servers.cfg"}
+
+# Pattern to match 100-999: [1-9][0-9][0-9]
+# Pattern to match 010-099: 0[1-9][0-9]
+# Pattern to match 001-009: 00[1-9]
+ncn_num_pattern="([1-9][0-9][0-9]|0[1-9][0-9]|00[1-9])"
+
+function is_master_node {
+    is_pit_node && return 1
+    [[ $(hostname -s) =~ ^.*ncn-m${ncn_num_pattern}.*$ ]]
+    return $?
+}
+
+function is_worker_node {
+    [[ $(hostname -s) =~ ^.*ncn-w${ncn_num_pattern}.*$ ]]
+    return $?
+}
+function is_storage_node {
+    [[ $(hostname -s) =~ ^.*ncn-s${ncn_num_pattern}.*$ ]]
+    return $?
+}
+
+function node_type {
+    is_pit_node     && echo "pit"     && return 0
+    is_master_node  && echo "master"  && return 0
+    is_worker_node  && echo "worker"  && return 0
+    is_storage_node && echo "storage" && return 0
+    print_warn "Unknown node type"
+    echo "unknown"
+    return 1
+}
 
 # Prints a list of all NCNs
 # Prints warnings if there are fewer than expected
@@ -115,10 +149,6 @@ function get_ncns {
         type_string=${type_string:1}
         type_char_pattern="${type_char_pattern}]"
     fi
-    # Pattern to match 100-999: [1-9][0-9][0-9]
-    # Pattern to match 010-099: 0[1-9][0-9]
-    # Pattern to match 001-009: 00[1-9]
-    local ncn_num_pattern="([1-9][0-9][0-9]|0[1-9][0-9]|00[1-9])"
     local ncn_string_pattern="ncn-${type_char_pattern}${ncn_num_pattern}"
 
     # Define a local function to do the output filtering based on the arguments passed in here.
@@ -238,16 +268,68 @@ function k8s_local_tests {
     fi
 }
 
-function run_ncn_tests {
-    local NODE port endpoint url
-    NODE=$1
-    port=$2
-    endpoint=$3
+# Endpoint names should begin with an alphanumeric character and only contain alphanumeric characters,
+# underscores, and dashes.
+ENDPOINT_NAME_REGEX="[0-9a-zA-Z][-_0-9A-Za-z]*"
+PORT_REGEX="[1-9][0-9]+"
+SINGLE_NCN_TYPE_REGEX="(master|pit|storage|worker)"
+NCN_TYPE_LIST_REGEX="${SINGLE_NCN_TYPE_REGEX}(,${SINGLE_NCN_TYPE_REGEX})*"
 
+function goss_endpoint_url
+{
+    # $1 node name (including network -- e.g. ncn-m002.hmn)
+    # $2 endpoint name (e.g. ncn-healthcheck-storage)
+    # Outputs the URL
+    if [[ $# -ne 2 ]]; then
+        print_error "goss_endpoint_url: Function requires exactly 2 arguments but received $#: $*"
+        return 1
+    fi
+    local endpoint node port
+    node="$1"
+    endpoint="$2"
+    if [[ -z ${endpoint} ]]; then
+        print_error "goss_endpoint_url: Endpoint names may not be blank."
+        return 1
+    elif [[ ! ${endpoint} =~ ^${ENDPOINT_NAME_REGEX}$ ]]; then
+        print_error "goss_endpoint_url: Endpoint name contains illegal characters: ${endpoint}"
+        return 1
+    elif [[ -z ${node} ]]; then
+        print_error "goss_endpoint_url: Node name may not be blank. Invalid arguments: $*"
+        return 1
+    elif [[ ! -s ${GOSS_SERVERS_CONFIG} ]]; then
+        print_error "goss_endpoint_url: Goss server configuration file does not exist, is empty, or is not a regular file: ${GOSS_SERVERS_CONFIG}"
+        return 1
+    fi
+
+    # We assume port numbers will be at least 2 digits
+    port=$(grep -E "^${endpoint}[[:space:]]+${PORT_REGEX}[[:space:]]+${NCN_TYPE_LIST_REGEX}[[:space:]]*$" "${GOSS_SERVERS_CONFIG}" | awk '{ print $2 }')
+
+    # Make sure we found exactly one port number
+    if [[ -z ${port} ]]; then
+        print_error "goss_endpoint_url: No port found for ${endpoint} in ${GOSS_SERVERS_CONFIG}"
+        return 1
+    elif [[ ! ${port} =~ ^${PORT_REGEX}$ ]]; then
+        print_error "goss_endpoint_url: Multiple ports found for ${endpoint} in ${GOSS_SERVERS_CONFIG}"
+        return 1
+    fi
+
+    echo "http://${node}:${port}/${endpoint}"
+    return 0
+}
+
+function run_ncn_tests {
+    if [[ $# -ne 2 ]]; then
+        print_error "run_ncn_tests: Function requires exactly 2 arguments but received $#: $*"
+        return 1
+    fi
+    local NODE endpoint url
+    NODE="$1"
+    endpoint="$2"
+    
     echo
     echo Running tests against node $'\e[1;33m'${NODE}$'\e[0m'
-    url="http://${NODE}.hmn:${port}/${endpoint}"
 
+    url=$(goss_endpoint_url "${NODE}.hmn" "${endpoint}") || return 1
     echo "Server URL: ${url}"
 
     # Calling with override-rc means that the script will not exit non-0 just for test failures, but only for

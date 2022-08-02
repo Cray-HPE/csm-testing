@@ -30,9 +30,6 @@ export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
 # necessary for kubectl commands to run
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
-# Default value for tmpvars file
-tmpvars="${GOSS_BASE}/vars/variables-ncn.yaml"
-
 # During the NCN image build, this service is started, even though the csm-testing RPM is not installed. In that
 # situation, the run-ncn-tests.sh file will not be present on the system, but we do not want the service to exit in
 # error (because this causes the NCN image build to think there is a real problem with the service). On live systems,
@@ -58,7 +55,7 @@ while true ; do
         exit 2
     fi
 
-    # Otherwise, if the function passed and generated a non-empty variable file, then proceed
+    # Otherwise, if the function passed and generated a non-empty variable file (setting the tmpvar variable to its path), then proceed
     [[ ${rc} -eq 0 && -n ${tmpvars} && -s ${tmpvars} ]] && break
 
     # create_tmpvars_file failed for some reason, so sleep and retry
@@ -69,108 +66,42 @@ done
 ip=$(host "$(hostname).hmn" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 [[ -z ${ip} ]] && exit 2
 
-# start servers with NCN test suites
-# designated goss-servers port range: 8994-9008
+# Get node type -- this function is defined in run-ncn-tests.sh
+node_type=$(node_type)
+rc=$?
+if [[ $rc -ne 0 ]]; then
+    echo "node_type function failed with return code $rc" 1>&2
+elif [[ ! -s ${GOSS_SERVERS_CONFIG} ]]; then
+    echo "Goss server configuration file is empty or does not exist: ${GOSS_SERVERS_CONFIG}" 1>&2
+else
+    echo "node_type = ${node_type}"
+    if [[ ${node_type} =~ ^[a-z]+$ ]]; then
+        # ENDPOINT_NAME_REGEX, PORT_REGEX, NCN_TYPE_LIST_REGEX, and GOSS_SERVERS_CONFIG are defined in run-ncn-tests.sh
+        grep -E "^${ENDPOINT_NAME_REGEX}[[:space:]]+${PORT_REGEX}[[:space:]]+${NCN_TYPE_LIST_REGEX}[[:space:]]*$" "${GOSS_SERVERS_CONFIG}" | while read endpoint port types
+        do
+            [[ -n ${endpoint} ]] || continue
+            if [[ ! ${types} =~ (,|^)${node_type}(,|$) ]]; then
+                echo "Skipping goss server entry because it does not match node type: ${endpoint} ${port} ${types}" 1>&2
+                continue
+            fi
+            suite="${GOSS_BASE}/suites/${endpoint}.yaml"
+            if [[ ! -s ${suite} ]]; then
+                echo "Skipping goss server entry because suite file (${suite}) is empty or does not exist: ${endpoint} ${port} ${types}" 1>&2
+                continue
+            fi
 
-echo "starting ncn-preflight-tests in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-preflight-tests.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-preflight-tests \
-  --listen-addr "${ip}":8995 &
-
-echo "starting ncn-kubernetes-tests-master in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-master.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-kubernetes-tests-master \
-  --listen-addr "${ip}":8996 &
-
-echo "starting ncn-kubernetes-tests-worker in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-kubernetes-tests-worker.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-kubernetes-tests-worker \
-  --listen-addr "${ip}":8998 &
-
-echo "starting ncn-storage-tests in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-storage-tests.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-storage-tests \
-  --listen-addr "${ip}":8997 &
-
-echo "starting ncn-healthcheck-master in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-master.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-healthcheck-master \
-  --listen-addr "${ip}":8994 &
-
-echo "starting ncn-healthcheck-worker in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-worker.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-healthcheck-worker \
-  --listen-addr "${ip}":9000 &
-
-echo "starting ncn-healthcheck-storage in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-healthcheck-storage.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-healthcheck-storage \
-  --listen-addr "${ip}":9001 &
-
-echo "starting ncn-smoke-tests in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-smoke-tests.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --endpoint /ncn-smoke-tests \
-  --max-concurrent 4 \
-  --listen-addr "${ip}":9002 &
-
-echo "starting ncn-spire-healthchecks in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-spire-healthchecks.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-spire-healthchecks \
-  --listen-addr "${ip}":9003 &
-
-echo "starting ncn-afterpitreboot-healthcheck-master in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-healthcheck-master.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-afterpitreboot-healthcheck-master \
-  --listen-addr "${ip}":9004 &
-
-echo "starting ncn-afterpitreboot-healthcheck-worker in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-healthcheck-worker.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-afterpitreboot-healthcheck-worker \
-  --listen-addr "${ip}":9005 &
-
-echo "starting ncn-afterpitreboot-healthcheck-storage in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-healthcheck-storage.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-afterpitreboot-healthcheck-storage \
-  --listen-addr "${ip}":9006 &
-
-echo "starting ncn-afterpitreboot-kubernetes-tests-master in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-kubernetes-tests-master.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-afterpitreboot-kubernetes-tests-master \
-  --listen-addr "${ip}":9007 &
-
-echo "starting ncn-afterpitreboot-kubernetes-tests-worker in background"
-/usr/bin/goss -g /opt/cray/tests/install/ncn/suites/ncn-afterpitreboot-kubernetes-tests-worker.yaml --vars "${tmpvars}" serve \
-  --format json \
-  --max-concurrent 4 \
-  --endpoint /ncn-afterpitreboot-kubernetes-tests-worker \
-  --listen-addr "${ip}":9008 &
-
-echo "Goss servers started in background"
+            # Start Goss server for this entry.
+            echo "starting ${endpoint} in background on port ${port}"
+            /usr/bin/goss -g "${suite}" --vars "${tmpvars}" serve \
+                --format json --max-concurrent 4 \
+                --endpoint "/${endpoint}" \
+                --listen-addr "${ip}:${port}" &
+        done
+        echo "Goss servers started in background"
+    else
+        echo "Unexpected format of node_type string -- skipping Goss server start" 1>&2
+    fi
+fi
 
 # Keep process running so systemd can kill and monitor background jobs as needed
 sleep infinity

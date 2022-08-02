@@ -25,6 +25,8 @@
 %define install_dir %{test_dir}/install
 %define livecd %{install_dir}/livecd
 %define ncn %{install_dir}/ncn
+%define dat %{install_dir}/dat
+%define logs %{install_dir}/logs
 
 Name: csm-testing
 License: HPE Software License Agreement
@@ -48,6 +50,8 @@ They test both the LiveCD and NCN environment.
 %install
 
 # Install testing files
+install -d -m 755 %{buildroot}%{dat}
+install -d -m 755 %{buildroot}%{logs}
 install -d -m 755 %{buildroot}%{livecd}/automated
 install -d -m 755 %{buildroot}%{livecd}/tests
 install -d -m 755 %{buildroot}%{livecd}/vars
@@ -93,8 +97,8 @@ cp -a goss-testing/suites/ncn-*         %{buildroot}%{ncn}/suites
 chmod +x -R %{buildroot}%{ncn}/scripts/
 chmod +x -R %{buildroot}%{livecd}/scripts/
 chmod +x -R %{buildroot}%{ncn}/automated/
-# Create default test log directories
-mkdir -p %{buildroot}/opt/cray/tests/install/logs
+# Install goss-servers config file
+install -m 755 goss-testing/dat/goss-servers.cfg	%{buildroot}%{dat}
 
 # Install goss-servers files
 mkdir -p %{buildroot}/usr/sbin
@@ -103,13 +107,16 @@ install -m 755 start-goss-servers.sh %{buildroot}/usr/sbin/
 install -m 755 goss-servers.service %{buildroot}/etc/systemd/system/
 
 %clean
+rm -rf %{buildroot}%{dat}
 rm -rf %{buildroot}%{livecd}
 rm -rf %{buildroot}%{ncn}
 # Remove log directories only if empty
-rmdir %{buildroot}/opt/cray/tests/install/logs || true
+rmdir %{buildroot}%{logs} || true
 
 %files
 %defattr(755, root, root)
+%{dat}
+%{logs}
 %{livecd}
 %{ncn}
 

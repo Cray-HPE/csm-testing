@@ -41,9 +41,9 @@ nodes=$(get_ncns --storage) || exit 1
 
 # Query the server endpoint
 for node in ${nodes} ; do
-	run_ncn_tests "${node}" "9001" "ncn-healthcheck-storage"
+	run_ncn_tests "${node}" "ncn-healthcheck-storage"
 	if ! is_pit_node ; then
-		run_ncn_tests "${node}" "9006" "ncn-afterpitreboot-healthcheck-storage"
+		run_ncn_tests "${node}" "ncn-afterpitreboot-healthcheck-storage"
 	fi
 done
 
