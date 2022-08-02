@@ -41,12 +41,13 @@ def get_data():
 
   if re.search("pit", hostname):
     try:
-        print("\nRunning on pit node: %s. Querying data.json..." % (hostname))
-        print("------------------------------------------------------------")
-        with open("/var/www/ephemeral/configs/data.json", 'r') as file:
-          return json.load(file)
-    except ValuError as e:
+      print("\nRunning on pit node: %s. Querying data.json..." % (hostname))
+      print("------------------------------------------------------------")
+      with open("/var/www/ephemeral/configs/data.json", 'r') as file:
+        return json.load(file)
+    except Exception as e:
       print_err(str(e))
+      return 1
   else:
     try:
       print("\nRunning on node: %s. Querying BSS..." % (hostname))
@@ -54,8 +55,7 @@ def get_data():
       command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
       return json.loads(bss_proc.stdout.read())
-    except ValueError as e:
-      print_err("Failed to parse json.")
+    except Exception as e:
       print_err(str(e))
       return 1
 
@@ -69,37 +69,44 @@ def user_data(data):
   if isinstance(data, list):
     for blob in data:
         if isinstance(blob['cloud-init']['user-data'], dict):
-          if "ntp" in blob['cloud-init']['user-data']:
-            filtered_data.append(blob['cloud-init']['user-data'].copy())
+          filtered_data.append(blob['cloud-init']['user-data'])
 
   # if we're using basecamp data
   elif isinstance(data, dict) and "Global" in data:
     for blob in data:
       if blob != "Global":
-        if "ntp" in data[blob]['user-data']:
-          filtered_data.append(data[blob]['user-data'].copy())
+        filtered_data.append(data[blob]['user-data'])
   
   return filtered_data
 
 
-def is_valid_ip_mask(data, desired_key):
-  """Checks that ip/mask is valid.
+def drill_down_data(data, desired_keys):
+  for i in range(0, ( len(desired_keys) + 1), 1):
+    if i == len(desired_keys):
+      return saved_data
+    if i == 0:
+      saved_data = data[desired_keys[i]]
+    if i != 0:
+      saved_data = saved_data[desired_keys[i]]
+
+
+def are_valid_ip_masks(data, desired_keys):
+  """Checks that ip/mask or cidr is valid.
   """
   filtered_data = user_data(data)
 
   for blob in filtered_data:
-    ntp_blob = blob['ntp']
-    ntp_key = ntp_blob[desired_key]
-    ntp_blob_hostname = blob['hostname']
+    instance_hostname = blob['hostname']
+    child_key = drill_down_data(blob, desired_keys)
 
-    if not ntp_key:
-      print_err("%s: '%s' is not defined" % (ntp_blob_hostname, desired_key))
+    if not child_key:
+      print_err("ERR: %s is not defined for: %s: " % (desired_keys, instance_hostname))
     else:
-      for ip_mask in ntp_key:
+      for value in child_key:
         try:
-          ipaddress.IPv4Network(ip_mask, strict=False)
+          ipaddress.IPv4Network(value, strict=False)
         except ValueError:
-          print_err("%s: '%s' is not a valid ip/mask in the %s list" % (ntp_blob_hostname, ip_mask, desired_key))
+          print_err("ERR: %s: '%s' is not a valid ip/mask in %s" % (instance_hostname, value, desired_keys))
 
 
 def check_hostname_syntax(hostname):
@@ -113,25 +120,24 @@ def check_hostname_syntax(hostname):
   return all(allowed.match(x) for x in hostname.split("."))
 
 
-def is_valid_hostnames(data, desired_key):
+def are_valid_hostnames(data, desired_keys):
   """Checks that a list of hostnames is defined and valid.
   """
   filtered_data = user_data(data)
 
   for blob in filtered_data:
-    ntp_blob = blob['ntp']
-    ntp_key = ntp_blob[desired_key]
-    ntp_blob_hostname = blob['hostname']
+    instance_hostname = blob['hostname']
+    child_key = drill_down_data(blob, desired_keys)
 
-    if not ntp_key:
-      print_err("ntp -> %s not defined for: %s: " % (desired_key, ntp_blob_hostname))
+    if not child_key:
+      print_err("ERR: %s is not defined for: %s: " % (desired_keys, instance_hostname))
     else:
-      for item in ntp_key:
+      for item in drill_down_data(blob, desired_keys):
         if not check_hostname_syntax(item):
-          print_err("%s: '%s' is not a valid hostname in the %s list." % (ntp_blob_hostname, item, desired_key))
+          print_err("ERR: %s: '%s' is not a valid hostname in %s" % (instance_hostname, item, desired_keys))
 
 
-def are_values_sane(data, desired_key):
+def are_hosts_sane(data, desired_keys):
   """Checks if a value is sane for a given system.
      Needs to check more stuff.
   """
@@ -139,24 +145,35 @@ def are_values_sane(data, desired_key):
   target_list = []
   hosts_list = []
 
-  is_valid_hostnames(data, desired_key)
+  are_valid_hostnames(data, desired_keys)
 
   # Check that a node isn't using itself
   for blob in filtered_data:
     hosts_list.append(blob['hostname'])
-    for value in blob['ntp'][desired_key]:
+    for value in drill_down_data(blob, desired_keys):
       target_list.append(value)
       if value == blob['hostname']:
-        print_err("%s: should not use %s in %s" % (blob['hostname'], value, desired_key))
+        print_err("WARN: %s: should not reference itself in %s" % (blob['hostname'], desired_keys))
 
   # Check that a host definition exists for nodes in peers/servers
   # needs to be fixed to not show items like ntp.hpecorp.net
   for i in set(target_list).difference(set(hosts_list)):
-    print_err("%s: defined in %s, but host not defined in BSS / Basecamp" % (i, desired_key))
+    print_err("WARN: %s: defined in %s, but host not defined in BSS / Basecamp" % (i, desired_keys))
+
+
+def validate_ntp(data):
+  are_valid_ip_masks(data, ['ntp', 'allow'])
+  are_hosts_sane(data, ['ntp', 'peers'])
+  are_hosts_sane(data, ['ntp', 'servers'])
+
+
+def boot_params(data):
+  for blob in data:
+    if "params" in blob:
+      print(blob['params'], "\n\n")
 
 
 if __name__ == "__main__":
   data = get_data()
-  is_valid_ip_mask(data, "allow")
-  are_values_sane(data, "peers")
-  are_values_sane(data, "servers")
+  validate_ntp(data)
+  boot_params(data)
