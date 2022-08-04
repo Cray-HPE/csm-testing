@@ -28,8 +28,10 @@ import sys
 import ipaddress
 import socket
 import json
-import fuzzywuzzy
 import itertools
+import fuzzywuzzy
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
 
 
 def print_err(*a):
@@ -54,9 +56,7 @@ def get_data():
     try:
       print_err("\nRunning on node: %s. Querying BSS..." % (hostname))
       print_err("------------------------------------------------------------")
-      #command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
       command = [ "cat", "/Users/jason/Desktop/mug-bss-data.json" ]
-      #command = [ "cat", "/Users/jason/Desktop/fanta-bss-data.json" 
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
       return json.loads(bss_proc.stdout.read())
     except Exception as e:
@@ -206,15 +206,26 @@ def score_params(node_class):
 
   baseline = max(counts)
 
+  searches = [ "bond=bond0:mgmt0,mgmt1",
+               "ifname=mgmt0",
+               "ip=mgmt0",
+               "ifname=mgmt1",
+               "ip=mgmt1" ]
+
   for blob in node_class:
     if blob['occurrence'] == baseline:
-      blob['valid'] = True
+      for search in searches:
+        if re.search(search, blob['params-orig']):
+          blob['valid'] = True
+        else:
+          blob['valid'] = False
     else:
       blob['valid'] = False
 
+
   for blob in node_class:
     if blob['valid'] == False:
-      print_err("WARN: %s: has boot params that differ from the others\n%s" % (blob['hostname'], blob['params']))
+      print_err("WARN: %s: has boot params that differ from the others\n%s\n" % (blob['hostname'], blob['params-orig']))
       err = 1
 
   if err == 1:
@@ -227,11 +238,18 @@ def boot_params(data):
   management = []
   err = 0
 
+  macreg = re.compile(r':([0-9a-fA-F]){2}:([0-9a-fA-F]){2}:([0-9a-fA-F]){2}:([0-9a-fA-F]){2}:([0-9a-fA-F]){2}:([0-9a-fA-F]){2}')
+  hostreg = re.compile(r'hostname=[a-zA-Z]*\-[a-zA-Z0-9]*')
+  httpreg = re.compile(r's=http://.*/')
+
   for blob in data:
     if "params" in blob and blob['cloud-init']['user-data'] is not None:
       hostname = blob['cloud-init']['user-data']['hostname']
-      params_length = len("".join(blob['params'].split()))
-      node = {'hostname': hostname, 'params': blob['params'], 'params-length': params_length}
+      params_stripd = macreg.sub("", blob['params'])
+      params_stripd = hostreg.sub("", params_stripd)
+      params_stripd = httpreg.sub("", params_stripd)
+      params_length = len("".join(params_stripd.split()))
+      node = {'hostname': hostname, 'params-orig': blob['params'], 'params-stripd': params_stripd, 'params-length': params_length}
 
       if re.search("ncn-m0", hostname):
         management.append(node)
@@ -249,6 +267,10 @@ def boot_params(data):
 if __name__ == "__main__":
   err = 0
   data = get_data()
-  if boot_params(data): err = 1
+
+  if isinstance(data, list):
+    if boot_params(data): err = 1
+
   if validate_ntp(data): err = 1
+
   sys.exit(err)
