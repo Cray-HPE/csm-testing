@@ -28,6 +28,8 @@ import sys
 import ipaddress
 import socket
 import json
+import fuzzywuzzy
+import itertools
 
 
 def print_err(*a):
@@ -52,7 +54,9 @@ def get_data():
     try:
       print_err("\nRunning on node: %s. Querying BSS..." % (hostname))
       print_err("------------------------------------------------------------")
-      command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
+      #command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
+      command = [ "cat", "/Users/jason/Desktop/mug-bss-data.json" ]
+      #command = [ "cat", "/Users/jason/Desktop/fanta-bss-data.json" 
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
       return json.loads(bss_proc.stdout.read())
     except Exception as e:
@@ -179,33 +183,72 @@ def are_hosts_sane(data, desired_keys):
 
 def validate_ntp(data):
   err = 0
-  if are_valid_ip_masks(data, ['ntp', 'allow']):
-    err = 1
-  if are_valid_ip_masks(data, ['ntp', 'allow']):
-    err = 1
-  if are_hosts_sane(data, ['ntp', 'servers']):
-    err = 1
+  if are_valid_ip_masks(data, ['ntp', 'allow']): err = 1
+  if are_hosts_sane(data, ['ntp', 'peers']): err = 1
+  if are_hosts_sane(data, ['ntp', 'servers']): err = 1
   return err
 
 
+def score_params(node_class):
+  lengths = []
+  counts = []
+  err = 0
+
+  for blob in node_class:
+    lengths.append(blob['params-length'])
+  
+  for i in lengths:
+    occ = lengths.count(i)
+    counts.append(occ)
+    for blob in node_class:
+      if i == blob['params-length']:
+        blob['occurrence'] = occ
+
+  baseline = max(counts)
+
+  for blob in node_class:
+    if blob['occurrence'] == baseline:
+      blob['valid'] = True
+    else:
+      blob['valid'] = False
+
+  for blob in node_class:
+    if blob['valid'] == False:
+      print_err("WARN: %s: has boot params that differ from the others\n%s" % (blob['hostname'], blob['params']))
+      err = 1
+
+  if err == 1:
+    return err
+
+
 def boot_params(data):
-  params_list = []
-  another_list = []
+  worker = []
+  storage = []
+  management = []
+  err = 0
 
   for blob in data:
-    if "params" in blob:
-      params_list += blob['params'].split()
+    if "params" in blob and blob['cloud-init']['user-data'] is not None:
+      hostname = blob['cloud-init']['user-data']['hostname']
+      params_length = len("".join(blob['params'].split()))
+      node = {'hostname': hostname, 'params': blob['params'], 'params-length': params_length}
 
-  params_list = set(params_list)
-  for i in sorted(params_list, key = str):
-    another_list += i.split("=")
+      if re.search("ncn-m0", hostname):
+        management.append(node)
+      if re.search("ncn-w0", hostname):
+        worker.append(node)
+      if re.search("ncn-s0", hostname):
+        storage.append(node)
 
-  another_list = set(another_list)
-  for j in sorted(another_list, key = str):
-    print(j)
+  if score_params(worker): err = 1
+  if score_params(storage): err = 1
+  if score_params(management): err = 1
+  return err
+
 
 if __name__ == "__main__":
+  err = 0
   data = get_data()
-  result = validate_ntp(data)
-  sys.exit(result)
-  #boot_params(data)
+  if boot_params(data): err = 1
+  if validate_ntp(data): err = 1
+  sys.exit(err)
