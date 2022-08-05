@@ -56,7 +56,7 @@ def get_data():
     try:
       print_err("\nRunning on node: %s. Querying BSS..." % (hostname))
       print_err("------------------------------------------------------------")
-      command = [ "cat", "/Users/jason/Desktop/mug-bss-data.json" ]
+      command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
       return json.loads(bss_proc.stdout.read())
     except Exception as e:
@@ -190,10 +190,10 @@ def validate_ntp(data):
 
 
 def score_params(node_class):
-  lengths = []
-  counts = []
   err = 0
 
+  lengths = []
+  counts = []
   for blob in node_class:
     lengths.append(blob['params-length'])
   
@@ -210,9 +210,14 @@ def score_params(node_class):
                "ifname=mgmt0",
                "ip=mgmt0",
                "ifname=mgmt1",
-               "ip=mgmt1" ]
+               "ip=mgmt1",
+               "hostname=" ]
 
+  all_param_strings = []
   for blob in node_class:
+    for k,v in blob.items():
+      if k == "params-stripd":
+        all_param_strings.append(v)
     if blob['occurrence'] == baseline:
       for search in searches:
         if re.search(search, blob['params-orig']):
@@ -222,10 +227,17 @@ def score_params(node_class):
     else:
       blob['valid'] = False
 
+  unique_param_strings = set(all_param_strings)
+  if len(unique_param_strings) > 1:
+    for blob in node_class:
+      for params in unique_param_strings:
+        if params == blob['params-stripd']:
+          blob['valid'] = False
+
 
   for blob in node_class:
     if blob['valid'] == False:
-      print_err("WARN: %s: has boot params that differ from the others\n%s\n" % (blob['hostname'], blob['params-orig']))
+      print_err("WARN: %s: has boot params that differ from at least one other node\n%s\n" % (blob['hostname'], blob['params-orig']))
       err = 1
 
   if err == 1:
