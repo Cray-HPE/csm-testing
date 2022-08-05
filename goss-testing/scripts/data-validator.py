@@ -28,10 +28,6 @@ import sys
 import ipaddress
 import socket
 import json
-import itertools
-import fuzzywuzzy
-from fuzzywuzzy import fuzz
-from fuzzywuzzy import process
 
 
 def print_err(*a):
@@ -240,11 +236,15 @@ def score_params(node_class):
       print_err("WARN: %s: has boot params that differ from at least one other node\n%s\n" % (blob['hostname'], blob['params-orig']))
       err = 1
 
+  print_err("------------------------------------------------------------")
+
   if err == 1:
     return err
 
 
 def boot_params(data):
+  """Attempt to validate boot parameters from BSS
+  """
   worker = []
   storage = []
   management = []
