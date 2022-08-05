@@ -28,6 +28,7 @@ import sys
 import ipaddress
 import socket
 import json
+import os
 
 
 def print_err(*a):
@@ -39,9 +40,9 @@ def get_data():
   """
   hostname = socket.gethostname()
 
-  if re.search("pit", hostname):
+  if os.path.isfile("/etc/pit-release"):
     try:
-      print_err("\nRunning on pit node: %s. Querying data.json..." % (hostname))
+      print_err(f"\nRunning on pit node: {hostname}. Querying data.json...")
       print_err("------------------------------------------------------------")
       with open("/var/www/ephemeral/configs/data.json", 'r') as file:
         return json.load(file)
@@ -50,7 +51,7 @@ def get_data():
       return 1
   else:
     try:
-      print_err("\nRunning on node: %s. Querying BSS..." % (hostname))
+      print_err(f"\nRunning on node: {hostname}. Querying BSS...")
       print_err("------------------------------------------------------------")
       command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
@@ -101,14 +102,14 @@ def are_valid_ip_masks(data, desired_keys):
     child_key = drill_down_data(blob, desired_keys)
 
     if not child_key:
-      print_err("ERR: %s is not defined for: %s: " % (desired_keys, instance_hostname))
+      print_err(f"ERR: {desired_keys} is not defined for: {instance_hostname}")
       err = 1
     else:
       for value in child_key:
         try:
           ipaddress.IPv4Network(value, strict=False)
         except ValueError:
-          print_err("ERR: %s: '%s' is not a valid ip/mask in %s" % (instance_hostname, value, desired_keys))
+          print_err(f"ERR: {instance_hostname}: '{value}' is not a valid ip/mask in {desired_keys}")
           err = 1
   if err == 1:
     return err
@@ -135,12 +136,12 @@ def are_valid_hostnames(data, desired_keys):
     child_key = drill_down_data(blob, desired_keys)
 
     if not child_key:
-      print_err("ERR: %s is not defined for: %s: " % (desired_keys, instance_hostname))
+      print_err(f"ERR: {desired_keys} is not defined for: {instance_hostname}: ")
       err = 1
     else:
       for item in drill_down_data(blob, desired_keys):
         if not check_hostname_syntax(item):
-          print_err("ERR: %s: '%s' is not a valid hostname in %s" % (instance_hostname, item, desired_keys))
+          print_err(f"ERR: {instance_hostname}: '{item}' is not a valid hostname in {desired_keys}")
           err = 1
   return err
 
@@ -163,14 +164,14 @@ def are_hosts_sane(data, desired_keys):
       target_list.append(value)
   # the following may or may not be bad configuration. TBD
   #    if value == blob['hostname']:
-  #      print_err("WARN: %s: should not reference itself in %s" % (blob['hostname'], desired_keys))
+  #      print_err(f"WARN: {blob['hostname']}: should not reference itself in {desired_keys}")
   #      err = 1
 
   # Check that a host definition exists for nodes in peers/servers
   # needs to be fixed to not show items like ntp.hpecorp.net
   for i in set(target_list).difference(set(hosts_list)):
     if re.search("ncn-", i):
-      print_err("WARN: %s: defined in %s, but host not defined in BSS / Basecamp" % (i, desired_keys))
+      print_err(f"WARN: {i}: defined in {desired_keys}, but host not defined in BSS / Basecamp" % (i, desired_keys))
       err = 1
 
   if err == 1:
@@ -233,7 +234,7 @@ def score_params(node_class):
 
   for blob in node_class:
     if blob['valid'] == False:
-      print_err("WARN: %s: has boot params that differ from at least one other node\n%s\n" % (blob['hostname'], blob['params-orig']))
+      print_err(f"WARN: {blob['hostname']}: has boot params that differ from at least one other node\n{blob['params-orig']}\n")
       err = 1
 
   print_err("------------------------------------------------------------")
