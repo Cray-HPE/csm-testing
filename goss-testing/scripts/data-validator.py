@@ -87,7 +87,7 @@ def drill_down_data(data, desired_keys):
       return saved_data
     if i == 0:
       saved_data = data[desired_keys[i]]
-    if i != 0:
+    elif i != 0:
       saved_data = saved_data[desired_keys[i]]
 
 
