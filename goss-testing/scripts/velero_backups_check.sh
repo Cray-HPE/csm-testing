@@ -43,7 +43,7 @@ cleanup_velero_backups() {
                     # Check if the PartiallyFailed backup occured within 10 minutes after the schedule was created. If so delete the backup.
 
                     time_from_schedule_creation_to_backup=$(( $backup_creation_date_sec - $schedule_creation_date_sec ))
-                    if [[ ! -z $backup_creation_date_sec && ${time_from_schedule_creation_to_backup} -gt 0 && ${time_from_schedule_creation_to_backup} -lt $ten_minutes ]]
+                    if [[ ! -z $backup_creation_date_sec && ${time_from_schedule_creation_to_backup} -ge 0 && ${time_from_schedule_creation_to_backup} -lt $ten_minutes ]]
                     then
                         delete_count+=1
 		        echo "velero backup delete ${backup_name}"
