@@ -92,7 +92,7 @@ def drill_down_data(data, desired_keys):
 
 
 def are_valid_ip_masks(data, desired_keys):
-  """Checks that ip/mask or cidr is valid.
+  """Checks that IP/mask or CIDR is valid.
   """
   filtered_data = user_data(data)
   err = 0
