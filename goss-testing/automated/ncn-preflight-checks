@@ -22,15 +22,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z ${GOSS_BASE} ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
-
-export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
-
-source "${GOSS_BASE}/automated/run-ncn-tests.sh"
+# Many functions and variables used in this script are defined/set/exported
+# in the run-ncn-tests.sh library
 
 echo $'\e[1;33m'NCN Preflight Checks$'\e[0m'
 echo $'\e[1;33m'--------------------$'\e[0m'
+echo
+
+# The run-ncn-tests.sh library is located in the same directory as the
+# current script. Using dirname like this could produce a relative path,
+# but that's fine, since we just want to source thie library script.
+# Note that this method is not infallible -- in particular, some symbolic
+# links can mess it up. But that won't be the case if this was installed
+# with the csm-testing RPM.
+source "$(dirname -- "$0")/run-ncn-tests.sh"
 
 if ! is_pit_node ; then
     err_exit "These tests can only be run from the LiveCD."
@@ -43,8 +48,11 @@ nodes=$(get_ncns --exclude-pit) || exit 1
 # The get_ncns function should always give NCNs if its return code was 0, but better safe than sorry
 [[ -n ${nodes} ]] || err_exit "No NCNs found"
 
-for node in ${nodes}; do
-    run_ncn_tests "${node}" ncn-preflight-tests
-done
+test_urls=$(goss_endpoint_urls ncn-preflight-tests ${nodes}) || exit 1
 
-exit
+print_goss_json_results ${test_urls}
+rc=$?
+
+# This script does not exit with non-0 return code just for test failures
+[[ $rc -le 1 ]] && exit 0
+exit 1

@@ -22,81 +22,65 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z ${GOSS_BASE} ]] && export GOSS_BASE=/opt/cray/tests/install/ncn
+# Many functions and variables used in this script are defined/set/exported
+# in the run-ncn-tests.sh library
 
-export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
-
-source "${GOSS_BASE}/automated/run-ncn-tests.sh"
-
-# file needed to run from livecd
-kube_creds=/root/.kube/config
-
-# is_pit_node is defined in run-ncn-tests.sh
-if is_pit_node; then
-  # running on a pit node
-  echo $'\e[1;33m'PIT Node Kubernetes Checks$'\e[0m'
-  echo $'\e[1;33m'--------------------------$'\e[0m'
-  if [[ -f ${kube_creds} ]]; then
-    # run livecd local Kubernetes cluster tests
-    k8s_local_tests
-  else
-    # We preface this warning with 'Total Tests:' to make it more visible, because the install documentation
-    # has the user grep for that string to review the results of the tests.
-    echo $'\e[1;31m'Total Tests: WARNING: Unable to run local Kubernetes checks because ${kube_creds} does not exist$'\e[0m'
-    echo
-  fi
-else
-  # run tests from an ncn
-  echo $'\e[1;33m'Kubernetes Cluster Node Checks$'\e[0m'
-  echo $'\e[1;33m'------------------------------$'\e[0m'
-  k8s_local_tests
-fi
-
-# master nodes
-echo $'\e[1;33m'Master Node Kubernetes Checks$'\e[0m'
-echo $'\e[1;33m'-----------------------------$'\e[0m'
-
-# The get_ncns function is defined in run-ncn-tests.sh
-if nodes=$(get_ncns --masters --exclude-pit); then
-
-	# The get_ncns function should always give NCNs if its return code was 0, but better safe than sorry
-	if [[ -z ${nodes} ]]; then
-		print_error "No master NCNs found"
-	else
-		# Query the server endpoints
-		for node in ${nodes} ; do
-			run_ncn_tests "${node}" "ncn-kubernetes-tests-master"
-			if ! is_pit_node ; then
-				run_ncn_tests "${node}" "ncn-afterpitreboot-kubernetes-tests-master"
-			fi
-		done
-	fi
-
-fi
-
+echo $'\e[1;33m'Kubernetes Checks$'\e[0m'
+echo $'\e[1;33m'------------------------------$'\e[0m'
 echo
 
-# worker nodes
-echo $'\e[1;33m'Worker Node Kubernetes Checks$'\e[0m'
-echo $'\e[1;33m'-----------------------------$'\e[0m'
+# The run-ncn-tests.sh library is located in the same directory as the
+# current script. Using dirname like this could produce a relative path,
+# but that's fine, since we just want to source thie library script.
+# Note that this method is not infallible -- in particular, some symbolic
+# links can mess it up. But that won't be the case if this was installed
+# with the csm-testing RPM.
+source "$(dirname -- "$0")/run-ncn-tests.sh"
 
-# The get_ncns function is defined in run-ncn-tests.sh
-if nodes=$(get_ncns --workers); then
+# Get master and worker node URLs
+master_nodes=$(get_ncns --masters --exclude-pit) ||
+    err_exit "Unable to get list of master nodes"
+worker_nodes=$(get_ncns --workers) ||
+    err_exit "Unable to get list of worker nodes"
 
-	# The get_ncns function should always give NCNs if its return code was 0, but better safe than sorry
-	if [[ -z ${nodes} ]]; then
-		print_error "No worker NCNs found"
-	else
-		# Query the server endpoints
-		for node in ${nodes} ; do
-			run_ncn_tests "${node}" "ncn-kubernetes-tests-worker"
-			if ! is_pit_node ; then
-				run_ncn_tests "${node}" "ncn-afterpitreboot-kubernetes-tests-worker"
-			fi
-		done
-	fi
+# Add k8s test endpoints
+master_test_urls=$(goss_endpoint_urls "ncn-kubernetes-tests-master" ${master_nodes}) ||
+    err_exit "Error finding test URLs for ncn-kubernetes-tests-master"
+worker_test_urls=$(goss_endpoint_urls "ncn-kubernetes-tests-worker" ${worker_nodes}) ||
+    err_exit "Error finding test URLs for ncn-kubernetes-tests-worker"
 
+if is_pit_node ; then
+    # running on a pit node
+
+    # file needed to run from livecd
+    kube_creds=/root/.kube/config
+
+    if is_nonempty_file "${kube_creds}"; then
+        # run livecd local Kubernetes cluster tests
+        run_goss_tests suites/common-kubernetes-tests-cluster.yaml --format json | \
+            print_goss_json_results stdin ${master_test_urls} ${worker_test_urls}
+        rc=$?
+    else
+        echo
+        echo $'\e[1;31m'WARNING: Unable to run local Kubernetes checks because ${kube_creds} does not exist or is invalid$'\e[0m'
+        print_goss_json_results stdin ${test_urls}
+        rc=$?
+    fi
+else
+    # run tests from an NCN
+
+    # If not running on the PIT node, this should mean we are post-PIT-reboot, so add in the appropriate tests
+    post_pit_master_test_urls=$(goss_endpoint_urls "ncn-afterpitreboot-kubernetes-tests-master" ${master_nodes}) ||
+        err_exit "Error finding test URLs for ncn-afterpitreboot-kubernetes-tests-master"
+
+    post_pit_worker_test_urls=$(goss_endpoint_urls "ncn-afterpitreboot-kubernetes-tests-worker" ${worker_nodes}) ||
+        err_exit "Error finding test URLs for ncn-afterpitreboot-kubernetes-tests-worker"
+
+    run_goss_tests suites/ncn-kubernetes-tests-cluster.yaml --format json | \
+        print_goss_json_results stdin ${master_test_urls} ${post_pit_master_test_urls} ${worker_test_urls} ${post_pit_worker_test_urls}
+    rc=$?
 fi
 
-exit
+# This script does not exit with non-0 return code just for test failures
+[[ $rc -le 1 ]] && exit 0
+exit 1

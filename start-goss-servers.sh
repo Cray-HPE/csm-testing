@@ -25,7 +25,6 @@
 # Goss server start up commands to serve health check endpoints
 
 export GOSS_BASE=/opt/cray/tests/install/ncn
-export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
 
 # necessary for kubectl commands to run
 export KUBECONFIG=/etc/kubernetes/admin.conf
@@ -43,9 +42,8 @@ done
 source "${GOSS_BASE}/automated/run-ncn-tests.sh"
 
 while true ; do
-    # The create_tmpvars_file function is defined in run-ncn-tests.sh
-    # It creates the temporary variables file and saves the path to it in the $tmpvars variable
-    create_tmpvars_file
+    # This creates a temporary Goss variables file and saves the path to it in the $tmpvars variable
+    tmpvars=$(create_goss_variable_file)
     rc=$?
     
     if [[ ${rc} -eq 127 ]]; then

@@ -22,21 +22,23 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z ${GOSS_BASE} ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
+# Many functions and variables used in this script are defined/set/exported
+# in the run-ncn-tests.sh library
 
-export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
-
-source "${GOSS_BASE}/automated/run-ncn-tests.sh"
+# The run-ncn-tests.sh library is located in the same directory as the
+# current script. Using dirname like this could produce a relative path,
+# but that's fine, since we just want to source thie library script.
+# Note that this method is not infallible -- in particular, some symbolic
+# links can mess it up. But that won't be the case if this was installed
+# with the csm-testing RPM.
+source "$(dirname -- "$0")/run-ncn-tests.sh"
 
 # These tests should not be run from the PIT node.
 if is_pit_node ; then
     err_exit "These tests cannot be run from the LiveCD."
 fi
 
-# The create_tmpvars_file function is defined in run-ncn-tests.sh
-# It creates the temporary variables file and saves the path to it in the ${tmpvars} variable
-create_tmpvars_file || exit 1
+tmpvars=$(create_goss_variable_file) || exit 1
 
 echo $'\e[1;33m'NCN Postgres Tests$'\e[0m'
 echo $'\e[1;33m'---------------$'\e[0m'
