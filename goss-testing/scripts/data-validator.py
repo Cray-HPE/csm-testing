@@ -109,7 +109,7 @@ def are_valid_ip_masks(data, desired_keys):
         try:
           ipaddress.IPv4Network(value, strict=False)
         except ValueError:
-          print_err(f"ERR: {instance_hostname}: '{value}' is not a valid ip/mask in {desired_keys}")
+          print_err(f"ERR: {instance_hostname}: '{value}' is not a valid IP/mask in {desired_keys}")
           err = 1
   if err == 1:
     return err
