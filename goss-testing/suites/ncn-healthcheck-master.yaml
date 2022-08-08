@@ -27,6 +27,7 @@ gossfile:
   ../tests/goss-bond-members-have-links.yaml: {}
   ../tests/goss-network-interfaces.yaml: {}
   ../tests/goss-interfaces-have-same-mac.yaml: {}
+  ../tests/ncn/goss-bss-basecamp-valid.yaml: {}
   ../tests/goss-unbound-ip.yaml: {}
   ../tests/goss-platform-ca-certs-exist.yaml: {}
   ../tests/goss-k8s-sealed-secret-key.yaml: {}
