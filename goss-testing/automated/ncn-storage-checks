@@ -22,15 +22,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z ${GOSS_BASE} ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
-
-export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
-
-source "${GOSS_BASE}/automated/run-ncn-tests.sh"
+# Many functions and variables used in this script are defined/set/exported
+# in the run-ncn-tests.sh library
 
 echo $'\e[1;33m'Storage Node Automated Tests$'\e[0m'
 echo $'\e[1;33m'----------------------------$'\e[0m'
+
+# The run-ncn-tests.sh library is located in the same directory as the
+# current script. Using dirname like this could produce a relative path,
+# but that's fine, since we just want to source this library script.
+# Note that this method is not infallible -- in particular, some symbolic
+# links can mess it up. But that won't be the case if this was installed
+# with the csm-testing RPM.
+source "$(dirname -- "$0")/run-ncn-tests.sh"
 
 # The get_storage_ncns function is defined in run-ncn-tests.sh
 storage_nodes=$(get_ncns --storage) || exit 1
@@ -41,14 +45,13 @@ echo "List of storage NCNs: "${storage_nodes}
 # The get_ncns function should always give NCNs if its return code was 0, but better safe than sorry
 [[ -n ${storage_nodes} ]] || err_exit "No storage nodes found"
 
-# It is important that we ran on ncn-s001, since some of the tests only run from that node
+# It is important that we run on ncn-s001, since some of the tests only run from that node
 if ! echo ${storage_nodes} | grep -q ncn-s001 ; then
-	print_error "ncn-s001 not listed among the storage nodes"
+    print_error "ncn-s001 not listed among the storage nodes"
 fi
 
-for node in ${storage_nodes} ; do
-	run_ncn_tests "${node}" "ncn-storage-tests"
-done
+test_urls=$(goss_endpoint_urls ncn-storage-tests ${storage_nodes}) || exit 1
+print_goss_json_results ${test_urls}
 
 # We always exit 0 -- this does not indicate that the tests passed.
 exit 0

@@ -1,8 +1,7 @@
-#!/usr/bin/env bash
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,27 +20,4 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-
-# Many functions and variables used in this script are defined/set/exported
-# in the run-ncn-tests.sh library
-
-echo $'\e[1;33m'NCN Storage Run-Time Checks$'\e[0m'
-echo $'\e[1;33m'-------------------$'\e[0m'
-echo
-
-# The run-ncn-tests.sh library is located in the same directory as the
-# current script. Using dirname like this could produce a relative path,
-# but that's fine, since we just want to source this library script.
-# Note that this method is not infallible -- in particular, some symbolic
-# links can mess it up. But that won't be the case if this was installed
-# with the csm-testing RPM.
-source "$(dirname -- "$0")/run-ncn-tests.sh"
-
-test_urls=$(ncn_healthcheck_storage_urls) || err_exit "Cannot find test URLs"
-
-print_goss_json_results ${test_urls}
-rc=$?
-
-# This script does not exit with non-0 return code just for test failures
-[[ $rc -le 1 ]] && exit 0
-exit 1
+#

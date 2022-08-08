@@ -47,15 +47,18 @@ function is_pit_node {
 
 # Set some default variables here, both because we use them in this library, and also to save
 # scripts from having to set them if they source this library.
-
-GOSS_INSTALL_BASE_DIR=${GOSS_INSTALL_BASE_DIR:-"/opt/cray/tests/install"}
-
 if [[ -z ${GOSS_BASE} ]]; then
+    GOSS_INSTALL_BASE_DIR=${GOSS_INSTALL_BASE_DIR:-"/opt/cray/tests/install"}
+
     if is_pit_node ; then
         GOSS_BASE="${GOSS_INSTALL_BASE_DIR}/livecd"
     else
         GOSS_BASE="${GOSS_INSTALL_BASE_DIR}/ncn"
     fi
+else
+    # If GOSS_BASE is set, then the default value for GOSS_INSTALL_BASE_DIR will
+    # be the parent directory of GOSS_BASE
+    GOSS_INSTALL_BASE_DIR=${GOSS_INSTALL_BASE_DIR:-$(dirname "${GOSS_BASE}")}
 fi
 export GOSS_BASE
 
@@ -69,6 +72,26 @@ GOSS_SERVERS_CONFIG=${GOSS_SERVERS_CONFIG:-"${GOSS_INSTALL_BASE_DIR}/dat/goss-se
 # Pattern to match 010-099: 0[1-9][0-9]
 # Pattern to match 001-009: 00[1-9]
 ncn_num_pattern="([1-9][0-9][0-9]|0[1-9][0-9]|00[1-9])"
+
+function is_nonempty_file {
+    if [[ $# -ne 1 ]]; then
+        print_error "regular_file_exists: Function requires exactly 1 argument but received $#: $*"
+        return 1
+    elif [[ -z $1 ]]; then
+        print_error "Filepath is blank"
+        return 1
+    elif [[ ! -e $1 ]]; then
+        print_error "File does not exist: $1"
+        return 1
+    elif [[ ! -f $1 ]]; then
+        print_error "Not a regular file: $1"
+        return 1
+    elif [[ ! -s $1 ]]; then
+        print_error "File is empty: $1"
+        return 1
+    fi
+    return 0
+}
 
 function is_master_node {
     is_pit_node && return 1
@@ -248,26 +271,6 @@ function get_ncns {
     return 1
 }
 
-function k8s_local_tests {
-    local tmpvars GOSS_VARS
-
-    # create_tmpvars_file creates the temporary variables file and saves the path to it in the ${tmpvars} variable
-    create_tmpvars_file || return 1
-
-    export GOSS_VARS=${tmpvars}
-    if is_pit_node; then
-        # Running on the PIT node -- run the PIT-appropriate suite
-        echo "Test Suite: Kubernetes Cluster Checks (on PIT node)"
-        /usr/bin/goss -g "${GOSS_BASE}/suites/common-kubernetes-tests-cluster.yaml" v
-        echo
-    else
-        # Not on the PIT node
-        echo "Test Suite: Kubernetes Cluster Checks"
-        /usr/bin/goss -g "${GOSS_BASE}/suites/ncn-kubernetes-tests-cluster.yaml" v
-        echo
-    fi
-}
-
 # Endpoint names should begin with an alphanumeric character and only contain alphanumeric characters,
 # underscores, and dashes.
 ENDPOINT_NAME_REGEX="[0-9a-zA-Z][-_0-9A-Za-z]*"
@@ -275,34 +278,44 @@ PORT_REGEX="[1-9][0-9]+"
 SINGLE_NCN_TYPE_REGEX="(master|pit|storage|worker)"
 NCN_TYPE_LIST_REGEX="${SINGLE_NCN_TYPE_REGEX}(,${SINGLE_NCN_TYPE_REGEX})*"
 
-function goss_endpoint_url
-{
-    # $1 node name (including network -- e.g. ncn-m002.hmn)
-    # $2 endpoint name (e.g. ncn-healthcheck-storage)
-    # Outputs the URL
-    if [[ $# -ne 2 ]]; then
+function goss_endpoint_urls {
+    # Usage: goss_endpoint_url <endpoint name> <node> [<node>] ...
+    # endpoint name (e.g. ncn-healthcheck-storage)
+    # node name (excluding network -- e.g. ncn-m002)
+    # Outputs the URLs (on the .hmn network)
+    if [[ $# -lt 2 ]]; then
         print_error "goss_endpoint_url: Function requires exactly 2 arguments but received $#: $*"
         return 1
     fi
-    local endpoint node port
-    node="$1"
-    endpoint="$2"
+    local endpoint nodes node port urls args
+    args="$*"
+    endpoint="$1"
+    nodes=()
     if [[ -z ${endpoint} ]]; then
         print_error "goss_endpoint_url: Endpoint names may not be blank."
         return 1
     elif [[ ! ${endpoint} =~ ^${ENDPOINT_NAME_REGEX}$ ]]; then
         print_error "goss_endpoint_url: Endpoint name contains illegal characters: ${endpoint}"
         return 1
-    elif [[ -z ${node} ]]; then
-        print_error "goss_endpoint_url: Node name may not be blank. Invalid arguments: $*"
-        return 1
-    elif [[ ! -s ${GOSS_SERVERS_CONFIG} ]]; then
-        print_error "goss_endpoint_url: Goss server configuration file does not exist, is empty, or is not a regular file: ${GOSS_SERVERS_CONFIG}"
+    fi
+    shift
+    while [[ $# -gt 0 ]]; do
+        if [[ -z $1 ]]; then
+            print_error "goss_endpoint_url: Node name may not be blank. Invalid arguments: ${args}"
+            return 1
+        fi
+        nodes+=( "$1" )
+        shift
+    done
+
+    if ! is_nonempty_file "${GOSS_SERVERS_CONFIG}" ; then
+        print_error "goss_endpoint_url: Invalid Goss server configuration file"
         return 1
     fi
 
     # We assume port numbers will be at least 2 digits
-    port=$(grep -E "^${endpoint}[[:space:]]+${PORT_REGEX}[[:space:]]+${NCN_TYPE_LIST_REGEX}[[:space:]]*$" "${GOSS_SERVERS_CONFIG}" | awk '{ print $2 }')
+    port=$(grep -E "^${endpoint}[[:space:]]+${PORT_REGEX}[[:space:]]+${NCN_TYPE_LIST_REGEX}[[:space:]]*$" \
+            "${GOSS_SERVERS_CONFIG}" | awk '{ print $2 }')
 
     # Make sure we found exactly one port number
     if [[ -z ${port} ]]; then
@@ -313,33 +326,104 @@ function goss_endpoint_url
         return 1
     fi
 
-    echo "http://${node}:${port}/${endpoint}"
+    urls=()
+    for node in "${nodes[@]}" ; do
+        urls+=( "http://${node}.hmn:${port}/${endpoint}" )
+    done
+    
+    echo "${urls[*]}"
     return 0
 }
 
-function run_ncn_tests {
-    if [[ $# -ne 2 ]]; then
-        print_error "run_ncn_tests: Function requires exactly 2 arguments but received $#: $*"
+# Just a wrapper for the Python script -- it transparently passes its arguments into the script
+function print_goss_json_results {
+    "${GOSS_BASE}/automated/python/print_goss_json_results.py" "$@"
+    return $?
+}
+
+function ncn_healthcheck_urls {
+    # $1 - master, worker, or storage
+    local endpoint after_pit_endpoint nodes urls more_urls
+    if [[ $# -ne 1 ]]; then
+        print_error "ncn_healthcheck_urls: Exactly 1 argument required, but received $#: $*"
         return 1
     fi
-    local NODE endpoint url
-    NODE="$1"
-    endpoint="$2"
-    
-    echo
-    echo Running tests against node $'\e[1;33m'${NODE}$'\e[0m'
-
-    url=$(goss_endpoint_url "${NODE}.hmn" "${endpoint}") || return 1
-    echo "Server URL: ${url}"
-
-    # Calling with override-rc means that the script will not exit non-0 just for test failures, but only for
-    # bigger issues (like unable to reach endpoint, invalid JSON format, etc)
-    if ! "${GOSS_BASE}/automated/print_goss_json_results" --input "${url}" --node "${NODE}" --override-rc ; then
-        echo $'\e[1;31m'"ERROR: Problem with tests on ${NODE}"$'\e[0m'
+    case "$1" in
+        "master"|"masters")
+            endpoint="ncn-healthcheck-master"
+            after_pit_endpoint="ncn-afterpitreboot-healthcheck-master"
+            nodes=$(get_ncns --masters --exclude-pit) || return 1
+            ;;
+        "storage")
+            endpoint="ncn-healthcheck-storage"
+            after_pit_endpoint="ncn-afterpitreboot-healthcheck-storage"
+            nodes=$(get_ncns --storage) || return 1
+            ;;
+        "worker"|"workers")
+            endpoint="ncn-healthcheck-worker"
+            after_pit_endpoint="ncn-afterpitreboot-healthcheck-worker"
+            nodes=$(get_ncns --workers) || return 1
+            ;;
+        *)
+            print_error "ncn_healthcheck_urls: Invalid argument: $1"
+            return 1
+            ;;
+    esac
+    if ! urls=$(goss_endpoint_urls "${endpoint}" ${nodes}) ; then
+        print_error "Error finding test URLs for ${endpoint}"
         return 1
     fi
-
+    if ! is_pit_node ; then
+        if ! more_urls=$(goss_endpoint_urls "${after_pit_endpoint}" ${nodes}) ; then
+            print_error "Error finding test URLs for ${after_pit_endpoint}"
+            return 1
+        fi
+        urls+=" ${more_urls}"
+    fi
+    echo ${urls}
     return 0
+}    
+
+function ncn_healthcheck_master_urls {
+    ncn_healthcheck_urls masters
+    return $?
+}
+
+function ncn_healthcheck_storage_urls {
+    ncn_healthcheck_urls storage
+    return $?
+}
+
+function ncn_healthcheck_worker_urls {
+    ncn_healthcheck_urls workers
+    return $?
+}
+
+function run_goss_tests {
+    # $1 tests/<whatever.yaml> or suites/<whatever.yaml>
+    # $2+ additional arguments to goss validate (most often --format <blah>)
+    # Creates a temporary variables file and then 
+    # calls goss -g "${GOSS_BASE}/$1" --vars "${tmpvars}" v $2
+    
+    local tmpvars gossfile
+    tmpvars=$(create_goss_variable_file) || return 1
+    
+    if [[ $# -eq 0 ]]; then
+        print_error "run_goss_tests: Function requires at least 1 argument"
+        return 1
+    elif [[ $1 != tests/*.yaml && $1 != suites/*.yaml ]]; then
+        print_error "run_goss_tests: First argument must be tests/<file>.yaml or suites/<file>.yaml. Invalid argument: $1"
+        return 1
+    fi
+    gossfile="${GOSS_BASE}/$1"
+    if ! is_nonempty_file "${gossfile}" ; then
+        print_error "run_goss_tests: Invalid Goss test/suite file"
+        return 1
+    fi
+    shift
+
+    /usr/bin/goss -g "${gossfile}" --vars "${tmpvars}" v "$@"
+    return $?
 }
 
 function add_local_vars {
@@ -395,8 +479,8 @@ function add_local_vars {
     return $?
 }
 
-# Sets ${tmpvars} variable to the name of the temporary variable file it creates
-function create_tmpvars_file {
+# Creates Goss variable file and prints path to it
+function create_goss_variable_file {
     if [[ -z ${GOSS_BASE} ]]; then
         print_error "create_tmpvars_file: GOSS_BASE variable is not set"
         return 1
@@ -405,7 +489,7 @@ function create_tmpvars_file {
         return 1
     fi
     
-    local base_var_file
+    local base_var_file tmpvars
     
     if is_pit_node ; then
         base_var_file="${GOSS_BASE}/vars/variables-livecd.yaml"
@@ -434,6 +518,6 @@ function create_tmpvars_file {
     
     add_local_vars "${tmpvars}" || return 1
     
-    echo "Using Goss variable file: ${tmpvars}"
+    echo "${tmpvars}"
     return 0
 }
