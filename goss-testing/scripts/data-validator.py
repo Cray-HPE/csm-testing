@@ -171,7 +171,7 @@ def are_hosts_sane(data, desired_keys):
   # needs to be fixed to not show items like ntp.hpecorp.net
   for i in set(target_list).difference(set(hosts_list)):
     if re.search("ncn-", i):
-      print_err(f"WARN: {i}: defined in {desired_keys}, but host not defined in BSS / Basecamp" % (i, desired_keys))
+      print_err(f"WARN: {i}: defined in {desired_keys}, but host not defined in BSS / Basecamp")
       err = 1
 
   if err == 1:
