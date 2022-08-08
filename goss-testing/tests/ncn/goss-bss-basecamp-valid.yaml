@@ -32,7 +32,9 @@ command:
         meta:
             desc: Check that BSS or Basecamp has valid data.
             sev: 0
-        exec: "{{.Env.GOSS_BASE}}/scripts/data-validator.py"
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$data_validator}}"
         # The command should succeed
         exit-status: 0
         # We fail if the following message shows up in stdout
