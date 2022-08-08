@@ -22,7 +22,9 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/data-validator.py" }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $data_validator := $scripts | printf "%s/data-validator.py" }}
 command:
     {{ $testlabel := "bss_basecamp_validate" }}
     {{$testlabel}}:
