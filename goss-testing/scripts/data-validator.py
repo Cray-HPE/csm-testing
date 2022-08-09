@@ -46,19 +46,22 @@ def get_data():
       print_err("------------------------------------------------------------")
       with open("/var/www/ephemeral/configs/data.json", 'r') as file:
         return json.load(file)
+      with open("data.json", 'r') as file:
+        return json.load(file)
     except Exception as e:
       print_err(str(e))
-      return 1
+      sys.exit(1)
   else:
     try:
       print_err(f"\nRunning on node: {hostname}. Querying BSS...")
       print_err("------------------------------------------------------------")
-      command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
+      #command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
+      command = [ "cat", "mug-bss-data.json" ]
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
       return json.loads(bss_proc.stdout.read())
     except Exception as e:
       print_err(str(e))
-      return 1
+      sys.exit(1)
 
 
 def user_data(data):
@@ -85,10 +88,20 @@ def drill_down_data(data, desired_keys):
   for i in range(0, ( len(desired_keys) + 1), 1):
     if i == len(desired_keys):
       return saved_data
+
     if i == 0:
-      saved_data = data[desired_keys[i]]
+      if desired_keys[i] in data:
+        saved_data = data[desired_keys[i]]
+      else:
+        print(f"ERR: {data['hostname']}: {desired_keys[i]} field not present. Looking for {desired_keys}.")
+        return 1
+
     elif i != 0:
-      saved_data = saved_data[desired_keys[i]]
+      if saved_data and desired_keys[i] in saved_data:
+        saved_data = saved_data[desired_keys[i]]
+      else:
+        print(f"ERR: {data['hostname']}: {desired_keys} field not present. Looking for {desired_keys}.")
+        return 1
 
 
 def are_valid_ip_masks(data, desired_keys):
@@ -100,6 +113,7 @@ def are_valid_ip_masks(data, desired_keys):
   for blob in filtered_data:
     instance_hostname = blob['hostname']
     child_key = drill_down_data(blob, desired_keys)
+    if child_key == 1: return 1
 
     if not child_key:
       print_err(f"ERR: {desired_keys} is not defined for: {instance_hostname}")
@@ -134,6 +148,7 @@ def are_valid_hostnames(data, desired_keys):
   for blob in filtered_data:
     instance_hostname = blob['hostname']
     child_key = drill_down_data(blob, desired_keys)
+    if child_key == 1: return 1
 
     if not child_key:
       print_err(f"ERR: {desired_keys} is not defined for: {instance_hostname}: ")
@@ -155,8 +170,7 @@ def are_hosts_sane(data, desired_keys):
   hosts_list = []
   err = 0
 
-  if are_valid_hostnames(data, desired_keys):
-    err = 1
+  if are_valid_hostnames(data, desired_keys): return 1
 
   for blob in filtered_data:
     hosts_list.append(blob['hostname'])
@@ -281,9 +295,11 @@ if __name__ == "__main__":
   err = 0
   data = get_data()
 
-  if isinstance(data, list):
-    if boot_params(data): err = 1
-
-  if validate_ntp(data): err = 1
+  if len(data) != 0:
+    if isinstance(data, list):
+      if boot_params(data): err = 1
+    if validate_ntp(data): err = 1
+  else:
+    print_err(f"No data to process. json object is empty.")
 
   sys.exit(err)
