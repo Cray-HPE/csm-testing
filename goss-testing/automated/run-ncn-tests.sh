@@ -272,13 +272,6 @@ function get_ncns {
     return 1
 }
 
-# Endpoint names should begin with an alphanumeric character and only contain alphanumeric characters,
-# underscores, and dashes.
-ENDPOINT_NAME_REGEX="[0-9a-zA-Z][-_0-9A-Za-z]*"
-PORT_REGEX="[1-9][0-9]+"
-SINGLE_NCN_TYPE_REGEX="(master|pit|storage|worker)"
-NCN_TYPE_LIST_REGEX="${SINGLE_NCN_TYPE_REGEX}(,${SINGLE_NCN_TYPE_REGEX})*"
-
 # Some Python script wrappers -- they transparently pass their arguments into the scripts, and return the script's return code
 function goss_endpoint_urls {
     "${GOSS_BASE}/automated/python/goss_suite_urls.py" "$@"
@@ -295,18 +288,59 @@ function goss_suites_endpoints_ports {
     return $?
 }
 
+function get_ready_k8s_node
+{
+    # Usage: get_ready_k8s_node [ncn1] [ncn2] ...
+    # Runs kubectl get nodes and prints the name of the first master or worker node that is Ready.
+    # If nodes are passed in as arguments, it will only look at those nodes.
+
+    local node node_pattern node_list
+    if [[ $# -eq 0 ]]; then
+        node_list=""
+        node_pattern="ncn-[mw]${ncn_num_pattern}"
+    else
+        node_list="$*"
+        if [[ $# -eq 1 ]]; then
+            node_pattern="$1"
+        else
+            node_pattern="($1"
+            shift
+            while [[ $# -gt 0 ]]; do
+                node_pattern+="|$1"
+                shift
+            done
+            node_pattern+=")"
+        fi
+    fi
+    node=$(kubectl get nodes --no-headers "$@" 2>/dev/null | 
+            grep -E "^${node_pattern}[[:space:]]{1,}Ready[[:space:]]" |
+            awk '{ print $1 }' | head -1)
+    [[ -n ${node} ]] && echo "${node}" && return 0
+    if [[ -n ${node_list} ]]; then
+        print_error "None of the following Kubernetes nodes is Ready, according to kubectl: ${node_list}"
+    else
+        print_error "No master or worker NCNs are Ready, according to kubectl"
+    fi
+    return 1
+}
+
 function ncn_healthcheck_urls {
     # $1 - master, worker, or storage
-    local suite after_pit_suite nodes urls more_urls
+    local suite after_pit_suite nodes urls more_urls ready_node single_suite after_pit_single_suite
     if [[ $# -ne 1 ]]; then
         print_error "ncn_healthcheck_urls: Exactly 1 argument required, but received $#: $*"
         return 1
     fi
+    after_pit_single_suite=""
+    single_suite=""
+    ready_node=""
     case "$1" in
         "master"|"masters")
             suite="ncn-healthcheck-master.yaml"
+            single_suite="ncn-healthcheck-master-single.yaml"
             after_pit_suite="ncn-afterpitreboot-healthcheck-master.yaml"
             nodes=$(get_ncns --masters --exclude-pit) || return 1
+            ready_node=$(get_ready_k8s_node ${nodes}) || return 1
             ;;
         "storage")
             suite="ncn-healthcheck-storage.yaml"
@@ -315,8 +349,11 @@ function ncn_healthcheck_urls {
             ;;
         "worker"|"workers")
             suite="ncn-healthcheck-worker.yaml"
+            single_suite="ncn-healthcheck-worker-single.yaml"
             after_pit_suite="ncn-afterpitreboot-healthcheck-worker.yaml"
+            after_pit_single_suite="ncn-afterpitreboot-healthcheck-worker-single.yaml"
             nodes=$(get_ncns --workers) || return 1
+            ready_node=$(get_ready_k8s_node ${nodes}) || return 1
             ;;
         *)
             print_error "ncn_healthcheck_urls: Invalid argument: $1"
@@ -324,15 +361,30 @@ function ncn_healthcheck_urls {
             ;;
     esac
     if ! urls=$(goss_endpoint_urls "${suite}" ${nodes}) ; then
-        print_error "Error finding test URLs for ${suite}"
+        print_error "Error finding test URLs for ${suite} on ${nodes}"
         return 1
     fi
-    if ! is_pit_node ; then
-        if ! more_urls=$(goss_endpoint_urls "${after_pit_suite}" ${nodes}) ; then
-            print_error "Error finding test URLs for ${after_pit_suite}"
+    if [[ -n ${single_suite} ]]; then
+        if ! more_urls=$(goss_endpoint_urls "${single_suite}" ${ready_node}) ; then
+            print_error "Error finding test URL for ${single_suite} on ${ready_node}"
             return 1
         fi
         urls+=" ${more_urls}"
+    fi
+    if ! is_pit_node ; then
+        if ! more_urls=$(goss_endpoint_urls "${after_pit_suite}" ${nodes}) ; then
+            print_error "Error finding test URLs for ${after_pit_suite} on ${nodes}"
+            return 1
+        fi
+        urls+=" ${more_urls}"
+
+        if [[ -n ${after_pit_single_suite} ]]; then
+            if ! more_urls=$(goss_endpoint_urls "${after_pit_single_suite}" ${ready_node}) ; then
+                print_error "Error finding test URL for ${after_pit_single_suite} on ${ready_node}"
+                return 1
+            fi
+            urls+=" ${more_urls}"
+        fi
     fi
     echo ${urls}
     return 0

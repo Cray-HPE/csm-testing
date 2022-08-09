@@ -22,15 +22,13 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+#
 # This suite is run:
-# * During CSM installs before CSM services have been deployed,
-# * During CSM Health Validation (after CSM services have been deployed), both
-#   before and after PIT redeployment
+# * During CSM Health Validation (after CSM services have been deployed), ONLY
+#   after PIT redeployment
+#
 
-# During health validation, these tests are executed on every worker node
-# in the cluster. Tests that are executed on just a single worker node are
-# in the corresponding -single.yaml suite file.
+# During health validation, these tests are executed on a single worker node
+# in the cluster.
 gossfile:
-  ../tests/goss-dedicated-drive-worker.yaml: {}
-  ../tests/goss-ncn-xname.yaml: {}
-  ../tests/goss-weave-health.yaml: {}
+  ../tests/goss-k8s-all-loadbalancers-have-external-ips.yaml: {}

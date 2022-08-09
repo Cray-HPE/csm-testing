@@ -40,14 +40,31 @@ source "$(dirname -- "$0")/run-ncn-tests.sh"
 # Get master and worker node URLs
 master_nodes=$(get_ncns --masters --exclude-pit) ||
     err_exit "Unable to get list of master nodes"
+
+ready_master_node=$(get_ready_k8s_node ${master_nodes}) ||
+	exit 1
+
 worker_nodes=$(get_ncns --workers) ||
     err_exit "Unable to get list of worker nodes"
 
-# Add k8s test endpoints
-master_test_urls=$(goss_endpoint_urls "ncn-kubernetes-tests-master.yaml" ${master_nodes}) ||
+ready_worker_node=$(get_ready_k8s_node ${worker_nodes}) ||
+	exit 1
+
+# Add k8s test endpoints for tests that run on all master nodes
+master_test_urls=$(goss_endpoint_urls ncn-kubernetes-tests-master.yaml ${master_nodes}) ||
     err_exit "Error finding test URLs for ncn-kubernetes-tests-master"
-worker_test_urls=$(goss_endpoint_urls "ncn-kubernetes-tests-worker.yaml" ${worker_nodes}) ||
+
+# Add k8s test endpoints for tests that only run on a single master node
+single_master_test_url=$(goss_endpoint_urls ncn-kubernetes-tests-master-single.yaml ${ready_master_node}) ||
+    err_exit "Error finding test URL for ncn-kubernetes-tests-master-single"
+
+# Add k8s test endpoints for tests that run on all worker nodes
+worker_test_urls=$(goss_endpoint_urls ncn-kubernetes-tests-worker.yaml ${worker_nodes}) ||
     err_exit "Error finding test URLs for ncn-kubernetes-tests-worker"
+
+# Add k8s test endpoints for tests that only run on a single master node
+single_worker_test_url=$(goss_endpoint_urls ncn-kubernetes-tests-worker-single.yaml ${ready_worker_node}) ||
+    err_exit "Error finding test URL for ncn-kubernetes-tests-worker-single"
 
 if is_pit_node ; then
     # running on a pit node
@@ -58,26 +75,27 @@ if is_pit_node ; then
     if is_nonempty_file "${kube_creds}"; then
         # run livecd local Kubernetes cluster tests
         run_goss_tests suites/common-kubernetes-tests-cluster.yaml --format json | \
-            print_goss_json_results stdin ${master_test_urls} ${worker_test_urls}
+            print_goss_json_results stdin ${master_test_urls} ${single_master_test_url} ${worker_test_urls} ${single_worker_test_url}
         rc=$?
     else
         echo
         echo $'\e[1;31m'WARNING: Unable to run local Kubernetes checks because ${kube_creds} does not exist or is invalid$'\e[0m'
-        print_goss_json_results stdin ${test_urls}
+        print_goss_json_results stdin ${master_test_urls} ${single_master_test_url} ${worker_test_urls} ${single_worker_test_url}
         rc=$?
     fi
 else
     # run tests from an NCN
 
     # If not running on the PIT node, this should mean we are post-PIT-reboot, so add in the appropriate tests
-    post_pit_master_test_urls=$(goss_endpoint_urls "ncn-afterpitreboot-kubernetes-tests-master.yaml" ${master_nodes}) ||
-        err_exit "Error finding test URLs for ncn-afterpitreboot-kubernetes-tests-master"
+    post_pit_single_master_test_url=$(goss_endpoint_urls ncn-afterpitreboot-kubernetes-tests-master-single.yaml ${ready_master_node}) ||
+        err_exit "Error finding test URL for ncn-afterpitreboot-kubernetes-tests-master-single"
 
-    post_pit_worker_test_urls=$(goss_endpoint_urls "ncn-afterpitreboot-kubernetes-tests-worker.yaml" ${worker_nodes}) ||
-        err_exit "Error finding test URLs for ncn-afterpitreboot-kubernetes-tests-worker"
+    post_pit_single_worker_test_url=$(goss_endpoint_urls ncn-afterpitreboot-kubernetes-tests-worker-single.yaml ${ready_worker_node}) ||
+        err_exit "Error finding test URL for ncn-afterpitreboot-kubernetes-tests-worker-single"
 
     run_goss_tests suites/ncn-kubernetes-tests-cluster.yaml --format json | \
-        print_goss_json_results stdin ${master_test_urls} ${post_pit_master_test_urls} ${worker_test_urls} ${post_pit_worker_test_urls}
+        print_goss_json_results stdin ${master_test_urls} ${single_master_test_url} ${post_pit_single_master_test_url} \
+									  ${worker_test_urls} ${single_worker_test_url} ${post_pit_single_worker_test_url}
     rc=$?
 fi
 

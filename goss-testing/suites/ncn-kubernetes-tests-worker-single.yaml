@@ -27,10 +27,8 @@
 # * During CSM Health Validation (after CSM services have been deployed), both
 #   before and after PIT redeployment
 
-# During health validation, these tests are executed on every worker node
-# in the cluster. Tests that are executed on just a single worker node are
-# in the corresponding -single.yaml suite file.
+# During health validation, these tests are executed on a single worker node
+# in the cluster. Tests that are executed on every worker node are in the
+# corresponding suite file without the -single suffix.
 gossfile:
-  ../tests/goss-dedicated-drive-worker.yaml: {}
-  ../tests/goss-ncn-xname.yaml: {}
-  ../tests/goss-weave-health.yaml: {}
+  ../tests/goss-unbound-dns-entries.yaml: {}

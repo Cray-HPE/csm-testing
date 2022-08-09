@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,7 +21,15 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+# During health validation, these tests are executed on a single worker node
+# in the cluster. Tests that are executed on every worker node are in the
+# corresponding suite file without the -single suffix.
 gossfile:
-  ../tests/goss-k8s-trustedcerts-configmaps-exist.yaml: {}
-  ../tests/goss-k8s-vault-cluster-health.yaml: {}
-  ../tests/goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
+  ../tests/goss-cray-service-etcd-health-check.yaml: {}
+  ../tests/goss-k8s-postgres-backups.yaml: {}
+  ../tests/goss-k8s-postgres-clusters-running.yaml: {}
+  ../tests/goss-k8s-postgres-leader.yaml: {}
+  ../tests/goss-k8s-postgres-pods-running.yaml: {}
+  ../tests/goss-k8s-postgres-replication-lag.yaml: {}
+  ../tests/goss-k8s-precache-images-health.yaml: {}
