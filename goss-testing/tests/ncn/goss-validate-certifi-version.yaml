@@ -27,7 +27,7 @@ command:
   {{$testlabel}}:
     title: "Validate certifi is the correct version."
     meta:
-      desc: "If this fails then validate that an upstream version of certifi has not been installed. If a non-SLES certifi package has been installed the uninstall it by running `pip uninstall certifi`."
+      desc: "If this fails, then validate that an upstream version of certifi has not been installed. If a non-SLES certifi package has been installed, then uninstall it by running `pip uninstall certifi`."
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" \
