@@ -79,9 +79,9 @@ def goss_base_dirs(validate=False):
 
         # GOSS_BASE will be the ncn or livecd subdirectory of GOSS_INSTALL_BASE_DIR, depending on our node type
         if is_pit_node():
-            base_dir f"{install_base_dir}/livecd"
+            base_dir = f"{install_base_dir}/livecd"
         else:
-            base_dir f"{install_base_dir}/ncn"
+            base_dir = f"{install_base_dir}/ncn"
 
         if validate and not os.path.isdir(base_dir):
             raise ScriptException(f"GOSS_BASE directory does not exist or is not a directory: {base_dir}")
@@ -281,9 +281,7 @@ def load_goss_endpoints():
     global goss_endpoints_by_ncn_type
     if goss_endpoints_by_ncn_type != None:
         return goss_endpoints_by_ncn_type
-    config_file = goss_servers_config()
-    if not os.path.isfile(config_file):
-        raise ScriptException(f"Goss server configuration file does not exist or is not a regular file: {config_file}")
+    config_file = goss_servers_config(validate=True)
     
     start_port=0
     end_port=0
@@ -352,5 +350,5 @@ def load_goss_endpoints():
             endpoint_name = suite[:-5]
             endpoints_by_type[ntype].append( (suite, endpoint_name, port) )
 
-    goss_endpoints_by_ncn_type = endpoints_by_ncn_type
+    goss_endpoints_by_ncn_type = endpoints_by_type
     return goss_endpoints_by_ncn_type

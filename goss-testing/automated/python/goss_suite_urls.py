@@ -49,6 +49,7 @@ def get_port_endpoint(node, suite):
     try:
         return port_endpoint[node_type]
     except KeyError:
+        goss_endpoints_by_ncn_type = load_goss_endpoints()
         for (suite_name, endpoint_name, port) in goss_endpoints_by_ncn_type[node_type]:
             if suite_name == suite:
                 port_endpoint[node_type] = port, endpoint_name
@@ -57,14 +58,13 @@ def get_port_endpoint(node, suite):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Print list of Goss endpoints.")
-    parser.add_argument("suite", nargs="1", type=argparse_yaml_file_name, help="Goss suite name.")
+    parser.add_argument("suite", type=argparse_yaml_file_name, help="Goss suite name.")
     parser.add_argument("nodes", nargs="+", type=argparse_valid_ncn_name, help="Target nodes.")
     args = parser.parse_args()
     return args.suite, args.nodes
 
 def get_suite_urls_nodelist(suite, *nodes):
     urls = list()
-    goss_endpoints_by_ncn_type = load_goss_endpoints()
     for node in nodes:
         port, endpoint = get_port_endpoint(node, suite)
         urls.append(f"http://{node}.hmn:{port}/{endpoint}")
