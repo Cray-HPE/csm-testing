@@ -25,7 +25,7 @@ command:
   spire_in_bss_cloudinit:
     title: Kubernetes Query BSS Cloud-init for spire meta data
     meta:
-      desc: If this test fails then you need to recreate the spire-update-bss-# job in the spire namespace so that it adds the spire information to the meta-data service.
+      desc: If this test fails, then recreate the spire-update-bss-# job in the spire namespace. The job will add the Spire information to the meta-data service.
       sev: 0
     exec: |-
       set -eo pipefail
