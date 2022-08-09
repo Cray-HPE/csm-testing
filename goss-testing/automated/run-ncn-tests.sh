@@ -324,84 +324,210 @@ function get_ready_k8s_node
     return 1
 }
 
-function ncn_healthcheck_urls {
-    # $1 - master, worker, or storage
-    local suite after_pit_suite nodes urls more_urls ready_node single_suite after_pit_single_suite
-    if [[ $# -ne 1 ]]; then
-        print_error "ncn_healthcheck_urls: Exactly 1 argument required, but received $#: $*"
+function healthcheck_urls_for_master_nodelist
+{
+    # Usage: healthcheck_urls_for_master_nodelist <node1> [<node2>] ...
+    local suite after_pit_suite urls more_urls ready_node single_suite
+    if [[ $# -eq 0 ]]; then
+        print_error "healthcheck_urls_for_master_nodelist: Function requires at least 1 argument"
         return 1
     fi
-    after_pit_single_suite=""
-    single_suite=""
-    ready_node=""
-    case "$1" in
-        "master"|"masters")
-            suite="ncn-healthcheck-master.yaml"
-            single_suite="ncn-healthcheck-master-single.yaml"
-            after_pit_suite="ncn-afterpitreboot-healthcheck-master.yaml"
-            nodes=$(get_ncns --masters --exclude-pit) || return 1
-            ready_node=$(get_ready_k8s_node ${nodes}) || return 1
-            ;;
-        "storage")
-            suite="ncn-healthcheck-storage.yaml"
-            after_pit_suite="ncn-afterpitreboot-healthcheck-storage.yaml"
-            nodes=$(get_ncns --storage) || return 1
-            ;;
-        "worker"|"workers")
-            suite="ncn-healthcheck-worker.yaml"
-            single_suite="ncn-healthcheck-worker-single.yaml"
-            after_pit_suite="ncn-afterpitreboot-healthcheck-worker.yaml"
-            after_pit_single_suite="ncn-afterpitreboot-healthcheck-worker-single.yaml"
-            nodes=$(get_ncns --workers) || return 1
-            ready_node=$(get_ready_k8s_node ${nodes}) || return 1
-            ;;
-        *)
-            print_error "ncn_healthcheck_urls: Invalid argument: $1"
-            return 1
-            ;;
-    esac
-    if ! urls=$(goss_endpoint_urls "${suite}" ${nodes}) ; then
-        print_error "Error finding test URLs for ${suite} on ${nodes}"
-        return 1
-    fi
-    if [[ -n ${single_suite} ]]; then
-        if ! more_urls=$(goss_endpoint_urls "${single_suite}" ${ready_node}) ; then
-            print_error "Error finding test URL for ${single_suite} on ${ready_node}"
-            return 1
-        fi
-        urls+=" ${more_urls}"
-    fi
-    if ! is_pit_node ; then
-        if ! more_urls=$(goss_endpoint_urls "${after_pit_suite}" ${nodes}) ; then
-            print_error "Error finding test URLs for ${after_pit_suite} on ${nodes}"
-            return 1
-        fi
-        urls+=" ${more_urls}"
 
-        if [[ -n ${after_pit_single_suite} ]]; then
-            if ! more_urls=$(goss_endpoint_urls "${after_pit_single_suite}" ${ready_node}) ; then
-                print_error "Error finding test URL for ${after_pit_single_suite} on ${ready_node}"
-                return 1
-            fi
-            urls+=" ${more_urls}"
-        fi
+    suite="ncn-healthcheck-master.yaml"
+    single_suite="ncn-healthcheck-master-single.yaml"
+    after_pit_suite="ncn-afterpitreboot-healthcheck-master.yaml"
+
+    ready_node=$(get_ready_k8s_node "$@") || return 1
+
+    if ! urls=$(goss_endpoint_urls "${suite}" "$@") ; then
+        print_error "Error finding test URLs for ${suite} on $*"
+        return 1
     fi
+
+    if ! more_urls=$(goss_endpoint_urls "${single_suite}" "${ready_node}") ; then
+        print_error "Error finding test URL for ${single_suite} on ${ready_node}"
+        return 1
+    fi
+    urls+=" ${more_urls}"
+
+    if ! is_pit_node ; then
+        if ! more_urls=$(goss_endpoint_urls "${after_pit_suite}" "$@") ; then
+            print_error "Error finding test URLs for ${after_pit_suite} on $*"
+            return 1
+        fi
+        urls+=" ${more_urls}"
+    fi
+
     echo ${urls}
     return 0
 }    
 
+function healthcheck_urls_for_storage_nodelist
+{
+    # Usage: healthcheck_urls_for_storage_nodelist <node1> [<node2>] ...
+    local suite after_pit_suite urls more_urls
+    if [[ $# -eq 0 ]]; then
+        print_error "healthcheck_urls_for_storage_nodelist: Function requires at least 1 argument"
+        return 1
+    fi
+    
+    suite="ncn-healthcheck-storage.yaml"
+    after_pit_suite="ncn-afterpitreboot-healthcheck-storage.yaml"
+
+    if ! urls=$(goss_endpoint_urls "${suite}" "$@") ; then
+        print_error "Error finding test URLs for ${suite} on $*"
+        return 1
+    fi
+
+    if ! is_pit_node ; then
+        if ! more_urls=$(goss_endpoint_urls "${after_pit_suite}" "$@") ; then
+            print_error "Error finding test URLs for ${after_pit_suite} on $*"
+            return 1
+        fi
+        urls+=" ${more_urls}"
+    fi
+
+    echo ${urls}
+    return 0
+}    
+
+function healthcheck_urls_for_worker_nodelist
+{
+    # Usage: healthcheck_urls_for_worker_nodelist <node1> [<node2>] ...
+    local suite after_pit_suite urls more_urls ready_node single_suite after_pit_single_suite
+    if [[ $# -eq 0 ]]; then
+        print_error "healthcheck_urls_for_worker_nodelist: Function requires at least 1 argument"
+        return 1
+    fi
+    
+    suite="ncn-healthcheck-worker.yaml"
+    single_suite="ncn-healthcheck-worker-single.yaml"
+    after_pit_suite="ncn-afterpitreboot-healthcheck-worker.yaml"
+    after_pit_single_suite="ncn-afterpitreboot-healthcheck-worker-single.yaml"
+
+    ready_node=$(get_ready_k8s_node "$@") || return 1
+
+    if ! urls=$(goss_endpoint_urls "${suite}" "$@") ; then
+        print_error "Error finding test URLs for ${suite} on $*"
+        return 1
+    fi
+
+    if ! more_urls=$(goss_endpoint_urls "${single_suite}" "${ready_node}") ; then
+        print_error "Error finding test URL for ${single_suite} on ${ready_node}"
+        return 1
+    fi
+    urls+=" ${more_urls}"
+
+    if ! is_pit_node ; then
+        if ! more_urls=$(goss_endpoint_urls "${after_pit_suite}" "$@") ; then
+            print_error "Error finding test URLs for ${after_pit_suite} on $*"
+            return 1
+        fi
+        urls+=" ${more_urls}"
+
+        if ! more_urls=$(goss_endpoint_urls "${after_pit_single_suite}" "${ready_node}") ; then
+            print_error "Error finding test URL for ${after_pit_single_suite} on ${ready_node}"
+            return 1
+        fi
+        urls+=" ${more_urls}"
+    fi
+
+    echo ${urls}
+    return 0
+}
+
+function k8s_check_urls_for_master_nodelist {
+    # Usage: k8s_check_urls_for_master_nodelist <node1> [<node2>] ...
+    local suite after_pit_suite urls more_urls ready_node single_suite after_pit_single_suite
+    if [[ $# -eq 0 ]]; then
+        print_error "k8s_check_urls_for_master_nodelist: Function requires at least 1 argument"
+        return 1
+    fi
+    
+    suite="ncn-kubernetes-tests-master.yaml"
+    single_suite="ncn-kubernetes-tests-master-single.yaml"
+    after_pit_single_suite="ncn-afterpitreboot-kubernetes-tests-master-single.yaml"
+
+    ready_node=$(get_ready_k8s_node "$@") || return 1
+
+    if ! urls=$(goss_endpoint_urls "${suite}" "$@") ; then
+        print_error "Error finding test URLs for ${suite} on $*"
+        return 1
+    fi
+
+    if ! more_urls=$(goss_endpoint_urls "${single_suite}" "${ready_node}") ; then
+        print_error "Error finding test URL for ${single_suite} on ${ready_node}"
+        return 1
+    fi
+    urls+=" ${more_urls}"
+
+    if ! is_pit_node ; then
+        if ! more_urls=$(goss_endpoint_urls "${after_pit_single_suite}" "${ready_node}") ; then
+            print_error "Error finding test URL for ${after_pit_single_suite} on ${ready_node}"
+            return 1
+        fi
+        urls+=" ${more_urls}"
+    fi
+
+    echo ${urls}
+    return 0
+}
+
+function k8s_check_urls_for_worker_nodelist {
+    # Usage: k8s_check_urls_for_worker_nodelist <node1> [<node2>] ...
+    local suite after_pit_suite urls more_urls ready_node single_suite after_pit_single_suite
+    if [[ $# -eq 0 ]]; then
+        print_error "k8s_check_urls_for_worker_nodelist: Function requires at least 1 argument"
+        return 1
+    fi
+    
+    suite="ncn-kubernetes-tests-worker.yaml"
+    single_suite="ncn-kubernetes-tests-worker-single.yaml"
+    after_pit_single_suite="ncn-afterpitreboot-kubernetes-tests-worker-single.yaml"
+
+    ready_node=$(get_ready_k8s_node "$@") || return 1
+
+    if ! urls=$(goss_endpoint_urls "${suite}" "$@") ; then
+        print_error "Error finding test URLs for ${suite} on $*"
+        return 1
+    fi
+
+    if ! more_urls=$(goss_endpoint_urls "${single_suite}" "${ready_node}") ; then
+        print_error "Error finding test URL for ${single_suite} on ${ready_node}"
+        return 1
+    fi
+    urls+=" ${more_urls}"
+
+    if ! is_pit_node ; then
+        if ! more_urls=$(goss_endpoint_urls "${after_pit_single_suite}" "${ready_node}") ; then
+            print_error "Error finding test URL for ${after_pit_single_suite} on ${ready_node}"
+            return 1
+        fi
+        urls+=" ${more_urls}"
+    fi
+
+    echo ${urls}
+    return 0
+}
+
 function ncn_healthcheck_master_urls {
-    ncn_healthcheck_urls masters
+    local nodes
+    nodes=$(get_ncns --masters --exclude-pit) || return 1
+    healthcheck_urls_for_master_nodelist ${nodes}
     return $?
 }
 
 function ncn_healthcheck_storage_urls {
-    ncn_healthcheck_urls storage
+    local nodes
+    nodes=$(get_ncns --storage) || return 1
+    healthcheck_urls_for_storage_nodelist ${nodes}
     return $?
 }
 
 function ncn_healthcheck_worker_urls {
-    ncn_healthcheck_urls workers
+    local nodes
+    nodes=$(get_ncns --workers) || return 1
+    healthcheck_urls_for_worker_nodelist ${nodes}
     return $?
 }
 
