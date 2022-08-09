@@ -46,7 +46,7 @@ echo $'\e[1;33m'---------------$'\e[0m'
 postgresClusters="$(kubectl get postgresql -A | awk '/postgres/ || NR==1' | \
                     grep -v NAME | awk '{print $1","$2}')"
 for postgresCluster in ${postgresClusters}; do
-  # $tmpvars is set by the create_tmpvars_file function earlier
+  # $tmpvars is set by the create_goss_variable_file function earlier
   #shellcheck disable=SC2154
   CLUSTER_NAME=$(echo ${postgresCluster} | awk -F, '{print $2;}') \
   CLUSTER_NS=$(echo ${postgresCluster} | awk -F, '{print $1;}') \

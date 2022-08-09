@@ -435,10 +435,10 @@ function add_local_vars {
 # Creates Goss variable file and prints path to it
 function create_goss_variable_file {
     if [[ -z ${GOSS_BASE} ]]; then
-        print_error "create_tmpvars_file: GOSS_BASE variable is not set"
+        print_error "create_goss_variable_file: GOSS_BASE variable is not set"
         return 1
     elif [[ ! -d ${GOSS_BASE}/vars ]]; then
-        print_error "create_tmpvars_file: Directory does not exist: ${GOSS_BASE}/vars"
+        print_error "create_goss_variable_file: Directory does not exist: ${GOSS_BASE}/vars"
         return 1
     fi
     
@@ -451,21 +451,21 @@ function create_goss_variable_file {
     fi
 
     if [[ ! -e ${base_var_file} ]]; then
-        print_error "create_tmpvars_file: File does not exist: ${base_var_file}"
+        print_error "create_goss_variable_file: File does not exist: ${base_var_file}"
         return 1
     elif [[ ! -f ${base_var_file} ]]; then
-        print_error "create_tmpvars_file: Not a regular file: ${base_var_file}"
+        print_error "create_goss_variable_file: Not a regular file: ${base_var_file}"
         return 1
     fi
 
     tmpvars=$(mktemp "/tmp/goss-variables-$(date +%s)-XXXXXX-temp.yaml")
     if [[ $? -ne 0 ]]; then
-        print_error "create_tmpvars_file: mktemp command failed"
+        print_error "create_goss_variable_file: mktemp command failed"
         return 1
     fi
 
     if ! cp "${base_var_file}" "${tmpvars}" ; then
-        print_error "create_tmpvars_file: Command failed: cp '${base_var_file}' '${tmpvars}'"
+        print_error "create_goss_variable_file: Command failed: cp '${base_var_file}' '${tmpvars}'"
         return 1
     fi
     

@@ -47,16 +47,16 @@ while true ; do
     rc=$?
     
     if [[ ${rc} -eq 127 ]]; then
-        # In this specific case we want the error to be fatal, because that means that the create_tmpvars_file function is not defined, and
+        # In this specific case we want the error to be fatal, because that means that the create_goss_variable_file function is not defined, and
         # no amount of retrying will alter that.
-        echo "ERROR: create_tmpvars_file function does not appear to be defined" 1>&2
+        echo "ERROR: create_goss_variable_file function does not appear to be defined" 1>&2
         exit 2
     fi
 
     # Otherwise, if the function passed and generated a non-empty variable file (setting the tmpvar variable to its path), then proceed
     [[ ${rc} -eq 0 && -n ${tmpvars} && -s ${tmpvars} ]] && break
 
-    # create_tmpvars_file failed for some reason, so sleep and retry
+    # create_goss_variable_file failed for some reason, so sleep and retry
     sleep 5
 done
 
