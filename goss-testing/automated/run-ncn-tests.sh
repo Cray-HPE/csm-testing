@@ -278,90 +278,43 @@ PORT_REGEX="[1-9][0-9]+"
 SINGLE_NCN_TYPE_REGEX="(master|pit|storage|worker)"
 NCN_TYPE_LIST_REGEX="${SINGLE_NCN_TYPE_REGEX}(,${SINGLE_NCN_TYPE_REGEX})*"
 
+# Some Python script wrappers -- they transparently pass their arguments into the scripts, and return the script's return code
 function goss_endpoint_urls {
-    # Usage: goss_endpoint_url <endpoint name> <node> [<node>] ...
-    # endpoint name (e.g. ncn-healthcheck-storage)
-    # node name (excluding network -- e.g. ncn-m002)
-    # Outputs the URLs (on the .hmn network)
-    if [[ $# -lt 2 ]]; then
-        print_error "goss_endpoint_url: Function requires exactly 2 arguments but received $#: $*"
-        return 1
-    fi
-    local endpoint nodes node port urls args
-    args="$*"
-    endpoint="$1"
-    nodes=()
-    if [[ -z ${endpoint} ]]; then
-        print_error "goss_endpoint_url: Endpoint names may not be blank."
-        return 1
-    elif [[ ! ${endpoint} =~ ^${ENDPOINT_NAME_REGEX}$ ]]; then
-        print_error "goss_endpoint_url: Endpoint name contains illegal characters: ${endpoint}"
-        return 1
-    fi
-    shift
-    while [[ $# -gt 0 ]]; do
-        if [[ -z $1 ]]; then
-            print_error "goss_endpoint_url: Node name may not be blank. Invalid arguments: ${args}"
-            return 1
-        fi
-        nodes+=( "$1" )
-        shift
-    done
-
-    if ! is_nonempty_file "${GOSS_SERVERS_CONFIG}" ; then
-        print_error "goss_endpoint_url: Invalid Goss server configuration file"
-        return 1
-    fi
-
-    # We assume port numbers will be at least 2 digits
-    port=$(grep -E "^${endpoint}[[:space:]]+${PORT_REGEX}[[:space:]]+${NCN_TYPE_LIST_REGEX}[[:space:]]*$" \
-            "${GOSS_SERVERS_CONFIG}" | awk '{ print $2 }')
-
-    # Make sure we found exactly one port number
-    if [[ -z ${port} ]]; then
-        print_error "goss_endpoint_url: No port found for ${endpoint} in ${GOSS_SERVERS_CONFIG}"
-        return 1
-    elif [[ ! ${port} =~ ^${PORT_REGEX}$ ]]; then
-        print_error "goss_endpoint_url: Multiple ports found for ${endpoint} in ${GOSS_SERVERS_CONFIG}"
-        return 1
-    fi
-
-    urls=()
-    for node in "${nodes[@]}" ; do
-        urls+=( "http://${node}.hmn:${port}/${endpoint}" )
-    done
-    
-    echo "${urls[*]}"
-    return 0
+    "${GOSS_BASE}/automated/python/goss_suite_urls.py" "$@"
+    return $?
 }
 
-# Just a wrapper for the Python script -- it transparently passes its arguments into the script
 function print_goss_json_results {
     "${GOSS_BASE}/automated/python/print_goss_json_results.py" "$@"
     return $?
 }
 
+function goss_suites_endpoints_ports {
+    "${GOSS_BASE}/automated/python/goss_suites_endpoints_ports.py" "$@"
+    return $?
+}
+
 function ncn_healthcheck_urls {
     # $1 - master, worker, or storage
-    local endpoint after_pit_endpoint nodes urls more_urls
+    local suite after_pit_suite nodes urls more_urls
     if [[ $# -ne 1 ]]; then
         print_error "ncn_healthcheck_urls: Exactly 1 argument required, but received $#: $*"
         return 1
     fi
     case "$1" in
         "master"|"masters")
-            endpoint="ncn-healthcheck-master"
-            after_pit_endpoint="ncn-afterpitreboot-healthcheck-master"
+            suite="ncn-healthcheck-master.yaml"
+            after_pit_suite="ncn-afterpitreboot-healthcheck-master.yaml"
             nodes=$(get_ncns --masters --exclude-pit) || return 1
             ;;
         "storage")
-            endpoint="ncn-healthcheck-storage"
-            after_pit_endpoint="ncn-afterpitreboot-healthcheck-storage"
+            suite="ncn-healthcheck-storage.yaml"
+            after_pit_suite="ncn-afterpitreboot-healthcheck-storage.yaml"
             nodes=$(get_ncns --storage) || return 1
             ;;
         "worker"|"workers")
-            endpoint="ncn-healthcheck-worker"
-            after_pit_endpoint="ncn-afterpitreboot-healthcheck-worker"
+            suite="ncn-healthcheck-worker.yaml"
+            after_pit_suite="ncn-afterpitreboot-healthcheck-worker.yaml"
             nodes=$(get_ncns --workers) || return 1
             ;;
         *)
@@ -369,13 +322,13 @@ function ncn_healthcheck_urls {
             return 1
             ;;
     esac
-    if ! urls=$(goss_endpoint_urls "${endpoint}" ${nodes}) ; then
-        print_error "Error finding test URLs for ${endpoint}"
+    if ! urls=$(goss_endpoint_urls "${suite}" ${nodes}) ; then
+        print_error "Error finding test URLs for ${suite}"
         return 1
     fi
     if ! is_pit_node ; then
-        if ! more_urls=$(goss_endpoint_urls "${after_pit_endpoint}" ${nodes}) ; then
-            print_error "Error finding test URLs for ${after_pit_endpoint}"
+        if ! more_urls=$(goss_endpoint_urls "${after_pit_suite}" ${nodes}) ; then
+            print_error "Error finding test URLs for ${after_pit_suite}"
             return 1
         fi
         urls+=" ${more_urls}"

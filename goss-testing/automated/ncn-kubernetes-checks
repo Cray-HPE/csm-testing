@@ -44,9 +44,9 @@ worker_nodes=$(get_ncns --workers) ||
     err_exit "Unable to get list of worker nodes"
 
 # Add k8s test endpoints
-master_test_urls=$(goss_endpoint_urls "ncn-kubernetes-tests-master" ${master_nodes}) ||
+master_test_urls=$(goss_endpoint_urls "ncn-kubernetes-tests-master.yaml" ${master_nodes}) ||
     err_exit "Error finding test URLs for ncn-kubernetes-tests-master"
-worker_test_urls=$(goss_endpoint_urls "ncn-kubernetes-tests-worker" ${worker_nodes}) ||
+worker_test_urls=$(goss_endpoint_urls "ncn-kubernetes-tests-worker.yaml" ${worker_nodes}) ||
     err_exit "Error finding test URLs for ncn-kubernetes-tests-worker"
 
 if is_pit_node ; then
@@ -70,10 +70,10 @@ else
     # run tests from an NCN
 
     # If not running on the PIT node, this should mean we are post-PIT-reboot, so add in the appropriate tests
-    post_pit_master_test_urls=$(goss_endpoint_urls "ncn-afterpitreboot-kubernetes-tests-master" ${master_nodes}) ||
+    post_pit_master_test_urls=$(goss_endpoint_urls "ncn-afterpitreboot-kubernetes-tests-master.yaml" ${master_nodes}) ||
         err_exit "Error finding test URLs for ncn-afterpitreboot-kubernetes-tests-master"
 
-    post_pit_worker_test_urls=$(goss_endpoint_urls "ncn-afterpitreboot-kubernetes-tests-worker" ${worker_nodes}) ||
+    post_pit_worker_test_urls=$(goss_endpoint_urls "ncn-afterpitreboot-kubernetes-tests-worker.yaml" ${worker_nodes}) ||
         err_exit "Error finding test URLs for ncn-afterpitreboot-kubernetes-tests-worker"
 
     run_goss_tests suites/ncn-kubernetes-tests-cluster.yaml --format json | \

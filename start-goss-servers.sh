@@ -64,42 +64,24 @@ done
 ip=$(host "$(hostname).hmn" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 [[ -z ${ip} ]] && exit 2
 
-# Get node type -- this function is defined in run-ncn-tests.sh
-node_type=$(node_type)
-rc=$?
-if [[ $rc -ne 0 ]]; then
-    echo "node_type function failed with return code $rc" 1>&2
-elif [[ ! -s ${GOSS_SERVERS_CONFIG} ]]; then
-    echo "Goss server configuration file is empty or does not exist: ${GOSS_SERVERS_CONFIG}" 1>&2
-else
-    echo "node_type = ${node_type}"
-    if [[ ${node_type} =~ ^[a-z]+$ ]]; then
-        # ENDPOINT_NAME_REGEX, PORT_REGEX, NCN_TYPE_LIST_REGEX, and GOSS_SERVERS_CONFIG are defined in run-ncn-tests.sh
-        grep -E "^${ENDPOINT_NAME_REGEX}[[:space:]]+${PORT_REGEX}[[:space:]]+${NCN_TYPE_LIST_REGEX}[[:space:]]*$" "${GOSS_SERVERS_CONFIG}" | while read endpoint port types
-        do
-            [[ -n ${endpoint} ]] || continue
-            if [[ ! ${types} =~ (,|^)${node_type}(,|$) ]]; then
-                echo "Skipping goss server entry because it does not match node type: ${endpoint} ${port} ${types}" 1>&2
-                continue
-            fi
-            suite="${GOSS_BASE}/suites/${endpoint}.yaml"
-            if [[ ! -s ${suite} ]]; then
-                echo "Skipping goss server entry because suite file (${suite}) is empty or does not exist: ${endpoint} ${port} ${types}" 1>&2
-                continue
-            fi
-
-            # Start Goss server for this entry.
-            echo "starting ${endpoint} in background on port ${port}"
-            /usr/bin/goss -g "${suite}" --vars "${tmpvars}" serve \
-                --format json --max-concurrent 4 \
-                --endpoint "/${endpoint}" \
-                --listen-addr "${ip}:${port}" &
-        done
-        echo "Goss servers started in background"
-    else
-        echo "Unexpected format of node_type string -- skipping Goss server start" 1>&2
+# The goss_suites_endpoints_ports function calls a Python script that outputs lines of the format:
+# <suite file path> <endpoint name> <port>
+# For all Goss endpoints that should be started on this node
+goss_suites_endpoints_ports | while read suite endpoint port ; do
+    [[ -n ${endpoint} ]] || continue
+    if [[ ! -s ${suite} ]]; then
+        echo "Skipping goss server entry because suite file is empty or does not exist. suite=${suite} endpoint=${endpoint} port=${port}" 1>&2
+        continue
     fi
-fi
+
+    # Start Goss server for this entry.
+    echo "starting ${endpoint} in background on port ${port}"
+    /usr/bin/goss -g "${suite}" --vars "${tmpvars}" serve \
+        --format json --max-concurrent 4 \
+        --endpoint "/${endpoint}" \
+        --listen-addr "${ip}:${port}" &
+done
+echo "Goss servers started in background"
 
 # Keep process running so systemd can kill and monitor background jobs as needed
 sleep infinity

@@ -82,14 +82,14 @@ install -m 755 build-testing/*                     %{buildroot}%{livecd}/build-t
 
 # vars - livecd
 install -d -m 755 %{buildroot}%{livecd}/vars
-install -m 755 goss-testing/vars/vars-packages.yaml         %{buildroot}%{livecd}/vars
-install -T -m 755 goss-testing/vars/variables-common.yaml   %{buildroot}%{livecd}/vars/variables-livecd.yaml
+install -m 644 goss-testing/vars/vars-packages.yaml         %{buildroot}%{livecd}/vars
+install -T -m 644 goss-testing/vars/variables-common.yaml   %{buildroot}%{livecd}/vars/variables-livecd.yaml
 cat goss-testing/vars/variables-livecd.yaml >> %{buildroot}%{livecd}/vars/variables-livecd.yaml
 
 # vars - ncn
 install -d -m 755 %{buildroot}%{ncn}/vars
-install -m 755 goss-testing/vars/vars-packages.yaml         %{buildroot}%{ncn}/vars
-install -T -m 755 goss-testing/vars/variables-common.yaml   %{buildroot}%{ncn}/vars/variables-ncn.yaml
+install -m 644 goss-testing/vars/vars-packages.yaml         %{buildroot}%{ncn}/vars
+install -T -m 644 goss-testing/vars/variables-common.yaml   %{buildroot}%{ncn}/vars/variables-ncn.yaml
 cat goss-testing/vars/variables-ncn.yaml >> %{buildroot}%{ncn}/vars/variables-ncn.yaml
 
 # script files - livecd
@@ -117,7 +117,7 @@ cp -a goss-testing/suites/common-*      %{buildroot}%{ncn}/suites
 cp -a goss-testing/suites/ncn-*         %{buildroot}%{ncn}/suites
 
 # goss-servers config file
-install -m 755 goss-testing/dat/goss-servers.cfg    %{buildroot}%{dat}
+install -m 644 goss-testing/dat/*       %{buildroot}%{dat}
 
 # goss-servers files
 mkdir -p %{buildroot}/usr/sbin

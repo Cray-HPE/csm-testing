@@ -45,7 +45,7 @@ nodes=$(get_ncns --exclude-pit) || exit 1
 # The get_ncns function should always give NCNs if its return code was 0, but better safe than sorry
 [[ -n ${nodes} ]] || err_exit "No NCNs found"
 
-test_urls=$(goss_endpoint_urls ncn-spire-healthchecks ${nodes}) || exit 1
+test_urls=$(goss_endpoint_urls ncn-spire-healthchecks.yaml ${nodes}) || exit 1
 
 print_goss_json_results ${test_urls}
 rc=$?

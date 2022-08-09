@@ -61,6 +61,7 @@ If multiple exit codes apply, the highest one is used.
 
 
 from lib.common import err_text,               \
+                       fmt_exc,                \
                        get_hostname,           \
                        log_goss_env_variables, \
                        goss_script_log_level,  \
@@ -99,7 +100,7 @@ def outfile_print(s):
         outfile.write(f"{s}\n")
         outfile.flush()
     except Exception as e:
-        msg = f"Error writing to output file. {type(e).__name__}: {e}"
+        msg = f"Error writing to output file. {fmt_exc(e)}"
         logging.error(msg)
         stderr_print(msg)
         outfile = None
@@ -144,7 +145,7 @@ def read_and_decode_json(input_file):
             # Add a newline before printing errors
             print_newline()
             multi_print(traceback.format_exc(), outfile_print, logging.error)
-            raise ScriptException(f"Problem reading input file {input_file}. {type(e).__name__}: {e}")
+            raise ScriptException(f"Problem reading input file {input_file}. {fmt_exc(e)}")
     try:
         return json.loads(input)
     except Exception as e:
@@ -152,7 +153,7 @@ def read_and_decode_json(input_file):
         print_newline()
         log_values(logging.debug, input=input)
         multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Error decoding JSON from {input_file}. {type(e).__name__}: {e}")
+        raise ScriptException(f"Error decoding JSON from {input_file}. {fmt_exc(e)}")
 
 def get_json_from_input_url(input_url):
     logging.debug(f"Making GET request to {input_url}")
@@ -173,7 +174,7 @@ def get_json_from_input_url(input_url):
         # Add a newline before printing errors
         print_newline()
         multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Unable to decode JSON from endpoint response from {input_url}. {type(e).__name__}: {e}")
+        raise ScriptException(f"Unable to decode JSON from endpoint response from {input_url}. {fmt_exc(e)}")
 
 def extract_results_data(json_results):
     try:
@@ -197,7 +198,7 @@ def extract_results_data(json_results):
         # Add a newline before printing errors
         print_newline()
         multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Goss test results from have unexpected format. {type(e).__name__}: {e}")
+        raise ScriptException(f"Goss test results from have unexpected format. {fmt_exc(e)}")
 
     # Sort the results
     selected_results.sort(key=lambda r: (r["title"], r["result"]))
@@ -220,7 +221,7 @@ def show_results(json_results, node_name):
         # Add a newline before printing errors
         print_newline()
         multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Error extracting test results from JSON data. {type(e).__name__}: {e}")
+        raise ScriptException(f"Error extracting test results from JSON data. {fmt_exc(e)}")
 
     manual_unknown_count=0
     manual_pass_count=0
@@ -371,7 +372,7 @@ def main(input_sources):
             unexpected_error = True
         except Exception as e:
             multi_print(traceback.format_exc(), outfile_print, logging.error)
-            error(f"Unexpected error. {type(e).__name__}: {e}")
+            error(f"Unexpected error. {fmt_exc(e)}")
             error(f"Skipping {source} due to error\n")
             unexpected_error = True
 
@@ -405,14 +406,14 @@ def setup_logging():
         # create log directory; it is NOT ok if it already exists
         os.makedirs(MY_LOG_DIR, exist_ok=False)
     except Exception as e:
-        stderr_print(err_text(f"Error creating log directory. {type(e).__name__}: {e}"))
+        stderr_print(err_text(f"Error creating log directory. {fmt_exc(e)}"))
         sys.exit(RC_ERROR)
 
     MY_LOG_FILE = f"{MY_LOG_DIR}/log"
     try:
         logging.basicConfig(filename=MY_LOG_FILE, level=goss_script_log_level())
     except Exception as e:
-        stderr_print(err_text(f"Error configuring script logging. {type(e).__name__}: {e}"))    
+        stderr_print(err_text(f"Error configuring script logging. {fmt_exc(e)}"))    
         sys.exit(RC_ERROR)
 
     MY_OUTPUT_FILE = f"{MY_LOG_DIR}/out"
@@ -455,7 +456,7 @@ with open(MY_OUTPUT_FILE, "wt") as outfile:
         # ScriptExceptions. So we should print more information about this exception.
         stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug log: {MY_LOG_FILE}")
         multi_print(traceback.format_exc(), logging.error, outfile_print)
-        error(f"Unexpected error. {type(e).__name__}: {e}")
+        error(f"Unexpected error. {fmt_exc(e)}")
         stderr_print(err_text("FAILED"))
         outfile_print("FAILED")
         logging.error(f"FAILED (unexpected error); exiting with return code {RC_ERROR}")
