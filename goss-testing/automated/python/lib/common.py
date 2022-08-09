@@ -51,22 +51,68 @@ DEFAULT_LOG_LEVEL = "INFO"
 DEFAULT_GOSS_INSTALL_BASE_DIR = "/opt/cray/tests/install"
 PIT_NODE_RELEASE_FILE = "/etc/pit-release"
 
+def goss_base_dirs(validate=False):
+    """
+    Returns GOSS_INSTALL_BASE_DIR, GOSS_BASE
+    """
+    try:
+        base_dir = os.environ["GOSS_BASE"]
+        # GOSS_BASE is set
+
+        if validate and not os.path.isdir(base_dir):
+            raise ScriptException(f"GOSS_BASE directory does not exist or is not a directory: {base_dir}")
+
+        # Get the value of GOSS_INSTALL_BASE_DIR. In this case, if it is unset, it defaults to being the
+        # parent directory of GOSS_BASE.
+        install_base_dir = os.environ.get("GOSS_INSTALL_BASE_DIR", os.path.realpath(f"{base_dir}/.."))
+
+        if validate and not os.path.isdir(install_base_dir):
+            raise ScriptException(f"GOSS_INSTALL_BASE_DIR directory does not exist or is not a directory: {install_base_dir}")
+    except KeyError:
+        # GOSS_BASE is not set
+
+        # Get the value of GOSS_INSTALL_BASE_DIR, or its default value if it is also unset
+        install_base_dir = os.environ.get("GOSS_INSTALL_BASE_DIR", DEFAULT_GOSS_INSTALL_BASE_DIR)
+
+        if validate and not os.path.isdir(install_base_dir):
+            raise ScriptException(f"GOSS_INSTALL_BASE_DIR directory does not exist or is not a directory: {install_base_dir}")
+
+        # GOSS_BASE will be the ncn or livecd subdirectory of GOSS_INSTALL_BASE_DIR, depending on our node type
+        if is_pit_node():
+            base_dir f"{install_base_dir}/livecd"
+        else:
+            base_dir f"{install_base_dir}/ncn"
+
+        if validate and not os.path.isdir(base_dir):
+            raise ScriptException(f"GOSS_BASE directory does not exist or is not a directory: {base_dir}")
+
+    return install_base_dir, base_dir
+
+def goss_install_base_dir(*args, **kwargs):
+    return goss_base_dirs(*args, **kwargs)[0]
+
+def goss_base(*args, **kwargs):
+    return goss_base_dirs(*args, **kwargs)[1]
+
 def goss_script_log_level():
     # Make it uppercase, just so that people who accidentally set a lowercase
     # log level are not tripped up
     requested_log_level = os.environ.get("GOSS_SCRIPT_LOG_LEVEL", DEFAULT_LOG_LEVEL).upper()
     return logging.getLevelName(requested_log_level)
 
-def goss_install_base_dir():
-    return os.environ.get("GOSS_INSTALL_BASE_DIR", DEFAULT_GOSS_INSTALL_BASE_DIR)
-
-def goss_servers_config():
+def goss_servers_config(validate=False):
     gibd = goss_install_base_dir()
-    return os.environ.get("GOSS_SERVERS_CONFIG", f"{gibd}/dat/goss-servers.cfg")
+    config_file = os.environ.get("GOSS_SERVERS_CONFIG", f"{gibd}/dat/goss-servers.cfg")
+    if validate and not os.path.isfile(config_file):
+        raise ScriptException(f"GOSS_SERVERS_CONFIG file does not exist or is not a file: {config_file}")
+    return config_file
 
-def goss_log_base_dir():
+def goss_log_base_dir(validate=False):
     gibd = goss_install_base_dir()
-    return f"{gibd}/logs"
+    log_dir = os.environ.get("GOSS_LOG_BASE_DIR", f"{gibd}/logs")
+    if validate and not os.path.isdir(log_dir):
+        raise ScriptException(f"GOSS_LOG_BASE_DIR directory does not exist or is not a directory: {log_dir}")
+    return log_dir
 
 ERR_TEXT_CODE = colorama.Fore.LIGHTRED_EX
 WARN_TEXT_CODE = colorama.Fore.LIGHTYELLOW_EX
@@ -90,16 +136,6 @@ def ok_text(s):
 
 def is_pit_node():
     return os.path.isfile(PIT_NODE_RELEASE_FILE)
-
-def goss_base():
-    try:
-        return os.environ["GOSS_BASE"]
-    except KeyError:
-        gibd = goss_install_base_dir()
-        if is_pit_node():
-            return f"{gibd}/livecd"
-        else:
-            return f"{gibd}/ncn"
 
 def goss_suites_dir():
     return f"{goss_base()}/suites"

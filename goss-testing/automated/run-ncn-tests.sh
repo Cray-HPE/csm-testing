@@ -60,7 +60,8 @@ else
     # be the parent directory of GOSS_BASE
     GOSS_INSTALL_BASE_DIR=${GOSS_INSTALL_BASE_DIR:-$(dirname "${GOSS_BASE}")}
 fi
-export GOSS_BASE
+export GOSS_BASE=${GOSS_BASE}
+export GOSS_INSTALL_BASE_DIR=${GOSS_INSTALL_BASE_DIR}
 
 export GOSS_LOG_BASE_DIR=${GOSS_LOG_BASE_DIR:-"${GOSS_INSTALL_BASE_DIR}/logs"}
 
