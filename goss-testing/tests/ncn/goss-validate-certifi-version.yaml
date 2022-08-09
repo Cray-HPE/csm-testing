@@ -29,7 +29,9 @@ command:
     meta:
       desc: "If this fails then validate that an upstream version of certifi has not been installed. If a non-SLES certifi package has been installed the uninstall it by running `pip uninstall certifi`."
       sev: 0
-    exec: "pip show certifi"
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" \
+        pip show certifi
     exit-status: 0
     stdout:
       - "Version: 2018.1.18"
