@@ -35,7 +35,7 @@ command:
                 "{{$scripts}}/check_bios_firmware_versions.sh" -b
         # 10 minutes since ilorest and redfish calls for each ncn can take a while
         timeout: 600000
-        # the script is a success if return code is 0 and there is no unspported firmware/bios
+        # the script is a success if return code is 0 and there is no unsupported firmware/bios
         exit-status: 0
         stdout:
             - "!Unsupported"

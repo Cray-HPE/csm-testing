@@ -24,8 +24,8 @@
 #
 
 """
-Usage: print_goss_json_results <filename|stdin|url>
-                               [<filename|stdin|url>] ...
+Usage: print_goss_json_results <filename|stdin[:label]|url>
+                               [<filename|stdin[:label]|url>] ...
 
 One or more sources of Goss test results are passed in.
 
@@ -34,7 +34,8 @@ and the GET request will be made to it to get the test results. The node name
 will be extracted from the URL to be displayed in the test results.
 
 If the source is "stdin", then the Goss test results are read from standard input.
-The node name is assumed to be the local host.
+The node name is assumed to be the local host. A label for the tests will be used
+if one is provided after a :
 
 Otherwise, the source is assumed to be a file containing the Goss test results in JSON
 format. The node name is assumed to be the local host.
@@ -61,6 +62,7 @@ If multiple exit codes apply, the highest one is used.
 
 
 from lib.common import err_text,               \
+                       fmt_exc,                \
                        get_hostname,           \
                        log_goss_env_variables, \
                        goss_script_log_level,  \
@@ -99,7 +101,7 @@ def outfile_print(s):
         outfile.write(f"{s}\n")
         outfile.flush()
     except Exception as e:
-        msg = f"Error writing to output file. {type(e).__name__}: {e}"
+        msg = f"Error writing to output file. {fmt_exc(e)}"
         logging.error(msg)
         stderr_print(msg)
         outfile = None
@@ -131,11 +133,24 @@ def get_node_from_url(url):
         return node[:colon_index]
     return node
 
-def read_and_decode_json(input_file):
-    if input_file == "stdin":
+def print_reading_test_results_message(node, label=None):
+    if label:
+        stdout_print(f"Reading test results for node {warn_text(node)} ({label})")
+        outfile_print(f"Reading test results for node {node} ({label})")
+    else:
+        stdout_print(f"Reading test results for node {warn_text(node)}")
+        outfile_print(f"Reading test results for node {node}")
+
+def read_and_decode_json(input_file, node):
+    if input_file == "stdin" or input_file[:6] == "stdin:":
         logging.debug("Reading standard input for JSON results")
+        if input_file == "stdin":
+            print_reading_test_results_message(node)
+        else:
+            print_reading_test_results_message(node, input_file[6:])
         input = sys.stdin.read()
     else:
+        print_reading_test_results_message(node, input_file)
         logging.debug(f"Reading {input_file} for JSON results")
         try:
             with open(input_file, "rt") as infile:
@@ -144,7 +159,7 @@ def read_and_decode_json(input_file):
             # Add a newline before printing errors
             print_newline()
             multi_print(traceback.format_exc(), outfile_print, logging.error)
-            raise ScriptException(f"Problem reading input file {input_file}. {type(e).__name__}: {e}")
+            raise ScriptException(f"Problem reading input file {input_file}. {fmt_exc(e)}")
     try:
         return json.loads(input)
     except Exception as e:
@@ -152,11 +167,10 @@ def read_and_decode_json(input_file):
         print_newline()
         log_values(logging.debug, input=input)
         multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Error decoding JSON from {input_file}. {type(e).__name__}: {e}")
+        raise ScriptException(f"Error decoding JSON from {input_file}. {fmt_exc(e)}")
 
-def get_json_from_input_url(input_url):
+def get_json_from_input_url(input_url, node):
     logging.debug(f"Making GET request to {input_url}")
-    node=get_node_from_url(input_url)
     stdout_print(f"Running tests against node {warn_text(node)} (URL: {input_url})")
     outfile_print(f"Running tests against node {node} (URL: {input_url})")
     resp = requests.get(input_url)
@@ -173,7 +187,7 @@ def get_json_from_input_url(input_url):
         # Add a newline before printing errors
         print_newline()
         multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Unable to decode JSON from endpoint response from {input_url}. {type(e).__name__}: {e}")
+        raise ScriptException(f"Unable to decode JSON from endpoint response from {input_url}. {fmt_exc(e)}")
 
 def extract_results_data(json_results):
     try:
@@ -197,7 +211,7 @@ def extract_results_data(json_results):
         # Add a newline before printing errors
         print_newline()
         multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Goss test results from have unexpected format. {type(e).__name__}: {e}")
+        raise ScriptException(f"Goss test results from have unexpected format. {fmt_exc(e)}")
 
     # Sort the results
     selected_results.sort(key=lambda r: (r["title"], r["result"]))
@@ -220,7 +234,7 @@ def show_results(json_results, node_name):
         # Add a newline before printing errors
         print_newline()
         multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Error extracting test results from JSON data. {type(e).__name__}: {e}")
+        raise ScriptException(f"Error extracting test results from JSON data. {fmt_exc(e)}")
 
     manual_unknown_count=0
     manual_pass_count=0
@@ -326,7 +340,7 @@ def parse_args():
 
     # While we're here, make sure the file sources exist
     for source in input_sources:
-        if source == "stdin" or is_url(source):
+        if source == "stdin" or source[:6] == "stdin:" or is_url(source):
             continue
         elif not os.path.isfile(source):
             stderr_print(err_text(f"File source does not exist: {source}"))
@@ -354,11 +368,11 @@ def main(input_sources):
         try:
             log_values(logging.debug, source=source)
             if is_url(source):
-                json_results = get_json_from_input_url(source)
                 node = get_node_from_url(source)
+                json_results = get_json_from_input_url(source, node)
             else:
-                json_results = read_and_decode_json(source)
                 node = get_hostname()
+                json_results = read_and_decode_json(source, node)
             log_values(logging.info, source=source, node=node, json_results=json_results)
             logging.debug(f"Showing results for {source}")
             passed, failed, unknown = show_results(json_results, node)
@@ -371,7 +385,7 @@ def main(input_sources):
             unexpected_error = True
         except Exception as e:
             multi_print(traceback.format_exc(), outfile_print, logging.error)
-            error(f"Unexpected error. {type(e).__name__}: {e}")
+            error(f"Unexpected error. {fmt_exc(e)}")
             error(f"Skipping {source} due to error\n")
             unexpected_error = True
 
@@ -405,14 +419,14 @@ def setup_logging():
         # create log directory; it is NOT ok if it already exists
         os.makedirs(MY_LOG_DIR, exist_ok=False)
     except Exception as e:
-        stderr_print(err_text(f"Error creating log directory. {type(e).__name__}: {e}"))
+        stderr_print(err_text(f"Error creating log directory. {fmt_exc(e)}"))
         sys.exit(RC_ERROR)
 
     MY_LOG_FILE = f"{MY_LOG_DIR}/log"
     try:
         logging.basicConfig(filename=MY_LOG_FILE, level=goss_script_log_level())
     except Exception as e:
-        stderr_print(err_text(f"Error configuring script logging. {type(e).__name__}: {e}"))    
+        stderr_print(err_text(f"Error configuring script logging. {fmt_exc(e)}"))    
         sys.exit(RC_ERROR)
 
     MY_OUTPUT_FILE = f"{MY_LOG_DIR}/out"
@@ -455,7 +469,7 @@ with open(MY_OUTPUT_FILE, "wt") as outfile:
         # ScriptExceptions. So we should print more information about this exception.
         stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug log: {MY_LOG_FILE}")
         multi_print(traceback.format_exc(), logging.error, outfile_print)
-        error(f"Unexpected error. {type(e).__name__}: {e}")
+        error(f"Unexpected error. {fmt_exc(e)}")
         stderr_print(err_text("FAILED"))
         outfile_print("FAILED")
         logging.error(f"FAILED (unexpected error); exiting with return code {RC_ERROR}")

@@ -47,16 +47,16 @@ while true ; do
     rc=$?
     
     if [[ ${rc} -eq 127 ]]; then
-        # In this specific case we want the error to be fatal, because that means that the create_tmpvars_file function is not defined, and
+        # In this specific case we want the error to be fatal, because that means that the create_goss_variable_file function is not defined, and
         # no amount of retrying will alter that.
-        echo "ERROR: create_tmpvars_file function does not appear to be defined" 1>&2
+        echo "ERROR: create_goss_variable_file function does not appear to be defined" 1>&2
         exit 2
     fi
 
     # Otherwise, if the function passed and generated a non-empty variable file (setting the tmpvar variable to its path), then proceed
     [[ ${rc} -eq 0 && -n ${tmpvars} && -s ${tmpvars} ]] && break
 
-    # create_tmpvars_file failed for some reason, so sleep and retry
+    # create_goss_variable_file failed for some reason, so sleep and retry
     sleep 5
 done
 
@@ -64,42 +64,24 @@ done
 ip=$(host "$(hostname).hmn" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 [[ -z ${ip} ]] && exit 2
 
-# Get node type -- this function is defined in run-ncn-tests.sh
-node_type=$(node_type)
-rc=$?
-if [[ $rc -ne 0 ]]; then
-    echo "node_type function failed with return code $rc" 1>&2
-elif [[ ! -s ${GOSS_SERVERS_CONFIG} ]]; then
-    echo "Goss server configuration file is empty or does not exist: ${GOSS_SERVERS_CONFIG}" 1>&2
-else
-    echo "node_type = ${node_type}"
-    if [[ ${node_type} =~ ^[a-z]+$ ]]; then
-        # ENDPOINT_NAME_REGEX, PORT_REGEX, NCN_TYPE_LIST_REGEX, and GOSS_SERVERS_CONFIG are defined in run-ncn-tests.sh
-        grep -E "^${ENDPOINT_NAME_REGEX}[[:space:]]+${PORT_REGEX}[[:space:]]+${NCN_TYPE_LIST_REGEX}[[:space:]]*$" "${GOSS_SERVERS_CONFIG}" | while read endpoint port types
-        do
-            [[ -n ${endpoint} ]] || continue
-            if [[ ! ${types} =~ (,|^)${node_type}(,|$) ]]; then
-                echo "Skipping goss server entry because it does not match node type: ${endpoint} ${port} ${types}" 1>&2
-                continue
-            fi
-            suite="${GOSS_BASE}/suites/${endpoint}.yaml"
-            if [[ ! -s ${suite} ]]; then
-                echo "Skipping goss server entry because suite file (${suite}) is empty or does not exist: ${endpoint} ${port} ${types}" 1>&2
-                continue
-            fi
-
-            # Start Goss server for this entry.
-            echo "starting ${endpoint} in background on port ${port}"
-            /usr/bin/goss -g "${suite}" --vars "${tmpvars}" serve \
-                --format json --max-concurrent 4 \
-                --endpoint "/${endpoint}" \
-                --listen-addr "${ip}:${port}" &
-        done
-        echo "Goss servers started in background"
-    else
-        echo "Unexpected format of node_type string -- skipping Goss server start" 1>&2
+# The goss_suites_endpoints_ports function calls a Python script that outputs lines of the format:
+# <suite file path> <endpoint name> <port>
+# For all Goss endpoints that should be started on this node
+goss_suites_endpoints_ports | while read suite endpoint port ; do
+    [[ -n ${endpoint} ]] || continue
+    if [[ ! -s ${suite} ]]; then
+        echo "Skipping goss server entry because suite file is empty or does not exist. suite=${suite} endpoint=${endpoint} port=${port}" 1>&2
+        continue
     fi
-fi
+
+    # Start Goss server for this entry.
+    echo "starting ${endpoint} in background on port ${port}"
+    /usr/bin/goss -g "${suite}" --vars "${tmpvars}" serve \
+        --format json --max-concurrent 4 \
+        --endpoint "/${endpoint}" \
+        --listen-addr "${ip}:${port}" &
+done
+echo "Goss servers started in background"
 
 # Keep process running so systemd can kill and monitor background jobs as needed
 sleep infinity

@@ -55,8 +55,7 @@ def get_data():
     try:
       print_err(f"\nRunning on node: {hostname}. Querying BSS...")
       print_err("------------------------------------------------------------")
-      #command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
-      command = [ "cat", "mug-bss-data.json" ]
+      command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
       return json.loads(bss_proc.stdout.read())
     except Exception as e:
