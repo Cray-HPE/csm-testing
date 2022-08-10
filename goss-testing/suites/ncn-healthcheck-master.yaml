@@ -39,6 +39,8 @@ gossfile:
   ../tests/goss-network-interfaces.yaml: {}
   ../tests/goss-platform-ca-certs-exist.yaml: {}
   ../tests/goss-platform-ca-certs-match-cloud-init.yaml: {}
+  ../tests/goss-platform-ca-in-bundle.yaml: {}
   ../tests/goss-spire-agent-service-running.yaml: {}
   ../tests/goss-spire-healthcheck.yaml: {}
   ../tests/goss-unbound-ip.yaml: {}
+  ../tests/goss-validate-certifi-version.yaml: {}
