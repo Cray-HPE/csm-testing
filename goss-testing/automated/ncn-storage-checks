@@ -36,6 +36,10 @@ echo $'\e[1;33m'----------------------------$'\e[0m'
 # with the csm-testing RPM.
 source "$(dirname -- "$0")/run-ncn-tests.sh"
 
+if ! is_pit_node ; then
+    err_exit "These tests can only be run from the LiveCD."
+fi
+
 # The get_storage_ncns function is defined in run-ncn-tests.sh
 storage_nodes=$(get_ncns --storage) || exit 1
 
