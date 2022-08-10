@@ -52,8 +52,7 @@ if is_pit_node ; then
 
     if is_nonempty_file "${kube_creds}"; then
         # run livecd local Kubernetes cluster tests
-        run_goss_tests suites/common-kubernetes-tests-cluster.yaml --format json | \
-            print_goss_json_results stdin ${master_test_urls} ${worker_test_urls}
+        run_goss_tests_print_results suites/common-kubernetes-tests-cluster.yaml ${master_test_urls} ${worker_test_urls}
         rc=$?
     else
         echo
@@ -65,8 +64,7 @@ else
     # run tests from an NCN
 
 	# run NCN local Kubernetes cluster tests
-    run_goss_tests suites/ncn-kubernetes-tests-cluster.yaml --format json | \
-        print_goss_json_results stdin ${master_test_urls} ${worker_test_urls}
+    run_goss_tests_print_results suites/ncn-kubernetes-tests-cluster.yaml ${master_test_urls} ${worker_test_urls}
     rc=$?
 fi
 

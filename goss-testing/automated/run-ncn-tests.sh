@@ -558,6 +558,20 @@ function run_goss_tests {
     return $?
 }
 
+function run_goss_tests_print_results {
+    # $1 - tests/<whatever.yaml> or suites/<whatever.yaml>
+    # $2+ optional Goss URL endpoints to test
+    local test_or_suite
+    if [[ $# -eq 0 ]]; then
+        print_error "run_goss_tests_print_results: Function requires at least one argument"
+        return 1
+    fi
+    test_or_suite="$1"
+    shift
+    run_goss_tests "${test_or_suite}" --format json | print_goss_json_results "stdin:${test_or_suite}" "$@"
+    return $?
+}
+
 function add_local_vars {
     # $1 - goss variable file
     if [[ $# -ne 1 ]]; then

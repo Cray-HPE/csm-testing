@@ -50,8 +50,7 @@ fi
 
 test_urls=$(ncn_healthcheck_worker_urls) || err_exit "Cannot find test URLs"
 
-run_goss_tests tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml --format json | \
-    print_goss_json_results stdin ${test_urls}
+run_goss_tests_print_results tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml ${test_urls}
 rc=$?
 
 # This script does not exit with non-0 return code just for test failures
