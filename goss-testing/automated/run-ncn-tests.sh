@@ -23,7 +23,7 @@
 # This file is sourced by the NCN automated testing scripts.
 
 # No shebang line at the top of the file, because this is not intended to be executed, only included as a source in other Bash scripts.
-# The following line lets the linter know how to appripriately check this file.
+# The following line lets the linter know how to appropriately check this file.
 # shellcheck shell=bash
 
 function print_warn {
@@ -76,7 +76,7 @@ ncn_num_pattern="([1-9][0-9][0-9]|0[1-9][0-9]|00[1-9])"
 
 function sw_admin_pw_set {
     if [[ -z ${SW_ADMIN_PASSWORD} ]]; then
-        print_error "Management switch 'admin' user password must be provided via the SW_ADMIN_PASSWORD enviroment variable"
+        print_error "Management switch 'admin' user password must be provided via the SW_ADMIN_PASSWORD environment variable"
         echo "Example: export SW_ADMIN_PASSWORD='changeme'"
         return 1
     fi

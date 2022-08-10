@@ -30,7 +30,7 @@
 # This suite may be run on any master NCN or the PIT node.
 #
 # This suite is run as part of the ncn-k8s-combined-healthcheck script. This suite is
-# only run locally on the NCN where the script is invokved.
+# only run locally on the NCN where the script is invoked.
 #
 
 gossfile:

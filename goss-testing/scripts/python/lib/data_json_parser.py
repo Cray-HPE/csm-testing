@@ -41,7 +41,7 @@ Exposes:
     otherKeys: A list of the non-ncn keys
     ncnList: A list of k:v dictionaries, where k==ncn name and v==the MAC address. Easier for me to read
 
-Funtions:
+Functions:
     getGlobalMD(self):      Convenience function that returns just the Global meta-data
     getNcnData(self, ncn):  Convenience function - reverse lookup by hostname and return all of values
     getNcnDataM(self, ncn): Convenience function - reverse lookup by hostname and return just the meta-data
