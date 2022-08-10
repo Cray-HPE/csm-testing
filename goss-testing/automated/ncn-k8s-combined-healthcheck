@@ -87,7 +87,7 @@ if is_pit_node ; then
 else
     # running on an NCN
 
-	# run NCN local Kubernetes cluster tests plus the NCN worker BGP test
+    # run NCN local Kubernetes cluster tests plus the NCN worker BGP test
     run_goss_tests_print_results suites/ncn-combined-k8s-bgp-tests.yaml ${test_urls}
     rc=$?
 fi

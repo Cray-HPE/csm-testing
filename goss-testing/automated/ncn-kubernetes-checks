@@ -63,7 +63,7 @@ if is_pit_node ; then
 else
     # run tests from an NCN
 
-	# run NCN local Kubernetes cluster tests
+    # run NCN local Kubernetes cluster tests
     run_goss_tests_print_results suites/ncn-kubernetes-tests-cluster.yaml ${master_test_urls} ${worker_test_urls}
     rc=$?
 fi

@@ -45,7 +45,7 @@ storage_test_urls=$(ncn_healthcheck_storage_urls) || err_exit "Cannot find test 
 worker_test_urls=$(ncn_healthcheck_worker_urls) || err_exit "Cannot find test URLs for worker nodes"
 
 run_goss_tests_print_results tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml \
-							 ${master_test_urls} ${storage_test_urls} ${worker_test_urls}
+                             ${master_test_urls} ${storage_test_urls} ${worker_test_urls}
 rc=$?
 
 # This script does not exit with non-0 return code just for test failures
