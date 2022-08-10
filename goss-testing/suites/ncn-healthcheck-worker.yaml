@@ -21,39 +21,25 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+# During health validation, these tests are executed on every worker node
+# in the cluster. Tests that are executed on just a single worker node are
+# in the corresponding -single.yaml suite file.
 gossfile:
-  ../tests/goss-command-available.yaml: {}
-  ../tests/goss-interface-has-ip.yaml: {}
-  ../tests/goss-bond-members-have-links.yaml: {}
-  ../tests/goss-network-interfaces.yaml: {}
-  ../tests/goss-interfaces-have-same-mac.yaml: {}
-  ../tests/goss-unbound-ip.yaml: {}
-  ../tests/goss-platform-ca-certs-exist.yaml: {}
-  ../tests/goss-validate-certifi-version.yaml: {}
-  ../tests/goss-platform-ca-in-bundle.yaml: {}
-  ../tests/goss-k8s-storageclass.yaml: {}
-  ../tests/goss-k8s-velero-backup-storage-locations-available.yaml: {}
-  ../tests/goss-k8s-velero-backup-vault-schedule-exists.yaml: {}
-  ../tests/goss-k8s-velero-no-failed-backups.yaml: {}
   ../tests/goss-bond-members-have-correct-mtu.yaml: {}
-  ../tests/goss-dns-nodes.yaml: {}
-  ../tests/goss-spire-healthcheck.yaml: {}
-  ../tests/goss-spire-bss-metadata-exist.yaml: {}
-  ../tests/goss-spire-verify-pods.yaml: {}
-  ../tests/goss-spire-agent-service-running.yaml: {}
-  ../tests/goss-spire-check-key-id-in-jwks.yaml: {}
-  ../tests/goss-spire-verify-api-fetch-jwt.yaml: {}
-  ../tests/goss-default-gateway-points-to-CMN-gateway.yaml: {}
-  ../tests/goss-cray-service-etcd-health-check.yaml: {}
-  ../tests/goss-platform-ca-certs-match-cloud-init.yaml: {}
-  ../tests/goss-k8s-resolve-external-dns.yaml: {}
-  ../tests/goss-k8s-kea-has-active-dhcp-leases.yaml: {}
-  ../tests/goss-k8s-etcd-backups.yaml: {}
-  ../tests/goss-k8s-etcd-cluster-balance.yaml: {}
-  ../tests/goss-k8s-etcd-database-health.yaml: {}
-  ../tests/goss-k8s-etcd-endpoint-health.yaml: {}
-  ../tests/goss-k8s-postgres-*.yaml: {}
-  ../tests/goss-k8s-monitoring-url.yaml: {}
-  ../tests/goss-k8s-precache-images-health.yaml: {}
+  ../tests/goss-bond-members-have-links.yaml: {}
   ../tests/goss-cfs-state-reporter.yaml: {}
   ../tests/goss-check-static-routes.yaml: {}
+  ../tests/goss-command-available.yaml: {}
+  ../tests/goss-default-gateway-points-to-CMN-gateway.yaml: {}
+  ../tests/goss-dns-nodes.yaml: {}
+  ../tests/goss-interface-has-ip.yaml: {}
+  ../tests/goss-interfaces-have-same-mac.yaml: {}
+  ../tests/goss-network-interfaces.yaml: {}
+  ../tests/goss-platform-ca-certs-exist.yaml: {}
+  ../tests/goss-platform-ca-certs-match-cloud-init.yaml: {}
+  ../tests/goss-platform-ca-in-bundle.yaml: {}
+  ../tests/goss-spire-agent-service-running.yaml: {}
+  ../tests/goss-spire-healthcheck.yaml: {}
+  ../tests/goss-unbound-ip.yaml: {}
+  ../tests/goss-validate-certifi-version.yaml: {}

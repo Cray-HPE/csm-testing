@@ -1,7 +1,8 @@
+#!/usr/bin/env python3
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,19 +23,28 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-#
-# This suite is run:
-# * During CSM installs before CSM services have been deployed,
-# * During CSM Health Validation (after CSM services have been deployed), both
-#   before and after PIT redeployment
-#
+"""
+Usage: goss_suites_endpoints_ports
 
-# During health validation, these tests are executed on every master node
-# in the cluster. Tests that are executed on just a single master node are
-# in the corresponding -single.yaml suite file.
-gossfile:
-  ../tests/goss-ceph-status.yaml: {}
-  ../tests/goss-etcdlvm-drive-master.yaml: {}
-  ../tests/goss-k8s-etcd-service.yaml: {}
-  ../tests/goss-ncn-xname.yaml: {}
-  ../tests/goss-weave-health.yaml: {}
+Scans the Goss server configuration file and prints out a list of suites/endpoint/port combinations
+that should be started for the current node.
+
+Each line of output is of the format:
+<full suite path> <endpoint name> <port>
+
+Exits 0 on success, non-0 otherwise.
+"""
+
+from lib.common import goss_suites_dir,             \
+                       load_goss_endpoints,         \
+                       my_ncn_type
+
+import sys
+
+if __name__ == "__main__":
+    suite_dir = goss_suites_dir()
+    node_type = my_ncn_type()
+    goss_endpoints_by_ncn_type = load_goss_endpoints()
+    for (suite_name, endpoint_name, port) in goss_endpoints_by_ncn_type[node_type]:
+        print(f"{suite_dir}/{suite_name} {endpoint_name} {port}")
+    sys.exit(0)

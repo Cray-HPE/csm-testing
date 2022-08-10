@@ -37,18 +37,15 @@ echo
 # with the csm-testing RPM.
 source "$(dirname -- "$0")/run-ncn-tests.sh"
 
-if [[ -z ${SW_ADMIN_PASSWORD} ]]; then
-    echo "ERROR Management switch admin password must be provided via the SW_ADMIN_PASSWORD enviroment varaible"
-    echo "Example: export SW_ADMIN_PASSWORD='changeme'"
-    exit 1
-fi
+# BGP test requires switch password to be set
+sw_admin_pw_set || exit 1
 
 master_test_urls=$(ncn_healthcheck_master_urls) || err_exit "Cannot find test URLs for master nodes"
 storage_test_urls=$(ncn_healthcheck_storage_urls) || err_exit "Cannot find test URLs for storage nodes"
 worker_test_urls=$(ncn_healthcheck_worker_urls) || err_exit "Cannot find test URLs for worker nodes"
 
-run_goss_tests tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml --format json | \
-    print_goss_json_results stdin ${master_test_urls} ${storage_test_urls} ${worker_test_urls}
+run_goss_tests_print_results tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml \
+                             ${master_test_urls} ${storage_test_urls} ${worker_test_urls}
 rc=$?
 
 # This script does not exit with non-0 return code just for test failures
