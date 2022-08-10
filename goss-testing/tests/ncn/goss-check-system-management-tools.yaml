@@ -1,0 +1,52 @@
+command:
+  assigned_ip-status:
+    exit-status: 0
+    exec: "ip addr show bond0.cmn0|grep -i inet"
+  default_gw:
+    exit-status: 0
+    exec: "ip route | grep default"
+    stdout:
+      - "default"
+  gw-reacheable:
+    exit-status: 0
+    exec: "ping -c 3 10.102.5.1"
+    stdout:
+      - "0% packet"
+    timeout: 30000
+  powerdns-status:
+    exit-status: 0
+    exec: "kubectl -n services get svc cray-dns-powerdns-cmn-udp"
+  switch_ping-status:
+    exit-status: 0
+    exec: "canu test --csm 1.2 --json --username admin --password ${SW_ADMIN_PASSWORD} |grep ping"
+    stdout:
+      - "PASS"
+    timeout: 60000
+  bgp_established_mellanox:
+    exit-status: 0
+    exec: "sshpass -p ${SW_ADMIN_PASSWORD} ssh admin@sw-spine-001.hmn cli \"enable\" \"show ip bgp vrf all summary\""
+    stdout:
+      - "ESTABLISHED"
+    timeout: 30000
+  bgp_established_aruba:
+    exit-status: 0
+    exec: "sshpass -p ${SW_ADMIN_PASSWORD} ssh admin@sw-spine-001.hmn cli \"enable\" \"show bgp all-vrf all summary\""
+    stdout:
+      - "Established"
+    timeout: 30000
+  k8s_service_no_ip:
+    exit-status: 1
+    exec: "kubectl get service -A | grep Load|grep -i pending"
+  k8s_MetalLB_configmap:
+    exit-status: 0
+    exec: "kubectl -n istio-system describe service istio-ingressgateway-cmn"
+    stdout:
+      - "Annotations"
+  k8s_customer_management_address:
+    exit-status: 0
+    exec: "kubectl -n metallb-system get cm metallb -o yaml"
+  check_if_prometheus_module_enabled:
+    exit-status: 0
+    exec: "ceph mgr module ls | jq '.enabled_modules'"
+    stdout:
+      - "prometheus"
