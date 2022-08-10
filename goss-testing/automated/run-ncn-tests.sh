@@ -482,23 +482,16 @@ function k8s_check_urls_for_worker_nodelist {
     fi
     
     suite="ncn-kubernetes-tests-worker.yaml"
-    single_suite="ncn-kubernetes-tests-worker-single.yaml"
     after_pit_single_suite="ncn-afterpitreboot-kubernetes-tests-worker-single.yaml"
-
-    ready_node=$(get_ready_k8s_node "$@") || return 1
 
     if ! urls=$(goss_endpoint_urls "${suite}" "$@") ; then
         print_error "Error finding test URLs for ${suite} on $*"
         return 1
     fi
 
-    if ! more_urls=$(goss_endpoint_urls "${single_suite}" "${ready_node}") ; then
-        print_error "Error finding test URL for ${single_suite} on ${ready_node}"
-        return 1
-    fi
-    urls+=" ${more_urls}"
-
     if ! is_pit_node ; then
+        ready_node=$(get_ready_k8s_node "$@") || return 1
+
         if ! more_urls=$(goss_endpoint_urls "${after_pit_single_suite}" "${ready_node}") ; then
             print_error "Error finding test URL for ${after_pit_single_suite} on ${ready_node}"
             return 1

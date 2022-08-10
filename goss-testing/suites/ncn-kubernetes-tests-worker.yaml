@@ -28,8 +28,7 @@
 #   before and after PIT redeployment
 
 # During health validation, these tests are executed on every worker node
-# in the cluster. Tests that are executed on just a single worker node are
-# in the corresponding -single.yaml suite file.
+# in the cluster.
 gossfile:
   ../tests/goss-dedicated-drive-worker.yaml: {}
   ../tests/goss-ncn-xname.yaml: {}
