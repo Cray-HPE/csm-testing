@@ -24,19 +24,15 @@
 
 #
 # This suite is run:
-# * During CSM installs before CSM services have been deployed,
-# * During CSM Health Validation (after CSM services have been deployed), both
-#   before and after PIT redeployment
+# * During CSM Health Validation (after CSM services have been deployed), only
+#   after PIT redeployment
 #
-# This suite may be run on any master NCN or the PIT node.
-#
-# This suite is run as part of the ncn_kubernetes_checks script. This suite is
-# only run locally on the NCN where the script is invokved (as opposed to
-# tests in the ncn-kubernetes-test-master/worker suites, which are run
-# on every master/worker node).
+# This suite is run as part of the ncn-k8s-combined-healthcheck script. This suite is
+# only run locally on the NCN where the script is invokved.
 #
 
 gossfile:
-  ../tests/goss-k8s-nodes-joined-cluster.yaml: {}
-  ../tests/goss-k8s-nodes-age-valid.yaml: {}
-  ../tests/goss-ceph-csi-k8s-requirements.yaml: {}
+  # This covers the NCN healthchecks
+  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
+  # This covers the k8s healthchecks
+  ncn-kubernetes-tests-cluster.yaml: {}

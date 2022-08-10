@@ -71,20 +71,21 @@ if is_pit_node ; then
     kube_creds=/root/.kube/config
 
     if is_nonempty_file "${kube_creds}"; then
-        # run livecd local Kubernetes cluster tests
-        run_goss_tests_print_results suites/common-kubernetes-tests-cluster.yaml ${test_urls}
+        # run livecd local Kubernetes cluster tests plus the NCN worker BGP test
+        run_goss_tests_print_results suites/common-combined-k8s-bgp-tests.yaml ${test_urls}
         rc=$?
     else
         echo
         echo $'\e[1;31m'WARNING: Unable to run local Kubernetes checks because ${kube_creds} does not exist or is invalid$'\e[0m'
-        print_goss_json_results ${test_urls}
+        # But we are still able to run the BGP test that the NCN worker healthcheck runs
+        run_goss_tests_print_results tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml ${test_urls}
         rc=$?
     fi
 else
     # running on an NCN
 
-	# run NCN local Kubernetes cluster tests
-    run_goss_tests_print_results suites/ncn-kubernetes-tests-cluster.yaml ${test_urls}
+	# run NCN local Kubernetes cluster tests plus the NCN worker BGP test
+    run_goss_tests_print_results suites/ncn-combined-k8s-bgp-tests.yaml ${test_urls}
     rc=$?
 fi
 
