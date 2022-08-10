@@ -41,6 +41,9 @@ echo
 # with the csm-testing RPM.
 source "$(dirname -- "$0")/run-ncn-tests.sh"
 
+# BGP test requires switch password to be set
+sw_admin_pw_set || exit 1
+
 # Get master and worker node lists (storage node list is created inside the ncn_healthcheck_storage_urls function)
 master_nodes=$(get_ncns --masters --exclude-pit) || exit 1
 worker_nodes=$(get_ncns --workers) || exit 1
