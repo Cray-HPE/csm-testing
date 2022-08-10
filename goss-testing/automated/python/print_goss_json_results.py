@@ -24,8 +24,8 @@
 #
 
 """
-Usage: print_goss_json_results <filename|stdin|url>
-                               [<filename|stdin|url>] ...
+Usage: print_goss_json_results <filename|stdin[:label]|url>
+                               [<filename|stdin[:label]|url>] ...
 
 One or more sources of Goss test results are passed in.
 
@@ -34,7 +34,8 @@ and the GET request will be made to it to get the test results. The node name
 will be extracted from the URL to be displayed in the test results.
 
 If the source is "stdin", then the Goss test results are read from standard input.
-The node name is assumed to be the local host.
+The node name is assumed to be the local host. A label for the tests will be used
+if one is provided after a :
 
 Otherwise, the source is assumed to be a file containing the Goss test results in JSON
 format. The node name is assumed to be the local host.
@@ -132,11 +133,24 @@ def get_node_from_url(url):
         return node[:colon_index]
     return node
 
-def read_and_decode_json(input_file):
-    if input_file == "stdin":
+def print_reading_test_results_message(node, label=None):
+    if label:
+        stdout_print(f"Reading test results for node {warn_text(node)} ({label})")
+        outfile_print(f"Reading test results for node {node} ({label})")
+    else:
+        stdout_print(f"Reading test results for node {warn_text(node)}")
+        outfile_print(f"Reading test results for node {node}")
+
+def read_and_decode_json(input_file, node):
+    if input_file == "stdin" or input_file[:6] == "stdin:":
         logging.debug("Reading standard input for JSON results")
+        if input_file == "stdin":
+            print_reading_test_results_message(node)
+        else:
+            print_reading_test_results_message(node, input_file[6:])
         input = sys.stdin.read()
     else:
+        print_reading_test_results_message(node, input_file)
         logging.debug(f"Reading {input_file} for JSON results")
         try:
             with open(input_file, "rt") as infile:
@@ -155,9 +169,8 @@ def read_and_decode_json(input_file):
         multi_print(traceback.format_exc(), outfile_print, logging.error)
         raise ScriptException(f"Error decoding JSON from {input_file}. {fmt_exc(e)}")
 
-def get_json_from_input_url(input_url):
+def get_json_from_input_url(input_url, node):
     logging.debug(f"Making GET request to {input_url}")
-    node=get_node_from_url(input_url)
     stdout_print(f"Running tests against node {warn_text(node)} (URL: {input_url})")
     outfile_print(f"Running tests against node {node} (URL: {input_url})")
     resp = requests.get(input_url)
@@ -327,7 +340,7 @@ def parse_args():
 
     # While we're here, make sure the file sources exist
     for source in input_sources:
-        if source == "stdin" or is_url(source):
+        if source == "stdin" or source[:6] == "stdin:" or is_url(source):
             continue
         elif not os.path.isfile(source):
             stderr_print(err_text(f"File source does not exist: {source}"))
@@ -355,11 +368,11 @@ def main(input_sources):
         try:
             log_values(logging.debug, source=source)
             if is_url(source):
-                json_results = get_json_from_input_url(source)
                 node = get_node_from_url(source)
+                json_results = get_json_from_input_url(source, node)
             else:
-                json_results = read_and_decode_json(source)
                 node = get_hostname()
+                json_results = read_and_decode_json(source, node)
             log_values(logging.info, source=source, node=node, json_results=json_results)
             logging.debug(f"Showing results for {source}")
             passed, failed, unknown = show_results(json_results, node)
