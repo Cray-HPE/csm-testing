@@ -60,7 +60,6 @@ Other error                 3
 If multiple exit codes apply, the highest one is used.
 """
 
-
 from lib.common import err_text,               \
                        fmt_exc,                \
                        get_hostname,           \
@@ -77,11 +76,14 @@ from lib.common import err_text,               \
                        warn_text
 
 import argparse
+import concurrent.futures
+import itertools
 import json
 import logging
 import os
 import requests
 import sys
+import threading
 import traceback
 
 RC_TESTFAIL = 1
@@ -160,6 +162,7 @@ def read_and_decode_json(input_file, node):
             print_newline()
             multi_print(traceback.format_exc(), outfile_print, logging.error)
             raise ScriptException(f"Problem reading input file {input_file}. {fmt_exc(e)}")
+
     try:
         return json.loads(input)
     except Exception as e:
@@ -169,25 +172,50 @@ def read_and_decode_json(input_file, node):
         multi_print(traceback.format_exc(), outfile_print, logging.error)
         raise ScriptException(f"Error decoding JSON from {input_file}. {fmt_exc(e)}")
 
-def get_json_from_input_url(input_url, node):
-    logging.debug(f"Making GET request to {input_url}")
-    stdout_print(f"Running tests against node {warn_text(node)} (URL: {input_url})")
-    outfile_print(f"Running tests against node {node} (URL: {input_url})")
-    resp = requests.get(input_url)
-    log_values(logging.debug, status_code=resp.status_code, reason=resp.reason, headers=resp.headers, ok=resp.ok)
+# The function name is a bit misleading. This just makes sure that log_values makes a single call to
+# the logging method, guaranteeing that the entry will all go in together. That way it won't be interleaved
+# with entries from other threads.
+def threaded_log_values(log_method, **kwargs):
+    log_values(log_method, values=kwargs)
+
+# input_url suffices as a unique name for this function in a multi-threading context, as we do not
+# permit duplicate URLs. It is important to include this in all logging calls made in this function,
+# in order to identify which thread was making the call. Also, 
+def get_json_from_input_url(input_url, lock, json_results_map):
+    logging.info(f"Making GET request to {input_url}")
+    try:
+        resp = requests.get(input_url)
+    except Exception as e:
+        logging.error(f"Unexpected error attempting GET request to {input_url}: {traceback.format_exc()}")
+        with lock:
+            json_results_map[input_url] = f"Unexpected error attempting GET request to {input_url}: {fmt_exc(e)}"
+        return
+
+    threaded_log_values(logging.debug, input_url=input_url, status_code=resp.status_code, reason=resp.reason, headers=resp.headers, ok=resp.ok)
     # Expected responses are 200 (meaning no tests failed) or 503 (which can mean either that there were test failures OR that there was
     # another Goss issue, like syntax errors in the test files).
     if resp.status_code not in { 200, 503 }:
-        
-        raise ScriptException(f"Status code {resp.status_code} received from Goss URL {input_url}: {resp.text}")
+        err_msg = f"Status code {resp.status_code} received from Goss URL {input_url}: {resp.text}"
+        logging.error(err_msg)
+        with lock:
+            json_results_map[input_url]= err_msg
+        return
+
+    logging.info(f"Decoding JSON response body from {input_url}")
     try:
-        return resp.json()
+        json_results = resp.json()
     except Exception as e:
-        log_values(logging.debug, text=resp.text)
-        # Add a newline before printing errors
-        print_newline()
-        multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Unable to decode JSON from endpoint response from {input_url}. {fmt_exc(e)}")
+        logging.error(f"Unexpected error decoding JSON response from {input_url}: {traceback.format_exc()}")
+        threaded_log_values(logging.debug, input_url=input_url, text=resp.text)
+        with lock:
+            json_results_map[input_url] = f"Unexpected error decoding JSON response from {input_url}: {fmt_exc(e)}"
+        return
+
+    threaded_log_values(logging.debug, input_url=input_url, json_results=json_results)
+    logging.info(f"Successfully decoded JSON response from {input_url}")
+    with lock:
+        json_results_map[input_url] = json_results
+    return
 
 def extract_results_data(json_results):
     try:
@@ -345,12 +373,14 @@ def main(input_sources):
     unexpected_error = False
     
     all_results = list()
+    url_sources = list()
     for source in input_sources:
         try:
             log_values(logging.debug, source=source)
             if is_url(source):
-                node = get_node_from_url(source)
-                json_results = get_json_from_input_url(source, node)
+                # These will be processed concurrently after we process the non-URL sources
+                url_sources.append(source)
+                continue
             else:
                 node = get_hostname()
                 json_results = read_and_decode_json(source, node)
@@ -386,6 +416,50 @@ def main(input_sources):
             "failed_count": failed_count,
             "total_duration": total_duration,
             "node_name": node })
+
+    # Now handle URL sources in parallel
+    num_urls = len(url_sources)
+    if num_urls > 0:
+        multi_print("Running remote tests", outfile_print, logging.info, stdout_print)
+        mylock = threading.Lock()
+        json_results_map = dict()
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
+            executor.map(get_json_from_input_url, url_sources, itertools.repeat(mylock, num_urls), itertools.repeat(json_results_map, num_urls))
+
+        for source in url_sources:
+            node = get_node_from_url(source)
+            try:
+                json_results = json_results_map[source]
+            except KeyError:
+                error(f"Internal error. Unable to find results OR error message from request to {source}")
+                error(f"Skipping {source} due to error\n")
+                unexpected_error = True
+                continue
+            if isinstance(json_results, str):
+                error(f"Error encountered running {source} tests: {json_results}")
+                error(f"Skipping {source} due to error\n")
+                unexpected_error = True
+                continue
+            # Extract the results from the JSON
+            try:
+                selected_results, failed_count, total_duration = extract_results_data(json_results)
+            except ScriptException:
+                error(e)
+                error(f"Skipping {source} due to error\n")
+                unexpected_error = True
+                continue
+            except Exception as e:
+                multi_print(traceback.format_exc(), outfile_print, logging.error)
+                error(f"Skipping {source} due to error extracting test results from JSON data\n")
+                unexpected_error = True
+                continue
+            all_results.append({
+                "source": source,
+                "selected_results": selected_results,
+                "failed_count": failed_count,
+                "total_duration": total_duration,
+                "node_name": node })
 
     total_passed = 0
     total_failed = 0

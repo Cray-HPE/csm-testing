@@ -160,9 +160,13 @@ def log_values(logmethod, **kwargs):
     for k, v in kwargs.items():
         # For dictionary values, format them nicely
         if isinstance(v, dict):
-            logmethod(f"{k}=\n" + json.dumps(v, indent=2))
-        else:
-            logmethod(f"{k}={v}")
+            try:
+                logmethod(f"{k}=\n" + json.dumps(v, indent=2))
+                continue
+            except TypeError:
+                # This can happen if the dict contains stuff that cannot be serialized as JSON
+                pass
+        logmethod(f"{k}={v}")
 
 def log_goss_env_variables(logmethod):
     log_values(logmethod=logmethod, **goss_env_variables())
