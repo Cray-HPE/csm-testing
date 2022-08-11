@@ -34,8 +34,13 @@ from .common import argparse_yaml_file_name,     \
                     NCN_TYPES,                   \
                     ScriptException
 
+from typing import Dict, List, Tuple
+
 import argparse
 import re
+
+StringList = List[str]
+EndpointTuple = Tuple[str, str, int]
 
 # We assume our Goss server ports will be between 1000 and 65535 (the maximum TCP port number)
 
@@ -57,7 +62,7 @@ port_re_prog = re.compile(port_pattern)
 
 goss_endpoints_by_ncn_type = None
 
-def parse_config_file_line(line: str) -> tuple[int, str, list]:
+def parse_config_file_line(line: str) -> Tuple[int, str, StringList]:
     """
     Returns port, suite file, and list of NCN types
     Raises ScriptException in case of error
@@ -88,7 +93,7 @@ def parse_config_file_line(line: str) -> tuple[int, str, list]:
         raise ScriptException(f"Line includes duplicate NCN types.")
     return port, suite, type_list
 
-def load_goss_endpoints() -> dict:
+def load_goss_endpoints() -> Dict[str, List[EndpointTuple]]:
     """
     Reads Goss server configuration file (goss-servers.json) and for each NCN type, generates a mapping from
     port number to endpoint name + suite name.

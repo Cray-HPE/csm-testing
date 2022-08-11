@@ -39,12 +39,14 @@ from lib.common import argparse_yaml_file_name,     \
                        ScriptException
 from lib.endpoints  import load_goss_endpoints
 
+from typing import List, Tuple
+
 import argparse
 import sys
 
 port_endpoint = dict()
 
-def get_port_endpoint(node: str, suite: str) -> tuple[int, str]:
+def get_port_endpoint(node: str, suite: str) -> Tuple[int, str]:
     node_type = get_ncn_type(node)
     try:
         return port_endpoint[node_type]
@@ -56,14 +58,14 @@ def get_port_endpoint(node: str, suite: str) -> tuple[int, str]:
                 return port, endpoint_name
         raise ScriptException(f"No port/endpoint found for suite {suite} for NCN {node_type} nodes")
 
-def parse_args() -> tuple[str, list]:
+def parse_args() -> Tuple[str, List[str]]:
     parser = argparse.ArgumentParser(description="Print list of Goss endpoints.")
     parser.add_argument("suite", type=argparse_yaml_file_name, help="Goss suite name.")
     parser.add_argument("nodes", nargs="+", type=argparse_valid_ncn_name, help="Target nodes.")
     args = parser.parse_args()
     return args.suite, args.nodes
 
-def get_suite_urls_nodelist(suite: str, *nodes) -> list:
+def get_suite_urls_nodelist(suite: str, *nodes) -> List[str]:
     urls = list()
     for node in nodes:
         port, endpoint = get_port_endpoint(node, suite)

@@ -27,6 +27,8 @@
 Helper functions for Goss Python automated scripts
 """
 
+from typing import Tuple
+
 import argparse
 import colorama
 from datetime import datetime
@@ -49,7 +51,7 @@ DEFAULT_GOSS_SCRIPT_MAX_THREADS = 16
 DEFAULT_GOSS_INSTALL_BASE_DIR = "/opt/cray/tests/install"
 PIT_NODE_RELEASE_FILE = "/etc/pit-release"
 
-def goss_base_dirs(validate: bool = False) -> tuple[str, str]:
+def goss_base_dirs(validate: bool = False) -> Tuple[str, str]:
     """
     Returns GOSS_INSTALL_BASE_DIR, GOSS_BASE
     """

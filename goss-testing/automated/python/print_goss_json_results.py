@@ -75,6 +75,8 @@ from lib.common import err_text,               \
                        stdout_print,           \
                        warn_text
 
+from typing import List, Tuple
+
 import argparse
 import concurrent.futures
 import itertools
@@ -217,7 +219,7 @@ def get_json_from_input_url(input_url: str, lock: threading.Lock, json_results_m
         json_results_map[input_url] = json_results
     return
 
-def extract_results_data(json_results: dict) -> tuple[list, int, float]:
+def extract_results_data(json_results: dict) -> Tuple[List[dict], int, float]:
     try:
         results = json_results["results"]
         # Make list of results with a numeric result
@@ -248,7 +250,7 @@ def extract_results_data(json_results: dict) -> tuple[list, int, float]:
     selected_results.sort(key=lambda r: (r["title"], r["result"]))
     return selected_results, failed_count, total_duration
 
-def show_results(source: str, selected_results: list, failed_count: int, total_duration: float, node_name: str) -> tuple[int, int, int]:
+def show_results(source: str, selected_results: List[dict], failed_count: int, total_duration: float, node_name: str) -> Tuple[int, int, int]:
     """
     Prints all results to outfile.
     Prints failures to stderr.
@@ -332,7 +334,7 @@ def is_url(s: str) -> bool:
     """
     return s.find("http://") == 0 or s.find("https://") == 0
 
-def parse_args() -> list:
+def parse_args() -> List[str]:
     parser = argparse.ArgumentParser(description="Summarize JSON-format Goss test results with pretty colors.")
     parser.add_argument("sources", nargs="+", help="Sources for test results.")
     # In Python 3.6, the exit_on_error option to ArgumentParser does not yet exist, so a cruder method is
@@ -361,7 +363,7 @@ def parse_args() -> list:
 
     return input_sources
 
-def main(input_sources: list) -> int:
+def main(input_sources: List[str]) -> int:
     """
     Returns number of failed tests
 
@@ -498,7 +500,7 @@ def main(input_sources: list) -> int:
         raise ScriptException()
     return total_failed
 
-def setup_logging() -> tuple[str, str]:
+def setup_logging() -> Tuple[str, str]:
     MY_LOG_DIR = log_dir(__file__)
     try:
         # create log directory; it is NOT ok if it already exists
