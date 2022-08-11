@@ -24,15 +24,11 @@ command:
     timeout: 60000
   bgp_established_mellanox:
     exit-status: 0
-    exec: "sshpass -p ${SW_ADMIN_PASSWORD} ssh admin@sw-spine-001.hmn cli \"enable\" \"show ip bgp vrf all summary\""
-    stdout:
-      - "ESTABLISHED"
+    exec: "sshpass -p ${SW_ADMIN_PASSWORD} ssh admin@sw-spine-001.hmn cli \"enable\" \"show ip bgp vrf all summary\"|grep -i established"
     timeout: 30000
   bgp_established_aruba:
     exit-status: 0
-    exec: "sshpass -p ${SW_ADMIN_PASSWORD} ssh admin@sw-spine-001.hmn cli \"enable\" \"show bgp all-vrf all summary\""
-    stdout:
-      - "Established"
+    exec: "sshpass -p ${SW_ADMIN_PASSWORD} ssh admin@sw-spine-001.hmn cli \"enable\" \"show bgp all-vrf all summary\"|grep -i established"
     timeout: 30000
   k8s_service_no_ip:
     exit-status: 1
