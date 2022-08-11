@@ -27,7 +27,7 @@
 Helper functions for Goss Python automated scripts
 """
 
-from typing import Tuple
+from typing import Callable, Tuple
 
 import argparse
 import colorama
@@ -174,7 +174,7 @@ def log_dir(script_name: str) -> str:
     glbd = goss_log_base_dir()
     return f"{glbd}/{script_name}/{timestamp}-{mypid}-{randstring}"
 
-def log_values(logmethod: function, **kwargs) -> None:
+def log_values(logmethod: Callable, **kwargs) -> None:
     for k, v in kwargs.items():
         # For dictionary values, format them nicely
         if isinstance(v, dict):
@@ -186,7 +186,7 @@ def log_values(logmethod: function, **kwargs) -> None:
                 pass
         logmethod(f"{k}={v}")
 
-def log_goss_env_variables(logmethod: function) -> None:
+def log_goss_env_variables(logmethod: Callable) -> None:
     log_values(logmethod=logmethod, **goss_env_variables())
 
 def stderr_print(s: str) -> None:

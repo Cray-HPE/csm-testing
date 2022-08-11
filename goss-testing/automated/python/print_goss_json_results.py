@@ -75,7 +75,7 @@ from lib.common import err_text,               \
                        stdout_print,           \
                        warn_text
 
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 
 import argparse
 import concurrent.futures
@@ -177,7 +177,7 @@ def read_and_decode_json(input_file: str, node: str) -> dict:
 # The function name is a bit misleading. This just makes sure that log_values makes a single call to
 # the logging method, guaranteeing that the entry will all go in together. That way it won't be interleaved
 # with entries from other threads.
-def threaded_log_values(log_method: function, **kwargs) -> None:
+def threaded_log_values(log_method: Callable, **kwargs) -> None:
     log_values(log_method, values=kwargs)
 
 # input_url suffices as a unique name for this function in a multi-threading context, as we do not
