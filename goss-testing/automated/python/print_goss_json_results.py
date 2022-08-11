@@ -464,14 +464,15 @@ def main(input_sources: list) -> int:
     total_passed = 0
     total_failed = 0
     total_unknown = 0
-    multi_print("\nChecking test results", outfile_print, logging.info, stdout_print)
-    stdout_print("Only errors will be printed to the screen")
-    for results in all_results:
-        log_values(logging.debug, results=results)
-        passed, failed, unknown = show_results(**results)
-        total_passed += passed
-        total_failed += failed
-        total_unknown += unknown
+    if all_results:
+        multi_print("\nChecking test results", outfile_print, logging.info, stdout_print)
+        stdout_print("Only errors will be printed to the screen")
+        for results in all_results:
+            log_values(logging.debug, results=results)
+            passed, failed, unknown = show_results(**results)
+            total_passed += passed
+            total_failed += failed
+            total_unknown += unknown
 
     print_newline()
     if total_unknown == 0:
