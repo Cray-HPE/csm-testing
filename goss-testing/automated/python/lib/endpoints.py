@@ -57,7 +57,7 @@ port_re_prog = re.compile(port_pattern)
 
 goss_endpoints_by_ncn_type = None
 
-def parse_config_file_line(line):
+def parse_config_file_line(line: str) -> tuple[int, str, list]:
     """
     Returns port, suite file, and list of NCN types
     Raises ScriptException in case of error
@@ -88,7 +88,7 @@ def parse_config_file_line(line):
         raise ScriptException(f"Line includes duplicate NCN types.")
     return port, suite, type_list
 
-def load_goss_endpoints():
+def load_goss_endpoints() -> dict:
     """
     Reads Goss server configuration file (goss-servers.json) and for each NCN type, generates a mapping from
     port number to endpoint name + suite name.

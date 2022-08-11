@@ -95,7 +95,7 @@ outfile = None
 MY_LOG_DIR = None
 MY_LOG_FILE = None
 
-def outfile_print(s):
+def outfile_print(s: str) -> None:
     global outfile
     if outfile == None:
         return
@@ -108,20 +108,20 @@ def outfile_print(s):
         stderr_print(msg)
         outfile = None
 
-def print_newline():
+def print_newline() -> None:
     multi_print("", outfile_print, stdout_print)
 
-def error(s):
+def error(s: str) -> None:
     stderr_print(err_text(f"ERROR: {s}"))
     logging.error(s)
     outfile_print(f"ERROR: {s}")
 
-def warning(s):
+def warning(s: str) -> None:
     stderr_print(warn_text(f"WARNING: {s}"))
     logging.warning(s)
     outfile_print(f"WARNING: {s}")
 
-def get_node_from_url(url):
+def get_node_from_url(url: str) -> str:
     # The node name we use (as a label for results) is the first string after the //, up until
     # the first period, colon, or / (whichever is first)
     node = url.split("/")[2]
@@ -135,7 +135,7 @@ def get_node_from_url(url):
         return node[:colon_index]
     return node
 
-def print_reading_test_results_message(node, label=None):
+def print_reading_test_results_message(node: str, label: str = "") -> None:
     if label:
         stdout_print(f"Reading test results for node {warn_text(node)} ({label})")
         outfile_print(f"Reading test results for node {node} ({label})")
@@ -143,7 +143,7 @@ def print_reading_test_results_message(node, label=None):
         stdout_print(f"Reading test results for node {warn_text(node)}")
         outfile_print(f"Reading test results for node {node}")
 
-def read_and_decode_json(input_file, node):
+def read_and_decode_json(input_file: str, node: str) -> dict:
     if input_file == "stdin" or input_file[:6] == "stdin:":
         logging.debug("Reading standard input for JSON results")
         if input_file == "stdin":
@@ -175,13 +175,13 @@ def read_and_decode_json(input_file, node):
 # The function name is a bit misleading. This just makes sure that log_values makes a single call to
 # the logging method, guaranteeing that the entry will all go in together. That way it won't be interleaved
 # with entries from other threads.
-def threaded_log_values(log_method, **kwargs):
+def threaded_log_values(log_method: function, **kwargs) -> None:
     log_values(log_method, values=kwargs)
 
 # input_url suffices as a unique name for this function in a multi-threading context, as we do not
 # permit duplicate URLs. It is important to include this in all logging calls made in this function,
 # in order to identify which thread was making the call. Also, 
-def get_json_from_input_url(input_url, lock, json_results_map):
+def get_json_from_input_url(input_url: str, lock: threading.Lock, json_results_map: dict) -> None:
     logging.info(f"Making GET request to {input_url}")
     try:
         resp = requests.get(input_url)
@@ -217,7 +217,7 @@ def get_json_from_input_url(input_url, lock, json_results_map):
         json_results_map[input_url] = json_results
     return
 
-def extract_results_data(json_results):
+def extract_results_data(json_results: dict) -> tuple[list, int, float]:
     try:
         results = json_results["results"]
         # Make list of results with a numeric result
@@ -248,7 +248,7 @@ def extract_results_data(json_results):
     selected_results.sort(key=lambda r: (r["title"], r["result"]))
     return selected_results, failed_count, total_duration
 
-def show_results(source, selected_results, failed_count, total_duration, node_name):
+def show_results(source: str, selected_results: list, failed_count: int, total_duration: float, node_name: str) -> tuple[int, int, int]:
     """
     Prints all results to outfile.
     Prints failures to stderr.
@@ -326,13 +326,13 @@ def show_results(source, selected_results, failed_count, total_duration, node_na
 
     return manual_pass_count, manual_fail_count, manual_unknown_count
 
-def is_url(s):
+def is_url(s: str) -> bool:
     """
     Very basic check to see if string appears to be a URL
     """
     return s.find("http://") == 0 or s.find("https://") == 0
 
-def parse_args():
+def parse_args() -> list:
     parser = argparse.ArgumentParser(description="Summarize JSON-format Goss test results with pretty colors.")
     parser.add_argument("sources", nargs="+", help="Sources for test results.")
     # In Python 3.6, the exit_on_error option to ArgumentParser does not yet exist, so a cruder method is
@@ -361,7 +361,7 @@ def parse_args():
 
     return input_sources
 
-def main(input_sources):
+def main(input_sources: list) -> int:
     """
     Returns number of failed tests
 
@@ -497,7 +497,7 @@ def main(input_sources):
         raise ScriptException()
     return total_failed
 
-def setup_logging():
+def setup_logging() -> tuple[str, str]:
     MY_LOG_DIR = log_dir(__file__)
     try:
         # create log directory; it is NOT ok if it already exists
