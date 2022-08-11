@@ -60,19 +60,20 @@ Other error                 3
 If multiple exit codes apply, the highest one is used.
 """
 
-from lib.common import err_text,               \
-                       fmt_exc,                \
-                       get_hostname,           \
-                       log_goss_env_variables, \
-                       goss_script_log_level,  \
-                       log_dir,                \
-                       log_values,             \
-                       multi_print,            \
-                       ok_text,                \
-                       ScriptException,        \
-                       ScriptUsageException,   \
-                       stderr_print,           \
-                       stdout_print,           \
+from lib.common import err_text,                \
+                       fmt_exc,                 \
+                       get_hostname,            \
+                       log_goss_env_variables,  \
+                       goss_script_log_level,   \
+                       goss_script_max_threads, \
+                       log_dir,                 \
+                       log_values,              \
+                       multi_print,             \
+                       ok_text,                 \
+                       ScriptException,         \
+                       ScriptUsageException,    \
+                       stderr_print,            \
+                       stdout_print,            \
                        warn_text
 
 from typing import Callable, List, Tuple
