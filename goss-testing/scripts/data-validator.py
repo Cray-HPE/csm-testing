@@ -227,16 +227,14 @@ def boot_params(data):
 	"console=tty0",
 	"console=ttyS0,115200",
 	"crashkernel=[0-9]*M",
-	"ds=nocloud-net;s=http://",
+	"ds=",
 	"hostname=",
 	"ifname=mgmt0",
 	"ifname=mgmt1",
 	"initrd=initrd.img.xz",
 	"iommu=pt",
 	"log_buf_len=1",
-	"metal.no-wipe=",
-	"metal.no-wipe=1",
-	"metal.server=http://",
+	"metal.server=",
 	"pcie_ports=native",
 	"psi=1",
 	"rd.auto=1",
@@ -246,7 +244,7 @@ def boot_params(data):
 	"rd.live.overlay.thin=1",
 	"rd.live.overlay=LABEL=ROOTRAID",
 	"rd.live.ram=0",
-	"rd.live.squashimg=filesystem.squashfs",
+	"rd.live.squashimg=",
 	"rd.luks.crypttab=0",
 	"rd.lvm.conf=0",
 	"rd.lvm=1",
@@ -295,7 +293,7 @@ def boot_params(data):
         if not re.search(param, blob['params']):
           print_err(f"{hostname}: {param} not found in boot params")
           err = 1
-      
+
   if err == 1:
     return err
 
