@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,20 +21,13 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
-#
-# This suite is run:
-# * During CSM installs before CSM services have been deployed,
-# * During CSM Health Validation (after CSM services have been deployed), both
-#   before and after PIT redeployment
-#
-
-# During health validation, these tests are executed on every master node
-# in the cluster. Tests that are executed on just a single master node are
-# in the corresponding -single.yaml suite file.
-gossfile:
-  ../tests/goss-ceph-status.yaml: {}
-  ../tests/goss-etcdlvm-drive-master.yaml: {}
-  ../tests/goss-k8s-etcd-service.yaml: {}
-  ../tests/goss-ncn-xname.yaml: {}
-  ../tests/goss-weave-health.yaml: {}
+command:
+  platform_ca_in_bundle:
+    title: "Validates that the platform CA is included in ca-bundle.pem"
+    meta:
+      desc: "If this fails but the platform-ca-certs-match-cloud-init test passes then running the following commands should fix this issue: `rm /var/lib/ca-certificates/ca-bundle.pem;update-ca-certificates`"
+      sev: 0
+    exec: "keytool -printcert -v -file /etc/pki/trust/anchors/platform-ca-certs.crt  | grep SHA1 | awk '{print $2}' | while read line; do if ! keytool -printcert -v -file /etc/ssl/ca-bundle.pem | grep -q $line; then exit 1; fi; done"
+    exit-status: 0
+    timeout: 10000
+    skip: false

@@ -30,7 +30,7 @@ command:
         meta:
             desc: Validates that no zypper repos exist
             sev: 0
-        # List repos, exlcuding the meta on top, and count how many there are
+        # List repos, excluding the meta on top, and count how many there are
         exec: |-
             # The logrun wrapper will save the full output of the zypper command, pre-grep
             "{{$logrun}}" -l "{{$testlabel}}" \

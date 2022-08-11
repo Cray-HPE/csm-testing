@@ -29,7 +29,7 @@ command:
     {{$testlabel}}:
         title: Check Boot Parameter is Set to Not Wipe the Disk (metal.no-wipe=1)
         meta:
-            desc: If this test fails, run `csi handoff bss-update-param --set metal.no-wipe=1 --limit <SERVER_XNAME>` to set metal.no-wipe to 1. This test is not meant to be run if the PIT has not been rebooted into m001 or if metal.no-wipe has been set to 0 for a node image upgraded.
+            desc: If this test fails, run `csi handoff bss-update-param --set metal.no-wipe=1 --limit <SERVER_XNAME>` to set metal.no-wipe to 1. This test is not meant to be run if the PIT has not been rebooted into m001 or if metal.no-wipe has been set to 0 for a node image upgrade.
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \

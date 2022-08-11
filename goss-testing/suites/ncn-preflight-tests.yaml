@@ -26,6 +26,7 @@ gossfile:
   ../tests/goss-k8s-get-nodes.yaml: {}
   ../tests/goss-command-available.yaml: {}
   ../tests/goss-basecamp-json-ncns.yaml: {}
+  ../tests/goss-bss-basecamp-valid.yaml: {}
   ../tests/goss-network-interfaces.yaml: {}
   ../tests/goss-interface-has-ip.yaml: {}
   ../tests/goss-bond-members-have-links.yaml: {}

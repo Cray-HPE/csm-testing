@@ -25,13 +25,13 @@
 #
 # This suite is run:
 # * During CSM installs before CSM services have been deployed,
-# * During CSM Health Validation (after CSM services have been deployed), both
-#   before and after PIT redeployment
+# * During CSM Health Validation (after CSM services have been deployed),
+#   only after PIT redeployment
 #
-# This suite may be run on any NCN, but not the PIT node.
+# This suite should be run on an NCN master node.
 #
 # This suite is run as part of the ncn_kubernetes_checks script. This suite is
-# only run locally on the NCN where the script is invokved (as opposed to
+# only run locally on the NCN where the script is invoked (as opposed to
 # tests in the ncn-kubernetes-test-master/worker suites, which are run
 # on every master/worker node).
 #
