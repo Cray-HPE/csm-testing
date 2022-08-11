@@ -25,11 +25,6 @@
 
 """
 Helper functions for Goss Python automated scripts
-Global script log file is in directory /opt/cray/tests/install/logs/run_remote_goss_tests.log
-This log file is fairly terse in terms of test results, and is more focused on the script execution.
-
-A per-execution log file is also created in /opt/cray/tests/install/logs/run_remote_goss_tests/<timestamp>-<pid>-<randomstring>.log
-This log file contains the full test results for any given execution.
 """
 
 import argparse
@@ -198,24 +193,6 @@ ncn_master_re_prog = re.compile(ncn_master_pattern)
 ncn_storage_re_prog = re.compile(ncn_storage_pattern)
 ncn_worker_re_prog = re.compile(ncn_worker_pattern)
 
-# We assume our Goss server ports will be between 1000 and 65535 (the maximum TCP port number)
-
-# Pattern for 1000-9999     = [1-9][0-9]{3}
-# Pattern for 10000-59999   = [1-5][0-9]{4}
-# Pattern for 60000-64999   = 6[0-4][0-9]{3}
-# Pattern for 65000-65499   = 65[0-4][0-9]{2}
-# Pattern for 65500-65529   = 655[0-2][0-9]
-# Pattern for 65530-65535   = 6553[0-5]
-port_patterns = [ 
-    "[1-9][0-9]{3}", 
-    "[1-5][0-9]{4}",
-    "6[0-4][0-9]{3}",
-    "65[0-4][0-9]{2}",
-    "655[0-2][0-9]",
-    "6553[0-5]" ]
-port_pattern = "^(" + "|".join(port_patterns) + ")$"
-port_re_prog = re.compile(port_pattern)
-
 def is_ncn_name(n):
     if ncn_re_prog.match(n):
         return True
@@ -269,86 +246,3 @@ def argparse_valid_ncn_name(n):
 
 def fmt_exc(e):
     return f"{type(e).__name__}: {e}"
-
-goss_endpoints_by_ncn_type = None
-
-def load_goss_endpoints():
-    """
-    Reads Goss server configuration file (goss-servers.json) and for each NCN type, generates a mapping from
-    port number to endpoint name + suite name.
-    These mappings are returned.
-    """
-    global goss_endpoints_by_ncn_type
-    if goss_endpoints_by_ncn_type != None:
-        return goss_endpoints_by_ncn_type
-    config_file = goss_servers_config(validate=True)
-    
-    start_port=0
-    end_port=0
-    suite_types_list = list()
-    with open(config_file, "rt") as f:
-        for line in f.readlines():
-            line = line.strip()
-            if len(line) == 0 or line[0] == "#":
-                continue
-            fields = line.split()
-            if fields[0] == "start_port":
-                if start_port != 0:
-                    raise ScriptException(f"Server configuration ({config_file}) error: multiple start_port lines")
-                elif len(fields) != 2:
-                    raise ScriptException(f"Server configuration ({config_file}) error: start_port line must have exactly two fields. Invalid line: {line}")
-                port_string = fields[1]
-                if not port_re_prog.match(port_string):
-                    raise ScriptException(f"Server configuration ({config_file}) error: Invalid port format: {line}")
-                start_port = int(port_string)
-                if end_port != 0 and start_port > end_port:
-                    raise ScriptException(f"Server configuration ({config_file}) error: start_port ({start_port}) must be <= end_port ({end_port})")
-                continue
-            elif fields[0] == "end_port":
-                if end_port != 0:
-                    raise ScriptException(f"Server configuration ({config_file}) error: multiple end_port lines")
-                elif len(fields) != 2:
-                    raise ScriptException(f"Server configuration ({config_file}) error: end_port line must have exactly two fields. Invalid line: {line}")
-                port_string = fields[1]
-                if not port_re_prog.match(port_string):
-                    raise ScriptException(f"Server configuration ({config_file}) error: Invalid port format: {line}")
-                end_port = int(port_string)
-                if start_port > end_port:
-                    raise ScriptException(f"Server configuration ({config_file}) error: end_port ({end_port}) must be >= start_port ({start_port})")
-                continue
-            elif fields[0] != "suite":
-                raise ScriptException(f"Server configuration ({config_file}) error: Unexpected line format: {line}")
-            # suite line
-            if len(fields) < 3:
-                raise ScriptException(f"Server configuration ({config_file}) error: suite line must have at least three fields. Invalid line: {line}")
-            try:
-                suite = argparse_yaml_file_name(fields[1])
-            except argparse.ArgumentTypeError:
-                raise ScriptException(f"Server configuration ({config_file}) error: Invalid YAML suite file name: {line}")
-            if any( s == suite for (s, t) in suite_types_list ):
-                raise ScriptException(f"Server configuration ({config_file}) error: suite should only be specified on a single line. Duplicated suite: {line}")
-            type_list = fields[2:]
-            if not all(t in NCN_TYPES for t in type_list):
-                raise ScriptException(f"Server configuration ({config_file}) error: Invalid NCN type listed on suite line: {line}")
-            suite_types_list.append( (suite, type_list) )
-            continue
-    if start_port == 0:
-        raise ScriptException(f"Server configuration ({config_file}) error: No start_port line")
-    elif end_port == 0:
-        raise ScriptException(f"Server configuration ({config_file}) error: No end_port line")
-    elif len(suite_types_list) == 0:
-        raise ScriptException(f"Server configuration ({config_file}) error: No suites specified")
-
-    endpoints_by_type = { ntype: list() for ntype in NCN_TYPES }
-
-    for (suite, type_list) in suite_types_list:
-        for ntype in type_list:
-            port = len(endpoints_by_type[ntype]) + start_port
-            if port > end_port:
-                raise ScriptException(f"Server configuration ({config_file}) error: Too many {ntype} suites for given port game ({start_port}-{end_port})")
-            # Endpoint name is the suite name, minus the .yaml extension
-            endpoint_name = suite[:-5]
-            endpoints_by_type[ntype].append( (suite, endpoint_name, port) )
-
-    goss_endpoints_by_ncn_type = endpoints_by_type
-    return goss_endpoints_by_ncn_type

@@ -35,9 +35,9 @@ Exits 0 on success, non-0 otherwise.
 from lib.common import argparse_yaml_file_name,     \
                        argparse_valid_ncn_name,     \
                        get_ncn_type,                \
-                       load_goss_endpoints,         \
                        NCN_TYPES,                   \
                        ScriptException
+from lib.endpoints  import load_goss_endpoints
 
 import argparse
 import sys
