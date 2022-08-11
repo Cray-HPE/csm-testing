@@ -38,6 +38,7 @@ def print_err(*a):
 def get_data():
   """Get data from data.json or BSS.
   """
+
   hostname = socket.gethostname()
 
   if os.path.isfile("/etc/pit-release"):
@@ -55,8 +56,7 @@ def get_data():
     try:
       print_err(f"\nRunning on node: {hostname}. Querying BSS...")
       print_err("------------------------------------------------------------")
-      #command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
-      command = [ "cat", "mug-bss-data.json" ]
+      command = [ "cray", "bss", "bootparameters", "list", "--format", "json" ]
       bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
       return json.loads(bss_proc.stdout.read())
     except Exception as e:
@@ -67,6 +67,7 @@ def get_data():
 def user_data(data):
   """Returns the 'user-data' blobs from data.json or BSS.
   """
+
   filtered_data = []
 
   # if we're using BSS data
@@ -85,6 +86,9 @@ def user_data(data):
 
 
 def drill_down_data(data, desired_keys):
+  """Returns target data.
+  """
+
   for i in range(0, ( len(desired_keys) + 1), 1):
     if i == len(desired_keys):
       return saved_data
@@ -107,6 +111,7 @@ def drill_down_data(data, desired_keys):
 def are_valid_ip_masks(data, desired_keys):
   """Checks that IP/mask or CIDR is valid.
   """
+
   filtered_data = user_data(data)
   err = 0
 
@@ -118,6 +123,7 @@ def are_valid_ip_masks(data, desired_keys):
     if not child_key:
       print_err(f"ERR: {desired_keys} is not defined for: {instance_hostname}")
       err = 1
+
     else:
       for value in child_key:
         try:
@@ -125,17 +131,21 @@ def are_valid_ip_masks(data, desired_keys):
         except ValueError:
           print_err(f"ERR: {instance_hostname}: '{value}' is not a valid IP/mask in {desired_keys}")
           err = 1
+
   if err == 1:
     return err
 
 def check_hostname_syntax(hostname):
   """Checks that a given hostname syntax is valid.
-  """  
+  """
+
   if len(hostname) > 253:
       return False
+
   if hostname[-1] == ".":
       hostname = hostname[:-1]
   allowed = re.compile("(?!-)[A-Z\d-]{1,63}(?<!-)$", re.IGNORECASE)
+
   return all(allowed.match(x) for x in hostname.split("."))
 
 
@@ -153,11 +163,13 @@ def are_valid_hostnames(data, desired_keys):
     if not child_key:
       print_err(f"ERR: {desired_keys} is not defined for: {instance_hostname}: ")
       err = 1
+
     else:
       for item in drill_down_data(blob, desired_keys):
         if not check_hostname_syntax(item):
           print_err(f"ERR: {instance_hostname}: '{item}' is not a valid hostname in {desired_keys}")
           err = 1
+
   return err
 
 
@@ -165,6 +177,7 @@ def are_hosts_sane(data, desired_keys):
   """Checks if a value is sane for a given system.
      Needs to check more stuff.
   """
+
   filtered_data = user_data(data)
   target_list = []
   hosts_list = []
@@ -193,6 +206,9 @@ def are_hosts_sane(data, desired_keys):
 
 
 def validate_ntp(data):
+  """Check ntp data.
+  """
+
   err = 0
   if are_valid_ip_masks(data, ['ntp', 'allow']): err = 1
   if are_hosts_sane(data, ['ntp', 'peers']): err = 1
@@ -200,96 +216,88 @@ def validate_ntp(data):
   return err
 
 
-def score_params(node_class):
-  err = 0
-
-  lengths = []
-  counts = []
-  for blob in node_class:
-    lengths.append(blob['params-length'])
-  
-  for i in lengths:
-    occ = lengths.count(i)
-    counts.append(occ)
-    for blob in node_class:
-      if i == blob['params-length']:
-        blob['occurrence'] = occ
-
-  baseline = max(counts)
-
-  searches = [ "bond=bond0:mgmt0,mgmt1",
-               "ifname=mgmt0",
-               "ip=mgmt0",
-               "ifname=mgmt1",
-               "ip=mgmt1",
-               "hostname=" ]
-
-  all_param_strings = []
-  for blob in node_class:
-    for k,v in blob.items():
-      if k == "params-stripd":
-        all_param_strings.append(v)
-    if blob['occurrence'] == baseline:
-      for search in searches:
-        if re.search(search, blob['params-orig']):
-          blob['valid'] = True
-        else:
-          blob['valid'] = False
-    else:
-      blob['valid'] = False
-
-  unique_param_strings = set(all_param_strings)
-  if len(unique_param_strings) > 1:
-    for blob in node_class:
-      for params in unique_param_strings:
-        if params == blob['params-stripd']:
-          blob['valid'] = False
-
-
-  for blob in node_class:
-    if blob['valid'] == False:
-      print_err(f"WARN: {blob['hostname']}: has boot params that differ from at least one other node\n{blob['params-orig']}\n")
-      err = 1
-
-  print_err("------------------------------------------------------------")
-
-  if err == 1:
-    return err
-
-
 def boot_params(data):
-  """Attempt to validate boot parameters from BSS
+  """Confirm that params required for booting are
+     present.
   """
-  worker = []
-  storage = []
-  management = []
-  err = 0
 
-  macreg = re.compile(r':([0-9a-fA-F]){2}:([0-9a-fA-F]){2}:([0-9a-fA-F]){2}:([0-9a-fA-F]){2}:([0-9a-fA-F]){2}:([0-9a-fA-F]){2}')
-  hostreg = re.compile(r'hostname=[a-zA-Z]*\-[a-zA-Z0-9]*')
-  httpreg = re.compile(r's=http://.*/')
+  err = 0
+  ncn_params = [
+	"biosdevname=1",
+	"console=tty0",
+	"console=ttyS0,115200",
+	"crashkernel=[0-9]*M",
+	"ds=nocloud-net;s=http://",
+	"hostname=",
+	"ifname=mgmt0",
+	"ifname=mgmt1",
+	"initrd=initrd.img.xz",
+	"iommu=pt",
+	"log_buf_len=1",
+	"metal.no-wipe=",
+	"metal.no-wipe=1",
+	"metal.server=http://",
+	"pcie_ports=native",
+	"psi=1",
+	"rd.auto=1",
+	"rd.bootif=0",
+	"rd.dm=0",
+	"rd.live.overlay.overlayfs=1",
+	"rd.live.overlay.thin=1",
+	"rd.live.overlay=LABEL=ROOTRAID",
+	"rd.live.ram=0",
+	"rd.live.squashimg=filesystem.squashfs",
+	"rd.luks.crypttab=0",
+	"rd.lvm.conf=0",
+	"rd.lvm=1",
+	"rd.md.conf=1",
+	"rd.md.waitclean=1",
+	"rd.md=1",
+	"rd.multipath=0",
+	"rd.neednet=0",
+	"rd.net.dhcp.retry=5",
+	"rd.net.timeout.carrier=120",
+	"rd.net.timeout.iflink=120",
+	"rd.net.timeout.ifup=120",
+	"rd.net.timeout.ipv6auto=0",
+	"rd.net.timeout.ipv6dad=0",
+	"rd.peerdns=0",
+	"rd.retry=10",
+	"rd.shell",
+	"rd.skipfsck",
+	"rd.writable.fsimg=0",
+	"root=live:LABEL=SQFSRAID",
+	"rootfallback=LABEL=BOOTRAID",
+	"transparent_hugepage=never"
+	]
+
+  worker_params     = [ "rd.luks=0\s+" ]
+  storage_params    = [ "rd.luks\s+" ]
+  management_params = [ "rd.luks\s+" ]
 
   for blob in data:
     if "params" in blob and blob['cloud-init']['user-data'] is not None:
       hostname = blob['cloud-init']['user-data']['hostname']
-      params_stripd = macreg.sub("", blob['params'])
-      params_stripd = hostreg.sub("", params_stripd)
-      params_stripd = httpreg.sub("", params_stripd)
-      params_length = len("".join(params_stripd.split()))
-      node = {'hostname': hostname, 'params-orig': blob['params'], 'params-stripd': params_stripd, 'params-length': params_length}
 
-      if re.search("ncn-m0", hostname):
-        management.append(node)
       if re.search("ncn-w0", hostname):
-        worker.append(node)
-      if re.search("ncn-s0", hostname):
-        storage.append(node)
+        mod_params = ncn_params
+        mod_params = mod_params + worker_params
 
-  if score_params(worker): err = 1
-  if score_params(storage): err = 1
-  if score_params(management): err = 1
-  return err
+      elif re.search("ncn-s0", hostname):
+        mod_params = ncn_params
+        mod_params = mod_params + storage_params
 
+      elif re.search("ncn-m0", hostname):
+        mod_params = ncn_params
+        mod_params = mod_params + management_params
+
+      for param in mod_params:
+        if not re.search(param, blob['params']):
+          print_err(f"{hostname}: {param} not found in boot params")
+          err = 1
+      
+  if err == 1:
+    return err
 
 if __name__ == "__main__":
   err = 0
@@ -300,6 +308,6 @@ if __name__ == "__main__":
       if boot_params(data): err = 1
     if validate_ntp(data): err = 1
   else:
-    print_err(f"No data to process. json object is empty.")
+    print_err("No data to process. json object is empty.")
 
   sys.exit(err)
