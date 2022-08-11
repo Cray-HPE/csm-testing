@@ -277,15 +277,15 @@ def boot_params(data):
     if "params" in blob and blob['cloud-init']['user-data'] is not None:
       hostname = blob['cloud-init']['user-data']['hostname']
 
-      if re.search("ncn-w00", hostname):
+      if re.search("ncn-w", hostname):
         mod_params = ncn_params
         mod_params = mod_params + worker_params
 
-      elif re.search("ncn-s00", hostname):
+      elif re.search("ncn-s", hostname):
         mod_params = ncn_params
         mod_params = mod_params + storage_params
 
-      elif re.search("ncn-m00", hostname):
+      elif re.search("ncn-m", hostname):
         mod_params = ncn_params
         mod_params = mod_params + management_params
 
