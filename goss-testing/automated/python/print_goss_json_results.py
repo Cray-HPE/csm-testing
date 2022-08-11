@@ -213,33 +213,24 @@ def extract_results_data(json_results):
         multi_print(traceback.format_exc(), outfile_print, logging.error)
         raise ScriptException(f"Goss test results from have unexpected format. {fmt_exc(e)}")
 
+    if len(selected_results) == 0:
+        raise ScriptException("No Goss test results found.")
+
     # Sort the results
     selected_results.sort(key=lambda r: (r["title"], r["result"]))
     return selected_results, failed_count, total_duration
 
-def show_results(json_results, node_name):
+def show_results(source, selected_results, failed_count, total_duration, node_name):
     """
-    Extracts results from json results
     Prints all results to outfile.
     Prints failures to stderr.
     Prints warnings if no tests executed or the Goss data contains inconsistencies.
     Returns (# of passes, # of failures, # of unknown results)
     """
-
-    try:
-        selected_results, failed_count, total_duration = extract_results_data(json_results)
-    except ScriptException:
-        raise
-    except Exception as e:
-        # Add a newline before printing errors
-        print_newline()
-        multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Error extracting test results from JSON data. {fmt_exc(e)}")
-
     manual_unknown_count=0
     manual_pass_count=0
     manual_fail_count=0
-    manual_skip_count=0
+    manual_skip_count=0    
     total_count=len(selected_results)
     for res in selected_results:
         bad_result = False
@@ -266,6 +257,7 @@ def show_results(json_results, node_name):
         # The blank string at the end is just to add a newline when
         # the join is called
         result_lines.extend([
+            f"Source: {source}",
             f"Test Name: {res['title']}",
             f"Description: {res['desc']}",
             f"Test Summary: {res['summary-line']}",
@@ -286,7 +278,8 @@ def show_results(json_results, node_name):
 
     summary = ', '.join([
         f"Node: {node_name}",
-        f"Total Tests: {total_count}"
+        f"Source: {source}",
+        f"Total Tests: {total_count}",
         f"Total Passed: {manual_pass_count}",
         f"Total Failed: {manual_fail_count}",
         f"Total Skipped: {manual_skip_count}",
@@ -301,15 +294,6 @@ def show_results(json_results, node_name):
         stderr_print(warn_text(f"WARNING: {mismatch}"))
         logging.warning(mismatch)
         outfile_print(f"WARNING: {mismatch}")
-        print_newline()
-    elif total_count == 0:
-        # If total count is 0, that certainly means that there were no failures, so print a newline before printing an error
-        print_newline()
-        stderr_print(warn_text(summary))
-        if failed_count == 0:
-            warning("No tests executed")
-        else:
-            warning(f"Goss reports that no tests executed, but also that {failed_count} tests failed")
         print_newline()
 
     return manual_pass_count, manual_fail_count, manual_unknown_count
@@ -356,14 +340,11 @@ def main(input_sources):
     Or raises ScriptException
     """
 
-    total_passed = 0
-    total_failed = 0
-    total_unknown = 0
-
     # This will get updated as needed during execution, in case
     # of failures beyond test failures
     unexpected_error = False
     
+    all_results = list()
     for source in input_sources:
         try:
             log_values(logging.debug, source=source)
@@ -374,20 +355,49 @@ def main(input_sources):
                 node = get_hostname()
                 json_results = read_and_decode_json(source, node)
             log_values(logging.info, source=source, node=node, json_results=json_results)
-            logging.debug(f"Showing results for {source}")
-            passed, failed, unknown = show_results(json_results, node)
-            total_passed += passed
-            total_failed += failed
-            total_unknown += unknown
         except ScriptException as e:
             error(e)
             error(f"Skipping {source} due to error\n")
             unexpected_error = True
+            continue
         except Exception as e:
             multi_print(traceback.format_exc(), outfile_print, logging.error)
-            error(f"Unexpected error. {fmt_exc(e)}")
             error(f"Skipping {source} due to error\n")
             unexpected_error = True
+            continue
+        # Extract the results from the JSON
+        try:
+            selected_results, failed_count, total_duration = extract_results_data(json_results)
+        except ScriptException:
+            error(e)
+            error(f"Skipping {source} due to error\n")
+            unexpected_error = True
+            continue
+        except Exception as e:
+            # Add a newline before printing errors
+            print_newline()
+            multi_print(traceback.format_exc(), outfile_print, logging.error)
+            error(f"Skipping {source} due to error extracting test results from JSON data\n")
+            unexpected_error = True
+            continue
+        all_results.append({
+            "source": source,
+            "selected_results": selected_results,
+            "failed_count": failed_count,
+            "total_duration": total_duration,
+            "node_name": node })
+
+    total_passed = 0
+    total_failed = 0
+    total_unknown = 0
+    multi_print("\nChecking test results", outfile_print, logging.info, stdout_print)
+    stdout_print("Only errors will be printed to the screen")
+    for results in all_results:
+        log_values(logging.debug, results=results)
+        passed, failed, unknown = show_results(**results)
+        total_passed += passed
+        total_failed += failed
+        total_unknown += unknown
 
     print_newline()
     if total_unknown == 0:
@@ -450,18 +460,18 @@ with open(MY_OUTPUT_FILE, "wt") as outfile:
     outfile_print(f"Script debug log file: {MY_LOG_FILE}")
     try:
         if main(input_sources) == 0:
-            stdout_print(ok_text("PASSED"))
-            outfile_print("PASSED")
+            stdout_print(ok_text("\nPASSED"))
+            outfile_print("\nPASSED")
             logging.info("PASSED; exiting with return code 0")
             sys.exit(0)
-        stderr_print(err_text("FAILED"))
-        outfile_print("FAILED")
+        stderr_print(err_text("\nFAILED"))
+        outfile_print("\nFAILED")
         logging.error(f"FAILED (failed tests); exiting with return code {RC_TESTFAIL}")
         sys.exit(RC_TESTFAIL)
     except ScriptException:
         stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug log: {MY_LOG_FILE}")
-        stderr_print(err_text("FAILED"))
-        outfile_print("FAILED")
+        stderr_print(err_text("\nFAILED"))
+        outfile_print("\nFAILED")
         logging.error(f"FAILED; exiting with return code {RC_ERROR}")
         sys.exit(RC_ERROR)
     except Exception as e:
@@ -470,11 +480,11 @@ with open(MY_OUTPUT_FILE, "wt") as outfile:
         stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug log: {MY_LOG_FILE}")
         multi_print(traceback.format_exc(), logging.error, outfile_print)
         error(f"Unexpected error. {fmt_exc(e)}")
-        stderr_print(err_text("FAILED"))
-        outfile_print("FAILED")
+        stderr_print(err_text("\nFAILED"))
+        outfile_print("\nFAILED")
         logging.error(f"FAILED (unexpected error); exiting with return code {RC_ERROR}")
         sys.exit(RC_ERROR)
 
 outfile = None
-error("PROGRAMMING LOGIC ERROR: This line should never be reached")
+error("\nPROGRAMMING LOGIC ERROR: This line should never be reached")
 sys.exit(RC_ERROR)
