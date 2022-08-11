@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,6 +21,20 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-gossfile:
- ../tests/goss-k8s-trustedcerts-configmaps-exist.yaml: {}
- ../tests/goss-k8s-vault-cluster-health.yaml: {}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+command:
+  {{ $testlabel := "validate_certifi_version" }}
+  {{$testlabel}}:
+    title: "Validate certifi is the correct version."
+    meta:
+      desc: "If this fails, then validate that an upstream version of certifi has not been installed. If a non-SLES certifi package has been installed, then uninstall it by running `pip uninstall certifi`."
+      sev: 0
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" \
+        pip show certifi
+    exit-status: 0
+    stdout:
+      - "Version: 2018.1.18"
+      - "Location: /usr/lib/python3.6/site-packages"
+    timeout: 10000
+    skip: false

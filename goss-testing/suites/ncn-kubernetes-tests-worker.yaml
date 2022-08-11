@@ -21,15 +21,15 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-# This test suite is run during CSM installs before CSM services are deployed
 
+# This suite is run:
+# * During CSM installs before CSM services have been deployed,
+# * During CSM Health Validation (after CSM services have been deployed), both
+#   before and after PIT redeployment
+
+# During health validation, these tests are executed on every worker node
+# in the cluster.
 gossfile:
-  ../tests/goss-weave-health.yaml: {}
-  ../tests/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
-  ../tests/goss-ceph-csi-k8s-requirements.yaml: {}
-  ../tests/goss-k8s-verify-cluster.yaml: {}
-  ../tests/goss-k8s-certmanager-certs-ready.yaml: {}
-  ../tests/goss-k8s-certmanager-issuers-ready.yaml: {}
-  ../tests/goss-unbound-dns-entries.yaml: {}
   ../tests/goss-dedicated-drive-worker.yaml: {}
   ../tests/goss-ncn-xname.yaml: {}
+  ../tests/goss-weave-health.yaml: {}

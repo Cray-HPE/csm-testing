@@ -29,7 +29,7 @@ command:
     {{$testlabel}}:
         title: Kubernetes Postgres Check that All Clusters are in a Running State
         meta:
-            desc: If this test fails, run the command 'kubectl get postgresql -A' to look at all postgres clusters and thier statuses. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing clusters not in a running state.
+            desc: If this test fails, run the command 'kubectl get postgresql -A' to look at all postgres clusters and their statuses. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing clusters not in a running state.
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \

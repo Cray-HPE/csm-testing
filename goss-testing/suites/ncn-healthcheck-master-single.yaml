@@ -22,19 +22,26 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-#
-# This suite is run:
-# * During CSM installs before CSM services have been deployed,
-# * During CSM Health Validation (after CSM services have been deployed), both
-#   before and after PIT redeployment
-#
-
-# During health validation, these tests are executed on every master node
-# in the cluster. Tests that are executed on just a single master node are
-# in the corresponding -single.yaml suite file.
+# During health validation, these tests are executed on a single master node
+# in the cluster. Tests that are executed on every master node are in the
+# corresponding suite file without the -single suffix.
 gossfile:
-  ../tests/goss-ceph-status.yaml: {}
-  ../tests/goss-etcdlvm-drive-master.yaml: {}
-  ../tests/goss-k8s-etcd-service.yaml: {}
-  ../tests/goss-ncn-xname.yaml: {}
-  ../tests/goss-weave-health.yaml: {}
+  ../tests/goss-bss-basecamp-valid.yaml: {}
+  ../tests/goss-k8s-etcd-backups.yaml: {}
+  ../tests/goss-k8s-etcd-cluster-balance.yaml: {}
+  ../tests/goss-k8s-etcd-database-health.yaml: {}
+  ../tests/goss-k8s-etcd-endpoint-health.yaml: {}
+  ../tests/goss-k8s-etcd-members.yaml: {}
+  ../tests/goss-k8s-kea-has-active-dhcp-leases.yaml: {}
+  ../tests/goss-k8s-psp-enabled.yaml: {}
+  ../tests/goss-k8s-resolve-external-dns.yaml: {}
+  ../tests/goss-k8s-monitoring-url.yaml: {}
+  ../tests/goss-k8s-sealed-secret-key.yaml: {}
+  ../tests/goss-k8s-storageclass.yaml: {}
+  ../tests/goss-k8s-velero-backup-storage-locations-available.yaml: {}
+  ../tests/goss-k8s-velero-backup-vault-schedule-exists.yaml: {}
+  ../tests/goss-k8s-velero-no-failed-backups.yaml: {}
+  ../tests/goss-spire-bss-metadata-exist.yaml: {}
+  ../tests/goss-spire-check-key-id-in-jwks.yaml: {}
+  ../tests/goss-spire-verify-api-fetch-jwt.yaml: {}
+  ../tests/goss-spire-verify-pods.yaml: {}

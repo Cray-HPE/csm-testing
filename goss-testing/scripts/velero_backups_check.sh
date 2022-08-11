@@ -3,7 +3,7 @@
 # Due to a velero bug, a backup is created anytime the backup schedule is created or updated.
 # Backups should only occurs based upon the cron schedule and not when the schedule itself is created.. 
 # This bug can result in a backup being created before the service is fully running and thus the backup ends up PartiallyFailed.
-# A cleanup is done for anly PartiallyFailed backup that exists for backups that were created within 10 minutes of the schedule being created.
+# A cleanup is done for any PartiallyFailed backup that exists for backups that were created within 10 minutes of the schedule being created.
 
 cleanup_velero_backups() {
 

@@ -37,21 +37,12 @@ echo
 # with the csm-testing RPM.
 source "$(dirname -- "$0")/run-ncn-tests.sh"
 
-# Specify the switch passwords and call the switch BGP neighbors tests.
-# This only needs to be done once on the NCN that this script is
-# executing on as the BGP status tests check all switches in
-# the cluster.
-# If explicit Aruba or Mellanox switch passwords were not provided, then go with SW_ADMIN_PASSWORD
-if [[ -z ${SW_ADMIN_PASSWORD} ]]; then
-    echo "ERROR Management switch admin password must be provided via the SW_ADMIN_PASSWORD enviroment varaible"
-    echo "Example: export SW_ADMIN_PASSWORD='changeme'"
-    exit 1
-fi
+# BGP test requires switch password to be set
+sw_admin_pw_set || exit 1
 
 test_urls=$(ncn_healthcheck_worker_urls) || err_exit "Cannot find test URLs"
 
-run_goss_tests tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml --format json | \
-    print_goss_json_results stdin ${test_urls}
+run_goss_tests_print_results tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml ${test_urls}
 rc=$?
 
 # This script does not exit with non-0 return code just for test failures

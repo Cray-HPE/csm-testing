@@ -21,6 +21,11 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+# This suite is only executed after the PIT node has been rebooted and become ncn-m001.
+
+# During health validation, these tests are executed on every worker node
+# in the cluster. Tests that are executed on just a single worker node are
+# in the corresponding -single.yaml suite file.
 gossfile:
   ../tests/goss-boot-parameter-check-no-wipe.yaml: {}
-  ../tests/goss-k8s-vault-cluster-health.yaml: {}
