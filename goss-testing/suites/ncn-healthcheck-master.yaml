@@ -34,6 +34,7 @@ gossfile:
   ../tests/goss-default-gateway-points-to-CMN-gateway.yaml: {}
   ../tests/goss-dns-nodes.yaml: {}
   ../tests/goss-interface-has-ip.yaml: {}
+  ../tests/goss-bss-basecamp-valid.yaml: {}
   ../tests/goss-interfaces-have-same-mac.yaml: {}
   ../tests/goss-k8s-etcd-service.yaml: {}
   ../tests/goss-network-interfaces.yaml: {}
