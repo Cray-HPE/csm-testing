@@ -43,6 +43,9 @@ import traceback
 NCN_TYPES = [ "master", "storage", "worker" ]
 
 DEFAULT_LOG_LEVEL = "INFO"
+# For automated scripts with parallel execution, set the max number of parallel jobs.
+# Mainly this is available in case problems are seen running things in parallel.
+DEFAULT_GOSS_SCRIPT_MAX_THREADS = 16
 DEFAULT_GOSS_INSTALL_BASE_DIR = "/opt/cray/tests/install"
 PIT_NODE_RELEASE_FILE = "/etc/pit-release"
 
@@ -95,6 +98,18 @@ def goss_script_log_level() -> int:
     requested_log_level = os.environ.get("GOSS_SCRIPT_LOG_LEVEL", DEFAULT_LOG_LEVEL).upper()
     return logging.getLevelName(requested_log_level)
 
+def goss_script_max_threads() -> int:
+    max_threads_str = os.environ.get("GOSS_SCRIPT_MAX_THREADS", DEFAULT_GOSS_SCRIPT_MAX_THREADS)
+    try:
+        max_threads = int(max_threads_str)
+    except ValueError:
+        logging.warn(f"Non-integer value specified for GOSS_SCRIPT_MAX_THREADS ({max_threads_str}). Default to {DEFAULT_GOSS_SCRIPT_MAX_THREADS}")
+        max_threads = DEFAULT_GOSS_SCRIPT_MAX_THREADS
+    if max_threads < 1:
+        logging.warn(f"GOSS_SCRIPT_MAX_THREADS must be a positive integer. Invalid value ({max_threads}). Defaulting to 1.")
+        max_threads = 1
+    return max_threads
+
 def goss_servers_config(validate: bool = False) -> str:
     gibd = goss_install_base_dir()
     config_file = os.environ.get("GOSS_SERVERS_CONFIG", f"{gibd}/dat/goss-servers.cfg")
@@ -139,6 +154,7 @@ def goss_env_variables() -> dict:
     return { 
         "GOSS_INSTALL_BASE_DIR": goss_install_base_dir(),
         "GOSS_SCRIPT_LOG_LEVEL": goss_script_log_level(),
+        "GOSS_SCRIPT_MAX_THREADS": goss_script_max_threads(),
         "GOSS_SERVERS_CONFIG": goss_servers_config(),
         "GOSS_LOG_BASE_DIR": goss_log_base_dir(),
         "GOSS_BASE": goss_base() }

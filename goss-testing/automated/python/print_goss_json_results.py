@@ -424,7 +424,7 @@ def main(input_sources: list) -> int:
         mylock = threading.Lock()
         json_results_map = dict()
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=goss_script_max_threads()) as executor:
             executor.map(get_json_from_input_url, url_sources, itertools.repeat(mylock, num_urls), itertools.repeat(json_results_map, num_urls))
 
         for source in url_sources:
