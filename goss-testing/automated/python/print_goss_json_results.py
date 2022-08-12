@@ -60,28 +60,33 @@ Other error                 3
 If multiple exit codes apply, the highest one is used.
 """
 
-
-from lib.common import err_text,               \
-                       fmt_exc,                \
-                       get_hostname,           \
-                       log_goss_env_variables, \
-                       goss_script_log_level,  \
-                       log_dir,                \
-                       log_values,             \
-                       multi_print,            \
-                       ok_text,                \
-                       ScriptException,        \
-                       ScriptUsageException,   \
-                       stderr_print,           \
-                       stdout_print,           \
+from lib.common import err_text,                \
+                       fmt_exc,                 \
+                       get_hostname,            \
+                       log_goss_env_variables,  \
+                       goss_script_log_level,   \
+                       goss_script_max_threads, \
+                       log_dir,                 \
+                       log_values,              \
+                       multi_print,             \
+                       ok_text,                 \
+                       ScriptException,         \
+                       ScriptUsageException,    \
+                       stderr_print,            \
+                       stdout_print,            \
                        warn_text
 
+from typing import Callable, List, Tuple
+
 import argparse
+import concurrent.futures
+import itertools
 import json
 import logging
 import os
 import requests
 import sys
+import threading
 import traceback
 
 RC_TESTFAIL = 1
@@ -93,7 +98,7 @@ outfile = None
 MY_LOG_DIR = None
 MY_LOG_FILE = None
 
-def outfile_print(s):
+def outfile_print(s: str) -> None:
     global outfile
     if outfile == None:
         return
@@ -106,20 +111,20 @@ def outfile_print(s):
         stderr_print(msg)
         outfile = None
 
-def print_newline():
+def print_newline() -> None:
     multi_print("", outfile_print, stdout_print)
 
-def error(s):
+def error(s: str) -> None:
     stderr_print(err_text(f"ERROR: {s}"))
     logging.error(s)
     outfile_print(f"ERROR: {s}")
 
-def warning(s):
+def warning(s: str) -> None:
     stderr_print(warn_text(f"WARNING: {s}"))
     logging.warning(s)
     outfile_print(f"WARNING: {s}")
 
-def get_node_from_url(url):
+def get_node_from_url(url: str) -> str:
     # The node name we use (as a label for results) is the first string after the //, up until
     # the first period, colon, or / (whichever is first)
     node = url.split("/")[2]
@@ -133,7 +138,7 @@ def get_node_from_url(url):
         return node[:colon_index]
     return node
 
-def print_reading_test_results_message(node, label=None):
+def print_reading_test_results_message(node: str, label: str = "") -> None:
     if label:
         stdout_print(f"Reading test results for node {warn_text(node)} ({label})")
         outfile_print(f"Reading test results for node {node} ({label})")
@@ -141,7 +146,7 @@ def print_reading_test_results_message(node, label=None):
         stdout_print(f"Reading test results for node {warn_text(node)}")
         outfile_print(f"Reading test results for node {node}")
 
-def read_and_decode_json(input_file, node):
+def read_and_decode_json(input_file: str, node: str) -> dict:
     if input_file == "stdin" or input_file[:6] == "stdin:":
         logging.debug("Reading standard input for JSON results")
         if input_file == "stdin":
@@ -160,6 +165,7 @@ def read_and_decode_json(input_file, node):
             print_newline()
             multi_print(traceback.format_exc(), outfile_print, logging.error)
             raise ScriptException(f"Problem reading input file {input_file}. {fmt_exc(e)}")
+
     try:
         return json.loads(input)
     except Exception as e:
@@ -169,27 +175,52 @@ def read_and_decode_json(input_file, node):
         multi_print(traceback.format_exc(), outfile_print, logging.error)
         raise ScriptException(f"Error decoding JSON from {input_file}. {fmt_exc(e)}")
 
-def get_json_from_input_url(input_url, node):
-    logging.debug(f"Making GET request to {input_url}")
-    stdout_print(f"Running tests against node {warn_text(node)} (URL: {input_url})")
-    outfile_print(f"Running tests against node {node} (URL: {input_url})")
-    resp = requests.get(input_url)
-    log_values(logging.debug, status_code=resp.status_code, reason=resp.reason, headers=resp.headers, ok=resp.ok)
+# The function name is a bit misleading. This just makes sure that log_values makes a single call to
+# the logging method, guaranteeing that the entry will all go in together. That way it won't be interleaved
+# with entries from other threads.
+def threaded_log_values(log_method: Callable, **kwargs) -> None:
+    log_values(log_method, values=kwargs)
+
+# input_url suffices as a unique name for this function in a multi-threading context, as we do not
+# permit duplicate URLs. It is important to include this in all logging calls made in this function,
+# in order to identify which thread was making the call. Also, 
+def get_json_from_input_url(input_url: str, lock: threading.Lock, json_results_map: dict) -> None:
+    logging.info(f"Making GET request to {input_url}")
+    try:
+        resp = requests.get(input_url)
+    except Exception as e:
+        logging.error(f"Unexpected error attempting GET request to {input_url}: {traceback.format_exc()}")
+        with lock:
+            json_results_map[input_url] = f"Unexpected error attempting GET request to {input_url}: {fmt_exc(e)}"
+        return
+
+    threaded_log_values(logging.debug, input_url=input_url, status_code=resp.status_code, reason=resp.reason, headers=resp.headers, ok=resp.ok)
     # Expected responses are 200 (meaning no tests failed) or 503 (which can mean either that there were test failures OR that there was
     # another Goss issue, like syntax errors in the test files).
     if resp.status_code not in { 200, 503 }:
-        
-        raise ScriptException(f"Status code {resp.status_code} received from Goss URL {input_url}: {resp.text}")
-    try:
-        return resp.json()
-    except Exception as e:
-        log_values(logging.debug, text=resp.text)
-        # Add a newline before printing errors
-        print_newline()
-        multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Unable to decode JSON from endpoint response from {input_url}. {fmt_exc(e)}")
+        err_msg = f"Status code {resp.status_code} received from Goss URL {input_url}: {resp.text}"
+        logging.error(err_msg)
+        with lock:
+            json_results_map[input_url]= err_msg
+        return
 
-def extract_results_data(json_results):
+    logging.info(f"Decoding JSON response body from {input_url}")
+    try:
+        json_results = resp.json()
+    except Exception as e:
+        logging.error(f"Unexpected error decoding JSON response from {input_url}: {traceback.format_exc()}")
+        threaded_log_values(logging.debug, input_url=input_url, text=resp.text)
+        with lock:
+            json_results_map[input_url] = f"Unexpected error decoding JSON response from {input_url}: {fmt_exc(e)}"
+        return
+
+    threaded_log_values(logging.debug, input_url=input_url, json_results=json_results)
+    logging.info(f"Successfully decoded JSON response from {input_url}")
+    with lock:
+        json_results_map[input_url] = json_results
+    return
+
+def extract_results_data(json_results: dict) -> Tuple[List[dict], int, float]:
     try:
         results = json_results["results"]
         # Make list of results with a numeric result
@@ -213,33 +244,24 @@ def extract_results_data(json_results):
         multi_print(traceback.format_exc(), outfile_print, logging.error)
         raise ScriptException(f"Goss test results from have unexpected format. {fmt_exc(e)}")
 
+    if len(selected_results) == 0:
+        raise ScriptException("No Goss test results found.")
+
     # Sort the results
     selected_results.sort(key=lambda r: (r["title"], r["result"]))
     return selected_results, failed_count, total_duration
 
-def show_results(json_results, node_name):
+def show_results(source: str, selected_results: List[dict], failed_count: int, total_duration: float, node_name: str) -> Tuple[int, int, int]:
     """
-    Extracts results from json results
     Prints all results to outfile.
     Prints failures to stderr.
     Prints warnings if no tests executed or the Goss data contains inconsistencies.
     Returns (# of passes, # of failures, # of unknown results)
     """
-
-    try:
-        selected_results, failed_count, total_duration = extract_results_data(json_results)
-    except ScriptException:
-        raise
-    except Exception as e:
-        # Add a newline before printing errors
-        print_newline()
-        multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Error extracting test results from JSON data. {fmt_exc(e)}")
-
     manual_unknown_count=0
     manual_pass_count=0
     manual_fail_count=0
-    manual_skip_count=0
+    manual_skip_count=0    
     total_count=len(selected_results)
     for res in selected_results:
         bad_result = False
@@ -266,6 +288,7 @@ def show_results(json_results, node_name):
         # The blank string at the end is just to add a newline when
         # the join is called
         result_lines.extend([
+            f"Source: {source}",
             f"Test Name: {res['title']}",
             f"Description: {res['desc']}",
             f"Test Summary: {res['summary-line']}",
@@ -286,7 +309,8 @@ def show_results(json_results, node_name):
 
     summary = ', '.join([
         f"Node: {node_name}",
-        f"Total Tests: {total_count}"
+        f"Source: {source}",
+        f"Total Tests: {total_count}",
         f"Total Passed: {manual_pass_count}",
         f"Total Failed: {manual_fail_count}",
         f"Total Skipped: {manual_skip_count}",
@@ -302,25 +326,16 @@ def show_results(json_results, node_name):
         logging.warning(mismatch)
         outfile_print(f"WARNING: {mismatch}")
         print_newline()
-    elif total_count == 0:
-        # If total count is 0, that certainly means that there were no failures, so print a newline before printing an error
-        print_newline()
-        stderr_print(warn_text(summary))
-        if failed_count == 0:
-            warning("No tests executed")
-        else:
-            warning(f"Goss reports that no tests executed, but also that {failed_count} tests failed")
-        print_newline()
 
     return manual_pass_count, manual_fail_count, manual_unknown_count
 
-def is_url(s):
+def is_url(s: str) -> bool:
     """
     Very basic check to see if string appears to be a URL
     """
     return s.find("http://") == 0 or s.find("https://") == 0
 
-def parse_args():
+def parse_args() -> List[str]:
     parser = argparse.ArgumentParser(description="Summarize JSON-format Goss test results with pretty colors.")
     parser.add_argument("sources", nargs="+", help="Sources for test results.")
     # In Python 3.6, the exit_on_error option to ArgumentParser does not yet exist, so a cruder method is
@@ -349,45 +364,118 @@ def parse_args():
 
     return input_sources
 
-def main(input_sources):
+def main(input_sources: List[str]) -> int:
     """
     Returns number of failed tests
 
     Or raises ScriptException
     """
 
-    total_passed = 0
-    total_failed = 0
-    total_unknown = 0
-
     # This will get updated as needed during execution, in case
     # of failures beyond test failures
     unexpected_error = False
     
+    all_results = list()
+    url_sources = list()
     for source in input_sources:
         try:
             log_values(logging.debug, source=source)
             if is_url(source):
-                node = get_node_from_url(source)
-                json_results = get_json_from_input_url(source, node)
+                # These will be processed concurrently after we process the non-URL sources
+                url_sources.append(source)
+                continue
             else:
                 node = get_hostname()
                 json_results = read_and_decode_json(source, node)
             log_values(logging.info, source=source, node=node, json_results=json_results)
-            logging.debug(f"Showing results for {source}")
-            passed, failed, unknown = show_results(json_results, node)
-            total_passed += passed
-            total_failed += failed
-            total_unknown += unknown
         except ScriptException as e:
             error(e)
             error(f"Skipping {source} due to error\n")
             unexpected_error = True
+            continue
         except Exception as e:
             multi_print(traceback.format_exc(), outfile_print, logging.error)
-            error(f"Unexpected error. {fmt_exc(e)}")
             error(f"Skipping {source} due to error\n")
             unexpected_error = True
+            continue
+        # Extract the results from the JSON
+        try:
+            selected_results, failed_count, total_duration = extract_results_data(json_results)
+        except ScriptException:
+            error(e)
+            error(f"Skipping {source} due to error\n")
+            unexpected_error = True
+            continue
+        except Exception as e:
+            # Add a newline before printing errors
+            print_newline()
+            multi_print(traceback.format_exc(), outfile_print, logging.error)
+            error(f"Skipping {source} due to error extracting test results from JSON data\n")
+            unexpected_error = True
+            continue
+        all_results.append({
+            "source": source,
+            "selected_results": selected_results,
+            "failed_count": failed_count,
+            "total_duration": total_duration,
+            "node_name": node })
+
+    # Now handle URL sources in parallel
+    num_urls = len(url_sources)
+    if num_urls > 0:
+        multi_print("Running remote tests", outfile_print, logging.info, stdout_print)
+        mylock = threading.Lock()
+        json_results_map = dict()
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=goss_script_max_threads()) as executor:
+            executor.map(get_json_from_input_url, url_sources, itertools.repeat(mylock, num_urls), itertools.repeat(json_results_map, num_urls))
+
+        for source in url_sources:
+            node = get_node_from_url(source)
+            try:
+                json_results = json_results_map[source]
+            except KeyError:
+                error(f"Internal error. Unable to find results OR error message from request to {source}")
+                error(f"Skipping {source} due to error\n")
+                unexpected_error = True
+                continue
+            if isinstance(json_results, str):
+                error(f"Error encountered running {source} tests: {json_results}")
+                error(f"Skipping {source} due to error\n")
+                unexpected_error = True
+                continue
+            # Extract the results from the JSON
+            try:
+                selected_results, failed_count, total_duration = extract_results_data(json_results)
+            except ScriptException:
+                error(e)
+                error(f"Skipping {source} due to error\n")
+                unexpected_error = True
+                continue
+            except Exception as e:
+                multi_print(traceback.format_exc(), outfile_print, logging.error)
+                error(f"Skipping {source} due to error extracting test results from JSON data\n")
+                unexpected_error = True
+                continue
+            all_results.append({
+                "source": source,
+                "selected_results": selected_results,
+                "failed_count": failed_count,
+                "total_duration": total_duration,
+                "node_name": node })
+
+    total_passed = 0
+    total_failed = 0
+    total_unknown = 0
+    if all_results:
+        multi_print("\nChecking test results", outfile_print, logging.info, stdout_print)
+        stdout_print("Only errors will be printed to the screen")
+        for results in all_results:
+            log_values(logging.debug, results=results)
+            passed, failed, unknown = show_results(**results)
+            total_passed += passed
+            total_failed += failed
+            total_unknown += unknown
 
     print_newline()
     if total_unknown == 0:
@@ -413,7 +501,7 @@ def main(input_sources):
         raise ScriptException()
     return total_failed
 
-def setup_logging():
+def setup_logging() -> Tuple[str, str]:
     MY_LOG_DIR = log_dir(__file__)
     try:
         # create log directory; it is NOT ok if it already exists
@@ -450,18 +538,18 @@ with open(MY_OUTPUT_FILE, "wt") as outfile:
     outfile_print(f"Script debug log file: {MY_LOG_FILE}")
     try:
         if main(input_sources) == 0:
-            stdout_print(ok_text("PASSED"))
-            outfile_print("PASSED")
+            stdout_print(ok_text("\nPASSED"))
+            outfile_print("\nPASSED")
             logging.info("PASSED; exiting with return code 0")
             sys.exit(0)
-        stderr_print(err_text("FAILED"))
-        outfile_print("FAILED")
+        stderr_print(err_text("\nFAILED"))
+        outfile_print("\nFAILED")
         logging.error(f"FAILED (failed tests); exiting with return code {RC_TESTFAIL}")
         sys.exit(RC_TESTFAIL)
     except ScriptException:
         stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug log: {MY_LOG_FILE}")
-        stderr_print(err_text("FAILED"))
-        outfile_print("FAILED")
+        stderr_print(err_text("\nFAILED"))
+        outfile_print("\nFAILED")
         logging.error(f"FAILED; exiting with return code {RC_ERROR}")
         sys.exit(RC_ERROR)
     except Exception as e:
@@ -470,11 +558,11 @@ with open(MY_OUTPUT_FILE, "wt") as outfile:
         stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug log: {MY_LOG_FILE}")
         multi_print(traceback.format_exc(), logging.error, outfile_print)
         error(f"Unexpected error. {fmt_exc(e)}")
-        stderr_print(err_text("FAILED"))
-        outfile_print("FAILED")
+        stderr_print(err_text("\nFAILED"))
+        outfile_print("\nFAILED")
         logging.error(f"FAILED (unexpected error); exiting with return code {RC_ERROR}")
         sys.exit(RC_ERROR)
 
 outfile = None
-error("PROGRAMMING LOGIC ERROR: This line should never be reached")
+error("\nPROGRAMMING LOGIC ERROR: This line should never be reached")
 sys.exit(RC_ERROR)

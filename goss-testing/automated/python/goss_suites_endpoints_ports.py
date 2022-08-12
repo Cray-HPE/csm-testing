@@ -35,9 +35,9 @@ Each line of output is of the format:
 Exits 0 on success, non-0 otherwise.
 """
 
-from lib.common import goss_suites_dir,             \
-                       load_goss_endpoints,         \
-                       my_ncn_type
+from lib.common     import  goss_suites_dir,             \
+                            my_ncn_type
+from lib.endpoints  import load_goss_endpoints
 
 import sys
 
