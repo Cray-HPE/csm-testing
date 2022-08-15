@@ -27,7 +27,7 @@
 command:
     {{ $testlabel := "switch-ping-status" }}
     {{$testlabel}}:
-        title: Check if switch is able to reach external
+        title: Verify that the network switch has external access
         meta:
             desc: If this test fails, then validate the network switch configurations.
             sev: 0
