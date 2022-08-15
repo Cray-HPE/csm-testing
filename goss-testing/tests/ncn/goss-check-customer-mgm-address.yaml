@@ -27,7 +27,7 @@
 command:
     {{ $testlabel := "check_k8s-metallb-status" }}
     {{$testlabel}}:
-        title: Check configuration management is enabled for metallb
+        title: Verify that configuration management is enabled for metallb
         meta:
             desc: If this test fails, then see troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for remediation steps.
             sev: 0
