@@ -27,7 +27,7 @@
 command:
     {{ $testlabel := "check_k8s-metallb-status" }}
     {{$testlabel}}:
-        title: Check if Metal Load Balancer for Kubernetes is running on service ingress
+        title: Verify that Metal Load Balancer for Kubernetes is running on service ingress
         meta:
             desc: If this test fails, load balance is properly configured on ingress service, follow https://github.com/Cray-HPE/docs-csm/blob/main/troubleshooting/known_issues/check_system_management_monitoring_tools.md for remediation steps
             sev: 0
