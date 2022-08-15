@@ -27,7 +27,7 @@
 command:
    {{ $testlabel := "ip_bond0" }}
     {{$testlabel}}:
-        title: Check if bond0.cmn0 has assigned IP
+        title: Verify that bond0.cmn0 has an IP address
         meta:
             desc: If this test fail, make sure ip is correctly assigned to bond0.cmn0.
             sev: 0
