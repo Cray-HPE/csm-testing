@@ -393,7 +393,7 @@ def main(input_sources: List[str]) -> int:
             error(f"Skipping {source} due to error\n")
             unexpected_error = True
             continue
-        except Exception as e:
+        except Exception:
             multi_print(traceback.format_exc(), outfile_print, logging.error)
             error(f"Skipping {source} due to error\n")
             unexpected_error = True
@@ -401,12 +401,12 @@ def main(input_sources: List[str]) -> int:
         # Extract the results from the JSON
         try:
             selected_results, failed_count, total_duration = extract_results_data(json_results)
-        except ScriptException:
+        except ScriptException as e:
             error(e)
             error(f"Skipping {source} due to error\n")
             unexpected_error = True
             continue
-        except Exception as e:
+        except Exception:
             # Add a newline before printing errors
             print_newline()
             multi_print(traceback.format_exc(), outfile_print, logging.error)
@@ -447,12 +447,12 @@ def main(input_sources: List[str]) -> int:
             # Extract the results from the JSON
             try:
                 selected_results, failed_count, total_duration = extract_results_data(json_results)
-            except ScriptException:
+            except ScriptException as e:
                 error(e)
                 error(f"Skipping {source} due to error\n")
                 unexpected_error = True
                 continue
-            except Exception as e:
+            except Exception:
                 multi_print(traceback.format_exc(), outfile_print, logging.error)
                 error(f"Skipping {source} due to error extracting test results from JSON data\n")
                 unexpected_error = True
