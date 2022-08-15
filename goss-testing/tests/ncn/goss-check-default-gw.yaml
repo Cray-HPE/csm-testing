@@ -27,7 +27,7 @@
 command:
     {{ $testlabel := "check_default_gw_assigned" }}
     {{$testlabel}}:
-        title: Check if default gateway IP is assigned
+        title: Check if default gateway IP address is assigned
         meta:
             desc: If this test fails, make sure default GW ip is assigned and follow https://github.com/Cray-HPE/docs-csm/blob/main/troubleshooting/known_issues/check_system_management_monitoring_tools.md for remediation steps
             sev: 0
