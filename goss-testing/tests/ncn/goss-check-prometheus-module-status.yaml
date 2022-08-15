@@ -27,7 +27,7 @@
 command:
     {{ $testlabel := "check_prometheus-module-status" }}
     {{$testlabel}}:
-        title: Check if prometheus module is enabled
+        title: Verify that Prometheus module is enabled
         meta:
             desc: If this test fails, follow https://github.com/Cray-HPE/docs-csm/blob/main/troubleshooting/known_issues/check_system_management_monitoring_tools.md for remediation steps
             sev: 0
