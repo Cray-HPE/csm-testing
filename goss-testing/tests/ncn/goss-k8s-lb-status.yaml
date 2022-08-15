@@ -27,10 +27,9 @@
 command:
     {{ $testlabel := "check_k8s-lb-status" }}
     {{$testlabel}}:
-        title: Check if Load Balancer for Kubernetes is running
+        title: Verify that Load Balancer for Kubernetes is running
         meta:
-            desc: If this test fails, load balance is properly configured, follow https://github.com/Cray-HPE/docs-csm/blob/main/troubleshooting/known_issues/check_system_management_monitoring_tools.md for remediation steps
-            sev: 0
+            desc: If this test fails, verify that the load balancer is properly configured. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for additional remediation steps.
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
                 kubectl get service -A | grep Load|grep -i pending

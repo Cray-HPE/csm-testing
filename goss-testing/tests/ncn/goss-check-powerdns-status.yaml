@@ -27,9 +27,9 @@
 command:
     {{ $testlabel := "check_powerdns-status" }}
     {{$testlabel}}:
-        title: Check if powerdns is enabled and configured
+        title: Verify that if PowerDNS is enabled and configured
         meta:
-            desc: If this test fails, make sure powerdns is enabled and configured, follow https://github.com/Cray-HPE/docs-csm/blob/main/troubleshooting/known_issues/check_system_management_monitoring_tools.md for remediation steps
+            desc: If this test fails, then make sure that PowerDNS is enabled and configured. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for remediation steps.
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
