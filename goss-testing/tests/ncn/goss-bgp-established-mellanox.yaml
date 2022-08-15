@@ -22,7 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Be aware that in order this goss run with success need to have sshpass 
-# binary installed on system and SSHPASS environment variable set
+# variable must be set to the admin user password of the spine switches.
 
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
