@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -24,13 +24,13 @@
 # This test suite is intented to run as part of check of system management 
 # monitoring tools on new environment for validation and fix of CMN issues.
 gossfile:
-  ../tests/ncn/goss-switch-ping-status.yaml: {}
-  ../tests/ncn/goss-k8s-lb-status.yaml: {}
-  ../tests/ncn/goss-k8s-metallb_configmap-status.yaml: {}
-  ../tests/ncn/goss-check-prometheus-module-status.yaml: {}
-  ../tests/ncn/goss-check-powerdns-status.yaml: {}
-  ../tests/ncn/goss-check-default-gw.yaml:  {}
-  ../tests/ncn/goss-check-customer-mgm-address.yaml:  {}
-  ../tests/ncn/goss-bond0-ip-validation:  {}
-  ../tests/ncn/goss-bgp-established-mellanox.yaml:  {}
-  ../tests/ncn/goss-bgp-established-aruba.yaml:  {}
+  ../tests/goss-switch-ping-status.yaml: {}
+  ../tests/goss-k8s-lb-status.yaml: {}
+  ../tests/goss-k8s-metallb_configmap-status.yaml: {}
+  ../tests/goss-check-prometheus-module-status.yaml: {}
+  ../tests/goss-check-powerdns-status.yaml: {}
+  ../tests/goss-check-default-gw.yaml:  {}
+  ../tests/goss-check-customer-mgm-address.yaml:  {}
+  ../tests/goss-bond0-ip-validation:  {}
+  ../tests/goss-bgp-established-mellanox.yaml:  {}
+  ../tests/goss-bgp-established-aruba.yaml:  {}
