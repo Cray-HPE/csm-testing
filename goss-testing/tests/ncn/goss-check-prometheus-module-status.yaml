@@ -36,6 +36,8 @@ command:
             set -eo pipefail
             "{{$logrun}}" -l "{{$testlabel}}" \
                 ceph mgr module ls | jq '.enabled_modules'
+        stdout:
+            - prometheus
         exit-status: 0
         timeout: 30000
         skip: false

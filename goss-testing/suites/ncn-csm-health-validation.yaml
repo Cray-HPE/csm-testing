@@ -23,7 +23,7 @@
 #
 # This test suite is intented to run as part of check of system management 
 # monitoring tools on new environment for validation and fix of CMN issues.
-# This suite must run during CSM health validation PIT node is redeployed.
+# This suite must be executed after PIT node is redeployed for validation.
 #
 gossfile:
   ../tests/goss-switch-ping-status.yaml: {}

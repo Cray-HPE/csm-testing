@@ -33,7 +33,9 @@ command:
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
-                ip route | grep default
+                ip route
+        stdout:
+            - default
         exit-status: 0
         timeout: 30000
         skip: false
