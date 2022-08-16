@@ -31,7 +31,7 @@ command:
     {{$testlabel}}:
         title: Validate the BGP Aruba switch status
         meta:
-            desc: If this test fails, make sure system is using Aruba switcht. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for further remediation steps.
+            desc: If this test fails, then verify that the system is using Aruba switches. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for further remediation steps.
             sev: 0
         exec: |-
             #Set pipefail so that if any commands in the command pipeline fail, the test will fail
