@@ -27,7 +27,7 @@
 command:
     {{ $testlabel := "check_powerdns-status" }}
     {{$testlabel}}:
-        title: Verify that if PowerDNS is enabled and configured
+        title: Verify that PowerDNS is enabled and configured
         meta:
             desc: If this test fails, then make sure that PowerDNS is enabled and configured. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for remediation steps.
             sev: 0
