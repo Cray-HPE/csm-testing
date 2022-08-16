@@ -29,7 +29,7 @@ command:
     {{$testlabel}}:
         title: Check if IPV4 IP address is assigned to bond0.cmn0
         meta:
-            desc: If this test fails, then make sure IPV4 IP address is assigned. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for remediation steps.
+            desc: If this test fails, then make sure an IPV4 IP address is assigned to bond0.cmn0. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for remediation steps.
             sev: 0
         exec: |-
             #Set pipefail so that if any commands in the command pipeline fail, the test will fail
