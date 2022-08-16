@@ -23,20 +23,19 @@
 #
 
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-   {{ $testlabel := "ip_bond0" }}
+    {{ $testlabel := "check_ipv4_ip_assigned" }}
     {{$testlabel}}:
-        title: Verify that bond0.cmn0 has an IP address
+        title: Check if IPV4 IP address is assigned to bond0.cmn0
         meta:
-            desc: If this test fails, then make sure that an IP address is correctly assigned to bond0.cmn0.
+            desc: If this test fails, then make sure IPV4 IP address is assigned. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for remediation steps.
             sev: 0
         exec: |-
+            #Set pipefail so that if any commands in the command pipeline fail, the test will fail
+            set -eo pipefail
             "{{$logrun}}" -l "{{$testlabel}}" \
-                ip -4 addr show bond0.cmn0
-        stdout:
-          - "inet"
+                ip -4 addr show bond0.cmn0|grep -i inet
         exit-status: 0
-        timeout: 20000
+        timeout: 30000
         skip: false
-        
