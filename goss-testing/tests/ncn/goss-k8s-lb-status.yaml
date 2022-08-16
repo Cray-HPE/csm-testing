@@ -29,7 +29,7 @@ command:
     {{$testlabel}}:
         title: Verify that Load Balancer for Kubernetes is running
         meta:
-            desc: If this test fails, verify that the load balancer is properly configured. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for additional remediation steps.
+            desc: If this test fails, then verify that the load balancer is properly configured. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for additional remediation steps.
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
                 kubectl get service -A | grep Load|grep -i pending
