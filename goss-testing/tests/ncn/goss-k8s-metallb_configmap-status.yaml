@@ -29,13 +29,13 @@ command:
     {{$testlabel}}:
         title: Verify that Metal Load Balancer for Kubernetes is running on service ingress
         meta:
-            desc: If this test fails, then verify that load balance is properly configured on the ingress service. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for additional remediation steps.
+            desc: If <pending> appears in this column, the service is having a problem getting an IP address assigned from MetalLB. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for additional remediation steps.
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
-                kubectl -n istio-system describe service istio-ingressgateway-cmn
+                kubectl get service -A | grep Load
         stdout:
-          - "Annotations"
-        exit-status: 0
+          - "pending"
+        exit-status: 1
         timeout: 30000
         skip: false

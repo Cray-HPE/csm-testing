@@ -27,12 +27,11 @@
 #
 gossfile:
   ../tests/goss-switch-ping-status.yaml: {}
-  ../tests/goss-k8s-lb-status.yaml: {}
+  ../tests/goss-k8s-all-loadbalancers-have-external-ips.yaml: {}
   ../tests/goss-k8s-metallb_configmap-status.yaml: {}
   ../tests/goss-check-prometheus-module-status.yaml: {}
   ../tests/goss-check-powerdns-status.yaml: {}
-  ../tests/goss-check-default-gw.yaml:  {}
-  ../tests/goss-check-customer-mgm-address.yaml:  {}
-  ../tests/goss-bond0-ip-validation.yaml:  {}
-  ../tests/goss-bgp-established-mellanox.yaml:  {}
-  ../tests/goss-bgp-established-aruba.yaml:  {}
+  ../tests/goss-default-gateway-points-to-CMN-gateway.yaml:  {}
+  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml:  {}
+  ../tests/goss-interface-has-ip.yaml:  {}
+
