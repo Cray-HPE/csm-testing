@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # MIT License
 #
@@ -20,23 +21,29 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-#
-{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $logrun := $scripts | printf "%s/log_run.sh" }}
-command:
-    {{ $testlabel := "switch-ping-status" }}
-    {{$testlabel}}:
-        title: Verify that the network switch has external access
-        meta:
-            desc: If this test fails, then validate the network switch configurations.
-            sev: 0
-        exec: |-
-            #Set pipefail so that if any commands in the command pipeline fail, the test will fail
-            set -eo pipefail
-            "{{$logrun}}" -l "{{$testlabel}}" \
-                canu test --csm 1.2 --json --username admin --password ${SW_ADMIN_PASSWORD} |grep ping
-        stdout:
-          - "PASS"
-        exit-status: 0
-        timeout: 60000
-        skip: false
+
+# Many functions and variables used in this script are defined/set/exported
+# in the run-ncn-tests.sh library
+
+echo $'\e[1;33m'Check of system management monitoring tools$'\e[0m'
+echo $'\e[1;33m'-------------------$'\e[0m'
+echo
+
+# The run-ncn-tests.sh library is located in the same directory as the
+# current script. Using dirname like this could produce a relative path,
+# but that's fine, since we just want to source this library script.
+# Note that this method is not infallible -- in particular, some symbolic
+# links can mess it up. But that won't be the case if this was installed
+# with the csm-testing RPM.
+source "$(dirname -- "$0")/run-ncn-tests.sh"
+
+# BGP test requires switch password to be set
+sw_admin_pw_set || exit 1
+
+
+run_goss_tests_print_results suites/ncn-csm-health-validation.yaml \
+
+
+# This script does not exit with non-0 return code just for test failures
+[[ $rc -le 1 ]] && exit 0
+exit 1
