@@ -33,7 +33,7 @@ command:
             sev: 0
         exec: |-
             #Set pipefail so that if any commands in the command pipeline fail, the test will fail
-            set -eo pipefail
+            set -o pipefail
             "{{$logrun}}" -l "{{$testlabel}}" \
                 ceph mgr module ls | jq '.enabled_modules'
         stdout:
