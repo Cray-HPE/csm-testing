@@ -42,7 +42,6 @@ sw_admin_pw_set || exit 1
 
 run_goss_tests_print_results suites/ncn-csm-health-validation.yaml \
 
-
 # This script does not exit with non-0 return code just for test failures
 [[ $rc -le 1 ]] && exit 0
 exit 1
