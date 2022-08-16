@@ -29,7 +29,7 @@
 command:
     {{ $testlabel := "bgp-mellanox-status" }}
     {{$testlabel}}:
-        title: Check if bgp mellanox status
+        title: Validate the BGP Mellanox switch status
         meta:
             desc: If this test fails, make sure system is using Mellanox switch. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for further remediation steps
             sev: 0
