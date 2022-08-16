@@ -83,6 +83,15 @@ function sw_admin_pw_set {
     return 0
 }
 
+function SSHPASS {
+    if [[ -z ${SSHPASS} ]]; then
+        print_error "Management switch 'admin' user password must be provided via the SSHPASS environment variable"
+        echo "Example: export SSHPASS='changeme'"
+        return 1
+    fi
+    return 0
+}
+
 function is_nonempty_file {
     if [[ $# -ne 1 ]]; then
         print_error "regular_file_exists: Function requires exactly 1 argument but received $#: $*"
