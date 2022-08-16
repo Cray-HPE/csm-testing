@@ -36,6 +36,6 @@ command:
             "{{$logrun}}" --no-args -l "{{$testlabel}}" \
             canu test --csm 1.2 --json --username admin --password ${SW_ADMIN_PASSWORD}
         stdout:
-            - 'Is internal DNS server alive (ping)": "FAIL"'
-        timeout: 60000
+            - "!/ping.*FAIL/"
+        timeout: 90000
         skip: false
