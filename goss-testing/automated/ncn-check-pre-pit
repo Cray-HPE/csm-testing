@@ -40,7 +40,6 @@ source "$(dirname -- "$0")/run-ncn-tests.sh"
 # BGP test requires switch password to be set
 sw_admin_pw_set || exit 1
 
-
 run_goss_tests_print_results suites/ncn-csm-health-validation.yaml \
 
 
