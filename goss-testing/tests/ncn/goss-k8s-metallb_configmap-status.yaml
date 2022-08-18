@@ -25,7 +25,7 @@
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-    {{ $testlabel := "check_k8s-metallb-status" }}
+    {{ $testlabel := "check_k8s_metallb_status" }}
     {{$testlabel}}:
         title: Verify that Metal Load Balancer for Kubernetes is running on service ingress
         meta:
