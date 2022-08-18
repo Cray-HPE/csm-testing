@@ -25,7 +25,7 @@
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-    {{ $testlabel := "check_prometheus-module-status" }}
+    {{ $testlabel := "check_prometheus_module_status" }}
     {{$testlabel}}:
         title: Verify that Prometheus module is enabled
         meta:
