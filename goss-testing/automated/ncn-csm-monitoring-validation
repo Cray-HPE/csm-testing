@@ -41,6 +41,7 @@ source "$(dirname -- "$0")/run-ncn-tests.sh"
 sw_admin_pw_set || exit 1
 
 run_goss_tests_print_results suites/ncn-csm-health-validation.yaml
+rc=$?
 
 # This script does not exit with non-0 return code just for test failures
 [[ $rc -le 1 ]] && exit 0

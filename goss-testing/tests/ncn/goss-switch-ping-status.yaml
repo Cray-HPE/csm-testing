@@ -37,5 +37,6 @@ command:
             canu test --csm 1.2 --json --username admin --password ${SW_ADMIN_PASSWORD}
         stdout:
             - "!/ping.*FAIL/"
+        exit-status: 0
         timeout: 90000
         skip: false

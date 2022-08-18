@@ -29,13 +29,13 @@ command:
     {{$testlabel}}:
         title: Verify that Metal Load Balancer for Kubernetes is running on service ingress
         meta:
-            desc: If <pending> appears in this column, the service is having a problem getting an IP address assigned from MetalLB. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for additional remediation steps.
+            desc: If <pending> appears in the EXTERNAL-IP column, the service is having a problem getting an IP address assigned from MetalLB. See troubleshooting/known_issues/check_system_management_monitoring_tools.md in the CSM documentation for additional remediation steps.
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
                 kubectl get service -A | grep Load
         stdout:
-          - "pending"
-        exit-status: 1
+          - "!/pending/"
+        exit-status: 0
         timeout: 30000
         skip: false
