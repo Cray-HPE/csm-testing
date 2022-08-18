@@ -140,6 +140,11 @@ done
 
 get_token
 
+echo_stdout "---------------- Route Table ----------------"
+rttbl=$(ip route)
+echo_stdout "$rttbl"
+echo_stdout "---------------------------------------------"
+
 # Get the NMN gateway
 nmngw=$(craysys metadata get --level node ipam | jq .nmn.gateway | tr -d '\"')
 echo_stdout "INFO: NMN gateway is $nmngw"
@@ -159,31 +164,31 @@ fi
 # Check for NMNLB static route
 nmnlb_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/NMNLB | jq -r '.ExtraProperties.Subnets[0].CIDR')
 nmnlb_passed=false
-ip route | grep -q "$nmnlb_cidr via $nmngw dev bond0.nmn0" && nmnlb_passed=true
+echo $rttbl | grep -q "$nmnlb_cidr via $nmngw dev bond0.nmn0" && nmnlb_passed=true
 echo_stdout "INFO: NMNLB CIDR is $nmnlb_cidr - route found = $nmnlb_passed"
 
 # Check for NMN_RVR static route
 nmnrvr_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/NMN_RVR | jq -r '.ExtraProperties.Subnets[0].CIDR')
 nmnrvr_passed=false
-ip route | grep -q "$nmnrvr_cidr via $nmngw dev bond0.nmn0" && nmnrvr_passed=true
+echo $rttbl | grep -q "$nmnrvr_cidr via $nmngw dev bond0.nmn0" && nmnrvr_passed=true
 echo_stdout "INFO: NMNLB CIDR is $nmnrvr_cidr - route found = $nmnrvr_passed"
 
 # Check for HMNLB static route
 hmnlb_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/HMNLB | jq -r '.ExtraProperties.Subnets[0].CIDR')
 hmnlb_passed=false
-ip route | grep -q "$hmnlb_cidr via $hmngw dev bond0.hmn0" && hmnlb_passed=true
+echo $rttbl | grep -q "$hmnlb_cidr via $hmngw dev bond0.hmn0" && hmnlb_passed=true
 echo_stdout "INFO: HMNLB CIDR is $hmnlb_cidr - route found = $hmnlb_passed"
 
 # Check for HMN_RVR static route
 hmnrvr_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/HMN_RVR | jq -r '.ExtraProperties.Subnets[0].CIDR')
 hmnrvr_passed=false
-ip route | grep -q "$hmnrvr_cidr via $hmngw dev bond0.hmn0" && hmnrvr_passed=true
+echo $rttbl | grep -q "$hmnrvr_cidr via $hmngw dev bond0.hmn0" && hmnrvr_passed=true
 echo_stdout "INFO: HMNLB CIDR is $hmnrvr_cidr - route found = $hmnrvr_passed"
 
 # Check for MTL static route
 mtl_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/MTL | jq -r '.ExtraProperties.Subnets[0].CIDR')
 mtl_passed=false
-ip route | grep -q "$mtl_cidr via $nmngw dev bond0.nmn0" && mtl_passed=true
+echo $rttbl | grep -q "$mtl_cidr via $nmngw dev bond0.nmn0" && mtl_passed=true
 echo_stdout "INFO: MTL CIDR is $mtl_cidr - route found = $mtl_passed"
 
 if $nmnlb_passed && $hmnlb_passed && $mtl_passed && $nmnrvr_passed && $hmnrvr_passed; then
