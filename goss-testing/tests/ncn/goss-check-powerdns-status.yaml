@@ -25,7 +25,7 @@
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-    {{ $testlabel := "check_powerdns-status" }}
+    {{ $testlabel := "check_powerdns_status" }}
     {{$testlabel}}:
         title: Verify that PowerDNS is enabled and configured
         meta:
