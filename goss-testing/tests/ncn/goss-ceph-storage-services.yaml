@@ -30,7 +30,7 @@ command:
     {{$testlabel}}:
         title: Ceph services are healthy
         meta:
-            desc: Validates that Ceph services are running. For more detailed output, run '{{$ceph_service_status}} -A true -v true', or use the '-h' flag additional options
+            desc: Validates that Ceph services are running. For more detailed output, run '{{$ceph_service_status}} -A true -v true', or use the '-h' flag additional options. Refer to 'operations/utility_storage/Ceph_Service_Check_Script_Usage.md' for more information.
             sev: 0
         exec: |-
             # We are logging, so call script with verbose option
