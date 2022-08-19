@@ -38,7 +38,7 @@ command:
         {{$testlabel}}:
             title: "Kubernetes configmap {{$configmap}}"
             meta:
-                desc: "Check that Kubernetes configmap {{$configmap}} exists"
+                desc: "Check that Kubernetes configmap {{$configmap}} exists. If this test fails, refer to 'install/troubleshooting_ceph_csi.md#1-verify-ceph-csi' for more inforamtion."
                 sev: 0
             exec: |-
                 "{{$logrun}}" -l "{{$testlabel}}" \
@@ -51,7 +51,7 @@ command:
         {{$testlabel}}:
             title: "Kubernetes secret {{$secret}}"
             meta:
-                desc: "Check that Kubernetes secret {{$secret}} exists"
+                desc: "Check that Kubernetes secret {{$secret}} exists. If this test fails, refer to 'install/troubleshooting_ceph_csi.md#1-verify-ceph-csi' for more inforamtion."
                 sev: 0
             exec: |-
                 "{{$logrun}}" -l "{{$testlabel}}" \

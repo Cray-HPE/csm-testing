@@ -29,7 +29,7 @@ package:
     ceph-common:
         title: ceph-common package
         meta:
-            desc: Check that Ceph is installed
+            desc: Check that Ceph is installed. If this test fails, refer to 'install/troubleshooting_ceph_csi.md#1-verify-ceph-csi' for more inforamtion.
             sev: 0
         installed: true
 command:
@@ -40,7 +40,7 @@ command:
         {{$testlabel}}:
             title: ceph -s
             meta:
-                desc: Check that ceph -s successfully executes
+                desc: Check that ceph -s successfully executes. If this test fails, refer to 'install/troubleshooting_ceph_csi.md#1-verify-ceph-csi' for more inforamtion.
                 sev: 0
             exec: |-
                 "{{$logrun}}" -l "{{$testlabel}}" \
