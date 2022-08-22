@@ -32,14 +32,15 @@ These functions relate to the Goss server endpoints.
 from .common import argparse_yaml_file_name,     \
                     goss_servers_config,         \
                     NCN_TYPES,                   \
-                    ScriptException
+                    ScriptException,             \
+                    StringList
 
 from typing import Dict, List, Tuple
 
 import argparse
 import re
 
-StringList = List[str]
+# To help with function annotations
 EndpointTuple = Tuple[str, str, int]
 
 # We assume our Goss server ports will be between 1000 and 65535 (the maximum TCP port number)
