@@ -37,8 +37,12 @@ If the source is "stdin", then the Goss test results are read from standard inpu
 The node name is assumed to be the local host. A label for the tests will be used
 if one is provided after a :
 
-Otherwise, the source is assumed to be a file containing the Goss test results in JSON
-format. The node name is assumed to be the local host.
+Otherwise, the source is assumed to be a file. The node name is assumed to be the local host.
+
+- If the file begins with "test/" or "suite/" and ends in ".yaml", then it is assumed
+to be a Goss test/suite file. It will be executed and its results will be parsed.
+- Otherwise, it is assumed to be a file containing Goss test results in JSON
+format.
 
 As each source is processed, the failures are displayed, along with a single line summary
 of the overall results for that source.
@@ -51,7 +55,7 @@ which is mainly intended to help with debugging of the script itself. The other 
 file, where full test results are written (not just failures).
 
 Exit codes:
-                            
+
 All tests passed            0
 At least one test failed    1
 Usage error                 2
@@ -64,6 +68,7 @@ from lib.common import err_text,                \
                        fmt_exc,                 \
                        get_hostname,            \
                        log_goss_env_variables,  \
+                       goss_base,               \
                        goss_script_log_level,   \
                        goss_script_max_threads, \
                        log_dir,                 \
@@ -74,9 +79,10 @@ from lib.common import err_text,                \
                        ScriptUsageException,    \
                        stderr_print,            \
                        stdout_print,            \
+                       StringList,              \
                        warn_text
 
-from typing import Callable, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import argparse
 import concurrent.futures
@@ -84,7 +90,9 @@ import itertools
 import json
 import logging
 import os
+import re
 import requests
+import subprocess
 import sys
 import threading
 import traceback
@@ -123,6 +131,12 @@ def warning(s: str) -> None:
     stderr_print(warn_text(f"WARNING: {s}"))
     logging.warning(s)
     outfile_print(f"WARNING: {s}")
+
+def is_url(s: str) -> bool:
+    """
+    Very basic check to see if string appears to be a URL
+    """
+    return s.find("http://") == 0 or s.find("https://") == 0
 
 def get_node_from_url(url: str) -> str:
     # The node name we use (as a label for results) is the first string after the //, up until
@@ -175,50 +189,97 @@ def read_and_decode_json(input_file: str, node: str) -> dict:
         multi_print(traceback.format_exc(), outfile_print, logging.error)
         raise ScriptException(f"Error decoding JSON from {input_file}. {fmt_exc(e)}")
 
-# The function name is a bit misleading. This just makes sure that log_values makes a single call to
-# the logging method, guaranteeing that the entry will all go in together. That way it won't be interleaved
-# with entries from other threads.
-def threaded_log_values(log_method: Callable, **kwargs) -> None:
-    log_values(log_method, values=kwargs)
+class JsonResultsCollection:
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.results_map = dict()
 
-# input_url suffices as a unique name for this function in a multi-threading context, as we do not
-# permit duplicate URLs. It is important to include this in all logging calls made in this function,
-# in order to identify which thread was making the call. Also, 
-def get_json_from_input_url(input_url: str, lock: threading.Lock, json_results_map: dict) -> None:
-    logging.info(f"Making GET request to {input_url}")
-    try:
-        resp = requests.get(input_url)
-    except Exception as e:
-        logging.error(f"Unexpected error attempting GET request to {input_url}: {traceback.format_exc()}")
-        with lock:
-            json_results_map[input_url] = f"Unexpected error attempting GET request to {input_url}: {fmt_exc(e)}"
+    # This just makes sure that log_values makes a single call to
+    # the logging method, guaranteeing that the entry will all go in together. That way it won't be interleaved
+    # with entries from other threads.
+    @staticmethod
+    def log_values(log_method: Callable, **kwargs) -> None:
+        log_values(log_method, values=kwargs)
+
+    # result will either be a string or the decoded JSON results
+    def send_result(self, source: str, result) -> None:
+        """
+        Takes the lock and then sets the json_results_map[source] entry to be result
+        """
+        with self.lock:
+            self.results_map[source] = result
+
+    # input_url suffices as a unique name for this function in a multi-threading context, as we do not
+    # permit duplicate URLs. It is important to include this in all logging calls made in this function,
+    # in order to identify which thread was making the call. Also, 
+    def get_json_from_input_url(self, input_url: str) -> None:
+        logging.info(f"Making GET request to {input_url}")
+        try:
+            resp = requests.get(input_url)
+        except Exception as e:
+            logging.error(f"Unexpected error attempting GET request to {input_url}: {traceback.format_exc()}")
+            self.send_result(input_url, f"Unexpected error attempting GET request to {input_url}: {fmt_exc(e)}")
+            return
+
+        JsonResultsCollection.log_values(logging.debug, input_url=input_url, status_code=resp.status_code, reason=resp.reason, headers=resp.headers, ok=resp.ok)
+        # Expected responses are 200 (meaning no tests failed) or 503 (which can mean either that there were test failures OR that there was
+        # another Goss issue, like syntax errors in the test files).
+        if resp.status_code not in { 200, 503 }:
+            err_msg = f"Status code {resp.status_code} received from Goss URL {input_url}: {resp.text}"
+            logging.error(err_msg)
+            self.send_result(input_url, err_msg)
+            return
+
+        logging.info(f"Decoding JSON response body from {input_url}")
+        try:
+            json_results = resp.json()
+        except Exception as e:
+            logging.error(f"Unexpected error decoding JSON response from {input_url}: {traceback.format_exc()}")
+            JsonResultsCollection.log_values(logging.debug, input_url=input_url, text=resp.text)
+            self.send_result(input_url, f"Unexpected error decoding JSON response from {input_url}: {fmt_exc(e)}")
+            return
+
+        JsonResultsCollection.log_values(logging.debug, input_url=input_url, json_results=json_results)
+        logging.info(f"Successfully decoded JSON response from {input_url}")
+        self.send_result(input_url, json_results)
         return
 
-    threaded_log_values(logging.debug, input_url=input_url, status_code=resp.status_code, reason=resp.reason, headers=resp.headers, ok=resp.ok)
-    # Expected responses are 200 (meaning no tests failed) or 503 (which can mean either that there were test failures OR that there was
-    # another Goss issue, like syntax errors in the test files).
-    if resp.status_code not in { 200, 503 }:
-        err_msg = f"Status code {resp.status_code} received from Goss URL {input_url}: {resp.text}"
-        logging.error(err_msg)
-        with lock:
-            json_results_map[input_url]= err_msg
+    def run_goss_decode_json(self, suite_or_test: str) -> None:
+        cmd_list = ["/usr/bin/goss", "-g", suite_or_test, "v", "--format", "json"]
+        logging.debug(f"Running: {cmd_list}")
+        cmd_result = subprocess.run(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+        cmd_out = cmd_result.stdout
+        cmd_err = cmd_result.stderr
+        # The goss command will return non-0 both in the case of test failures and in the case of other errors
+        # (such as syntax errors in the test files). From what I can tell, it will return 1 in either case.
+        # If the output of the command has valid JSON results data, then we're happy.
+
+        # If the stderr is not empty, we log these values as warnings. Otherwise we log them as debug.
+        if len(cmd_err) != 0:
+            JsonResultsCollection.log_values(logging.warning, cmd_list=cmd_list, returncode=cmd_result.returncode, stderr=cmd_err)
+        else:
+            JsonResultsCollection.log_values(logging.debug, cmd_list=cmd_list, returncode=cmd_result.returncode, stderr=cmd_err)
+        logging.info(f"Command completed: {cmd_list}")
+        try:
+            json_results = json.loads(cmd_out)
+        except Exception as e:
+            # This is most likely going to happen if the goss command failed
+            JsonResultsCollection.log_values(logging.error, cmd_list=cmd_list, returncode=cmd_result.returncode,
+                                stdout=cmd_out, stderr=cmd_err)
+            logging.error(f"Unexpected error decoding JSON output from {cmd_list}: {traceback.format_exc()}")
+            self.send_result(suite_or_test, f"Unexpected error decoding JSON output from {cmd_list}: {fmt_exc(e)}")
+            return
+        JsonResultsCollection.log_values(logging.debug, cmd_list=cmd_list, returncode=cmd_result.returncode,
+                            stdout=cmd_out, stderr=cmd_err)
+        logging.info(f"Successfully decoded JSON output from {cmd_list}")
+        self.send_result(suite_or_test, json_results)
         return
 
-    logging.info(f"Decoding JSON response body from {input_url}")
-    try:
-        json_results = resp.json()
-    except Exception as e:
-        logging.error(f"Unexpected error decoding JSON response from {input_url}: {traceback.format_exc()}")
-        threaded_log_values(logging.debug, input_url=input_url, text=resp.text)
-        with lock:
-            json_results_map[input_url] = f"Unexpected error decoding JSON response from {input_url}: {fmt_exc(e)}"
-        return
-
-    threaded_log_values(logging.debug, input_url=input_url, json_results=json_results)
-    logging.info(f"Successfully decoded JSON response from {input_url}")
-    with lock:
-        json_results_map[input_url] = json_results
-    return
+    def run_test_decode_json(self, source: str) -> None:
+        if is_url(source):
+            self.get_json_from_input_url(input_url=source)
+        else:
+            self.run_goss_decode_json(suite_or_test=source)
 
 def extract_results_data(json_results: dict) -> Tuple[List[dict], int, float]:
     try:
@@ -329,13 +390,14 @@ def show_results(source: str, selected_results: List[dict], failed_count: int, t
 
     return manual_pass_count, manual_fail_count, manual_unknown_count
 
-def is_url(s: str) -> bool:
-    """
-    Very basic check to see if string appears to be a URL
-    """
-    return s.find("http://") == 0 or s.find("https://") == 0
+suite_test_file_pattern = "^(?:suites|tests)/[^/]+[.]yaml$"
+suite_test_file_prog = re.compile(suite_test_file_pattern)
+def is_suite_test_file(s: str) -> bool:
+    if suite_test_file_prog.match(s):
+        return True
+    return False
 
-def parse_args() -> List[str]:
+def parse_args() -> Dict[str, StringList]:
     parser = argparse.ArgumentParser(description="Summarize JSON-format Goss test results with pretty colors.")
     parser.add_argument("sources", nargs="+", help="Sources for test results.")
     # In Python 3.6, the exit_on_error option to ArgumentParser does not yet exist, so a cruder method is
@@ -353,18 +415,37 @@ def parse_args() -> List[str]:
         stderr_print(err_text("FAILED (usage)"))
         sys.exit(RC_USAGE)
 
-    # While we're here, make sure the file sources exist
+    # Classify the sources by type (stdin counts as a result_file_source)
+    # For non-stdin file sources, make sure the file exists
+
+    # Even though we allow only one stdin source, we make it a list just for simplicity
+    sources = { "stdin": list(), "goss_file": list(), "results_file": list(), "url": list() }
     for source in input_sources:
-        if source == "stdin" or source[:6] == "stdin:" or is_url(source):
+        if is_url(source):
+            sources["url"].append(source)
             continue
-        elif not os.path.isfile(source):
-            stderr_print(err_text(f"File source does not exist: {source}"))
+        elif source == "stdin" or source[:6] == "stdin:":
+            # Only allow a maximum of one stdin source
+            if sources["stdin"]:
+                stderr_print(err_text(f"Multiple stdin sources are not permitted. Invalid arguments: {' '.join(input_sources)}"))
+                stderr_print(err_text("FAILED (usage)"))
+                sys.exit(RC_USAGE)
+            sources["stdin"].append(source)
+            continue
+        elif is_suite_test_file(source):
+            source_path = f"{goss_base()}/{source}"
+            sources["goss_file"].append(source_path)
+        else:
+            source_path = source
+            sources["results_file"].append(source_path)
+        if not os.path.isfile(source_path):
+            stderr_print(err_text(f"File source does not exist: {source_path}"))
             stderr_print(err_text("FAILED (usage)"))
             sys.exit(RC_USAGE)
 
-    return input_sources
+    return sources
 
-def main(input_sources: List[str]) -> int:
+def main(input_sources: Dict[str, StringList]) -> int:
     """
     Returns number of failed tests
 
@@ -376,26 +457,26 @@ def main(input_sources: List[str]) -> int:
     unexpected_error = False
     
     all_results = list()
-    url_sources = list()
-    for source in input_sources:
+    url_sources = input_sources["url"]
+    goss_file_sources = input_sources["goss_file"]
+    results_file_sources = input_sources["results_file"]
+
+    mynode = get_hostname()
+
+    # First handle results files:
+    for source in results_file_sources:
         try:
             log_values(logging.debug, source=source)
-            if is_url(source):
-                # These will be processed concurrently after we process the non-URL sources
-                url_sources.append(source)
-                continue
-            else:
-                node = get_hostname()
-                json_results = read_and_decode_json(source, node)
-            log_values(logging.info, source=source, node=node, json_results=json_results)
+            json_results = read_and_decode_json(source, mynode)
+            log_values(logging.info, source=source, node=mynode, json_results=json_results)
         except ScriptException as e:
             error(e)
             error(f"Skipping {source} due to error\n")
             unexpected_error = True
             continue
-        except Exception:
+        except Exception as e:
             multi_print(traceback.format_exc(), outfile_print, logging.error)
-            error(f"Skipping {source} due to error\n")
+            error(f"Skipping {source} due to error: {fmt_exc(e)}\n")
             unexpected_error = True
             continue
         # Extract the results from the JSON
@@ -406,11 +487,11 @@ def main(input_sources: List[str]) -> int:
             error(f"Skipping {source} due to error\n")
             unexpected_error = True
             continue
-        except Exception:
+        except Exception as e:
             # Add a newline before printing errors
             print_newline()
             multi_print(traceback.format_exc(), outfile_print, logging.error)
-            error(f"Skipping {source} due to error extracting test results from JSON data\n")
+            error(f"Skipping {source} due to error extracting test results from JSON data: {fmt_exc(e)}\n")
             unexpected_error = True
             continue
         all_results.append({
@@ -418,20 +499,24 @@ def main(input_sources: List[str]) -> int:
             "selected_results": selected_results,
             "failed_count": failed_count,
             "total_duration": total_duration,
-            "node_name": node })
+            "node_name": mynode })
 
-    # Now handle URL sources in parallel
-    num_urls = len(url_sources)
-    if num_urls > 0:
-        multi_print("Running remote tests", outfile_print, logging.info, stdout_print)
-        mylock = threading.Lock()
-        json_results_map = dict()
+    # Now handle goss files and url sources in parallel
+    parallel_sources = goss_file_sources + url_sources
+    if parallel_sources:
+        json_results_collection = JsonResultsCollection()
+        multi_print("Running tests", outfile_print, logging.info, stdout_print)
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=goss_script_max_threads()) as executor:
-            executor.map(get_json_from_input_url, url_sources, itertools.repeat(mylock, num_urls), itertools.repeat(json_results_map, num_urls))
-
-        for source in url_sources:
-            node = get_node_from_url(source)
+        max_workers = goss_script_max_threads()
+        if max_workers == 0:
+            exec_args = dict()
+        else:
+            exec_args = { "max_workers": max_workers }
+        log_values(logging.debug, exec_args=exec_args)
+        with concurrent.futures.ThreadPoolExecutor(**exec_args) as executor:
+            executor.map(json_results_collection.run_test_decode_json, parallel_sources)
+        json_results_map = json_results_collection.results_map
+        for source in parallel_sources:
             try:
                 json_results = json_results_map[source]
             except KeyError:
@@ -452,17 +537,58 @@ def main(input_sources: List[str]) -> int:
                 error(f"Skipping {source} due to error\n")
                 unexpected_error = True
                 continue
-            except Exception:
+            except Exception as e:
                 multi_print(traceback.format_exc(), outfile_print, logging.error)
-                error(f"Skipping {source} due to error extracting test results from JSON data\n")
+                error(f"Skipping {source} due to error extracting test results from JSON data: {fmt_exc(e)}\n")
                 unexpected_error = True
                 continue
+            if source in url_sources:
+                node = get_node_from_url(source)
+            else:
+                node = mynode
             all_results.append({
                 "source": source,
                 "selected_results": selected_results,
                 "failed_count": failed_count,
                 "total_duration": total_duration,
                 "node_name": node })
+
+    # Finally we handle stdin,
+    if input_sources["stdin"]:
+        source = input_sources["stdin"][0]
+        try:
+            log_values(logging.debug, source=source)
+            json_results = read_and_decode_json(source, mynode)
+            log_values(logging.info, source=source, node=mynode, json_results=json_results)
+        except ScriptException as e:
+            error(e)
+            error(f"Skipping {source} due to error\n")
+            unexpected_error = True
+        except Exception as e:
+            multi_print(traceback.format_exc(), outfile_print, logging.error)
+            error(f"Skipping {source} due to error: {fmt_exc(e)}\n")
+            unexpected_error = True
+        else:
+            # Extract the results from the JSON
+            try:
+                selected_results, failed_count, total_duration = extract_results_data(json_results)
+            except ScriptException as e:
+                error(e)
+                error(f"Skipping {source} due to error\n")
+                unexpected_error = True
+            except Exception as e:
+                # Add a newline before printing errors
+                print_newline()
+                multi_print(traceback.format_exc(), outfile_print, logging.error)
+                error(f"Skipping {source} due to error extracting test results from JSON data: {fmt_exc(e)}\n")
+                unexpected_error = True
+            else:
+                all_results.append({
+                    "source": source,
+                    "selected_results": selected_results,
+                    "failed_count": failed_count,
+                    "total_duration": total_duration,
+                    "node_name": mynode })
 
     total_passed = 0
     total_failed = 0

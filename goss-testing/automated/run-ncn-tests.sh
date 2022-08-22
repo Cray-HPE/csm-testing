@@ -556,21 +556,28 @@ function run_goss_tests {
     fi
     shift
 
+    # Note that goss returns non-0 both in the case of test failures AND in the case of other errors, such as 
+    # syntax errors in test files. This function just passes the return code back to the caller, for them to
+    # interpret how they wish.
     /usr/bin/goss -g "${gossfile}" --vars "${tmpvars}" v "$@"
     return $?
 }
 
+# This is another wrapper for print_goss_json_results, except that this one
+# first creates a temporary variable file and exports it as GOSS_VARS.
+# That way the local tests being executed by the Python script can use those
+# variables.
 function run_goss_tests_print_results {
-    # $1 - tests/<whatever.yaml> or suites/<whatever.yaml>
-    # $2+ optional Goss URL endpoints to test
-    local test_or_suite
+    # Make this a local variable so our calling function isn't affected
+    local GOSS_VARS
     if [[ $# -eq 0 ]]; then
         print_error "run_goss_tests_print_results: Function requires at least one argument"
         return 1
     fi
-    test_or_suite="$1"
-    shift
-    run_goss_tests "${test_or_suite}" --format json | print_goss_json_results "stdin:${test_or_suite}" "$@"
+    GOSS_VARS=$(create_goss_variable_file) || return 1
+    export GOSS_VARS
+
+    print_goss_json_results "$@"
     return $?
 }
 

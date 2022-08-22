@@ -27,7 +27,7 @@
 Helper functions for Goss Python automated scripts
 """
 
-from typing import Callable, Tuple
+from typing import Callable, List, Tuple
 
 import argparse
 import colorama
@@ -42,12 +42,17 @@ import string
 import sys
 import traceback
 
+# To help with function annotations
+StringList = List[str]
+
 NCN_TYPES = [ "master", "storage", "worker" ]
 
 DEFAULT_LOG_LEVEL = "INFO"
 # For automated scripts with parallel execution, set the max number of parallel jobs.
 # Mainly this is available in case problems are seen running things in parallel.
-DEFAULT_GOSS_SCRIPT_MAX_THREADS = 16
+# This has no default value. If unset, we set the value as 0. In this case,
+# we leave it up to the Python default (5 * number of processors, currently).
+DEFAULT_GOSS_SCRIPT_MAX_THREADS = 0
 DEFAULT_GOSS_INSTALL_BASE_DIR = "/opt/cray/tests/install"
 PIT_NODE_RELEASE_FILE = "/etc/pit-release"
 
@@ -107,9 +112,9 @@ def goss_script_max_threads() -> int:
     except ValueError:
         logging.warn(f"Non-integer value specified for GOSS_SCRIPT_MAX_THREADS ({max_threads_str}). Default to {DEFAULT_GOSS_SCRIPT_MAX_THREADS}")
         max_threads = DEFAULT_GOSS_SCRIPT_MAX_THREADS
-    if max_threads < 1:
-        logging.warn(f"GOSS_SCRIPT_MAX_THREADS must be a positive integer. Invalid value ({max_threads}). Defaulting to 1.")
-        max_threads = 1
+    if max_threads < 0:
+        logging.warn(f"GOSS_SCRIPT_MAX_THREADS must be a nonnegative integer. Invalid value ({max_threads}). Defaulting to 0.")
+        max_threads = 0
     return max_threads
 
 def goss_servers_config(validate: bool = False) -> str:
@@ -153,13 +158,14 @@ def goss_suites_dir() -> str:
     return f"{goss_base()}/suites"
 
 def goss_env_variables() -> dict:
-    return { 
+    return {
+        "GOSS_BASE": goss_base(),
         "GOSS_INSTALL_BASE_DIR": goss_install_base_dir(),
+        "GOSS_LOG_BASE_DIR": goss_log_base_dir(),
         "GOSS_SCRIPT_LOG_LEVEL": goss_script_log_level(),
         "GOSS_SCRIPT_MAX_THREADS": goss_script_max_threads(),
-        "GOSS_SERVERS_CONFIG": goss_servers_config(),
-        "GOSS_LOG_BASE_DIR": goss_log_base_dir(),
-        "GOSS_BASE": goss_base() }
+        "GOSS_SERVERS_CONFIG": goss_servers_config()
+    }
 
 def log_dir(script_name: str) -> str:
     # Strip off path and .py, if present, in script name
