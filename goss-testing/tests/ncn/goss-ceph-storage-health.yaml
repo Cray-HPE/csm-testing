@@ -28,7 +28,7 @@ command:
     {{$testlabel}}:
         title: Ceph Service Healthy
         meta:
-            desc: Checks that the Ceph service is in a healthy state.
+            desc: Checks that the Ceph service is in a healthy state. If this test fails, refer to 'operations/utility_storage/Ceph_Service_Check_Script_Usage.md' for more information.
             sev: 0
         exec: |-
             # Now that we are logging, call script with verbose option
