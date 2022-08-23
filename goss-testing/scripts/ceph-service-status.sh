@@ -83,16 +83,16 @@ function check_service(){
       fi
       if [[ -n "$osd_id" ]] || [[ -n "$osd" ]]
       then
-        read -r -d "\n" service_unit status epoch < <(pdsh -N -w "$host" podman ps --format json 2>&1 |grep -v "Permanently added"|jq --arg osd "$osd_prefix$osd_id" -r '.[]|select(.Names[]|contains($osd))|.Names[], .State, .StartedAt')
+        read -r -d "\n" service_unit status < <(pdsh -N -w "$host" podman ps --format json 2>&1 |grep -v "Permanently added"|jq --arg osd "$osd_prefix$osd_id" -r '.[]|select(.Names[]|contains($osd))|.Names[], .State')
         (( tests++ ))
-        if [[ "$service_unit" =~ "$FSID_STR-$osd_prefix$osd_id" ]]
+        if [[ "$service_unit" =~ $FSID_STR-$osd_prefix$osd_id ]]
         then
           (( passed++ ))
         fi
       else
-        read -r -d "\n" service_unit status epoch < <(pdsh -N -w "$host" podman ps --format json 2>&1|grep -v "Permanently added"|jq --arg service "$service" -r '.[]|select(.Names[]|contains($service))|.Names[], .State, .StartedAt')
+        read -r -d "\n" service_unit status < <(pdsh -N -w "$host" podman ps --format json 2>&1|grep -v "Permanently added"|jq --arg service "$service" -r '.[]|select(.Names[]|contains($service))|.Names[], .State')
         (( tests++ ))
-        if [[ "$service_unit" =~ "$FSID_STR-$service" ]]
+        if [[ "$service_unit" =~ $FSID_STR-$service ]]
         then
           (( passed++ ))
         fi
@@ -111,7 +111,6 @@ function check_service(){
        mds_id=$(echo "$mds"|cut -d '.' -f2,3,4)
        started_time=$(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty |jq --arg mds_id "$mds_id" -r '.[]|select(.daemon_id==$mds_id)|.started')
        started_epoch=$(date -d "$started_time" +%s)
-       target_service=$(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty |jq --arg mds_id "$mds_id" -r '.[]|select(.daemon_id==$mds_id)|.daemon_id')
        current_epoch=$(date +%s)
        diff=$((current_epoch-started_epoch))
        if [[ -n "$current_start_time" ]]
@@ -133,9 +132,9 @@ function check_service(){
        then
          (( active_test++ ))
        fi
-       read -r -d "\n" service_unit status epoch < <(pdsh -N -w "$host" podman ps --format json 2>&1|grep -v "Permanently added"|jq --arg service "$service" -r '.[]|select(.Names[]|contains($service))|.Names[], .State, .StartedAt')
+       read -r -d "\n" service_unit status < <(pdsh -N -w "$host" podman ps --format json 2>&1|grep -v "Permanently added"|jq --arg service "$service" -r '.[]|select(.Names[]|contains($service))|.Names[], .State')
        (( tests++ ))
-       if [[ "$service_unit" =~ "$FSID_STR-$mds" ]]
+       if [[ "$service_unit" =~ $FSID_STR-$mds ]]
        then
          (( passed++ ))
        fi
@@ -156,9 +155,9 @@ function check_service(){
         echo "Service $service on $node has been restarted and up for $diff seconds"
         echo "$service's status is: $(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty|jq -r '.[].status_desc')"
       fi
-      read -r -d "\n" service_unit status epoch < <(pdsh -N -w "$host" podman ps --format json 2>&1|grep -v "Permanently added"|jq --arg service "$service_name" -r '.[]|select(.Names[]|contains($service))|.Names[], .State, .StartedAt')
+      read -r -d "\n" service_unit status  < <(pdsh -N -w "$host" podman ps --format json 2>&1|grep -v "Permanently added"|jq --arg service "$service_name" -r '.[]|select(.Names[]|contains($service))|.Names[], .State')
       (( tests++ ))
-      if [[ "$service_unit" =~ "$FSID_STR-$service_name" ]]
+      if [[ "$service_unit" =~ $FSID_STR-$service_name ]]
       then
         (( passed++ ))
       fi
