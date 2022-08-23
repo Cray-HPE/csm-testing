@@ -66,7 +66,7 @@ do
     clusterFailFlag=0
     first_member="$(kubectl get pod -n $c_ns -l "cluster-name=$c_name,application=spilo" \
                   -o custom-columns=NAME:.metadata.name --no-headers | head -1)"
-    num_patronictl_running=$(kubectl -n $c_ns exec $first_member -- patronictl list 2>/dev/null | grep running | wc -l)
+    num_patronictl_running=$(kubectl -n $c_ns exec $first_member -c postgres -- patronictl list 2>/dev/null | grep running | wc -l)
     if [[ $c_name == "sma-postgres-cluster" ]]; then
         if [[ $num_patronictl_running -ne 2 ]]; then clusterFailFlag=1; fi
     else
@@ -78,7 +78,7 @@ do
         if [[ $print_results -eq 1 ]]
         then
             echo "Error: $c_name instances are not running, shown by patronictl command."
-            kubectl -n $c_ns exec $first_member -- patronictl list 2>/dev/null
+            kubectl -n $c_ns exec $first_member -c postgres -- patronictl list 2>/dev/null
             echo
             failFlag=1;
         else exit 1; fi

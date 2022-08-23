@@ -21,21 +21,22 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $velero_backups_check := $scripts | printf "%s/velero_backups_check.sh" }}
 {{ $kubectl := .Vars.kubectl }}
 command:
-    k8s_velero_failed_backups:
+    {{ $testlabel := "goss-k8s-velero-no-failed-backups" }}
+    {{$testlabel}}:
         title: Kubernetes Velero No Failed Backups
         meta:
             desc: Validates there are no failed Velero backups. To cleanup backups that are known to have been interrupted, run the following to find the failed backup `kubectl get backups -A -o json | jq -e '.items[] | select(.status.phase == "PartiallyFailed") | .metadata.name'`.  To then delete the backup, run `velero backup delete <backup> --confirm` (on a master or worker node).
             sev: 0
         exec: |-
-            set -eo pipefail
-            # Print the status phase of every backup
-            "{{$kubectl}}" get backups -A -o json | 
-            jq '.items[].status.phase'
-        # Neither the kubectl nor jq command are expected to fail, so we verify that they do not
+            "{{$logrun}}" -l "{{$testlabel}}" \
+            "{{$velero_backups_check}}"
         exit-status: 0
-        # If any backups failed, then the output will contain the string Failed. So we verify that this is not the case.
         stdout:
-            - "!Failed"
+            - PASS
+        timeout: 600000
+        skip: false

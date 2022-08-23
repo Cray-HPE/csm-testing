@@ -31,5 +31,5 @@ command:
            cat /etc/pki/trust/anchors/platform-ca-certs.crt | sed '/^$/d' | sort > /tmp/goss-sorted-cert.txt;\
            diff /tmp/goss-sorted-cert.txt /tmp/goss-sorted-meta-cert.txt"
     exit-status: 0
-    timeout: 10000
+    timeout: 20000
     skip: false

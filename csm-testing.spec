@@ -25,13 +25,15 @@
 %define install_dir %{test_dir}/install
 %define livecd %{install_dir}/livecd
 %define ncn %{install_dir}/ncn
+%define dat %{install_dir}/dat
+%define logs %{install_dir}/logs
 
 Name: csm-testing
 License: HPE Software License Agreement
 Summary: Goss tests to test out installation set-up
 Group: HPC
-Version: %(cat .rpm_version)
-Release: %(echo ${BUILD_METADATA})
+Version: %(echo $VERSION)
+Release: 1
 Source: %{name}-%{version}.tar.bz2
 Vendor: HPE
 BuildArchitectures: noarch
@@ -47,64 +49,93 @@ They test both the LiveCD and NCN environment.
 
 %install
 
-# Install testing files
-install -d -m 755 %{buildroot}%{livecd}/automated
+install -d -m 755 %{buildroot}%{dat}
+install -d -m 755 %{buildroot}%{logs}
+
+# automated - livecd
+install -d -m 755 %{buildroot}%{livecd}/automated/python/lib
+cp -a goss-testing/automated/*            %{buildroot}%{livecd}/automated
+cp -a goss-testing/automated/python/*     %{buildroot}%{livecd}/automated/python
+cp -a goss-testing/automated/python/lib/* %{buildroot}%{livecd}/automated/python/lib
+chmod +x -R %{buildroot}%{livecd}/automated/
+
+# automated - ncn
+install -d -m 755 %{buildroot}%{ncn}/automated/python/lib
+cp -a goss-testing/automated/*            %{buildroot}%{ncn}/automated
+cp -a goss-testing/automated/python/*     %{buildroot}%{ncn}/automated/python
+cp -a goss-testing/automated/python/lib*  %{buildroot}%{ncn}/automated/python/lib
+chmod +x -R %{buildroot}%{ncn}/automated/
+
+# tests - livecd
 install -d -m 755 %{buildroot}%{livecd}/tests
-install -d -m 755 %{buildroot}%{livecd}/vars
-install -d -m 755 %{buildroot}%{livecd}/build-testing
-install -d -m 755 %{buildroot}%{ncn}/automated
+install -m 755 goss-testing/tests/livecd/*.yaml    %{buildroot}%{livecd}/tests
+install -m 755 goss-testing/tests/common/*.yaml    %{buildroot}%{livecd}/tests
+
+# tests - ncn
 install -d -m 755 %{buildroot}%{ncn}/tests
+install -m 755 goss-testing/tests/ncn/*.yaml                %{buildroot}%{ncn}/tests
+install -m 755 goss-testing/tests/common/*.yaml             %{buildroot}%{ncn}/tests
+
+# build-testing
+install -d -m 755 %{buildroot}%{livecd}/build-testing
+install -m 755 build-testing/*                     %{buildroot}%{livecd}/build-testing
+
+# vars - livecd
+install -d -m 755 %{buildroot}%{livecd}/vars
+install -m 644 goss-testing/vars/vars-packages.yaml         %{buildroot}%{livecd}/vars
+install -T -m 644 goss-testing/vars/variables-common.yaml   %{buildroot}%{livecd}/vars/variables-livecd.yaml
+cat goss-testing/vars/variables-livecd.yaml >> %{buildroot}%{livecd}/vars/variables-livecd.yaml
+
+# vars - ncn
 install -d -m 755 %{buildroot}%{ncn}/vars
-install -m 755 goss-testing/automated/*         %{buildroot}%{livecd}/automated
-install -m 755 goss-testing/tests/livecd/*.yaml %{buildroot}%{livecd}/tests
-install -m 755 goss-testing/tests/common/*.yaml %{buildroot}%{livecd}/tests
-install -m 755 goss-testing/vars/*.yaml         %{buildroot}%{livecd}/vars
-install -m 755 build-testing/*                  %{buildroot}%{livecd}/build-testing
-install -m 755 goss-testing/automated/*         %{buildroot}%{ncn}/automated
-install -m 755 goss-testing/tests/ncn/*.yaml    %{buildroot}%{ncn}/tests
-install -m 755 goss-testing/tests/common/*.yaml %{buildroot}%{ncn}/tests
-install -m 755 goss-testing/vars/*.yaml         %{buildroot}%{ncn}/vars
-# Install script files
-install -d -m 755 %{buildroot}%{livecd}/scripts
-install -d -m 755 %{buildroot}%{livecd}/scripts/python
+install -m 644 goss-testing/vars/vars-packages.yaml         %{buildroot}%{ncn}/vars
+install -T -m 644 goss-testing/vars/variables-common.yaml   %{buildroot}%{ncn}/vars/variables-ncn.yaml
+cat goss-testing/vars/variables-ncn.yaml >> %{buildroot}%{ncn}/vars/variables-ncn.yaml
+
+# script files - livecd
 install -d -m 755 %{buildroot}%{livecd}/scripts/python/lib
-install -d -m 755 %{buildroot}%{ncn}/scripts
-install -d -m 755 %{buildroot}%{ncn}/scripts/python
-install -d -m 755 %{buildroot}%{ncn}/scripts/python/lib
-# Install test suites
-install -d -m 755 %{buildroot}%{livecd}/suites
-install -d -m 755 %{buildroot}%{ncn}/suites
-# Copy files
 cp -a goss-testing/scripts/*            %{buildroot}%{livecd}/scripts
 cp -a goss-testing/scripts/python/*     %{buildroot}%{livecd}/scripts/python
 cp -a goss-testing/scripts/python/lib/* %{buildroot}%{livecd}/scripts/python/lib
-cp -a goss-testing/suites/common-*      %{buildroot}%{livecd}/suites
-cp -a goss-testing/suites/livecd-*      %{buildroot}%{livecd}/suites
+chmod +x -R %{buildroot}%{livecd}/scripts/
+
+# script files - ncn
+install -d -m 755 %{buildroot}%{ncn}/scripts/python/lib
 cp -a goss-testing/scripts/*            %{buildroot}%{ncn}/scripts
 cp -a goss-testing/scripts/python/*     %{buildroot}%{ncn}/scripts/python
 cp -a goss-testing/scripts/python/lib/* %{buildroot}%{ncn}/scripts/python/lib
+chmod +x -R %{buildroot}%{ncn}/scripts/
+
+# test suites - livecd
+install -d -m 755 %{buildroot}%{livecd}/suites
+cp -a goss-testing/suites/common-*      %{buildroot}%{livecd}/suites
+cp -a goss-testing/suites/livecd-*      %{buildroot}%{livecd}/suites
+
+# test suites - ncn
+install -d -m 755 %{buildroot}%{ncn}/suites
 cp -a goss-testing/suites/common-*      %{buildroot}%{ncn}/suites
 cp -a goss-testing/suites/ncn-*         %{buildroot}%{ncn}/suites
-chmod +x -R %{buildroot}%{ncn}/scripts/
-chmod +x -R %{buildroot}%{livecd}/scripts/
-chmod +x -R %{buildroot}%{ncn}/automated/
-# Create default test log directories
-mkdir -p %{buildroot}/opt/cray/tests/install/logs
 
-# Install goss-servers files
+# goss-servers config file
+install -m 644 goss-testing/dat/*       %{buildroot}%{dat}
+
+# goss-servers files
 mkdir -p %{buildroot}/usr/sbin
 mkdir -p %{buildroot}/etc/systemd/system/
 install -m 755 start-goss-servers.sh %{buildroot}/usr/sbin/
 install -m 755 goss-servers.service %{buildroot}/etc/systemd/system/
 
 %clean
+rm -rf %{buildroot}%{dat}
 rm -rf %{buildroot}%{livecd}
 rm -rf %{buildroot}%{ncn}
 # Remove log directories only if empty
-rmdir %{buildroot}/opt/cray/tests/install/logs || true
+rmdir %{buildroot}%{logs} || true
 
 %files
 %defattr(755, root, root)
+%{dat}
+%{logs}
 %{livecd}
 %{ncn}
 

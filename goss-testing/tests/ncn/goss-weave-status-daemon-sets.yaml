@@ -35,4 +35,4 @@ command:
             "{{$logrun}}" -l "{{$testlabel}}" \
                 "{{$kubectl}}" rollout status -n kube-system daemonset.apps/weave-net
         exit-status: 0
-        timeout: 10000
+        timeout: 20000

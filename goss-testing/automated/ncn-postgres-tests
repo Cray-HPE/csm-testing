@@ -22,24 +22,35 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
+# Many functions and variables used in this script are defined/set/exported
+# in the run-ncn-tests.sh library
 
-vars_file="$GOSS_BASE/vars/variables-ncn.yaml"
+# The run-ncn-tests.sh library is located in the same directory as the
+# current script. Using dirname like this could produce a relative path,
+# but that's fine, since we just want to source this library script.
+# Note that this method is not infallible -- in particular, some symbolic
+# links can mess it up. But that won't be the case if this was installed
+# with the csm-testing RPM.
+source "$(dirname -- "$0")/run-ncn-tests.sh"
 
-export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
+# These tests should not be run from the PIT node.
+if is_pit_node ; then
+    err_exit "These tests cannot be run from the LiveCD."
+fi
+
+tmpvars=$(create_goss_variable_file) || exit 1
 
 echo $'\e[1;33m'NCN Postgres Tests$'\e[0m'
 echo $'\e[1;33m'---------------$'\e[0m'
 
 postgresClusters="$(kubectl get postgresql -A | awk '/postgres/ || NR==1' | \
                     grep -v NAME | awk '{print $1","$2}')"
-for postgresCluster in $postgresClusters; do
-  CLUSTER_NAME=$(echo $postgresCluster | awk -F, '{print $2;}') \
-  CLUSTER_NS=$(echo $postgresCluster | awk -F, '{print $1;}') \
+for postgresCluster in ${postgresClusters}; do
+  CLUSTER_NAME=$(echo ${postgresCluster} | awk -F, '{print $2;}') \
+  CLUSTER_NS=$(echo ${postgresCluster} | awk -F, '{print $1;}') \
   goss -g \
-    "$GOSS_BASE/suites/ncn-postgres-tests.yaml" \
-    --vars "$vars_file" \
+    "${GOSS_BASE}/suites/ncn-postgres-tests.yaml" \
+    --vars "${tmpvars}" \
     validate
 done
 

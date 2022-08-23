@@ -189,7 +189,7 @@ do
             if [[ $print_results -eq 1 ]]
             then 
                 echo -e "\n  --- ERROR --- $c_name cluster has lag: unknown"
-                kubectl -n $c_ns exec $c_leader -- patronictl list 2>/dev/null
+                kubectl -n $c_ns exec $c_leader -c postgres -- patronictl list 2>/dev/null
                 if [[ $exit_on_failure -eq 1 ]]; then exit 1; else failFlag=1; fi
                 break;
             else exit 1; fi
@@ -203,7 +203,7 @@ do
             if [[ $print_results -eq 1 ]]
             then 
                 echo -e "\n  --- ERROR --- $c cluster has lag history: $c_lag_history"
-                kubectl -n $c_ns exec $c_leader -- patronictl list 2>/dev/null
+                kubectl -n $c_ns exec $c_leader -c postgres -- patronictl list 2>/dev/null
                 if [[ $exit_on_failure -eq 1 ]]; then exit 2; else failFlag=1; fi
                 break;
             else exit 2; fi

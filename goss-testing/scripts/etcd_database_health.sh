@@ -24,7 +24,7 @@
 #
 for pod in $(kubectl get pods -l app=etcd -n services -o jsonpath='{.items[*].metadata.name}')
 do
-    dbc=$(kubectl -n services exec ${pod} -- /bin/sh \
+    dbc=$(kubectl -n services exec ${pod} -c etcd -- /bin/sh \
                   -c "ETCDCTL_API=3 etcdctl put foo fooCheck && \
                   ETCDCTL_API=3 etcdctl get foo && \
                   ETCDCTL_API=3 etcdctl del foo && \

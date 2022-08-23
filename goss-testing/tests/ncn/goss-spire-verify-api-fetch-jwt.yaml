@@ -35,5 +35,5 @@ command:
             "{{$logrun}}" -l "{{$testlabel}}" --no-stdout \
                 /usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /root/spire/agent.sock -audience goss-test >/dev/null
         exit-status: 0
-        timeout: 5000
+        timeout: 20000
         skip: false

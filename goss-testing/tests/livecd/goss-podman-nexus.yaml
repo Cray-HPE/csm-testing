@@ -36,5 +36,5 @@ command:
         stdout:
             - nexus
         exit-status: 0
-        timeout: 10000
+        timeout: 20000
         skip: false

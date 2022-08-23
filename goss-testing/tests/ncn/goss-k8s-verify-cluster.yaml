@@ -46,7 +46,7 @@ command:
             - /^kube-scheduler-.*Running/
             - /^weave-net-.*Running/
         exit-status: 0
-        timeout: 10000
+        timeout: 20000
     {{ $testlabel_2 := "k8s_verify_cluster_2" }}
     {{$testlabel_2}}:
         title: All kube-system Pods Running or Completed
@@ -63,4 +63,4 @@ command:
             - "!/./"
         exit-status:
             gt: 0
-        timeout: 10000
+        timeout: 20000

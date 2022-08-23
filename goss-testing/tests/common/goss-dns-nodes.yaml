@@ -30,6 +30,6 @@ dns:
       desc: Validates node name '{{$name}}' is resolvable in DNS.
       sev: 0
     resolvable: true
-    timeout: 10000
+    timeout: 20000
     skip: false
 {{end}}

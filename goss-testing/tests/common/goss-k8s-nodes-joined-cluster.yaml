@@ -22,11 +22,14 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-# Variable set: k8s_nodes
 {{ $kubectl := .Vars.kubectl }}
+{{ $pit_node := .Vars.pit_node }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
     {{range $node := index .Vars "k8s_nodes"}}
+    # Do not run this test on ncn-m001 if this is executing on the PIT node
+    {{if $pit_node}}
+    {{if ne $node "ncn-m001"}}
     {{ $testlabel := $node | printf "k8s_node_%s_joined_cluster" }}
     {{$testlabel}}:
         title: Kubernetes Node '{{$node}}' Ready
@@ -40,6 +43,8 @@ command:
             "{{$logrun}}" -l "{{$testlabel}}" \
                 "{{$kubectl}}" get nodes "{{$node}}" | grep Ready | grep -v NotReady
         exit-status: 0
-        timeout: 10000
+        timeout: 20000
         skip: false
+    {{end}}
+    {{end}}
     {{end}}

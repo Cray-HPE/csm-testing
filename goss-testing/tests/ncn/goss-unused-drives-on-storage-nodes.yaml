@@ -32,10 +32,10 @@ command:
     {{$testlabel}}:
         title: Check for unused drives on utility storage nodes
         meta:
-            desc: Validate that the Ceph cluster contains the expected number of OSDs based on the hardware type and number of storage nodes. If the test fails, see the Deploy Management Nodes install procedure for remediation steps.
+            desc: Validate that the Ceph cluster contains the expected number of OSDs based on the hardware type and number of storage nodes. If the test fails, refer to 'install/deploy_management_nodes.md' for remediation steps.
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
                 "{{$check_for_unused_drives}}" "{{$num_storage_nodes}}" "{{$this_node_manufacturer}}"
         exit-status: 0
-        timeout: 10000
+        timeout: 20000

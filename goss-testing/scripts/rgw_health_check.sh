@@ -126,7 +126,7 @@ curl -s ${url} -o $download_file
 diff $download_file $upload_file
 if [[ $? == 0 ]]
 then
-    echo "-Succesfully downloaded file."
+    echo "-Successfully downloaded file."
     rm $download_file # remove the downloaded file
 else
     echo "Error downloading file from test bucket."
@@ -149,7 +149,7 @@ ${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --delete-bucket --bucket-name 
 bucket=$(radosgw-admin bucket list | grep ${test_bucket})
 if [[ -z $bucket ]]
 then
-    echo "-Test bucket succesfully deleted."
+    echo "-Test bucket successfully deleted."
 else
     echo "Error deleting test bucket."
     exit_code=4

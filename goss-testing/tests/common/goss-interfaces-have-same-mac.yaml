@@ -35,5 +35,5 @@ command:
       "{{$logrun}}" -l "{{$testlabel}}" \
         {{.Env.GOSS_BASE}}/scripts/check_interface_mac_matches_bond.sh {{range.Vars.network_interfaces}}{{.}} {{end}}
     exit-status: 0
-    timeout: 5000
+    timeout: 20000
     skip: false

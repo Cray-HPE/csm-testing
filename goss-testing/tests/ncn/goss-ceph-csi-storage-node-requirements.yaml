@@ -31,7 +31,7 @@ file:
             {{$ceph_file}}:
                 title: {{$ceph_file}} file
                 meta:
-                    desc: "Check that {{$ceph_file}} file exists"
+                    desc: "Check that {{$ceph_file}} file exists. If this test fails, refer to 'install/troubleshooting_ceph_csi.md#1-verify-ceph-csi' for more inforamtion."
                     sev: 0
                 exists: true
                 filetype: file

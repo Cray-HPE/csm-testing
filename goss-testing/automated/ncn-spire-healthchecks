@@ -22,26 +22,33 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 
-# GOSS_BASE isn't set by default on the NCNs, just on LiveCD
-[[ -z $GOSS_BASE ]] && export GOSS_BASE="/opt/cray/tests/install/ncn"
-
-export GOSS_LOG_BASE_DIR=/opt/cray/tests/install/logs
-
-vars_file="$GOSS_BASE/vars/variables-ncn.yaml"
-
-source "$GOSS_BASE/automated/run-ncn-tests.sh"
+# Many functions and variables used in this script are defined/set/exported
+# in the run-ncn-tests.sh library
 
 echo $'\e[1;33m'Spire Health Checks$'\e[0m'
 echo $'\e[1;33m'-------------------$'\e[0m'
 
-# find the ncn node names and query the server endpoint
-if [ -f "/etc/dnsmasq.d/statics.conf" ]; then
-  cat /etc/dnsmasq.d/statics.conf | grep -ohE "ncn-[mw]([0-9]{3})" | grep -v ncn-m001 | awk '!a[$0]++' | \
-    while read node ; do run_ncn_tests "$node" "9003" "ncn-spire-healthchecks" ; done
-else
-  cat /etc/hosts | grep -ohE "ncn-[mw]([0-9]{3})" | awk '!a[$0]++' | while read node ; do run_ncn_tests "$node" "9003" \
-    "ncn-spire-healthchecks" ; done
-fi
+# The run-ncn-tests.sh library is located in the same directory as the
+# current script. Using dirname like this could produce a relative path,
+# but that's fine, since we just want to source this library script.
+# Note that this method is not infallible -- in particular, some symbolic
+# links can mess it up. But that won't be the case if this was installed
+# with the csm-testing RPM.
+source "$(dirname -- "$0")/run-ncn-tests.sh"
+
+tmpvars=$(create_goss_variable_file) || exit 1
+
+# Find the NCN node names and query the server endpoint
+# The get_ncns function is defined in run-ncn-tests.sh
+nodes=$(get_ncns --exclude-pit) || exit 1
+
+# The get_ncns function should always give NCNs if its return code was 0, but better safe than sorry
+[[ -n ${nodes} ]] || err_exit "No NCNs found"
+
+test_urls=$(goss_endpoint_urls ncn-spire-healthchecks.yaml ${nodes}) || exit 1
+
+print_goss_json_results ${test_urls}
+rc=$?
 
 # Specify the spire postgres clusters and call the postgres tests.
 # This only needs to be done once on the NCN that this script is
@@ -55,14 +62,16 @@ echo $'\n\e[1;33m'---------------$'\e[0m'
 echo $'\e[1;33m'NCN Spire Postgres Pods Running$'\e[0m'
 echo "Test Name: goss-k8s-postgres-pods-running"
 echo "Description: Validate that spire postgres pods are running."
-goss -g  "$GOSS_BASE/tests/goss-k8s-postgres-pods-running.yaml" --vars "$vars_file"  validate --format documentation
+goss -g  "${GOSS_BASE}/tests/goss-k8s-postgres-pods-running.yaml" --vars "${tmpvars}"  validate --format documentation
 echo $'\n\e[1;33m'---------------$'\e[0m'
 echo $'\e[1;33m'NCN Spire Postgres Pods Have a Leader$'\e[0m'
 echo "Test Name: goss-k8s-postgres-leader"
 echo "Description: Validate that spire postgres pods have a leader."
-goss -g  "$GOSS_BASE/tests/goss-k8s-postgres-leader.yaml" --vars "$vars_file" validate --format documentation
+goss -g  "${GOSS_BASE}/tests/goss-k8s-postgres-leader.yaml" --vars "${tmpvars}" validate --format documentation
 
 echo $'\n\e[1;33m'-------------------$'\e[0m'
 echo $'\e[1;33m'Spire Health Checks Completed$'\e[0m\n'
 
-exit
+# This script does not exit with non-0 return code just for test failures
+[[ $rc -le 1 ]] && exit 0
+exit 1

@@ -22,44 +22,27 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # RPM
-SPEC_NAME ?= csm-testing
-RPM_NAME ?= csm-testing
-RPM_NAME_2 ?= csm-testing
-RPM_VERSION ?= $(shell cat .rpm_version)
-SPEC_FILE ?= ${SPEC_NAME}.spec
-BUILD_METADATA ?= "1~development~$(shell git rev-parse --short HEAD)"
-RPM_SOURCE_NAME_1 ?= ${RPM_NAME}-${RPM_VERSION}
-RPM_SOURCE_NAME_2 ?= ${RPM_NAME_2}-${RPM_VERSION}
+NAME ?= ${GIT_REPO_NAME}
+ifeq ($(VERSION),)
+VERSION := $(shell git describe --tags | tr -s '-' '~' | tr -d '^v')
+endif
+SPEC_FILE ?= ${NAME}.spec
+RPM_SOURCE_NAME ?= ${NAME}-${VERSION}
 RPM_BUILD_DIR ?= $(PWD)/dist/rpmbuild
-RPM_SOURCE_PATH_1 := ${RPM_BUILD_DIR}/SOURCES/${RPM_SOURCE_NAME_1}.tar.bz2
-RPM_SOURCE_PATH_2 := ${RPM_BUILD_DIR}/SOURCES/${RPM_SOURCE_NAME_2}.tar.bz2
+RPM_SOURCE_PATH := ${RPM_BUILD_DIR}/SOURCES/${RPM_SOURCE_NAME}.tar.bz2
 
-build-csm-testing: rpm_package_source1 rpm_build_source1 rpm_build1
-build-goss-servers: rpm_package_source2 rpm_build_source2 rpm_build2
+rpm: rpm_package_source rpm_build_source rpm_build
 
 rpm_prepare:
 	rm -rf $(RPM_BUILD_DIR)
 	mkdir -p $(RPM_BUILD_DIR)/SPECS $(RPM_BUILD_DIR)/SOURCES
 	cp $(SPEC_FILE) $(RPM_BUILD_DIR)/SPECS/
 
-# csm-testing rpm
+rpm_package_source:
+	tar --transform 'flags=r;s,^,/$(RPM_SOURCE_NAME)/,' --exclude .git --exclude dist -cvjf $(RPM_SOURCE_PATH) .
 
-rpm_package_source1:
-	tar --transform 'flags=r;s,^,/$(RPM_SOURCE_NAME_1)/,' --exclude .git --exclude dist -cvjf $(RPM_SOURCE_PATH_1) .
+rpm_build_source:
+	rpmbuild -ts $(RPM_SOURCE_PATH) --define "_topdir $(RPM_BUILD_DIR)"
 
-rpm_build_source1:
-	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ts $(RPM_SOURCE_PATH_1) --define "_topdir $(RPM_BUILD_DIR)"
-
-rpm_build1:
-	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ba $(SPEC_FILE) --define "_topdir $(RPM_BUILD_DIR)"
-
-# goss-servers rpm
-
-rpm_package_source2:
-	tar --transform 'flags=r;s,^,/$(RPM_SOURCE_NAME_2)/,' --exclude .git --exclude dist -cvjf $(RPM_SOURCE_PATH_2) .
-
-rpm_build_source2:
-	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ts $(RPM_SOURCE_PATH_2) --define "_topdir $(RPM_BUILD_DIR)"
-
-rpm_build2:
-	BUILD_METADATA=$(BUILD_METADATA) rpmbuild -ba $(SPEC_FILE) --define "_topdir $(RPM_BUILD_DIR)"
+rpm_build:
+	rpmbuild -ba $(SPEC_FILE) --define "_topdir $(RPM_BUILD_DIR)"

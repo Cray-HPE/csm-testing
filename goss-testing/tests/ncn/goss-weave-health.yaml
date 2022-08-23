@@ -41,4 +41,4 @@ command:
         # We fail if the following message shows up in stdout
         stdout:
             - "!IP allocation was seeded by different peers"
-        timeout: 15000
+        timeout: 20000
