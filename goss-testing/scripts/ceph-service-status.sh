@@ -28,7 +28,6 @@ do
 done
 
 function check_service(){
-  (( counter=0 ))
   if [[ $service =~ "osd" ]]
     then
       if [[ -n "$osd" ]]
@@ -39,7 +38,6 @@ function check_service(){
       fi
       started_time=$(ceph orch ps --daemon_type osd --hostname "$host" -f json-pretty |jq --arg osd_id "$osd_id" -r '.[]|select(.daemon_id==$osd_id)|.started')
       started_epoch=$(date -d "$started_time" +%s)
-      target_service=$(ceph orch ps --daemon_type osd --hostname "$host" -f json-pretty |jq --arg osd_id "$osd_id" -r '.[]|select(.daemon_id==$osd_id)|.daemon_id')
       current_epoch=$(date +%s)
       diff=$((current_epoch-started_epoch))
       if [[ -n "$current_start_time" ]]
