@@ -197,10 +197,10 @@ tests=0
 passed=0
 active_test=0
 num_storage_nodes=$(craysys metadata get num-storage-nodes)
-version=$(ceph version --format json|jq -r '.["version"]'|awk '{print $3}')
+version=$(ceph version --format json|jq -r '.["version"]'|awk '{print $3}'|awk -F "." '{print $1}')
 
 
-if [[ $version < "16.2.9" ]]; then
+if [[ $version -lt 16 ]]; then
   osd_prefix="osd."
 else 
   osd_prefix="osd-"
