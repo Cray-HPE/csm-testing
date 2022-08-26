@@ -81,6 +81,6 @@ then
         error_flag=1;
 fi
 
-if [[ error_flag -eq 0 ]]; then echo "PASS"; exit 0;
+if [[ $error_flag -eq 0 ]]; then echo "PASS"; exit 0;
 else echo "FAIL"; exit 1;
 fi
