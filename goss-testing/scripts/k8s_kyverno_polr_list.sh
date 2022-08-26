@@ -22,6 +22,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+set -o pipefail
+
+function err_exit
+{
+    local rc
+    rc=$1
+    shift
+    echo "ERROR: $*" 1>&2
+    echo "FAIL"
+    exit $rc
+}
+
 print_results=0
 while getopts ph stack
 do
@@ -40,42 +53,46 @@ error_flag=0
 
 # checks if kyverno policy reports are available
 
-failures=$(kubectl get polr -A -o json | jq '[.items[].summary.fail] | add')
-warnings=$(kubectl get polr -A -o json | jq '[.items[].summary.warn] | add')
-errors=$(kubectl get polr -A -o json | jq '[.items[].summary.error] | add')
-skipped=$(kubectl get polr -A -o json | jq '[.items[].summary.skip] | add')
-if [[ $failures > 0 ]]
+FAILURES=$(kubectl get polr -A -o json | jq '[.items[].summary.fail] | add') ||
+err_exit 10 "Command pipeline failed with return code $?: kubectl get polr -A -o json | jq '[.items[].summary.fail] | add')"
+WARNINGS=$(kubectl get polr -A -o json | jq '[.items[].summary.warn] | add') ||
+err_exit 10 "Command pipeline failed with return code $?: kubectl get polr -A -o json | jq '[.items[].summary.warn] | add')"
+ERRORS=$(kubectl get polr -A -o json | jq '[.items[].summary.error] | add') ||
+err_exit 10 "Command pipeline failed with return code $?: kubectl get polr -A -o json | jq '[.items[].summary.error] | add')"
+SKIPPED=$(kubectl get polr -A -o json | jq '[.items[].summary.skip] | add') ||
+err_exit 10 "Command pipeline failed with return code $?: kubectl get polr -A -o json | jq '[.items[].summary.skip] | add')"
+if [[ $FAILURES > 0 ]]
 then
         if [[ $print_results -eq 1 ]]
         then
-                echo "Error: There are $failures failures in policy report."
+                echo "Error: There are $FAILURES failures in policy report."
                 echo "Look into the Kyverno policy management document to address the failures/warnings/errors/skipped"
         fi
         error_flag=1;
 fi
-if [[ $warnings > 0 ]]
+if [[ $WARNINGS > 0 ]]
 then
         if [[ $print_results -eq 1 ]]
         then
-                echo "Error: There are $warnings warnings in policy report."
+                echo "Error: There are $WARNINGS warnings in policy report."
                 echo "Look into the Kyverno policy management document to address the failures/warnings/errors/skipped"
         fi
         error_flag=1;
 fi
-if [[ $errors > 0 ]]
+if [[ $ERRORS > 0 ]]
 then
         if [[ $print_results -eq 1 ]]
         then
-                echo "Error: There are $errors errors in policy report."
+                echo "Error: There are $ERRORS errors in policy report."
                 echo "Look into the Kyverno policy management document to address the failures/warnings/errors/skipped"
         fi
         error_flag=1;
 fi
-if [[ $skipped > 0 ]]
+if [[ $SKIPPED > 0 ]]
 then
         if [[ $print_results -eq 1 ]]
         then
-                echo "Error: Policy report shows $skipped policies are skipped."
+                echo "Error: Policy report shows $SKIPPED policies are skipped."
                 echo "Look into the Kyverno policy management document to address the failures/warnings/errors/skipped"
         fi
         error_flag=1;
