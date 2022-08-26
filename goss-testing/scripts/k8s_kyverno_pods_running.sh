@@ -25,16 +25,6 @@
 
 set -o pipefail
 
-function err_exit
-{
-    local rc
-    rc=$1
-    shift
-    echo "ERROR: $*" 1>&2
-    echo "FAIL"
-    exit $rc
-}
-
 print_results=0
 while getopts ph stack
 do
@@ -49,27 +39,28 @@ do
     esac
 done
 
-error_flag=0
-
 # checks if all kyverno pods are running. Total 3 pods.
 
-running_pods=$(kubectl get poda -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == "kyverno").status.containerStatuses[0].state.running] | length') || err_exit 10 "Command pipeline failed with return code $?: kubectl get pods -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == \"kyverno\").status.containerStatuses[0].state.running] | length'"
-if [[ $running_pods != 3 ]]
+running_pods=$(kubectl get poda -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == "kyverno").status.containerStatuses[0].state.running] | length')
+rc=$?
+if [[ ${rc} -ne 0 ]]
 then
-    error_flag=1
-    if [[ $print_results -eq 1 ]]
+    # Split into two echo commands for code readability
+    echo -n "ERROR: Command pipeline failed (return code $?): " 1>&2
+    echo "kubectl get pods -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == \"kyverno\").status.containerStatuses[0].state.running] | length'" 1>&2
+    echo "FAIL"
+    exit 10
+elif [[ ${running_pods} != 3 ]]
+then
+    if [[ ${print_results} -eq 1 ]]
     then
-        echo "Error: $running_pods out of 3 pods are running."
+        echo "ERROR: ${running_pods} out of 3 pods are running."
         echo "For high availability the recommended Kyverno pod replica count is 3."
-        echo "Check the logs, restart Kyverno and ensure all 3 Kyverno pods are running."
+        echo "Check the logs, restart Kyverno, and ensure that all 3 Kyverno pods are running."
     fi
+    echo "FAIL"
+    exit 1
 fi
 
-if [[ $error_flag -eq 0 ]]
-then
-    echo "PASS"
-    exit 0
-fi
-
-echo "FAIL"
-exit 1
+echo "PASS"
+exit 0
