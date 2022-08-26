@@ -53,20 +53,23 @@ error_flag=0
 
 # checks if all kyverno pods are running. Total 3 pods.
 
-running_pods=$(kubectl get poda -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == "kyverno").status.containerStatuses[0].state.running] | length') || err_exit 10 "Command pipeline failed with return code $?: kubectl get pods -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == "kyverno").status.containerStatuses[0].state.running] | length'"
-if [[ $running_pods != 3 ]] && [[ $print_results -eq 1 ]]
+running_pods=$(kubectl get poda -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == "kyverno").status.containerStatuses[0].state.running] | length') || err_exit 10 "Command pipeline failed with return code $?: kubectl get pods -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == \"kyverno\").status.containerStatuses[0].state.running] | length'"
+if [[ $running_pods != 3 ]]
 then
-        error_flag=1;
+    error_flag=1
+    if [[ $print_results -eq 1 ]]
+    then
         echo "Error: $running_pods out of 3 pods are running."
         echo "For high availability the recommended Kyverno pod replica count is 3."
         echo "Check the logs, restart Kyverno and ensure all 3 Kyverno pods are running."
-
+    fi
 fi
-if [[ $running_pods != 3 ]]
+
+if [[ $error_flag -eq 0 ]]
 then
-        error_flag=1;
+    echo "PASS"
+    exit 0
 fi
 
-if [[ $error_flag -eq 0 ]]; then echo "PASS"; exit 0;
-else echo "FAIL"; exit 1;
-fi
+echo "FAIL"
+exit 1
