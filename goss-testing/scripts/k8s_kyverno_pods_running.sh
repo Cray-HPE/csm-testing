@@ -22,6 +22,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+set -o pipefail
+
+function err_exit
+{
+    local rc
+    rc=$1
+    shift
+    echo "ERROR: $*" 1>&2
+    echo "FAIL"
+    exit $rc
+}
+
 print_results=0
 while getopts ph stack
 do
@@ -40,7 +53,7 @@ error_flag=0
 
 # checks if all kyverno pods are running. Total 3 pods.
 
-running_pods=$(kubectl get pods -n kyverno -o wide -A |  awk '$1 ~ "kyverno"' | awk '$4 == "Running"' | wc | awk '{print $1}')
+running_pods=$(kubectl get poda -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == "kyverno").status.containerStatuses[0].state.running] | length') || err_exit 10 "Command pipeline failed with return code $?: kubectl get pods -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == "kyverno").status.containerStatuses[0].state.running] | length'"
 if [[ $running_pods != 3 ]] && [[ $print_results -eq 1 ]]
 then
         error_flag=1;
