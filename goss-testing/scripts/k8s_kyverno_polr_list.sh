@@ -40,10 +40,10 @@ error_flag=0
 
 # checks if kyverno policy reports are available
 
-failures=$(kubectl get polr -A | awk '(NR>1)' | awk '{sum+=$4} END {print sum}')
-warnings=$(kubectl get polr -A | awk '(NR>1)' | awk '{sum+=$5} END {print sum}')
-errors=$(kubectl get polr -A | awk '(NR>1)' | awk '{sum+=$6} END {print sum}')
-skipped=$(kubectl get polr -A | awk '(NR>1)' | awk '{sum+=$7} END {print sum}')
+failures=$(kubectl get polr -A -o json | jq '[.items[].summary.fail] | add')
+warnings=$(kubectl get polr -A -o json | jq '[.items[].summary.warn] | add')
+errors=$(kubectl get polr -A -o json | jq '[.items[].summary.error] | add')
+skipped=$(kubectl get polr -A -o json | jq '[.items[].summary.skip] | add')
 if [[ $failures > 0 ]]
 then
         if [[ $print_results -eq 1 ]]
