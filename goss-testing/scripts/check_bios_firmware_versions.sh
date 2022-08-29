@@ -65,23 +65,6 @@ function set_vars() {
   DL325_BIOS="v2.52"
   DL385_BIOS="v2.52"
 
-  # Taken from HFP-firmware-22.05 but leaving here for reference in this code
-  # Appropriate versions to use for CSM v1.2 or HPCM as of 2/2/2022 unless otherwise indicated by your
-  # software installation manual:
-
-  #     HPE_EX425 4 node compute blades -   BIOS 1.6.3, MTN_CCNC 1.7.6.4 Node Controller (NC)
-  #     HPE_EX235N                          BIOS 1.2.1, MTN_CCNC 1.7.6.4 Node Controller (NC)
-  #     HPE_EX235a                          BIOS 1.3.6, MTN_CCNC 1.7.6.4 Node Controller (NC)
-  #     HPE_EX420				            BIOS 1.0.0, MTN_CCNC 1.7.6.4 Node Controller (NC)
-  #     HPE_EX235_NV                        FPGA NVIDIA 2.7.1
-  #     HPE_XL675d-Gen10Plus                BIOS 2.52, HPE_ILO5 version 2.46
-  #     HPE_XL645d-Gen10Plus                BIOS 2.52, HPE_ILO5 version 2.46
-  #     HPE_DL325_A43                       BIOS 2.52, HPE_ILO5 version 2.46
-  #     HPE_DL385_A42                       BIOS 2.52, HPE_ILO5 version 2.46
-  #     GB_SVR_1264UP_C17_C21 - Gigabyte NCN's, BIOS/BMC package C27  (Note: required upgrade prior to install of Shasta 1.4.0 or later)
-  #     GB_SVR_5264_C20 - Gigabyte UAN's, AN's BIOS/BMC package C27
-  #     GB_SVR_3264_C20 - Gigabyte Compute nodes, BIOS/BMC package C27
-
   # Allow for output of documentation when needed, 1 is yes, 0 is no
   DOCS=0
   # Links for documentation
@@ -347,7 +330,9 @@ does_bios_meet_req() {
     case "$bios_vers" in
       C17) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
       C21) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-      *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected C17 or C21)"
+      C27) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+      C33) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+      *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected C17, C21, C27, or C33)"
          DOCS=1
          rc=1
           ;;

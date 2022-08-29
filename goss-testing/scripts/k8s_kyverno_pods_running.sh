@@ -41,7 +41,9 @@ done
 
 # Checks if all kyverno pods are running. There should be a total of 3 running pods.
 
+
 running_pods=$(kubectl get pods -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == "kyverno").status.containerStatuses[0].state.running] | length')
+
 rc=$?
 if [[ ${rc} -ne 0 ]]
 then
