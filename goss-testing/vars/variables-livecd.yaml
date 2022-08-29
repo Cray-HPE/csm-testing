@@ -82,7 +82,7 @@ commands:
   - 'cray --version'
 
 artifact_symlinks:
-  - filesystem.squashfs
+  - rootfs
   - initrd.img.xz
   - kernel
 
