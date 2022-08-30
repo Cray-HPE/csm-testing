@@ -36,15 +36,13 @@ function check_service(){
       else
         osd_id=$(echo "$service"|cut -d '.' -f2)
       fi
-      started_time=$(ceph orch ps --daemon_type osd --hostname "$host" -f json-pretty |jq --arg osd_id "$osd_id" -r '.[]|select(.daemon_id==$osd_id)|.started')
-      started_epoch=$(date -d "$started_time" +%s)
+      current_start_time=$(ceph orch ps --daemon_type osd --hostname "$host" -f json-pretty |jq --arg osd_id "$osd_id" -r '.[]|select(.daemon_id==$osd_id)|.started')
       current_epoch=$(date +%s)
-      diff=$((current_epoch-started_epoch))
       if [[ -n "$current_start_time" ]]
       then
-        current_start_epoch=$(date -d "$started_time" +%s 2>/dev/null)
+        current_start_epoch=$(date -d "$current_start_time" +%s 2>/dev/null)
         diff=$((current_epoch-current_start_epoch))
-      elif [[ -z "$started_time" ]]
+      elif [[ -z "$current_start_time" ]]
       then
         if [[ $verbose == "true" ]]
         then
@@ -58,20 +56,6 @@ function check_service(){
         read -r -d "\n" up in < <(ceph osd info "$osd" -f json-pretty|jq '.up, .in')
       else
         read -r -d "\n" up in < <(ceph osd info "$service" -f json-pretty|jq '.up, .in')
-      fi
-
-      if [[ $up != "$in" ]]
-      then
-        echo "OSD: $osd is reporting down"
-        read -r -p "Press 'y' to attempt to fix it, press 'w' to pause the install so it can be manually fixed, press 'x' to exit the install."
-        case "${REPLY}"  in
-        y)
-          ceph orch system start "$osd";;
-        w)
-          read -r -p "Pausing until enter/return is pressed";;
-        x)
-          exit 1;;
-        esac
       fi
 
       if [[ $verbose == "true" ]]
@@ -107,15 +91,13 @@ function check_service(){
      for mds in $(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty |jq -r '.[]|(.daemon_type+"."+.daemon_id)')
      do
        mds_id=$(echo "$mds"|cut -d '.' -f2,3,4)
-       started_time=$(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty |jq --arg mds_id "$mds_id" -r '.[]|select(.daemon_id==$mds_id)|.started')
-       started_epoch=$(date -d "$started_time" +%s)
+       current_start_time=$(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty |jq --arg mds_id "$mds_id" -r '.[]|select(.daemon_id==$mds_id)|.started')
        current_epoch=$(date +%s)
-       diff=$((current_epoch-started_epoch))
        if [[ -n "$current_start_time" ]]
        then
-         current_start_epoch=$(date -d "$started_time" +%s 2>/dev/null)
+         current_start_epoch=$(date -d "$current_start_time" +%s 2>/dev/null)
          diff=$((current_epoch-current_start_epoch))
-       elif [[ -z "$started_time" ]]
+       elif [[ -z "$current_start_time" ]]
        then
          exit 1
        fi
@@ -297,6 +279,7 @@ then
   if [[ $verbose == "true" ]]
   then
     echo "Tests run: $tests  Tests Passed: $passed"
+    ceph health detail
   fi
   exit 1
 else
