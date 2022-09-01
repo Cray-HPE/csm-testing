@@ -32,7 +32,7 @@ command:
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
-                crictl pull registry.local/k8s.gcr.io/pause:3.2
+                crictl pull artifactory.algol60.net/csm-docker/stable/k8s.gcr.io/pause:3.4.1
         exit-status: 0
         timeout: 20000
         skip: false
