@@ -21,13 +21,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  k8s_velero_vault_daily_schedule:
-    title: Kubernetes Velero Daily Vault Backup Schedule Exists
-    meta:
-      desc: Kubernetes Velero Daily Vault Backup Schedule Exists
-      sev: 0
-    exec: "kubectl get schedule -A -o json | jq '.items[].metadata.name | contains(\"vault-daily-backup\")'"
-    stdout:
-    - "/^true$/"
-    exit-status: 0
+    {{ $testlabel := "k8s_velero_vault_daily_schedule" }}
+    {{$testlabel}}:
+        title: Kubernetes Velero Daily Vault Backup Schedule Exists
+        meta:
+            desc: Kubernetes Velero Daily Vault Backup Schedule Exists
+            sev: 0
+        exec: |-
+            # The test should fail if the kubectl command fails
+            set -o pipefail
+            # The logrun command will log the output of the kubectl command, pre-jq
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" get schedule -A -o json | jq '.items[].metadata.name | contains("vault-daily-backup")'
+        stdout:
+        - "/^true$/"
+        exit-status: 0
