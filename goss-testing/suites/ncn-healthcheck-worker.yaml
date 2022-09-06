@@ -29,6 +29,7 @@ gossfile:
   ../tests/goss-bond-members-have-correct-mtu.yaml: {}
   ../tests/goss-bond-members-have-links.yaml: {}
   ../tests/goss-cfs-state-reporter.yaml: {}
+  ../tests/goss-check-clock-skew.yaml: {}
   ../tests/goss-check-static-routes.yaml: {}
   ../tests/goss-command-available.yaml: {}
   ../tests/goss-default-gateway-points-to-CMN-gateway.yaml: {}
