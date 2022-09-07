@@ -22,15 +22,22 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Variable set: unbound_ip
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  unbound_ip_in_resolveconf:
-    title: Unbound Nameserver In resolv.conf
-    meta:
-      desc: Validates whether Unbound nameserver IP exists in resolv.conf.
-      sev: 0
-    # The fancy grep argument is to ensure that we don't have an IP in there which 
-    # contains the Unbound IP address as a substring.
-    exec: grep -E '^nameserver[[:space:]][[:space:]]*{{.Vars.unbound_ip}}([[:space:]]|$)' /etc/resolv.conf
-    exit-status: 0
-    timeout: 20000
-    skip: false
+    {{ $testlabel := "unbound_ip_in_resolveconf" }}
+    {{$testlabel}}:
+        title: Unbound Nameserver In resolv.conf
+        meta:
+            desc: Validates whether Unbound nameserver IP address exists in resolv.conf.
+            sev: 0
+        exec: |-
+            # We want the test to fail if the cat command fails
+            set -o pipefail
+            # We cat and pipe to grep so that we can save the contents of resolv.conf to the log, and also grep it.
+            # The fancy grep argument is to ensure that we don't have an IP in there which 
+            # contains the Unbound IP address as a substring.
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                cat /etc/resolv.conf | grep -E '^nameserver[[:space:]][[:space:]]*{{.Vars.unbound_ip}}([[:space:]]|$)' 
+        exit-status: 0
+        timeout: 20000
+        skip: false

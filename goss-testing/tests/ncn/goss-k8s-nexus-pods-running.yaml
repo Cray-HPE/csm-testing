@@ -21,13 +21,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  k8s_service_nexus_running:
-    title: Kubernetes Service 'nexus' Is Running
-    meta:
-      desc: If this test fails, look at the state of the nexus pods (kubectl get po -n nexus) to investigate.
-      sev: 0
-    exec: kubectl get pods -n nexus -l app=nexus | awk '{ print $3 }' | grep Running
-    exit-status: 0
-    timeout: 20000
-    skip: false
+    {{ $testlabel := "k8s_service_nexus_running" }}
+    {{$testlabel}}:
+        title: Kubernetes Service 'nexus' Is Running
+        meta:
+            desc: If this test fails, look at the state of the nexus pods (kubectl get po -n nexus) to investigate.
+            sev: 0
+        exec: |-
+            # The test should fail if the kubectl command fails
+            set -o pipefail
+            # The logrun command will log the output of the kubectl command, pre-grep
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" get pods -n nexus -l app=nexus | awk '{ print $3 }' | grep Running
+        exit-status: 0
+        timeout: 20000
+        skip: false
