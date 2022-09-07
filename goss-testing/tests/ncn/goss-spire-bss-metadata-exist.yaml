@@ -21,13 +21,17 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-  spire_in_bss_cloudinit:
-    title: Kubernetes Query BSS Cloud-init for spire meta data
-    meta:
-      desc: If this test fails, then recreate the spire-update-bss-# job in the spire namespace. The job will add the Spire information to the meta-data service.
-      sev: 0
-    exec: |-
-      set -eo pipefail
-      curl api-gw-service-nmn.local:8888/meta-data | jq -e '.Global.spire.fqdn'
-    exit-status: 0
+    {{ $testlabel := "spire_in_bss_cloudinit" }}
+    {{$testlabel}}:
+        title: Kubernetes Query BSS Cloud-init for spire meta data
+        meta:
+            desc: If this test fails, then recreate the spire-update-bss-# job in the spire namespace. The job will add the Spire information to the meta-data service.
+            sev: 0
+        exec: |-
+            set -eo pipefail
+            # The logrun command will log the output of the curl command, pre-jq
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                curl api-gw-service-nmn.local:8888/meta-data | jq -e '.Global.spire.fqdn'
+        exit-status: 0
