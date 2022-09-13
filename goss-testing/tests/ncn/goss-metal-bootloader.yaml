@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,14 +21,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-gossfile:
-  ../tests/goss-k8s-etcd-service.yaml: {}
-  ../tests/goss-k8s-etcd-endpoint-health.yaml: {}
-  ../tests/goss-k8s-etcd-database-health.yaml: {}
-  ../tests/goss-k8s-nexus-pods-running.yaml: {}
-  ../tests/goss-k8s-istio-pods-running.yaml: {}
-  ../tests/goss-k8s-nexus-endpoint.yaml: {}
-  ../tests/goss-k8s-services-endpoint.yaml: {}
-  ../tests/goss-k8s-istio-endpoint.yaml: {}
-  ../tests/goss-metal-bootloader.yaml: {}
-  ../tests/goss-services-running.yaml: {}
+
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $check_bootloader := $scripts | printf "%s/check_bootloader.sh" }}
+command:
+    {{ $testlabel := "check_bootloader" }}
+    {{$testlabel}}:
+        title: Validates that the NCN disk bootloader will work.
+        meta:
+            desc: If this test fails, run {{$check_bootloader}} for details.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$check_bootloader}}"
+        exit-status: 0
+        timeout: 5000
