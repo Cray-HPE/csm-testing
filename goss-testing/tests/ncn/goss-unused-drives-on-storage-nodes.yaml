@@ -32,7 +32,11 @@ command:
     {{$testlabel}}:
         title: Check for unused drives on utility storage nodes
         meta:
-            desc: Validate that the Ceph cluster contains the expected number of OSDs based on the hardware type and number of storage nodes. If the test fails, refer to 'install/deploy_management_nodes.md' for remediation steps.
+            desc: |-
+                This test validates that the Ceph cluster contains the expected number of OSDs based on the hardware type and number of storage nodes.
+                If the test fails, then see "install/troubleshooting_unused_drives_on_storage_nodes.md" in the CSM documentation for remediation steps.
+                The test can be executed manually on any master NCN or the first three storage NCNs with the following command:
+                "{{$check_for_unused_drives}}" "{{$num_storage_nodes}}" "{{$this_node_manufacturer}}"
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
