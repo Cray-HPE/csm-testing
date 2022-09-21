@@ -63,12 +63,12 @@ for PODNAME in $(cat "${TMPFILE}"); do
     grep -E '\-\-enable-admission-plugins=.*PodSecurityPolicy' "${TMPFILE}"
 done
 
+# Remove the temporary file. On the off chance that this command fails, we do not want to fail the test. Hence the || true.
+rm "${TMPFILE}" || true
+
 # We expect to have checked at least one pod (probably the actual expected number is higher, but for the purposes of this test, we just want to make sure we
 # actually checked something
 [[ $COUNT -gt 0 ]]
-
-# Remove the temporary file. On the off chance that this command fails, we do not want to fail the test. Hence the || true.
-rm "${TMPFILE}" || true
 
 # If we make it here, it means that no problems were found
 echo "PASS"
