@@ -25,7 +25,7 @@
 {{ $kubectl := .Vars.kubectl }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-    {{ $testlabel := "etcd_database_health" }}
+    {{ $testlabel := "etcd_cluster_endpoint_health" }}
     {{$testlabel}}:
         title: Etcd Cluster Endpoint Health
         meta:
