@@ -23,12 +23,21 @@
 #
 
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+{{ $this_node_name := .Vars.this_node_name }}
+# The test description text varies depending on where the test is run. However, it always begins the same way. The shared
+# prefix text is in the following variable
+{{ $common_description_prefix := "Validates that the spire healthcheck runs successfully. If this fails, then fix the issue by running" }}
 command:
     {{ $testlabel := "spire-healthcheck" }}
     {{$testlabel}}:
-        title: Spire Health Check
+        title: Spire health check
         meta:
-            desc: Validates that the spire healthcheck runs successfully. If this fails, run `kubectl rollout restart -n spire daemonset request-ncn-join-token` to fix the issue.
+            # The remediation method provided depends on whether this is executed on a storage NCN or a Kubernetes NCN
+            {{if $this_node_name | regexMatch "^ncn-s"}}
+            desc: {{$common_description_prefix}} "/opt/cray/platform-utils/spire/fix-spire-on-storage.sh" on ncn-m001.
+            {{else}}
+            desc: {{$common_description_prefix}} "kubectl rollout restart -n spire daemonset request-ncn-join-token" on a master or worker NCN.
+            {{end}}
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
