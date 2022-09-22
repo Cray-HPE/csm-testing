@@ -30,6 +30,7 @@ Validates that the system has:
 * Exactly 8 OSDs per storage node, if HPE hardware
 * Exactly 12 OSDs per storage node, if Gigabyte hardware
 * At least 1 OSD per storage node, if Intel hardware
+* Or that (#_osds / #_storage_nodes) has no remainder
  
 The test fails if the above validation fails.
 If the system has a different hardware type or the test is unable
@@ -100,11 +101,12 @@ def parse_args():
     logger.debug("Parsing command line arguments: {}".format(sys.argv))
     args = parser.parse_args()
 
-    hw_type = hw_type_map[args.hw_type]    
+    hw_type = hw_type_map[args.hw_type]
+    n_storage_nodes = args.num_storage_nodes
     min_expected_osds = min_osds_per_storage_node[hw_type] * args.num_storage_nodes
     max_expected_osds = max_osds_per_storage_node[hw_type] * args.num_storage_nodes
     logger.info("Based on hardware type ({}) and number of storage nodes ({}): min_expected_osds = {}, max_expected_osds = {}".format(hw_type, args.num_storage_nodes, min_expected_osds, max_expected_osds))
-    return min_expected_osds, max_expected_osds
+    return min_expected_osds, max_expected_osds, n_storage_nodes
 
 def get_num_osds():
     logger.debug("Loading Ceph")
@@ -138,15 +140,17 @@ def get_num_osds():
     return num_osds
 
 def main():
-    min_expected_osds, max_expected_osds = parse_args()
+    min_expected_osds, max_expected_osds, n_storage_nodes = parse_args()
     num_osds = get_num_osds()
     if num_osds < min_expected_osds:
-        logger.error("Fewer OSDs than expected")
-        sys.exit(6)
+        if num_osds%n_storage_nodes != 0:
+            logger.error("Fewer OSDs than expected and osds are not spread evenly across storage nodes.")
+            sys.exit(6)
     elif max_expected_osds > 0 and num_osds > max_expected_osds:
-        logger.error("More OSDs than expected")
-        sys.exit(9)
-    logger.info("SUCCESS -- number of OSDs found matches expectations based on hardware type")
+        if num_osds%n_storage_nodes != 0:
+            logger.error("More OSDs than expected and osds are not spread evenly across storage nodes.")
+            sys.exit(9)
+    logger.info("SUCCESS -- number of OSDs found matches expectations based on hardware type or are spread evely across storage nodes.")
     sys.exit(0)
 
 if __name__ == "__main__":
