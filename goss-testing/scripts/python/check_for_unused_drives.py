@@ -102,19 +102,21 @@ def parse_args():
     args = parser.parse_args()
 
     hw_type = hw_type_map[args.hw_type]
-    n_storage_nodes = args.num_storage_nodes
     min_expected_osds = min_osds_per_storage_node[hw_type] * args.num_storage_nodes
     max_expected_osds = max_osds_per_storage_node[hw_type] * args.num_storage_nodes
     logger.info("Based on hardware type ({}) and number of storage nodes ({}): min_expected_osds = {}, max_expected_osds = {}".format(hw_type, args.num_storage_nodes, min_expected_osds, max_expected_osds))
-    return min_expected_osds, max_expected_osds, n_storage_nodes
+    return min_expected_osds, max_expected_osds, args.num_storage_nodes
 
 def get_num_osds():
     logger.debug("Loading Ceph")
     ceph = rados.Rados(conffile=CEPH_CONFIG_FILE)
     logger.debug("Connecting to Ceph")
+    # connect to cluster
     ceph.connect()
     logger.info("Running ceph osd stat command")
     cmd_rc, cmd_out_bytes, cmd_opt_str = ceph.mon_command('{"prefix": "osd stat", "format": "json-pretty"}', b'')
+    #disconnect from cluster
+    ceph.shutdown()
     logger.info("Command return code = {}".format(cmd_rc))
     if cmd_opt_str:
         logger.info("Optional output string: {}".format(cmd_opt_str))
