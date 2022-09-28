@@ -231,7 +231,7 @@ def boot_params(data):
 	"hostname=",
 	"ifname=mgmt0",
 	"ifname=mgmt1",
-	"initrd=initrd.img.xz",
+	"initrd=",
 	"iommu=pt",
 	"log_buf_len=1",
 	"metal.server=",
