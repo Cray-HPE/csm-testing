@@ -22,6 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 gossfile:
+  ../tests/goss-services-running.yaml: {}
   ../tests/goss-k8s-etcd-service.yaml: {}
   ../tests/goss-k8s-etcd-endpoint-health.yaml: {}
   ../tests/goss-k8s-etcd-database-health.yaml: {}
@@ -30,5 +31,3 @@ gossfile:
   ../tests/goss-k8s-nexus-endpoint.yaml: {}
   ../tests/goss-k8s-services-endpoint.yaml: {}
   ../tests/goss-k8s-istio-endpoint.yaml: {}
-  ../tests/goss-metal-bootloader.yaml: {}
-  ../tests/goss-services-running.yaml: {}
