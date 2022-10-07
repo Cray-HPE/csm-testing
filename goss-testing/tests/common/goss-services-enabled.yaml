@@ -31,4 +31,13 @@ service:
       sev: 0
     enabled: true
     running: false
+    # skip testing conman on vshasta
+    {{ if eq $service "conman" }}
+    # (the HPC string is not found in this file)
+    {{ if readFile "/etc/os-release" | regexMatch ".*HPC.*" }}
+    skip: false
+    {{ else }}
+    skip: true
+    {{ end }}
+    {{ end }}
   {{end}}

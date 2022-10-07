@@ -31,3 +31,9 @@ file:
     owner: root
     group: root
     filetype: file
+    # skip this test on vshasta (the HPC string is not found in this file)
+    {{ if readFile "/etc/os-release" | regexMatch ".*HPC.*" }}
+    skip: false
+    {{ else }}
+    skip: true
+    {{ end }}
