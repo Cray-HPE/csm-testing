@@ -38,4 +38,10 @@ command:
                 "{{$check_bond_members_have_correct_mtu}}" "{{$bond_member_mtu}}"
         exit-status: 0
         timeout: 20000
+        # skip this test on vshasta
+        {{ if eq true .Vars.vshasta }}
+        skip: true
+        {{ else }}
         skip: false
+        {{ end }}
+

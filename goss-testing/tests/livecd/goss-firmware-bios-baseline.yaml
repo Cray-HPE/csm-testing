@@ -39,4 +39,9 @@ command:
         exit-status: 0
         stdout:
             - "!Unsupported"
+        # skip this test on vshasta (the HPC string is not found in this file)
+        {{ if eq true .Vars.vshasta }}
+        skip: true
+        {{ else }}
         skip: false
+        {{ end }}
