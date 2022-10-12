@@ -161,3 +161,5 @@ storage_fs_labels:
   - CONTAIN
 
 pit_node: false
+# false by default--overriden when vshasta is deployed
+vshasta: false

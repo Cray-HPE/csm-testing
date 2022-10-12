@@ -31,3 +31,9 @@ file:
     owner: root
     group: root
     filetype: file
+    # skip this test on vshasta
+    {{ if eq true .Vars.vshasta }}
+    skip: true
+    {{ else }}
+    skip: false
+    {{ end }}
