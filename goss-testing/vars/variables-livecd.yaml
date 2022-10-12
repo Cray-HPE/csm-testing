@@ -98,3 +98,5 @@ unbound_hostnames:
 bond_member_mtu: 1500
 
 pit_node: true
+# false by default--overriden when vshasta is deployed
+vshasta: false

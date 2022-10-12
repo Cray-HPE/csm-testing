@@ -35,9 +35,9 @@ command:
                 ipmitool chassis status
         exit-status: 0
         timeout: 20000
-        # skip this test on vshasta (the HPC string is not found in this file)
-        {{ if readFile "/etc/os-release" | regexMatch ".*HPC.*" }}
-        skip: false
-        {{ else }}
+        # skip this test on vshasta 
+        {{ if eq true .Vars.vshasta }}
         skip: true
+        {{ else }}
+        skip: false
         {{ end }}

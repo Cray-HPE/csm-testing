@@ -23,6 +23,8 @@
 #
 # Variable set: services_enabled
 service:
+  # set a var for vshasta
+  {{ $vs := .Vars.vshasta}}
   {{range $service := index .Vars "services_enabled"}}
   {{$service}}:
     title: Service '{{$service}}' Enabled
@@ -33,11 +35,10 @@ service:
     running: false
     # skip testing conman on vshasta
     {{ if eq $service "conman" }}
-    # (the HPC string is not found in this file)
-    {{ if readFile "/etc/os-release" | regexMatch ".*HPC.*" }}
-    skip: false
-    {{ else }}
+    {{ if eq true $vs }}
     skip: true
+    {{ else }}
+    skip: false
     {{ end }}
     {{ end }}
   {{end}}
