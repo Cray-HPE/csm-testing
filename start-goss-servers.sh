@@ -60,8 +60,13 @@ while true ; do
     sleep 5
 done
 
-# for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
-ip=$(host "$(hostname).hmn" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+if is_vshasta_node; then
+  # on vshasta there is only one network and no hmn
+  ip=$(host "$(hostname)" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+else
+  # for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
+  ip=$(host "$(hostname).hmn" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+fi
 [[ -z ${ip} ]] && exit 2
 
 # The goss_suites_endpoints_ports function calls a Python script that outputs lines of the format:
@@ -74,12 +79,21 @@ goss_suites_endpoints_ports | while read suite endpoint port ; do
         continue
     fi
 
-    # Start Goss server for this entry.
-    echo "starting ${endpoint} in background on port ${port}"
-    /usr/bin/goss -g "${suite}" --vars "${tmpvars}" serve \
-        --format json --max-concurrent 4 \
-        --endpoint "/${endpoint}" \
-        --listen-addr "${ip}:${port}" &
+    if is_vshasta_node; then 
+      # Use junit for vshasta
+      echo "starting ${endpoint} in background on port ${port} (vshasta detected)"
+      /usr/bin/goss -g "${suite}" --vars "${tmpvars}" serve \
+          --format junit --max-concurrent 4 \
+          --endpoint "/${endpoint}" \
+          --listen-addr "${ip}:${port}" &
+    else
+      # Start Goss server for this entry.
+      echo "starting ${endpoint} in background on port ${port}"
+      /usr/bin/goss -g "${suite}" --vars "${tmpvars}" serve \
+          --format json --max-concurrent 4 \
+          --endpoint "/${endpoint}" \
+          --listen-addr "${ip}:${port}" &
+    fi
 done
 echo "Goss servers started in background"
 

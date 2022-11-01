@@ -30,4 +30,9 @@ command:
     exec: 'curl --insecure -vvI https://rgw-vip.nmn 2>&1 | grep "expire date:"'
     exit-status: 0
     timeout: 20000
+    # skip this test on vshasta 
+    {{ if eq true .Vars.vshasta }}
+    skip: true
+    {{ else }}
     skip: false
+    {{ end }}

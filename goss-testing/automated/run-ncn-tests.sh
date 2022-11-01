@@ -44,6 +44,20 @@ function is_pit_node {
     [[ -f /etc/pit-release ]]
     return $?
 }
+ 
+function is_vshasta_node {
+    # This is the best check for an image specifically booted to vshasta
+    if [[ -f /etc/google_system ]]; then
+      return $?
+    # metal images can still be booted on GCP, so check if there are any disks vendored by Google
+    elif lsblk --noheadings -o vendor | grep Google >/dev/null; then
+      return $?
+    else
+      # if the above conditions do not match, it is not running on GCP
+      return 1
+    fi
+}
+
 
 # Set some default variables here, both because we use them in this library, and also to save
 # scripts from having to set them if they source this library.

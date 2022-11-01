@@ -23,6 +23,8 @@
 #
 # Variable set: network_interfaces
 
+# set a var for vshasta
+{{ $vs := .Vars.vshasta}}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
 {{ $check_network_interface := $scripts | printf "%s/check_network_interface.sh" }}
@@ -39,5 +41,9 @@ command:
                     "{{$check_network_interface}}" "{{$interface}}"
             exit-status: 0
             timeout: 20000
+            {{ if eq true $vs }}
+            skip: true
+            {{ else }}
             skip: false
+            {{ end }}
     {{end}}
