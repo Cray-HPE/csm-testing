@@ -32,7 +32,6 @@ gossfile:
   ../tests/goss-ncns-in-dnsmasq-leases.yaml: {}
   ../tests/goss-podman-basecamp.yaml: {}
   ../tests/goss-podman-nexus.yaml: {}
-  ../tests/goss-ping-arti_dev-accessibility-test.yaml: {}
   ../tests/goss-net-dhcp-pools-in-dnsmasq_d-are-correctly-defined.yaml: {}
   ../tests/goss-unbound-dns-entries.yaml: {}
   ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}

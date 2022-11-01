@@ -42,3 +42,4 @@ gossfile:
   ../tests/goss-ncn-xname.yaml: {}
   ../tests/goss-network-interfaces.yaml: {}
   ../tests/goss-unbound-ip.yaml: {}
+  ../tests/goss-rgw-cert-valid.yaml: {}
