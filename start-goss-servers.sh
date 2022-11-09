@@ -61,11 +61,19 @@ while true ; do
 done
 
 if is_vshasta_node; then
-  # on vshasta there is only one network and no hmn
-  ip=$(host "$(hostname)" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+    echo "vshasta detected."
+
+    # Use junit for vshasta
+    results_format=junit
+
+    # on vshasta there is only one network and no hmn
+    ip=$(host "$(hostname)" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 else
-  # for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
-  ip=$(host "$(hostname).hmn" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+    # for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
+    ip=$(host "$(hostname).hmn" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+    
+    # Return results in JSON format outside of vshasta
+    results_format=json
 fi
 [[ -z ${ip} ]] && exit 2
 
