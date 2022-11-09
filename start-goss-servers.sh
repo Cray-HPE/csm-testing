@@ -87,21 +87,13 @@ goss_suites_endpoints_ports | while read suite endpoint port ; do
         continue
     fi
 
-    if is_vshasta_node; then 
-      # Use junit for vshasta
-      echo "starting ${endpoint} in background on port ${port} (vshasta detected)"
-      /usr/bin/goss -g "${suite}" --vars "${tmpvars}" serve \
-          --format junit --max-concurrent 4 \
-          --endpoint "/${endpoint}" \
-          --listen-addr "${ip}:${port}" &
-    else
-      # Start Goss server for this entry.
-      echo "starting ${endpoint} in background on port ${port}"
-      /usr/bin/goss -g "${suite}" --vars "${tmpvars}" serve \
-          --format json --max-concurrent 4 \
-          --endpoint "/${endpoint}" \
-          --listen-addr "${ip}:${port}" &
-    fi
+    # Start Goss server for this entry.
+    echo "starting ${endpoint} in background on port ${port}"
+    /usr/bin/goss -g "${suite}" --vars "${tmpvars}" serve \
+        --format "${results_format}" \
+        --max-concurrent 4 \
+        --endpoint "/${endpoint}" \
+        --listen-addr "${ip}:${port}" &
 done
 echo "Goss servers started in background"
 
