@@ -48,7 +48,7 @@ function is_pit_node {
 function is_vshasta_node {
     # This is the best check for an image specifically booted to vshasta
     if [[ -f /etc/google_system ]]; then
-      return $?
+      return 0
     # metal images can still be booted on GCP, so check if there are any disks vendored by Google
     elif lsblk --noheadings -o vendor | grep Google >/dev/null; then
       return $?
