@@ -51,7 +51,7 @@ function is_vshasta_node {
       return 0
     # metal images can still be booted on GCP, so check if there are any disks vendored by Google
     elif lsblk --noheadings -o vendor | grep Google >/dev/null; then
-      return $?
+      return 0
     else
       # if the above conditions do not match, it is not running on GCP
       return 1
