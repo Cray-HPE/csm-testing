@@ -66,3 +66,5 @@ k8s_ceph_csi_secrets:
   - csi-sma-secret
 
 kubectl: "/usr/bin/kubectl"
+# false by default--overriden when vshasta is deployed
+vshasta: false

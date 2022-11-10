@@ -42,3 +42,8 @@ command:
         stdout:
             - "!IP allocation was seeded by different peers"
         timeout: 20000
+        {{ if eq true .Vars.vshasta }}
+        skip: true
+        {{ else }}
+        skip: false
+        {{ end }}

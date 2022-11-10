@@ -44,6 +44,16 @@ function is_pit_node {
     [[ -f /etc/pit-release ]]
     return $?
 }
+ 
+function is_vshasta_node {
+    # This is the best check for an image specifically booted to vshasta
+    [[ -f /etc/google_system ]] && return 0
+
+    # metal images can still be booted on GCP, so check if there are any disks vendored by Google
+    # if not, we conclude that this is not GCP
+    lsblk --noheadings -o vendor | grep -q Google
+    return $?
+}
 
 # Set some default variables here, both because we use them in this library, and also to save
 # scripts from having to set them if they source this library.
@@ -599,16 +609,26 @@ function add_local_vars {
 
     local this_node_name this_node_manufacturer var_string node nodes
 
+    if is_vshasta_node; then
+        # vshasta
+        var_string+="\nvshasta: true\n"
+
+        # Since we know this is vshasta, we directly set the node manufacturer variable, rather
+        # than the usual call to ipmitool
+        this_node_manufacturer=vshasta
+    else
+        # Not vshasta -- call ipmitool to determine node manufacturer
+        this_node_manufacturer=$(ipmitool mc info | 
+            grep -E "^Manufacturer Name[[:space:]]{1,}:[[:space:]]*[^[:space:]]" |
+            sed -e 's/^Manufacturer Name[[:space:]]*:[[:space:]]*//' -e 's/[[:space:]]*$//')
+    fi
+    # Add hardware manufacturer as variable
+    var_string+="\nthis_node_manufacturer: \"${this_node_manufacturer}\"\n"
+
     # Add local nodename as variable
     this_node_name=$(hostname -s | grep -Eo '(ncn-[msw][0-9]{3}|.*-pit)$')
     var_string="\n\nthis_node_name: \"${this_node_name}\"\n"
     
-    # Add hardware manufacturer as variable
-    this_node_manufacturer=$(ipmitool mc info | 
-        grep -E "^Manufacturer Name[[:space:]]{1,}:[[:space:]]*[^[:space:]]" |
-        sed -e 's/^Manufacturer Name[[:space:]]*:[[:space:]]*//' -e 's/[[:space:]]*$//')
-    var_string+="\nthis_node_manufacturer: \"${this_node_manufacturer}\"\n"
-
     # Get NCN list
     nodes=$(get_ncns)
 

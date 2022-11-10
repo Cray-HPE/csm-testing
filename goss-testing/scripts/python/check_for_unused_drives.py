@@ -76,17 +76,20 @@ logger.addHandler(stderr_handler)
 hw_type_map = {
     "GIGA-BYTE TECHNOLOGY CO., LTD": "gigabyte",
     "Hewlett Packard Enterprise": "hpe",
-    "Intel Corporation": "intel" }
+    "Intel Corporation": "intel",
+    "vshasta": "vshasta" }
 
 min_osds_per_storage_node = {
     "gigabyte": 12,
     "hpe": 8,
-    "intel": 1 }
+    "intel": 1,
+    "vshasta": 2 }
 
 max_osds_per_storage_node = {
     "gigabyte": 12,
     "hpe": 8,
-    "intel": 0 }
+    "intel": 0,
+    "vshasta": 0 }
 
 def num_storage_nodes(string):
     num = int(string)
