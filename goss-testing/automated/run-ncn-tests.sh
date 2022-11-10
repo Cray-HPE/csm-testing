@@ -613,6 +613,10 @@ function add_local_vars {
 
     local this_node_name this_node_manufacturer var_string node nodes
 
+    if is_vshasta_node; then
+      var_string+="\nvshasta: true\n"
+    fi
+
     # Add local nodename as variable
     this_node_name=$(hostname -s | grep -Eo '(ncn-[msw][0-9]{3}|.*-pit)$')
     var_string="\n\nthis_node_name: \"${this_node_name}\"\n"
