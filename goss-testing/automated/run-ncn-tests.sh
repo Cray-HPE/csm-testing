@@ -607,16 +607,16 @@ function add_local_vars {
         return 1
     fi
 
-    local this_node_name this_node_manufacturer var_string node nodes
+    local this_node_name this_node_manufacturer var_string node nodes is_vshasta
 
     if is_vshasta_node; then
         # vshasta
-        var_string+="\nvshasta: true\n"
-
+        is_vshasta="\nvshasta: true\n"
         # Since we know this is vshasta, we directly set the node manufacturer variable, rather
         # than the usual call to ipmitool
         this_node_manufacturer=vshasta
     else
+        is_vshasta="\nvshasta: false\n"
         # Not vshasta -- call ipmitool to determine node manufacturer
         this_node_manufacturer=$(ipmitool mc info | 
             grep -E "^Manufacturer Name[[:space:]]{1,}:[[:space:]]*[^[:space:]]" |
@@ -649,6 +649,8 @@ function add_local_vars {
     for node in $(echo "${nodes}" | grep -oE "ncn-s[0-9]{3}") ; do
         var_string+="  - ${node}\n"
     done
+
+    var_string+="\n${is_vshasta}\n"
 
     echo -e "${var_string}" >> "$1"
     return $?
