@@ -28,7 +28,7 @@
 %define dat %{install_dir}/dat
 %define logs %{install_dir}/logs
 
-Name: csm-testing
+Name: %(echo $NAME)
 License: HPE Software License Agreement
 Summary: Goss tests to test out installation set-up
 Group: HPC

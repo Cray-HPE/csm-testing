@@ -25,8 +25,9 @@
  */
 @Library('csm-shared-library') _
 
-def sleVersion = '15.3'
 def isStable = env.TAG_NAME != null ? true : false
+def sleImage = 'artifactory.algol60.net/csm-docker/stable/csm-docker-sle'
+def sleVersion = '15.3'
 pipeline {
     agent {
         label "metal-gcp-builder"
@@ -40,23 +41,24 @@ pipeline {
     }
 
     environment {
-        GIT_REPO_NAME = getRepoName()
+        NAME = getRepoName()
         VERSION = sh(returnStdout: true, script: "git describe --tags | tr -s '-' '~' | tr -d '^v'").trim()
     }
 
     stages {
-        stage('Prepare: RPM Build') {
-            // Make RPM MetaData in our target environment (SLE).
+
+        stage('Prepare: RPMs') {
             agent {
                 docker {
                     label 'docker'
                     reuseNode true
-                    image "artifactory.algol60.net/csm-docker/stable/csm-docker-sle:${sleVersion}"
+                    image "${sleImage}:${sleVersion}"
                 }
             }
             steps {
-                runLibraryScript("addRpmMetaData.sh", "${env.GIT_REPO_NAME}.spec")
+                runLibraryScript("addRpmMetaData.sh", "${env.NAME}.spec")
                 sh "make rpm_prepare"
+                sh "git update-index --assume-unchanged ${env.NAME}.spec"
             }
         }
 
@@ -65,7 +67,7 @@ pipeline {
                 docker {
                     label 'docker'
                     reuseNode true
-                    image "artifactory.algol60.net/csm-docker/stable/csm-docker-sle:${sleVersion}"
+                    image "${sleImage}:${sleVersion}"
                 }
             }
             steps {
@@ -76,12 +78,12 @@ pipeline {
         stage('Publish: RPMs') {
             steps {
                 script {
-                    publishCsmRpms(component: env.GIT_REPO_NAME, pattern: "dist/rpmbuild/RPMS/noarch/${env.GIT_REPO_NAME}*.rpm", os: 'sle-15sp2', arch: "noarch", isStable: isStable)
-                    publishCsmRpms(component: env.GIT_REPO_NAME, pattern: "dist/rpmbuild/RPMS/noarch/${env.GIT_REPO_NAME}*.rpm", os: 'sle-15sp3', arch: "noarch", isStable: isStable)
+                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/noarch/${env.NAME}*.rpm", os: 'sle-15sp2', arch: "noarch", isStable: isStable)
+                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/noarch/${env.NAME}*.rpm", os: 'sle-15sp3', arch: "noarch", isStable: isStable)
                     publishCsmRpms(component: 'goss-servers', pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm", os: 'sle-15sp2', arch: "noarch", isStable: isStable)
-                    publishCsmRpms(component: 'goss-servers', pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm", os: 'sle-15sp3',  arch: "noarch", isStable: isStable)
-                    publishCsmRpms(component: env.GIT_REPO_NAME, pattern: "dist/rpmbuild/SRPMS/${env.GIT_REPO_NAME}*.rpm", os: 'sle-15sp2', arch: "src", isStable: isStable)
-                    publishCsmRpms(component: env.GIT_REPO_NAME, pattern: "dist/rpmbuild/SRPMS/${env.GIT_REPO_NAME}*.rpm", os: 'sle-15sp3', arch: "src", isStable: isStable)
+                    publishCsmRpms(component: 'goss-servers', pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm", os: 'sle-15sp3', arch: "noarch", isStable: isStable)
+                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/SRPMS/${env.NAME}*.rpm", os: 'sle-15sp2', arch: "src", isStable: isStable)
+                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/SRPMS/${env.NAME}*.rpm", os: 'sle-15sp3', arch: "src", isStable: isStable)
                 }
             }
         }
