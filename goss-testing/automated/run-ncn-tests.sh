@@ -627,7 +627,7 @@ function add_local_vars {
 
     # Add local nodename as variable
     this_node_name=$(hostname -s | grep -Eo '(ncn-[msw][0-9]{3}|.*-pit)$')
-    var_string="\n\nthis_node_name: \"${this_node_name}\"\n"
+    var_string+="\n\nthis_node_name: \"${this_node_name}\"\n"
     
     # Get NCN list
     nodes=$(get_ncns)

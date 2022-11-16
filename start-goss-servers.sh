@@ -23,7 +23,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Goss server start up commands to serve health check endpoints
-
+set -e
 export GOSS_BASE=/opt/cray/tests/install/ncn
 
 # necessary for kubectl commands to run

@@ -21,7 +21,8 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
+# set a var for vshasta
+{{ $vs := .Vars.vshasta}}
 {{ $this_node_name := .Vars.this_node_name }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 package:
@@ -47,7 +48,7 @@ command:
                     /usr/bin/ceph -s
             exit-status: 0
             timeout: 20000
-            {{ if eq true .Vars.vshasta }}
+            {{ if eq true $vs }}
             skip: true
             {{ else }}
             skip: false

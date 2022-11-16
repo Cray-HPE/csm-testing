@@ -22,6 +22,8 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+# set a var for vshasta
+{{ $vs := .Vars.vshasta}}
 {{ $this_node_name := .Vars.this_node_name }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 file:
@@ -35,5 +37,10 @@ file:
                     sev: 0
                 exists: true
                 filetype: file
+                {{ if eq true $vs }}
+                skip: true
+                {{ else }}
+                skip: false
+                {{ end }}
         {{end}}
     {{end}}
