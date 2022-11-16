@@ -38,4 +38,8 @@ command:
                 "{{$ceph_service_status}}" -A true -v true
         exit-status: 0
         timeout: 1000000
+        {{ if eq true .Vars.vshasta }}
+        skip: true
+        {{ else }}
         skip: false
+        {{ end }}

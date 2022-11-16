@@ -43,3 +43,8 @@ command:
                 "{{$check_for_unused_drives}}" "{{$num_storage_nodes}}" "{{$this_node_manufacturer}}"
         exit-status: 0
         timeout: 20000
+        {{ if eq true .Vars.vshasta }}
+        skip: true
+        {{ else }}
+        skip: false
+        {{ end }}
