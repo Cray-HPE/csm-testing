@@ -167,18 +167,32 @@ def goss_env_variables() -> dict:
         "GOSS_SERVERS_CONFIG": goss_servers_config()
     }
 
-def log_dir(script_name: str) -> str:
+def timestamp_string() -> str:
+    return datetime.now().strftime('%Y%m%d_%H%M%S.%f')
+
+def strip_path_and_extension(filepath: str) -> str:
+    """
+    Given the pathname to a file, strip off the path (if any)
+    and the extension (if any)
+    """
+    return filepath.split('/')[-1]
+
+def time_pid_unique_string() -> str:
+    mypid = os.getpid()
+    timestamp = timestamp_string()
+    randstring = ''.join(random.choices(string.ascii_lowercase + string.digits + string.ascii_uppercase, k=8))
+    return f"{timestamp}-{mypid}-{randstring}"
+
+def log_dir(script_name: str, sub_directory_basename: str=None) -> str:
     # Strip off path and .py, if present, in script name
-    script_name = script_name.split('/')[-1]
+    script_name = strip_path_and_extension(script_name)
     if script_name[-3:] == ".py":
         script_name = script_name[:-3]
 
-    mypid = os.getpid()
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S.%f')
-    randstring = ''.join(random.choices(string.ascii_lowercase + string.digits + string.ascii_uppercase, k=8))
-
+    if sub_directory_basename is None:
+        sub_directory_basename = time_pid_unique_string()
     glbd = goss_log_base_dir()
-    return f"{glbd}/{script_name}/{timestamp}-{mypid}-{randstring}"
+    return f"{glbd}/{script_name}/{sub_directory_basename}"
 
 def log_values(logmethod: Callable, **kwargs) -> None:
     for k, v in kwargs.items():

@@ -64,22 +64,25 @@ Other error                 3
 If multiple exit codes apply, the highest one is used.
 """
 
-from lib.common import err_text,                \
-                       fmt_exc,                 \
-                       get_hostname,            \
-                       log_goss_env_variables,  \
-                       goss_base,               \
-                       goss_script_log_level,   \
-                       goss_script_max_threads, \
-                       log_dir,                 \
-                       log_values,              \
-                       multi_print,             \
-                       ok_text,                 \
-                       ScriptException,         \
-                       ScriptUsageException,    \
-                       stderr_print,            \
-                       stdout_print,            \
-                       StringList,              \
+from lib.common import err_text,                    \
+                       fmt_exc,                     \
+                       get_hostname,                \
+                       goss_base,                   \
+                       goss_script_log_level,       \
+                       goss_script_max_threads,     \
+                       log_dir,                     \
+                       log_goss_env_variables,      \
+                       log_values,                  \
+                       multi_print,                 \
+                       ok_text,                     \
+                       ScriptException,             \
+                       ScriptUsageException,        \
+                       stderr_print,                \
+                       stdout_print,                \
+                       StringList,                  \
+                       strip_path_and_extension,    \
+                       time_pid_unique_string,      \
+                       timestamp_string,            \
                        warn_text
 
 from typing import Callable, Dict, List, Tuple
@@ -102,9 +105,44 @@ RC_USAGE = 2
 RC_ERROR = 3
 
 outfile = None
+grok_exporter_outfile = None
 
 MY_LOG_DIR = None
 MY_LOG_FILE = None
+
+GROK_EXPORTER_RESULTS_FILE = None
+GROK_EXPORTER_LOG_DIR = "/opt/cray/tests/install/logs/grok_exporter"
+
+def grok_exporter_log(msg: str, data: dict=None) -> None:
+    """
+    Add a line to the grok-exporter log file. Format is:
+    <timestamp> <msg> [<single-line JSON representation of data>]
+    """
+    global grok_exporter_outfile
+    if grok_exporter_outfile is None:
+        return
+    timestamp = timestamp_string()
+    outline = f"{timestamp} {msg}"
+    if data is not None:
+        try:
+            json_data_string = json.dumps(data, sort_keys=True)
+        except TypeError as exc:
+            msg = f"Error encoding data for grok-exporter output file. {fmt_exc(exc)}"
+            logging.error(msg)
+            stderr_print(msg)
+            json_data_string = msg
+        outline = f"{outline} {json_data_string}"
+    # Escape characters like newlines, if any
+    outline = outline.encode("unicode_escape").decode("utf-8")
+    try:
+        grok_exporter_outfile.write(f"{outline}\n")
+        grok_exporter_outfile.flush()
+    except Exception as exc:
+        msg = f"Error writing to output file. {fmt_exc(exc)}"
+        logging.error(msg)
+        stderr_print(msg)
+        grok_exporter_outfile = None
+        
 
 def outfile_print(s: str) -> None:
     global outfile
@@ -281,19 +319,64 @@ class JsonResultsCollection:
         else:
             self.run_goss_decode_json(suite_or_test=source)
 
-def extract_results_data(json_results: dict) -> Tuple[List[dict], int, float]:
+class ResultsEntry(object):
+    def __init__(self, result_entry_raw: dict):
+        self.result_raw = result_entry_raw["result"]
+        self.title = result_entry_raw["title"]
+        self.summary = result_entry_raw["summary-line"]
+        self.duration_raw = result_entry_raw["duration"]
+        self.duration = self.duration_raw/1000000000.0
+        self.resource = result_entry_raw["resource-id"]
+        self.description = result_entry_raw["meta"]["desc"]
+        if self.result_raw == 0:
+            # Test passed
+            self.result_string = "PASS"
+        elif self.result_raw == 1:
+            # Test failed
+            self.result_string = "FAIL"
+        elif self.result_raw == 2:
+            # Test was skipped (this is not usually due to error)
+            self.result_string = "SKIPPED"
+        else:
+            # This should never happpen
+            self.result_string = f"UNKNOWN (Goss result = {self.result_raw})"
+
+    def multiline_string(self, source: str, node_name: str) -> str:
+        """
+        Return a string of the results formatted as a multi-line string,
+        followed by a blank line
+        """
+        return ( f"Result: {self.result_string}\n"
+                 f"Source: {source}\n"
+                 f"Test Name: {self.title}\n"
+                 f"Description: {self.description}\n"
+                 f"Test Summary: {self.summary}\n"
+                 f"Execution Time: {self.duration:.8f} seconds\n"
+                 f"Node: {node_name}\n\n" )
+
+    def dict(self, source: str, node_name: str) -> dict:
+        """
+        Return the results in dict format
+        """
+        return { "Result Code": self.result_raw,
+                 "Result String": self.result_string,
+                 "Source": source,
+                 "Test Name": self.title,
+                 "Description": self.description,
+                 "Test Summary": self.summary,
+                 "Execution Time (raw)": self.duration_raw,
+                 "Execution Time (seconds)": self.duration,
+                 "Node": node_name }
+
+
+def extract_results_data(json_results: dict) -> Tuple[List[ResultsEntry], int, float]:
     try:
         results = json_results["results"]
         # Make list of results with a numeric result
         # Convert durations to seconds
-        selected_results = [ 
-            {   "result":       result_entry["result"],
-                "title":        result_entry["title"], 
-                "summary-line": result_entry["summary-line"], 
-                "duration":     result_entry["duration"]/1000000000.0, 
-                "resource-id":  result_entry["resource-id"],
-                "desc":         result_entry["meta"]["desc"] }
-            for result_entry in results if isinstance(result_entry["result"], int) ]
+        selected_results = [ ResultsEntry(result_entry_raw=result_entry)
+                             for result_entry in results
+                             if isinstance(result_entry["result"], int) ]
 
         # Get some of the summary fields
         summary = json_results["summary"]
@@ -309,10 +392,10 @@ def extract_results_data(json_results: dict) -> Tuple[List[dict], int, float]:
         raise ScriptException("No Goss test results found.")
 
     # Sort the results
-    selected_results.sort(key=lambda r: (r["title"], r["result"]))
+    selected_results.sort(key=lambda r: (r.title, r.result_raw))
     return selected_results, failed_count, total_duration
 
-def show_results(source: str, selected_results: List[dict], failed_count: int, total_duration: float, node_name: str) -> Tuple[int, int, int]:
+def show_results(source: str, selected_results: List[ResultsEntry], failed_count: int, total_duration: float, node_name: str) -> Tuple[int, int, int]:
     """
     Prints all results to outfile.
     Prints failures to stderr.
@@ -327,46 +410,34 @@ def show_results(source: str, selected_results: List[dict], failed_count: int, t
     for res in selected_results:
         bad_result = False
         # Goss result 0 -> pass, 1 -> fail, 2 -> skip
-        if res["result"] == 0:
+        if res.result_string == "PASS":
             # Test passed
-            result_lines = [ "Result: PASS" ]
             manual_pass_count+=1
-        elif res["result"] == 1:
+        elif res.result_string == "FAIL":
             # Test failed
-            result_lines = [ "Result: FAIL" ]
             manual_fail_count+=1
             bad_result = True
-        elif res["result"] == 2:
+        elif res.result_string == "SKIPPED":
             # Test was skipped (this is not usually due to error)
             manual_skip_count+=1
-            result_lines = [ "Result: SKIPPED" ]
         else:
             # This should never happpen
             manual_unknown_count+=1
-            result_lines = [ "Result: UNKNOWN (Goss result = {res['result']})" ]
             bad_result = True
 
-        # The blank string at the end is just to add a newline when
-        # the join is called
-        result_lines.extend([
-            f"Source: {source}",
-            f"Test Name: {res['title']}",
-            f"Description: {res['desc']}",
-            f"Test Summary: {res['summary-line']}",
-            f"Execution Time: {res['duration']:.8f} seconds",
-            f"Node: {node_name}", "" ])
-
-        result_string = '\n'.join(result_lines)
-
         # Write to output file
-        outfile_print(result_string)
+        result_lines=res.multiline_string(source=source, node_name=node_name)
+        outfile_print(result_lines)
+
+        # Write to grok-exporter log
+        grok_exporter_log("Test result", data=res.dict(source=source, node_name=node_name))
 
         # If the test failed or had an unknown result, also print to stderr in red
         if bad_result:
             # If this is the first error for this source, add a newline before it
             if (manual_fail_count + manual_unknown_count) == 1:
                 print_newline()
-            stderr_print(err_text(result_string))
+            stderr_print(err_text(result_lines))
 
     summary = ', '.join([
         f"Node: {node_name}",
@@ -377,7 +448,7 @@ def show_results(source: str, selected_results: List[dict], failed_count: int, t
         f"Total Skipped: {manual_skip_count}",
         f"Total Unknown: {manual_unknown_count}",
         f"Total Execution Time: {total_duration:.8f} seconds"])
-    multi_print(summary, logging.info, outfile_print)
+    multi_print(summary, logging.info, outfile_print, grok_exporter_log)
     if failed_count != manual_fail_count:
         # If no errors have been reported yet for this source, add a newline first
         if manual_fail_count == 0:
@@ -385,7 +456,7 @@ def show_results(source: str, selected_results: List[dict], failed_count: int, t
         mismatch=f"failed_count in results ({failed_count}) does not match manual tally of test failures ({manual_fail_count})"
         stderr_print(warn_text(f"WARNING: {mismatch}"))
         logging.warning(mismatch)
-        outfile_print(f"WARNING: {mismatch}")
+        multi_print(f"WARNING: {mismatch}", outfile_print, grok_exporter_log)
         print_newline()
 
     return manual_pass_count, manual_fail_count, manual_unknown_count
@@ -608,7 +679,7 @@ def main(input_sources: Dict[str, StringList]) -> int:
         total_summary = f"GRAND TOTAL: {total_passed} passed, {total_failed} failed"
     else:
         total_summary = f"GRAND TOTAL: {total_passed} passed, {total_failed} failed, {total_unknown} unknown results"
-    outfile_print(total_summary)
+    multi_print(total_summary, outfile_print, grok_exporter_log)
     if total_passed == 0 and total_failed == 0 and total_unknown == 0:
         stderr_print(warn_text(total_summary))
         logging.warning(total_summary)
@@ -627,13 +698,19 @@ def main(input_sources: Dict[str, StringList]) -> int:
         raise ScriptException()
     return total_failed
 
-def setup_logging() -> Tuple[str, str]:
-    MY_LOG_DIR = log_dir(__file__)
+
+def setup_logging() -> Tuple[str, str, str]:
+    unique_string = time_pid_unique_string()
+    
+    MY_LOG_DIR = log_dir(script_name=__file__, sub_directory_basename=unique_string)
     try:
+        # create the log directory for the grok-exporter logs; it is ok if it already exists
+        os.makedirs(GROK_EXPORTER_LOG_DIR, exist_ok=True)
+        
         # create log directory; it is NOT ok if it already exists
         os.makedirs(MY_LOG_DIR, exist_ok=False)
-    except Exception as e:
-        stderr_print(err_text(f"Error creating log directory. {fmt_exc(e)}"))
+    except Exception as exc:
+        stderr_print(err_text(f"Error creating log directory. {fmt_exc(exc)}"))
         sys.exit(RC_ERROR)
 
     MY_LOG_FILE = f"{MY_LOG_DIR}/log"
@@ -650,45 +727,56 @@ def setup_logging() -> Tuple[str, str]:
     log_values(logging.info, MY_OUTPUT_FILE=MY_OUTPUT_FILE)
     log_goss_env_variables(logging.debug)
 
-    return MY_LOG_FILE, MY_OUTPUT_FILE
+    script_basename = strip_path_and_extension(__file__)
+    GROK_EXPORTER_LOG_FILE = f"{GROK_EXPORTER_LOG_DIR}/{script_basename}-{unique_string}.log"
+
+    return MY_LOG_FILE, MY_OUTPUT_FILE, GROK_EXPORTER_LOG_FILE
+
 
 # Parse command-line arguments
 input_sources = parse_args()
 
 # Set up logging
-MY_LOG_FILE, MY_OUTPUT_FILE = setup_logging()
+MY_LOG_FILE, MY_OUTPUT_FILE, GROK_EXPORTER_LOG_FILE = setup_logging()
 
 log_values(logging.debug, input_sources=input_sources)
 
 with open(MY_OUTPUT_FILE, "wt") as outfile:
     outfile_print(f"Script debug log file: {MY_LOG_FILE}")
-    try:
-        if main(input_sources) == 0:
-            stdout_print(ok_text("\nPASSED"))
-            outfile_print("\nPASSED")
-            logging.info("PASSED; exiting with return code 0")
-            sys.exit(0)
-        stderr_print(err_text("\nFAILED"))
-        outfile_print("\nFAILED")
-        logging.error(f"FAILED (failed tests); exiting with return code {RC_TESTFAIL}")
-        sys.exit(RC_TESTFAIL)
-    except ScriptException:
-        stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug log: {MY_LOG_FILE}")
-        stderr_print(err_text("\nFAILED"))
-        outfile_print("\nFAILED")
-        logging.error(f"FAILED; exiting with return code {RC_ERROR}")
-        sys.exit(RC_ERROR)
-    except Exception as e:
-        # For any anticipated exceptions, they would have been caught at a lower level and turned into
-        # ScriptExceptions. So we should print more information about this exception.
-        stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug log: {MY_LOG_FILE}")
-        multi_print(traceback.format_exc(), logging.error, outfile_print)
-        error(f"Unexpected error. {fmt_exc(e)}")
-        stderr_print(err_text("\nFAILED"))
-        outfile_print("\nFAILED")
-        logging.error(f"FAILED (unexpected error); exiting with return code {RC_ERROR}")
-        sys.exit(RC_ERROR)
+    with open(GROK_EXPORTER_LOG_FILE, "wt") as grok_exporter_outfile:
+        outfile_print(f"Script grok-exporter log file: {GROK_EXPORTER_LOG_FILE}")
+        log_values(logging.info, GROK_EXPORTER_LOG_FILE=GROK_EXPORTER_LOG_FILE)
+        grok_exporter_log("Starting")
+        try:
+            if main(input_sources) == 0:
+                stdout_print(ok_text("\nPASSED"))
+                outfile_print("\nPASSED")
+                multi_print("PASSED; exiting with return code 0", logging.info, grok_exporter_log)
+                sys.exit(0)
+            stderr_print(err_text("\nFAILED"))
+            outfile_print("\nFAILED")
+            multi_print(f"FAILED (failed tests); exiting with return code {RC_TESTFAIL}", logging.error, grok_exporter_log)
+            sys.exit(RC_TESTFAIL)
+        except ScriptException:
+            stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug log: {MY_LOG_FILE}")
+            stderr_print(err_text("\nFAILED"))
+            outfile_print("\nFAILED")
+            multi_print(f"FAILED; exiting with return code {RC_ERROR}", logging.error, grok_exporter_log)
+            sys.exit(RC_ERROR)
+        except Exception as e:
+            # For any anticipated exceptions, they would have been caught at a lower level and turned into
+            # ScriptExceptions. So we should print more information about this exception.
+            stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug log: {MY_LOG_FILE}")
+            multi_print(traceback.format_exc(), logging.error, outfile_print, grok_exporter_log)
+            msg = f"Unexpected error. {fmt_exc(e)}"
+            error(msg)
+            grok_exporter_log(msg)
+            stderr_print(err_text("\nFAILED"))
+            outfile_print("\nFAILED")
+            multi_print(f"FAILED (unexpected error); exiting with return code {RC_ERROR}", logging.error, grok_exporter_log)
+            sys.exit(RC_ERROR)
 
 outfile = None
+grok_exporter_outfile = None
 error("\nPROGRAMMING LOGIC ERROR: This line should never be reached")
 sys.exit(RC_ERROR)
