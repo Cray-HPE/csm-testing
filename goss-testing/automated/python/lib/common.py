@@ -170,7 +170,7 @@ def goss_env_variables() -> dict:
 def timestamp_string() -> str:
     return datetime.now().strftime('%Y%m%d_%H%M%S.%f')
 
-def strip_path_and_extension(filepath: str) -> str:
+def strip_path(filepath: str) -> str:
     """
     Given the pathname to a file, strip off the path (if any)
     and the extension (if any)
@@ -185,7 +185,7 @@ def time_pid_unique_string() -> str:
 
 def log_dir(script_name: str, sub_directory_basename: str=None) -> str:
     # Strip off path and .py, if present, in script name
-    script_name = strip_path_and_extension(script_name)
+    script_name = strip_path(script_name)
     if script_name[-3:] == ".py":
         script_name = script_name[:-3]
 

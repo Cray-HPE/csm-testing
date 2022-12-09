@@ -80,10 +80,14 @@ from lib.common import err_text,                    \
                        stderr_print,                \
                        stdout_print,                \
                        StringList,                  \
-                       strip_path_and_extension,    \
+                       strip_path,                  \
                        time_pid_unique_string,      \
                        timestamp_string,            \
                        warn_text
+
+from lib.grok_exporter_logger import grok_exporter_log,      \
+                                     GROK_EXPORTER_LOG_DIR,  \
+                                     JSONDict
 
 from typing import Callable, Dict, List, Tuple
 
@@ -107,41 +111,15 @@ RC_ERROR = 3
 outfile = None
 grok_exporter_outfile = None
 
-MY_LOG_DIR = None
-MY_LOG_FILE = None
+MY_BASENAME = strip_path(__file__)
 
-GROK_EXPORTER_RESULTS_FILE = None
-GROK_EXPORTER_LOG_DIR = "/opt/cray/tests/install/logs/grok_exporter"
 
-def grok_exporter_log(msg: str, data: dict=None) -> None:
+def log_to_grok_exporter(msg: str, data: JSONDict=None) -> None:
     """
-    Add a line to the grok-exporter log file. Format is:
-    <timestamp> <msg> [<single-line JSON representation of data>]
+    Add a line to the grok-exporter log file.
     """
-    global grok_exporter_outfile
-    if grok_exporter_outfile is None:
-        return
-    timestamp = timestamp_string()
-    outline = f"{timestamp} {msg}"
-    if data is not None:
-        try:
-            json_data_string = json.dumps(data, sort_keys=True)
-        except TypeError as exc:
-            msg = f"Error encoding data for grok-exporter output file. {fmt_exc(exc)}"
-            logging.error(msg)
-            stderr_print(msg)
-            json_data_string = msg
-        outline = f"{outline} {json_data_string}"
-    # Escape characters like newlines, if any
-    outline = outline.encode("unicode_escape").decode("utf-8")
-    try:
-        grok_exporter_outfile.write(f"{outline}\n")
-        grok_exporter_outfile.flush()
-    except Exception as exc:
-        msg = f"Error writing to output file. {fmt_exc(exc)}"
-        logging.error(msg)
-        stderr_print(msg)
-        grok_exporter_outfile = None
+    grok_exporter_log(message=msg, script_name=MY_BASENAME, outfile=grok_exporter_outfile,
+                      data=data)
         
 
 def outfile_print(s: str) -> None:
@@ -430,7 +408,7 @@ def show_results(source: str, selected_results: List[ResultsEntry], failed_count
         outfile_print(result_lines)
 
         # Write to grok-exporter log
-        grok_exporter_log("Test result", data=res.dict(source=source, node_name=node_name))
+        log_to_grok_exporter("Test result", data=res.dict(source=source, node_name=node_name))
 
         # If the test failed or had an unknown result, also print to stderr in red
         if bad_result:
@@ -439,16 +417,18 @@ def show_results(source: str, selected_results: List[ResultsEntry], failed_count
                 print_newline()
             stderr_print(err_text(result_lines))
 
-    summary = ', '.join([
-        f"Node: {node_name}",
-        f"Source: {source}",
-        f"Total Tests: {total_count}",
-        f"Total Passed: {manual_pass_count}",
-        f"Total Failed: {manual_fail_count}",
-        f"Total Skipped: {manual_skip_count}",
-        f"Total Unknown: {manual_unknown_count}",
-        f"Total Execution Time: {total_duration:.8f} seconds"])
-    multi_print(summary, logging.info, outfile_print, grok_exporter_log)
+    summary_data = {
+        "Node": node_name,
+        "Source": source,
+        "Total Tests": total_count,
+        "Total Passed": manual_pass_count,
+        "Total Failed": manual_fail_count,
+        "Total Skipped": manual_skip_count,
+        "Total Unknown": manual_unknown_count,
+        "Total Execution Time": f"{total_duration:.8f} seconds" }
+    summary = ', '.join([ f"{key}: {value}" for key, value in summary_data.items() ])
+    multi_print(summary, logging.info, outfile_print)
+    log_to_grok_exporter("Source test results summary", summary_data)
     if failed_count != manual_fail_count:
         # If no errors have been reported yet for this source, add a newline first
         if manual_fail_count == 0:
@@ -456,7 +436,7 @@ def show_results(source: str, selected_results: List[ResultsEntry], failed_count
         mismatch=f"failed_count in results ({failed_count}) does not match manual tally of test failures ({manual_fail_count})"
         stderr_print(warn_text(f"WARNING: {mismatch}"))
         logging.warning(mismatch)
-        multi_print(f"WARNING: {mismatch}", outfile_print, grok_exporter_log)
+        multi_print(f"WARNING: {mismatch}", outfile_print, log_to_grok_exporter)
         print_newline()
 
     return manual_pass_count, manual_fail_count, manual_unknown_count
@@ -679,7 +659,7 @@ def main(input_sources: Dict[str, StringList]) -> int:
         total_summary = f"GRAND TOTAL: {total_passed} passed, {total_failed} failed"
     else:
         total_summary = f"GRAND TOTAL: {total_passed} passed, {total_failed} failed, {total_unknown} unknown results"
-    multi_print(total_summary, outfile_print, grok_exporter_log)
+    multi_print(total_summary, outfile_print, log_to_grok_exporter)
     if total_passed == 0 and total_failed == 0 and total_unknown == 0:
         stderr_print(warn_text(total_summary))
         logging.warning(total_summary)
@@ -727,8 +707,8 @@ def setup_logging() -> Tuple[str, str, str]:
     log_values(logging.info, MY_OUTPUT_FILE=MY_OUTPUT_FILE)
     log_goss_env_variables(logging.debug)
 
-    script_basename = strip_path_and_extension(__file__)
-    GROK_EXPORTER_LOG_FILE = f"{GROK_EXPORTER_LOG_DIR}/{script_basename}-{unique_string}.log"
+    script_basename = strip_path(__file__)
+    GROK_EXPORTER_LOG_FILE = f"{GROK_EXPORTER_LOG_DIR}/{unique_string}.log"
 
     return MY_LOG_FILE, MY_OUTPUT_FILE, GROK_EXPORTER_LOG_FILE
 
@@ -739,41 +719,42 @@ input_sources = parse_args()
 # Set up logging
 MY_LOG_FILE, MY_OUTPUT_FILE, GROK_EXPORTER_LOG_FILE = setup_logging()
 
-log_values(logging.debug, input_sources=input_sources)
+log_values(logging.debug, input_sources=input_sources, sys_argv=sys.argv)
+
 
 with open(MY_OUTPUT_FILE, "wt") as outfile:
     outfile_print(f"Script debug log file: {MY_LOG_FILE}")
     with open(GROK_EXPORTER_LOG_FILE, "wt") as grok_exporter_outfile:
         outfile_print(f"Script grok-exporter log file: {GROK_EXPORTER_LOG_FILE}")
         log_values(logging.info, GROK_EXPORTER_LOG_FILE=GROK_EXPORTER_LOG_FILE)
-        grok_exporter_log("Starting")
+        log_to_grok_exporter("Starting", data={ "sys.argv": sys.argv })
         try:
             if main(input_sources) == 0:
                 stdout_print(ok_text("\nPASSED"))
                 outfile_print("\nPASSED")
-                multi_print("PASSED; exiting with return code 0", logging.info, grok_exporter_log)
+                multi_print("PASSED; exiting with return code 0", logging.info, log_to_grok_exporter)
                 sys.exit(0)
             stderr_print(err_text("\nFAILED"))
             outfile_print("\nFAILED")
-            multi_print(f"FAILED (failed tests); exiting with return code {RC_TESTFAIL}", logging.error, grok_exporter_log)
+            multi_print(f"FAILED (failed tests); exiting with return code {RC_TESTFAIL}", logging.error, log_to_grok_exporter)
             sys.exit(RC_TESTFAIL)
         except ScriptException:
             stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug log: {MY_LOG_FILE}")
             stderr_print(err_text("\nFAILED"))
             outfile_print("\nFAILED")
-            multi_print(f"FAILED; exiting with return code {RC_ERROR}", logging.error, grok_exporter_log)
+            multi_print(f"FAILED; exiting with return code {RC_ERROR}", logging.error, log_to_grok_exporter)
             sys.exit(RC_ERROR)
         except Exception as e:
             # For any anticipated exceptions, they would have been caught at a lower level and turned into
             # ScriptExceptions. So we should print more information about this exception.
             stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug log: {MY_LOG_FILE}")
-            multi_print(traceback.format_exc(), logging.error, outfile_print, grok_exporter_log)
+            multi_print(traceback.format_exc(), logging.error, outfile_print, log_to_grok_exporter)
             msg = f"Unexpected error. {fmt_exc(e)}"
             error(msg)
-            grok_exporter_log(msg)
+            log_to_grok_exporter(msg)
             stderr_print(err_text("\nFAILED"))
             outfile_print("\nFAILED")
-            multi_print(f"FAILED (unexpected error); exiting with return code {RC_ERROR}", logging.error, grok_exporter_log)
+            multi_print(f"FAILED (unexpected error); exiting with return code {RC_ERROR}", logging.error, log_to_grok_exporter)
             sys.exit(RC_ERROR)
 
 outfile = None
