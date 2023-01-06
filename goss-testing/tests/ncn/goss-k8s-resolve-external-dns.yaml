@@ -71,7 +71,7 @@ command:
            echo "Unbound and LDAP are configured" 
            CONNECTION_URL=$(curl -s -H "Authorization: Bearer $(get_master_token)" \
                         ${INGRESS}/keycloak/admin/realms/shasta/components \
-                        | jq -r '.[] | select(.providerId=="ldap").config.connectionUrl[]' | cut -d / -f 3)
+                        | jq -r '.[] | select(.providerId=="ldap").config.connectionUrl[]' | cut -d / -f 3  | cut -d: -f 1)
 
            if [[ ! $CONNECTION_URL ]]; then
               echo "LDAP provider is configured, but the connectionURL is missing from LDAP configuration."
