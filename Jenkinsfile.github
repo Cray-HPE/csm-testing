@@ -106,7 +106,14 @@ pipeline {
                                         component: env.NAME,
                                         isStable: isStable,
                                         os: "sle-${sles_major}sp${sles_minor}",
-                                        pattern: "dist/rpmbuild/RPMS/noarch/*.rpm",
+                                        pattern: "dist/rpmbuild/RPMS/noarch/${env.NAME}-*.rpm",
+                                )
+                                publishCsmRpms(
+                                        arch: "noarch",
+                                        component: 'goss-servers',
+                                        isStable: isStable,
+                                        os: "sle-${sles_major}sp${sles_minor}",
+                                        pattern: "dist/rpmbuild/RPMS/noarch/goss-servers-*.rpm",
                                 )
                                 publishCsmRpms(
                                         arch: "src",
