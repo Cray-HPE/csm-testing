@@ -2,7 +2,7 @@
  *
  *  MIT License
  *
- *  (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+ *  (C) Copyright 2023 Hewlett Packard Enterprise Development LP
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -27,8 +27,8 @@
 
 def isStable = env.TAG_NAME != null ? true : false
 def sleImage = 'artifactory.algol60.net/csm-docker/stable/csm-docker-sle'
-def sleVersion = '15.3'
 pipeline {
+
     agent {
         label "metal-gcp-builder"
     }
@@ -47,43 +47,77 @@ pipeline {
 
     stages {
 
-        stage('Prepare: RPMs') {
-            agent {
-                docker {
-                    label 'docker'
-                    reuseNode true
-                    image "${sleImage}:${sleVersion}"
-                }
-            }
-            steps {
-                runLibraryScript("addRpmMetaData.sh", "${env.NAME}.spec")
-                sh "make rpm_prepare"
-                sh "git update-index --assume-unchanged ${env.NAME}.spec"
-            }
-        }
+        stage('Build & Publish') {
 
-        stage('Build: RPMs') {
-            agent {
-                docker {
-                    label 'docker'
-                    reuseNode true
-                    image "${sleImage}:${sleVersion}"
-                }
-            }
-            steps {
-                sh "make rpm"
-            }
-        }
+            matrix {
 
-        stage('Publish: RPMs') {
-            steps {
-                script {
-                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/noarch/${env.NAME}*.rpm", os: 'sle-15sp2', arch: "noarch", isStable: isStable)
-                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/RPMS/noarch/${env.NAME}*.rpm", os: 'sle-15sp3', arch: "noarch", isStable: isStable)
-                    publishCsmRpms(component: 'goss-servers', pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm", os: 'sle-15sp2', arch: "noarch", isStable: isStable)
-                    publishCsmRpms(component: 'goss-servers', pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm", os: 'sle-15sp3', arch: "noarch", isStable: isStable)
-                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/SRPMS/${env.NAME}*.rpm", os: 'sle-15sp2', arch: "src", isStable: isStable)
-                    publishCsmRpms(component: env.NAME, pattern: "dist/rpmbuild/SRPMS/${env.NAME}*.rpm", os: 'sle-15sp3', arch: "src", isStable: isStable)
+                agent {
+                    node {
+                        label "metal-gcp-builder"
+                        customWorkspace "${env.WORKSPACE}/${sleVersion}"
+                    }
+                }
+
+                axes {
+                    axis {
+                        name 'sleVersion'
+                        values 15.3, 15.4
+                    }
+                }
+
+                stages {
+
+                    stage('Prepare: RPMs') {
+                        agent {
+                            docker {
+                                label 'docker'
+                                reuseNode true
+                                image "${sleImage}:${sleVersion}"
+                            }
+                        }
+                        steps {
+                            runLibraryScript("addRpmMetaData.sh", "${env.NAME}.spec")
+                            sh "make prepare"
+                            sh "git update-index --assume-unchanged ${env.NAME}.spec"
+                        }
+                    }
+
+                    stage('Build: RPMs') {
+                        agent {
+                            docker {
+                                label 'docker'
+                                reuseNode true
+                                image "${sleImage}:${sleVersion}"
+                            }
+                        }
+                        steps {
+                            sh "make rpm"
+                        }
+                    }
+
+                    stage('Publish: RPMs') {
+                        steps {
+                            script {
+                                sles_version_parts = "${sleVersion}".tokenize('.')
+                                sles_major = "${sles_version_parts[0]}"
+                                sles_minor = "${sles_version_parts[1]}"
+                                publishCsmRpms(
+                                        arch: "noarch",
+                                        component: env.NAME,
+                                        isStable: isStable,
+                                        os: "sle-${sles_major}sp${sles_minor}",
+                                        pattern: "dist/rpmbuild/RPMS/noarch/*.rpm",
+                                )
+                                publishCsmRpms(
+                                        arch: "src",
+                                        component: env.NAME,
+                                        isStable: isStable,
+                                        os: "sle-${sles_major}sp${sles_minor}",
+                                        pattern: "dist/rpmbuild/SRPMS/*.rpm",
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
