@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -76,13 +76,11 @@ from lib.common import err_text,                    \
                        multi_print,                 \
                        ok_text,                     \
                        ScriptException,             \
-                       ScriptUsageException,        \
                        stderr_print,                \
                        stdout_print,                \
                        StringList,                  \
                        strip_path,                  \
                        time_pid_unique_string,      \
-                       timestamp_string,            \
                        warn_text
 
 from lib.grok_exporter_logger import grok_exporter_log,      \
@@ -93,7 +91,6 @@ from typing import Callable, Dict, List, Tuple
 
 import argparse
 import concurrent.futures
-import itertools
 import json
 import logging
 import os
@@ -205,6 +202,7 @@ def read_and_decode_json(input_file: str, node: str) -> dict:
         multi_print(traceback.format_exc(), outfile_print, logging.error)
         raise ScriptException(f"Error decoding JSON from {input_file}. {fmt_exc(e)}")
 
+
 class JsonResultsCollection:
     def __init__(self):
         self.lock = threading.Lock()
@@ -297,13 +295,40 @@ class JsonResultsCollection:
         else:
             self.run_goss_decode_json(suite_or_test=source)
 
-class ResultsEntry(object):
+
+class DurationSeconds:
+    """
+    Ensures that when the entries are dumped as JSON in grok_exporter_logger.py,
+    the desired formatting of the duration in seconds is preserved.
+    """
+
+    def __init__(self, nanoseconds: int):
+        self.nanoseconds = nanoseconds
+        self.seconds = nanoseconds / 1000000000.0
+
+    def to_nanoseconds(self) -> int:
+        return self.nanoseconds
+
+    def __repr__(self) -> str:
+        # Print 9 decimal places because the minimum possible value is 0.000000001 (1 nanosecond)
+        return f"{self.seconds:.9f}"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
+    def to_json(self):
+        """
+        Used by the custom-JSON-encoding function in the grok_exporter_logger module
+        """
+        return self.__repr__()
+
+
+class ResultsEntry:
     def __init__(self, result_entry_raw: dict):
         self.result_raw = result_entry_raw["result"]
         self.title = result_entry_raw["title"]
         self.summary = result_entry_raw["summary-line"]
-        self.duration_raw = result_entry_raw["duration"]
-        self.duration = self.duration_raw/1000000000.0
+        self.duration_seconds = DurationSeconds(result_entry_raw["duration"])
         self.resource = result_entry_raw["resource-id"]
         self.description = result_entry_raw["meta"]["desc"]
         if self.result_raw == 0:
@@ -329,12 +354,15 @@ class ResultsEntry(object):
                  f"Test Name: {self.title}\n"
                  f"Description: {self.description}\n"
                  f"Test Summary: {self.summary}\n"
-                 f"Execution Time: {self.duration:.8f} seconds\n"
+                 f"Execution Time: {self.duration_seconds} seconds\n"
                  f"Node: {node_name}\n\n" )
 
     def dict(self, source: str, node_name: str) -> dict:
         """
-        Return the results in dict format
+        Return the results in dict format.
+
+        To avoid JSON printing the seconds duration in scientific notation (which causes problems
+        for the grok exporter that parses the log), we record it here as a string in the non-scientific format.
         """
         return { "Result Code": self.result_raw,
                  "Result String": self.result_string,
@@ -342,16 +370,15 @@ class ResultsEntry(object):
                  "Test Name": self.title,
                  "Description": self.description,
                  "Test Summary": self.summary,
-                 "Execution Time (raw)": self.duration_raw,
-                 "Execution Time (seconds)": self.duration,
+                 "Execution Time (seconds)": self.duration_seconds,
+                 "Execution Time (nanoseconds)": self.duration_seconds.to_nanoseconds(),
                  "Node": node_name }
 
 
-def extract_results_data(json_results: dict) -> Tuple[List[ResultsEntry], int, float]:
+def extract_results_data(json_results: dict) -> Tuple[List[ResultsEntry], int, DurationSeconds]:
     try:
         results = json_results["results"]
         # Make list of results with a numeric result
-        # Convert durations to seconds
         selected_results = [ ResultsEntry(result_entry_raw=result_entry)
                              for result_entry in results
                              if isinstance(result_entry["result"], int) ]
@@ -359,7 +386,7 @@ def extract_results_data(json_results: dict) -> Tuple[List[ResultsEntry], int, f
         # Get some of the summary fields
         summary = json_results["summary"]
         failed_count = summary["failed-count"]
-        total_duration = summary["total-duration"]/1000000000.0
+        total_duration = DurationSeconds(summary["total-duration"])
     except (KeyError, TypeError) as e:
         # Add a newline before printing errors
         print_newline()
@@ -373,7 +400,8 @@ def extract_results_data(json_results: dict) -> Tuple[List[ResultsEntry], int, f
     selected_results.sort(key=lambda r: (r.title, r.result_raw))
     return selected_results, failed_count, total_duration
 
-def show_results(source: str, selected_results: List[ResultsEntry], failed_count: int, total_duration: float, node_name: str) -> Tuple[int, int, int]:
+def show_results(source: str, selected_results: List[ResultsEntry], failed_count: int,
+                 total_duration: DurationSeconds, node_name: str) -> Tuple[int, int, int]:
     """
     Prints all results to outfile.
     Prints failures to stderr.
@@ -425,7 +453,7 @@ def show_results(source: str, selected_results: List[ResultsEntry], failed_count
         "Total Failed": manual_fail_count,
         "Total Skipped": manual_skip_count,
         "Total Unknown": manual_unknown_count,
-        "Total Execution Time": f"{total_duration:.8f} seconds" }
+        "Total Execution Time": f"{total_duration} seconds" }
     summary = ', '.join([ f"{key}: {value}" for key, value in summary_data.items() ])
     multi_print(summary, logging.info, outfile_print)
     log_to_grok_exporter("Source test results summary", summary_data)
@@ -707,7 +735,6 @@ def setup_logging() -> Tuple[str, str, str]:
     log_values(logging.info, MY_OUTPUT_FILE=MY_OUTPUT_FILE)
     log_goss_env_variables(logging.debug)
 
-    script_basename = strip_path(__file__)
     GROK_EXPORTER_LOG_FILE = f"{GROK_EXPORTER_LOG_DIR}/{unique_string}.log"
 
     return MY_LOG_FILE, MY_OUTPUT_FILE, GROK_EXPORTER_LOG_FILE
