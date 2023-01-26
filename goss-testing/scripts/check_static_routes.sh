@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -168,10 +168,28 @@ echo $rttbl | grep -q "$nmnlb_cidr via $nmngw dev bond0.nmn0" && nmnlb_passed=tr
 echo_stdout "INFO: NMNLB CIDR is $nmnlb_cidr - route found = $nmnlb_passed"
 
 # Check for NMN_RVR static route
-nmnrvr_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/NMN_RVR | jq -r '.ExtraProperties.Subnets[0].CIDR')
-nmnrvr_passed=false
-echo $rttbl | grep -q "$nmnrvr_cidr via $nmngw dev bond0.nmn0" && nmnrvr_passed=true
-echo_stdout "INFO: NMNLB CIDR is $nmnrvr_cidr - route found = $nmnrvr_passed"
+nmnrvr_exists=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks | jq '.[].Name | select(match("NMN_RVR"))')
+if [ -n "$nmnrvr_exists" ]; then
+    nmnrvr_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/NMN_RVR | jq -r '.ExtraProperties.Subnets[0].CIDR')
+    nmnrvr_passed=false
+    echo $rttbl | grep -q "$nmnrvr_cidr via $nmngw dev bond0.nmn0" && nmnrvr_passed=true
+    echo_stdout "INFO: NMN_RVR CIDR is $nmnrvr_cidr - route found = $nmnrvr_passed"
+else
+    echo_stdout "INFO: NMN_RVR network does not exist in SLS"
+    nmnrvr_passed=true
+fi
+
+# Check for NMN_MTN static route
+nmnmtn_exists=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks | jq '.[].Name | select(match("NMN_MTN"))')
+if [ -n "$nmnmtn_exists" ]; then
+    nmnmtn_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/NMN_MTN | jq -r '.ExtraProperties.Subnets[0].CIDR')
+    nmnmtn_passed=false
+    echo $rttbl | grep -q "$nmnmtn_cidr via $nmngw dev bond0.nmn0" && nmnmtn_passed=true
+    echo_stdout "INFO: NMN_MTN CIDR is $nmnmtn_cidr - route found = $nmnmtn_passed"
+else
+    echo_stdout "INFO: NMN_MTN network does not exist in SLS"
+    nmnmtn_passed=true
+fi
 
 # Check for HMNLB static route
 hmnlb_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/HMNLB | jq -r '.ExtraProperties.Subnets[0].CIDR')
@@ -180,10 +198,29 @@ echo $rttbl | grep -q "$hmnlb_cidr via $hmngw dev bond0.hmn0" && hmnlb_passed=tr
 echo_stdout "INFO: HMNLB CIDR is $hmnlb_cidr - route found = $hmnlb_passed"
 
 # Check for HMN_RVR static route
-hmnrvr_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/HMN_RVR | jq -r '.ExtraProperties.Subnets[0].CIDR')
-hmnrvr_passed=false
-echo $rttbl | grep -q "$hmnrvr_cidr via $hmngw dev bond0.hmn0" && hmnrvr_passed=true
-echo_stdout "INFO: HMNLB CIDR is $hmnrvr_cidr - route found = $hmnrvr_passed"
+hmnrvr_exists=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks | jq '.[].Name | select(match("HMN_RVR"))')
+if [ -n "$hmnrvr_exists" ]; then
+    hmnrvr_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/HMN_RVR | jq -r '.ExtraProperties.Subnets[0].CIDR')
+    hmnrvr_passed=false
+    echo $rttbl | grep -q "$hmnrvr_cidr via $hmngw dev bond0.hmn0" && hmnrvr_passed=true
+    echo_stdout "INFO: HMN_RVR CIDR is $hmnrvr_cidr - route found = $hmnrvr_passed"
+else
+    echo_stdout "INFO: HMN_RVR network does not exist in SLS"
+    hmnrvr_passed=true
+fi
+
+
+# Check for HMN_MTN static route
+hmnmtn_exists=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks | jq '.[].Name | select(match("NMN_MTN"))')
+if [ -n "$hmnmtn_exists" ]; then
+    hmnmtn_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/HMN_MTN | jq -r '.ExtraProperties.Subnets[0].CIDR')
+    hmnmtn_passed=false
+    echo $rttbl | grep -q "$hmnmtn_cidr via $hmngw dev bond0.hmn0" && hmnmtn_passed=true
+    echo_stdout "INFO: HMN_MTN CIDR is $hmnmtn_cidr - route found = $hmnmtn_passed"
+else
+    echo_stdout "INFO: HMN_MTN network does not exist in SLS"
+    hmnmtn_passed=true
+fi
 
 # Check for MTL static route
 mtl_cidr=$(curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/MTL | jq -r '.ExtraProperties.Subnets[0].CIDR')
@@ -191,7 +228,7 @@ mtl_passed=false
 echo $rttbl | grep -q "$mtl_cidr via $nmngw dev bond0.nmn0" && mtl_passed=true
 echo_stdout "INFO: MTL CIDR is $mtl_cidr - route found = $mtl_passed"
 
-if $nmnlb_passed && $hmnlb_passed && $mtl_passed && $nmnrvr_passed && $hmnrvr_passed; then
+if $nmnlb_passed && $hmnlb_passed && $mtl_passed && $nmnrvr_passed && $hmnrvr_passed && $nmnmtn_passed && $hmnmtn_passed; then
     echo "PASS"
     status=0
 else
