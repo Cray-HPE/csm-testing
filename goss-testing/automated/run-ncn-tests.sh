@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -641,6 +641,12 @@ function add_local_vars {
     # add list of k8s nodes
     var_string+="\nk8s_nodes:\n"
     for node in $(echo "${nodes}" | grep -oE "ncn-[mw][0-9]{3}") ; do
+        var_string+="  - ${node}\n"
+    done
+
+    # add list of master nodes
+    var_string+="\nk8s_master_nodes:\n"
+    for node in $(echo "${nodes}" | grep -oE "ncn-[m][0-9]{3}") ; do
         var_string+="  - ${node}\n"
     done
     
