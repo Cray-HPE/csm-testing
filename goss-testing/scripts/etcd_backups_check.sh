@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -72,7 +72,7 @@ check_backup_within_day() {
 }
 
 error_flag=0
-for cluster in cray-bos cray-bss cray-crus cray-fas
+for cluster in cray-bos cray-bss cray-fas
 do
     # look at age of cluster
     age=$(kubectl get etcd ${cluster}-etcd -n services -o jsonpath='{.metadata.creationTimestamp}')
