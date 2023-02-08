@@ -65,11 +65,12 @@ curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/
 [[ $? -eq 0 ]] && sls_network_check=0 || sls_network_check=1
 
 if [ -z "$SW_ADMIN_PASSWORD" ]; then
-    echo "******************************************"
-    echo "******************************************"
-    echo "**** Enter SSH password of switches: ****"
-    read -t180 -sp ""  SW_ADMIN_PASSWORD
-    echo
+    VAULT_PASSWD=$(kubectl -n vault get secrets cray-vault-unseal-keys -o json | jq -r '.data["vault-root"]' |  base64 -d)
+    SW_ADMIN_PASSWORD=$(kubectl -n vault exec -i cray-vault-0 -c vault -- env VAULT_TOKEN="$VAULT_PASSWD" VAULT_ADDR=http://127.0.0.1:8200 VAULT_FORMAT=json vault kv get secret/net-creds/switch_admin | jq -r  .data.admin) ||
+        err_exit 20 'Missing switch admin password from vault.  Please run:
+        VAULT_PASSWD=$(kubectl -n vault get secrets cray-vault-unseal-keys -o json | jq -r '.data["vault-root"]' |  base64 -d)
+        alias vault='kubectl -n vault exec -i cray-vault-0 -c vault -- env VAULT_TOKEN="$VAULT_PASSWD" VAULT_ADDR=http://127.0.0.1:8200 VAULT_FORMAT=json vault'
+        vault kv put secret/net-creds/switch_admin admin=SWITCH_ADMIN_PASSWORD'
 fi
 
 # We really shouldn't be passing a password in plaintext on the command line, but as long as we are, at least
