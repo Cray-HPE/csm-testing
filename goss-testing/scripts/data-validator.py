@@ -241,7 +241,7 @@ def boot_params(data):
 	"rd.bootif=0",
 	"rd.dm=0",
 	"rd.live.overlay.overlayfs=1",
-	"rd.live.overlay.thin=1",
+	"rd.live.overlay.thin=0",
 	"rd.live.overlay=LABEL=ROOTRAID",
 	"rd.live.ram=0",
 	"rd.live.squashimg=",
