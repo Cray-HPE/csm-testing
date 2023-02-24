@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -26,9 +26,9 @@ mount:
   {{$kw_mount}}:
     title: {{$kw_mount}} mount
     meta:
-      desc: Validate that {{$kw_mount}} mount exists and is < 75% full
+      desc: Validate that {{$kw_mount}} mount exists and is < 95% full
       sev: 0
     exists: true
     usage:
-      lt: 75
+      lt: 95
   {{end}}
