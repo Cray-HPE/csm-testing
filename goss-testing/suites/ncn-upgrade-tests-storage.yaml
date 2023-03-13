@@ -25,7 +25,6 @@ gossfile:
   ../tests/goss-check-static-routes.yaml: {}
   ../tests/goss-ceph-storage-health.yaml: {}
   ../tests/goss-lvm-drives-storage.yaml: {}
-  ../tests/goss-ceph-storage-images.yaml: {}
   ../tests/goss-ceph-storage-config-files.yaml: {}
   ../tests/goss-check-clock-skew.yaml: {}
   ../tests/goss-rgw-health.yaml: {}
