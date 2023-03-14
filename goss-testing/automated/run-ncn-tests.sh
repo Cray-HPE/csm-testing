@@ -659,6 +659,7 @@ function add_local_vars {
     var_string+="\n${is_vshasta}\n"
 
     echo -e "${var_string}" >> "$1"
+    # shellcheck disable=SC2320
     return $?
 }
 

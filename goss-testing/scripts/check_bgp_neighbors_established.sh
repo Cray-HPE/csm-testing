@@ -77,8 +77,8 @@ if [ -z "$SW_ADMIN_PASSWORD" ] && [ "$vault_check" -lt "1" ]; then
     VAULT_PASSWD=$(kubectl -n vault get secrets cray-vault-unseal-keys -o json | jq -r '.data["vault-root"]' |  base64 -d)
     SW_ADMIN_PASSWORD=$(kubectl -n vault exec -i cray-vault-0 -c vault -- env VAULT_TOKEN="$VAULT_PASSWD" VAULT_ADDR=http://127.0.0.1:8200 VAULT_FORMAT=json vault kv get secret/net-creds/switch_admin | jq -r  .data.admin) ||
         err_exit 20 'Detected Vault is running.  Missing switch admin password from vault.  Please run the following commands:
-        VAULT_PASSWD=$(kubectl -n vault get secrets cray-vault-unseal-keys -o json | jq -r '.data["vault-root"]' |  base64 -d)
-        alias vault='kubectl -n vault exec -i cray-vault-0 -c vault -- env VAULT_TOKEN='"$VAULT_PASSWD"' VAULT_ADDR=http://127.0.0.1:8200 VAULT_FORMAT=json vault'
+        VAULT_PASSWD=$(kubectl -n vault get secrets cray-vault-unseal-keys -o json | jq -r .data["vault-root"] |  base64 -d)
+        alias vault="kubectl -n vault exec -i cray-vault-0 -c vault -- env VAULT_TOKEN=\"$VAULT_PASSWD\" VAULT_ADDR=http://127.0.0.1:8200 VAULT_FORMAT=json vault"
         vault kv put secret/net-creds/switch_admin admin=SWITCH_ADMIN_PASSWORD'
 fi
 # this is the case if vault is not running and env variable has not been set

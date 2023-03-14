@@ -77,6 +77,7 @@ if ! eval ip addr show dev "$INTERFACE" 1>/dev/null; then
     break
   # otherwise, it's a legit failure
   else
+    # shellcheck disable=SC2319
     error 30 $? "ip addr show dev $INTERFACE"
   fi
 # if the interface does exist, continue checking if it matches bond0

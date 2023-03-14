@@ -57,7 +57,7 @@ function check_policy_reports
     if [[ ${rc} -ne 0 ]]
     then
         # Split echo into two commands for code readability
-        echo -n "ERROR: Command pipeline failed with return code $?: " 1>&2
+        echo -n "ERROR: Command pipeline failed with return code ${rc}: " 1>&2
         echo "kubectl get polr -A -o json | jq '[.items[].summary.${report_type}] | add'" 1>&2
         echo "FAIL"
         exit 10
