@@ -45,7 +45,7 @@ import traceback
 # To help with function annotations
 StringList = List[str]
 
-NCN_TYPES = [ "master", "storage", "worker" ]
+NCN_TYPES = [ "master", "storage", "worker", "livecd" ]
 
 DEFAULT_LOG_LEVEL = "INFO"
 # For automated scripts with parallel execution, set the max number of parallel jobs.
@@ -236,7 +236,7 @@ ncn_storage_re_prog = re.compile(ncn_storage_pattern)
 ncn_worker_re_prog = re.compile(ncn_worker_pattern)
 
 def is_ncn_name(n: str) -> bool:
-    if ncn_re_prog.match(n):
+    if ncn_re_prog.match(n) or n == "pit":
         return True
     return False
 
@@ -255,6 +255,9 @@ def is_worker_ncn_name(n: str) -> bool:
         return True
     return False
 
+def is_livecd_ncn_name(n: str) -> bool:
+    return (n == "pit")
+
 def get_ncn_type(ncn_name: str) -> str:
     if is_master_ncn_name(ncn_name):
         return "master"
@@ -262,6 +265,8 @@ def get_ncn_type(ncn_name: str) -> str:
         return "storage"
     elif is_worker_ncn_name(ncn_name):
         return "worker"
+    elif is_livecd_ncn_name(ncn_name):
+        return "livecd"
     raise ScriptException(f"Unexpected NCN name format: {ncn_name}")
 
 def my_ncn_type() -> str:

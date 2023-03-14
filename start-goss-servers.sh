@@ -24,7 +24,12 @@
 #
 # Goss server start up commands to serve health check endpoints
 set -e
-export GOSS_BASE=/opt/cray/tests/install/ncn
+
+if [ -f /etc/pit-release ]; then
+    export GOSS_BASE=/opt/cray/tests/install/livecd
+else
+    export GOSS_BASE=/opt/cray/tests/install/ncn
+fi
 
 # necessary for kubectl commands to run
 export KUBECONFIG=/etc/kubernetes/admin.conf
@@ -66,8 +71,10 @@ if is_vshasta_node; then
     # Use junit for vshasta
     results_format=junit
 
-    # on vshasta there is only one network and no hmn
-    ip=$(host "$(hostname)" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+    # On vshasta there is only one network and no hmn
+    # However, host command may not work if dnsmasq is not yet configured - try to parse ip address output in this case
+    ip=$(host "$(hostname)" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' || \
+        ip address show dev eth0 | awk '/ inet / {gsub("/.+", "", $2); print $2}')
 else
     # for security reasons we only want to run the servers on the HMN network, which is not connected to open Internet
     ip=$(host "$(hostname).hmn" | grep -Po '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
