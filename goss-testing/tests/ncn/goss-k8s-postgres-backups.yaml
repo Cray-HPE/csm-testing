@@ -30,7 +30,7 @@ command:
     {{$testlabel}}:
         title: Kubernetes Postgresql Check that Automated Backups are Working
         meta:
-            desc: If this test fails, run the script "{{$postgresql_backups_check}} -p" to see a printed description of the errors. Check that cron jobs are running and creating postgresql backups periodically with the command "kubectl get cronjob -A | grep postgresql". To see a last scheduled time, run the command "kubectl -n <namespace> get cronjob <cron_job_name> -o jsonpath='{.status}'".
+            desc: If this test fails, run the script "{{$postgresql_backups_check}} -p" to see a printed description of the errors. Check that cron jobs are running and creating postgresql logical backups periodically with the command "kubectl get cronjob -A | grep logical-backup". To see a last scheduled time, run the command "kubectl -n <namespace> get cronjob <cron_job_name> -o jsonpath='{.status}'".
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
