@@ -48,9 +48,9 @@ SECRET=$(kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret
 TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret="$SECRET" https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token') ||
     err_exit 15 "Command pipeline failed with return code $?: curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=XXXXXX https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token'"
 
-# check if vault configmap exists to verify vault has been installed
-# Set vault_check to 1 if we cannot get the Vault cray-vault-configurator configmap.  Set to 0 otherwise.
-if kubectl -n vault get cm cray-vault-configurer ; then
+# Set vault_check to 0 if healthy and unsealed.  Set to 0 otherwise.
+VAULTPOD=$(kubectl get pods -n vault | grep -E 'cray-vault-[[:digit:]].*Running' | awk 'NR==1{print $1}')
+if [ "$(kubectl -n vault exec -i ${VAULTPOD:-cray-vault-0} -c vault -- env VAULT_ADDR=http://cray-vault.vault:8200 VAULT_FORMAT=json vault status  | jq '.sealed')" = false ]; then
     vault_check=0
 else
     vault_check=1
