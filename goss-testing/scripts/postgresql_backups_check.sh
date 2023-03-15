@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,7 +22,12 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+# By default do not print the results
 print_results=0
+# Pass the test unless the latest logical-backup job has failed or the logical-backup completed but no backup exists in s3.
+error_flag=0
+
 while getopts ph stack
 do
     case "${stack}" in
@@ -36,81 +41,79 @@ do
     esac
 done
 
-# checks age of cluster
-# if cluster is older than 24 hours, checks that a backup was created within the last 24 hours
+# Get the list of postgresql clusters.
+postgres_clusters=$(kubectl get postgresql -A --no-headers 2>/dev/null | awk '{print $1","$2}')
 
-current_date_sec=$(date +"%s")
-one_day_sec=86400
-
-check_backup_within_day() {
-    backup_within_day=0
-    cluster_backups=$(cray artifacts list postgres-backup --format json | jq -r --arg cluster "$c_name" '.artifacts[].Key | select(contains($cluster))')
-
-    if [[ ! -z $cluster_backups ]] # check if any backups exist
-    then
-        for backup in $cluster_backups
-        do
-            backup_prefix=$(echo $backup | cut -d '.' -f1)
-            backup_date=${backup_prefix: -19}
-            if [[ ! -z $backup_date ]]
-            then
-                backup_sec=$(date -d "${backup_date}" "+%s" 2>/dev/null)
-                if [[ ! -z $backup_sec && $(( $current_date_sec - $backup_sec )) -lt $one_day_sec ]] # check if backup is less that 24 hours old
-                then
-                    backup_within_day=1
-                    if [[ $print_results -eq 1 ]]
-                    then echo "$c_name -- recent backup found: $backup"
-                    fi
-                    break
-                fi
-            fi
-        done
-    fi
-}
-
-error_flag=0
-
-postgres_clusters_wBackup=$(kubectl get cronjobs -A | grep postgresql-db-backup | awk '{print $1","$2}')
-if [[ -z $postgres_clusters_wBackup ]]
+if [[ -z $postgres_clusters ]]
 then
-    if [[ $print_results -eq 1 ]]; then echo "No Postgresql clusters have automatic backups set in cron jobs."; fi
-    error_flag=1
+    if [[ $print_results -eq 1 ]]; then echo "No Postgresql clusters."; fi
 fi
 
-for c in $postgres_clusters_wBackup
+for c in $postgres_clusters
 do
-
-    # NameSpace and PostgreSQL cluster name
+    # Set the namespace and PostgreSQL cluster name.
     c_ns="$(echo $c | awk -F, '{print $1;}')"
-    c_cronjob_name="$(echo $c | awk -F, '{print $2;}')"
-    c_name=${c_cronjob_name%"ql-db-backup"}     # remove suffix 'ql-db-backup'
-    c_name=${c_name#"cray-"}                    # remove prefix 'cray-'
-    c_name=$(kubectl get postgresql -n ${c_ns} | grep $c_name |awk '{print $1}')
+    c_name="$(echo $c | awk -F, '{print $2;}')"
+    if [[ $print_results -eq 1 ]]; then echo -n "$c_name -- "; fi
 
-    # Base the c_age on the cronjob creation time instead of when the postgres resource was created.
-    # During upgrades, cronjobs may get re-created if they failed to start due to too many missed starts.
-    c_age=$(kubectl get cronjobs.batch ${c_cronjob_name} -n ${c_ns} -o jsonpath='{.metadata.creationTimestamp}')
-    c_age_sec=$(date -d "${c_age}" "+%s")
+    # Continue to the next cluster if logical backups are not enabled for this cluster.
+    if [[ ! $(kubectl get postgresql -n $c_ns $c_name -o json | jq -r '.spec.enableLogicalBackup') == "true" ]]
+    then # pass
+	if [[ $print_results -eq 1 ]]; then echo "Logical backups are not enabled for this cluster (pass)"; fi
+        continue
+    fi
 
-    if [[ ! -z $c_age && ! -z $c_age_sec ]]
+    # If there are any logical backup jobs for this cluster, get the latest one and determine if it Failed, Completed or still Running.
+    #   Completed - check that there is a backup in s3.
+    #   Failed    - set the failed flag and continue to the next cluster.
+    #   Running   - continue checking the next cluster.
+    if [[ ! -z $(kubectl get jobs -l application=spilo-logical-backup,cluster-name=$c_name -n $c_ns --no-headers 2>/dev/null) ]]
     then
-        if [[ $(( $current_date_sec - $c_age_sec )) -gt $one_day_sec ]]
-        then
-            check_backup_within_day
-            if [[ $backup_within_day -eq 0 ]] 
-            then 
-                if [[ $print_results -eq 1 ]]; then echo "Error: No recent backup found for $c_name."; error_flag=1; 
-                else exit 1; fi
-            fi
-        else
-            if [[ $print_results -eq 1 ]]; then echo "$c_name is less than 24 hours old. Did not check if recent backups exist."; fi
-        fi
-    else
-        if [[ $print_results -eq 1 ]]; then echo "Error: could not find age of $c_name."; error_flag=1;
-        else exit 2; fi
+        latest_backup_job=$(kubectl get jobs -l application=spilo-logical-backup,cluster-name=$c_name -n $c_ns \
+		            --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].metadata.name}')
+
+        if [[ $(kubectl get job $latest_backup_job -n $c_ns -o jsonpath='{.status.conditions[?(@.type=="Failed")].status}') == "True" ]]
+        then # fail
+	    if [[ $print_results -eq 1 ]]; then echo "Latest $latest_backup_job job failed (fail)"; fi
+            error_flag=1
+            continue
+         elif [[ $(kubectl get job $latest_backup_job -n $c_ns -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}') == "True" ]]
+         then # pass
+            if [[ $print_results -eq 1 ]]; then echo "Latest $latest_backup_job job completed"; fi
+         else # pass
+    	    if [[ $print_results -eq 1 ]]; then echo "Latest $latest_backup_job job is running - neither failed or completed at this point in time (pass)"; fi
+            continue
+         fi
+    else # pass
+	if [[ $print_results -eq 1 ]]; then echo "No logical backup jobs have run at this point in time (pass)"; fi
+        continue
+    fi
+
+    # Given the logical-backup job succeeded for the cluster - check that backup(s) exist in s3.
+    #   None  - set the failed flag and continue to the next cluster.
+    #   Exist - print the latest backup key and time stamp.
+    backup_key_and_date=$(cray artifacts list postgres-backup --format json | jq -r --arg cluster "spilo/$c_name" \
+	                  '.artifacts[] | select(.Key | contains($cluster)) | "\(.Key) \(.LastModified)"')
+
+    if [[ ! -z ${backup_key_and_date} ]]
+    then # pass
+	if [[ $print_results -eq 1 ]]
+        then # Find the latest backup key to print
+	    latest_s3backup_time=$(cray artifacts list postgres-backup --format json | jq -r --arg cluster "spilo/$c_name" \
+		                   '[.artifacts[] |  select(.Key | contains($cluster)).LastModified] | sort | .[-1]')
+
+	    latest_s3backup_key=$(cray artifacts list postgres-backup --format json | jq -r --arg cluster "spilo/$c_name" --arg time $latest_s3backup_time \
+		                  '.artifacts[] | select((.Key | contains($cluster)) and (.LastModified==$time)) | .Key')
+
+	    echo "  Most recent backup ${latest_s3backup_key} at ${latest_s3backup_time} (pass)"
+	 fi
+    else # fail
+       if [[ $print_results -eq 1 ]]; then echo " Postgres backup(s) are missing from s3 (fail)"; fi
+       error_flag=1
+       continue
     fi
 done
 
 if [[ error_flag -eq 0 ]]; then echo "PASS"; exit 0;
-else echo "FAIL"; exit 1; 
+else echo "FAIL"; exit 1;
 fi
