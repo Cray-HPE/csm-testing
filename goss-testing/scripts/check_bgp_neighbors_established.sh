@@ -50,7 +50,7 @@ TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client
 
 # Set vault_check to 0 if healthy and unsealed.  Set to 0 otherwise.
 VAULTPOD=$(kubectl get pods -n vault | grep -E 'cray-vault-[[:digit:]].*Running' | awk 'NR==1{print $1}')
-if [ "$(kubectl -n vault exec -i $VAULTPOD -c vault -- env VAULT_ADDR=http://cray-vault.vault:8200 VAULT_FORMAT=json vault status  | jq '.sealed')" = false ]; then
+if [ "$(kubectl -n vault exec -i ${VAULTPOD:-cray-vault-0} -c vault -- env VAULT_ADDR=http://cray-vault.vault:8200 VAULT_FORMAT=json vault status  | jq '.sealed')" = false ]; then
     vault_check=0
 else
     vault_check=1
