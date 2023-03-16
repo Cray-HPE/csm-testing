@@ -25,13 +25,12 @@ command:
   resolve_external_dns:
     title: Resolve external DNS
     meta:
-      desc: Validates external DNS name resolves. If the test fails, the configured LDAP server was not pingable. Refer to 'operations/network/dns/Troubleshoot_Common_DNS_Issues.md' in the CSM documentation to troubleshoot external DNS issues.
+      desc: Validates external DNS name resolves. The test fails if it is unable to DNS lookup the configured LDAP server. Refer to 'operations/network/dns/Troubleshoot_Common_DNS_Issues.md' in the CSM documentation to troubleshoot external DNS issues.
       sev: 0
     exec: |-
           # External DNS resolution is best tested by checking if the configured LDAP server is pingable.
-          # Fail if the test requirements are not met:
-          # - Unbound forward-addr is not configured.
-          # - LDAP providerId is not configured.
+          # Pass if LDAP are not configured.
+          # Fail if Unbound is not configured.
           # Fail if the LDAP providerId is configured but the LDAP connectionURL is not.
           # Pass/Fail based on exit code from ping of the LDAP server.
 
@@ -64,8 +63,8 @@ command:
            fi
 
            if [[ ! $LDAP_PROVIDER ]]; then 
-              echo "LDAP must be configured for this test."
-              exit 1
+              echo "LDAP is not configured so unable to test external DNS."
+              exit 0
            fi
 
            echo "Unbound and LDAP are configured" 
