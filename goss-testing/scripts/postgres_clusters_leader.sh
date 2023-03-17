@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -57,12 +57,12 @@ do
             echo
         else exit 1; fi
     else
-        lock=$(kubectl logs -n $c_ns $leader postgres | awk '{$1="";$2=""; print $line}' | sort -u | grep 'i am the leader with the lock')
+        lock=$(kubectl logs -n $c_ns $leader postgres | awk '{$1="";$2=""; print $line}' | sort -u | grep 'the leader with the lock')
         if [[ -z $lock ]]
         then
             if [[ $print_results -eq 1 ]]
             then 
-                echo "${c_name}'s leader's logs do not contain 'i am the leader with the lock'."
+                echo "${c_name}'s leader's logs do not contain 'the leader with the lock'."
                 failFlag=1
             else exit 2; fi
         fi
