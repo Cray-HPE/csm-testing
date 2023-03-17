@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,21 +21,22 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-gossfile:
-  ../tests/goss-k8s-nodes-ready.yaml: {}
-  ../tests/goss-k8s-etcd-service.yaml: {}
-  ../tests/goss-k8s-etcd-members.yaml: {}
-  ../tests/goss-k8s-nexus-can-pull.yaml: {}
-  ../tests/goss-k8s-keycloak-healthy.yaml: {}
-  ../tests/goss-check-mounts-etcdlvm.yaml: {}
-  ../tests/goss-etcdlvm-drive-master.yaml: {}
-  ../tests/goss-k8s-nodes-have-running-pods.yaml: {}
-  ../tests/goss-check-clock-skew.yaml: {}
-  ../tests/goss-k8s-nexus-pods-running.yaml: {}
-  ../tests/goss-k8s-console-services.yaml: {}
-  ../tests/goss-k8s-ipxe-pod-running.yaml: {}
-  ../tests/goss-k8s-kea-pod-running.yaml: {}
-  ../tests/goss-k8s-tftp-pods-running.yaml: {}
-  ../tests/goss-k8s-istio-pods-running.yaml: {}
-  ../tests/goss-k8s-istio-pod-containers-running.yaml: {}
-  ../tests/goss-check-taints.yaml: {}
+ 
+{{ $this_node_name := .Env.HOSTNAME }}
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+command:
+    # We are only checking for this taint on master nodes 
+    {{if $this_node_name | regexMatch "^ncn-m.*" }}
+        {{ $testlabel := "master_taint" }}
+        {{$testlabel}}:
+            title: master-taint 
+            meta:
+                desc: Checks that the node-role.kubernetes.io/master:NoSchedule taint exists on this master node. If this tests fails, make the node-role.kubernetes.io/master:NoSchedule gets added to this node. 
+                sev: 0
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    {{$kubectl}} get node {{$this_node_name}}  -o jsonpath='{range .spec.taints[*]}{.key}:{.effect}{"\n"}{end}' | grep "node-role.kubernetes.io/master:NoSchedule" 
+            exit-status: 0
+            timeout: 20000
+    {{end}}
