@@ -41,9 +41,4 @@ command:
             - SUCCESS
         # 3 minute test timeout
         timeout: 180000
-        # skip this test on vshasta
-        {{ if eq true .Vars.vshasta }}
-        skip: true
-        {{ else }}
         skip: false
-        {{ end }}
