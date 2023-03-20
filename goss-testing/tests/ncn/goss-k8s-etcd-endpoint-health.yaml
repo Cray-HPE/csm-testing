@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -29,20 +29,15 @@ command:
     {{$testlabel}}:
         title: Etcd Cluster Endpoint Health
         meta:
-            desc: Checks the endpoint health of the etcd clusters.
+            desc: Checks the endpoint health of the etcd clusters. If this test fails, run '/opt/cray/platform-utils/ncnHealthChecks.sh -s etcd_health_status' for more detail.
             sev: 0
         exec: |-
-            count=0
-            set -eo pipefail
-            for pod in $("{{$kubectl}}" get pods -l app=etcd -n services -o jsonpath='{.items[*].metadata.name}') ; do
-                "{{$logrun}}" -l "{{$testlabel}}_${pod}" \
-                    "{{$kubectl}}" -n services exec ${pod} -- /bin/sh -c "ETCDCTL_API=3 etcdctl endpoint health"
-                let count+=1
-            done
-            # Make sure we actually found clusters
-            [[ $count -gt 0 ]] || exit 57
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "/opt/cray/platform-utils/ncnHealthChecks.sh" \
+                "-s" \
+                "etcd_health_status"
         stdout:
-          - "!unhealthy"
+          - "!FAILED"
         exit-status: 0
         timeout: 20000
         skip: false

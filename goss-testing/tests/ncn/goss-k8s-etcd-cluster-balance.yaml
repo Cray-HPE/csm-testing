@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -30,14 +30,15 @@ command:
     {{$testlabel}}:
         title: All Etcd Pods in a Cluster are Running on a Different Worker Node
         meta:
-            desc: If this test fails, run the script "{{$etcd_cluster_balance}} -p" to see a printed description of the errors. Refer to 'operations/kubernetes/Rebalance_Healthy_etcd_Clusters.md' in the CSM documentation for instructions on fixing unbalanced clusters.
+            desc: If this test fails, run '/opt/cray/platform-utils/ncnHealthChecks.sh -s etcd_cluster_balance' for more detail. Refer to 'operations/kubernetes/Rebalance_Healthy_etcd_Clusters.md' in the CSM documentation for instructions on fixing unbalanced clusters.
             sev: 0
         exec: |-
-            # Since we are logging, call with the -p flag
             "{{$logrun}}" -l "{{$testlabel}}" \
-                "{{$etcd_cluster_balance}}" -p
+                "/opt/cray/platform-utils/ncnHealthChecks.sh" \
+                "-s" \
+                "etcd_cluster_balance" \
         exit-status: 0
         stdout:
-            - PASS
+            - "!FAILED"
         timeout: 20000
         skip: false

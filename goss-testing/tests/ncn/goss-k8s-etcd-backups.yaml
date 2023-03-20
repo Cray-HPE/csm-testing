@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -33,9 +33,8 @@ command:
             desc: If this test fails, run the script "{{$etcd_backups_check}} -p" to see a printed description of the errors. Check that cron jobs are running and creating backups periodically with the command "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron". To see the last scheduled time, run the command "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron -o jsonpath='{.status}'". To restart the cronjob, execute "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | jq 'del(.status)' | kubectl replace --force -f -".
             sev: 0
         exec: |-
-            # Since we are logging the output, call script with -p argument
             "{{$logrun}}" -l "{{$testlabel}}" \
-                "{{$etcd_backups_check}}" -p
+                "{{$etcd_backups_check}}"
         exit-status: 0
         stdout:
             - PASS

@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -29,13 +29,15 @@ command:
     {{$testlabel}}:
         title: Etcd Database Health
         meta:
-            desc: Checks the health of the etcd service databases.
+            desc: Checks the health of the etcd service databases. If this test fails, run '/opt/cray/platform-utils/ncnHealthChecks.sh -s etcd_database_health' for more detail.
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
-                "{{$scripts}}/etcd_database_health.sh"
+                "/opt/cray/platform-utils/ncnHealthChecks.sh" \
+                "-s" \
+                "etcd_database_health"
         stdout:
-            - "!FAIL"
+            - "!FAILED DATABASE CHECK"
         exit-status: 0
         timeout: 20000
         skip: false

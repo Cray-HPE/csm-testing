@@ -22,80 +22,43 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-print_results=0
-while getopts ph stack
+while getopts h stack
 do
     case "${stack}" in
-          p) print_results=1;;
-          h) echo "usage: etcd_backups_check.sh           # Only print 'PASS' upon success"
-             echo "       etcd_backups_check.sh -p        # Print all results and errors if found. Use for manual check."
+          h) echo "usage: etcd_backups_check.sh # Print 'PASS' upon success"
              exit 3;;
-         \?) echo "usage: etcd_backups_check.sh           # Only print 'PASS' upon success"
-             echo "       etcd_backups_check.sh -p        # Print all results and errors if found. Use for manual check."
+         \?) echo "usage: etcd_backups_check.sh # Print 'PASS' upon success"
              exit 3;;
     esac
 done
 
-# checks age of cluster
-# given the cronjob creates etcd backup crd within one hour of the cluster being created and based on the config map, the backups currently run every 24 hours,
-# it can take up to 25 hours before a backup is created. The one_day_sec is now set to 25 hours to allow for the initial hour needed to create the backup crd.
-
-current_date_sec=$(date +"%s")
-one_day_sec=90000 # 25 hours
-
-check_backup_within_day() {
-    backup_within_day=0
-    # We omit the often-seen '-it' flags from the kubectl call because we do not need to pass in stdin, and using
-    # those flags generates warning messages when this script is run in some contexts.
-    #shellcheck disable=SC2046
-    backups=$(kubectl exec -n operators $(kubectl get pod -n operators | \
-        grep etcd-backup-restore | head -1 | awk '{print $1}') -c boto3 -- list_backups ${cluster})
-    if [[ "$backups" != *"KeyError: 'Contents'"* ]] && [[ ! -z $backups ]] # check if any backups exist
-    then
-        for backup in $backups
-        do
-            backup_date=$(echo ${backup##*_} | sed "s/-/ /3")
-            if [[ ! -z $backup_date ]]
-            then
-                backup_sec=$(date -d "${backup_date}" "+%s" 2>/dev/null)
-                if [[ ! -z $backup_sec && $(( $current_date_sec - $backup_sec )) -lt $one_day_sec ]] # check if backup is less that 25 hours old
-                then
-                    backup_within_day=1
-                    if [[ $print_results -eq 1 ]]
-                    then echo "$cluster -- recent backup found: $backup"
-                    fi
-                    break
-                fi
-            fi
-        done
-    fi
-}
-
 error_flag=0
-for cluster in cray-bos cray-bss cray-fas
-do
-    # look at age of cluster
-    age=$(kubectl get etcd ${cluster}-etcd -n services -o jsonpath='{.metadata.creationTimestamp}')
-    if [[ ! -z $age ]]
-    then
-        age_sec=$(date -d "${age}" "+%s")
-        if [[ $(( $current_date_sec - $age_sec )) -gt $one_day_sec ]]
-        then
-            check_backup_within_day $cluster
-            if [[ $backup_within_day -eq 0 ]] 
-            then 
-                if [[ $print_results -eq 1 ]]; then echo "Error: No recent backup found for $cluster."; error_flag=1; 
-                else exit 1; fi
-            fi
-        else
-            if [[ $print_results -eq 1 ]]; then echo "$cluster etcd backup resource is less than 24 hours old. Did not check if recent backups exist."; fi            
-        fi
-    else
-        if [[ $print_results -eq 1 ]]; then echo "Error: could not find age of $cluster."; error_flag=1;
-        else exit 2; fi
-    fi
+
+clusters=$(kubectl get statefulsets.apps -A | grep bitnami-etcd | awk '{print $2}')
+for c in $clusters; do
+  short_name=$(echo $c | sed s/-bitnami-etcd//g)
+  ns=$(kubectl get statefulset -A -o json | jq --arg name ${c} '.items[].metadata | select (.name==$name) | .namespace' | sed 's/\"//g')
+  dr_setting=$(kubectl get statefulsets.apps -n ${ns} ${c} -o json | jq -r '.spec.template.spec.containers[].env[] | select(."name" == "ETCD_DISASTER_RECOVERY") | .value')
+  if [ "$dr_setting" != "yes" ]; then
+    echo "$short_name -- not configured for disaster recovery, skipping..."
+    continue
+  fi
+  #
+  # Need to chop off the goofy carriage return in the result from the pod
+  #
+  result=$(/opt/cray/platform-utils/etcd/etcd-util.sh has_recent_backup ${short_name} 1 | sed 's/\r$//')
+  if [ "$result" == "Pass" ]; then
+    echo "$short_name -- backup found in the past 24 hours"
+  else
+    echo "$short_name -- no backup found in the past 24 hours!"
+    error_flag=1
+  fi
 done
 
-if [[ error_flag -eq 0 ]]; then echo "PASS"; exit 0;
-else echo "FAIL"; exit 1; 
+if [[ $error_flag -eq 0 ]]; then
+  echo "PASS"
+  exit 0
+else
+  echo "FAIL"
+  exit 1
 fi
