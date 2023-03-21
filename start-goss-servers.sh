@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -33,6 +33,9 @@ fi
 
 # necessary for kubectl commands to run
 export KUBECONFIG=/etc/kubernetes/admin.conf
+
+# necessary for test that need to know the current hostname
+export HOSTNAME=$(hostname -s | grep -Eo '(ncn-[msw][0-9]{3}|.*-pit)$')
 
 # During the NCN image build, this service is started, even though the csm-testing RPM is not installed. In that
 # situation, the run-ncn-tests.sh file will not be present on the system, but we do not want the service to exit in
