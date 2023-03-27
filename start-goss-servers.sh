@@ -35,7 +35,7 @@ fi
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
 # necessary for test that need to know the current hostname
-HOSTNAME=$(hostname -s | grep -Eo '(ncn-[msw][0-9]{3}|.*-pit)$')
+HOSTNAME=$(hostname -s)
 export HOSTNAME
 
 # During the NCN image build, this service is started, even though the csm-testing RPM is not installed. In that
