@@ -30,7 +30,7 @@ command:
     {{$testlabel}}:
         title: All Kubernetes Etcd Clusters have a Backup Created within the Last 24 Hours.
         meta:
-            desc: If this test fails, run the script "{{$etcd_backups_check}} -p" to see a printed description of the errors. Check that cron jobs are running and creating backups periodically with the command "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron". To see the last scheduled time, run the command "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron -o jsonpath='{.status}'". To restart the cronjob, execute "kubectl -n operators get cronjob kube-etcd-periodic-backup-cron -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | jq 'del(.status)' | kubectl replace --force -f -".
+            desc: If this test fails, run the script "{{$etcd_backups_check}}" to see a description of the errors. Check that cron jobs that publish snapshots to S3 are running with the command "kubectl -n services get cronjob etcd-backup-pvc-snapshots-to-s3". To see the last scheduled time, run the command "kubectl -n services get cronjob etcd-backup-pvc-snapshots-to-s3 -o jsonpath='{.status}'". To restart the cronjob, execute "kubectl -n services get cronjob etcd-backup-pvc-snapshots-to-s3 -o json | jq 'del(.spec.selector)' | jq 'del(.spec.template.metadata.labels."controller-uid")' | jq 'del(.status)' | kubectl replace --force -f -".
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
