@@ -42,7 +42,8 @@ gossfile:
   ../tests/goss-k8s-velero-backup-storage-locations-available.yaml: {}
   ../tests/goss-k8s-velero-backup-vault-schedule-exists.yaml: {}
   ../tests/goss-k8s-velero-no-failed-backups.yaml: {}
+  ../tests/goss-cray-spire-check-key-id-in-jwks.yaml: {}
+  ../tests/goss-cray-spire-verify-pods.yaml: {}
   ../tests/goss-spire-bss-metadata-exist.yaml: {}
-  ../tests/goss-spire-check-key-id-in-jwks.yaml: {}
   ../tests/goss-spire-verify-api-fetch-jwt.yaml: {}
   ../tests/goss-spire-verify-pods.yaml: {}
