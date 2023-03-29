@@ -67,7 +67,7 @@ for c in $clusters; do
   fi
 
   old_enough=$(check_ss_old_enough $short_name)
-  if [ ! $old_enough ]; then
+  if [[ $old_enough -eq 0 ]]; then
     echo "$short_name -- not old enough to expect backups, skipping..."
     continue
   fi
