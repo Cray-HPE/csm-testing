@@ -650,6 +650,14 @@ function add_local_vars {
         var_string+="  - ${node}\n"
     done
 
+    # add list of CMS tests, if cmsdev utility is present
+    if [ -f /usr/local/bin/cmsdev ]; then
+        var_string+="\ncms_tests:\n"
+        for test in $(/usr/local/bin/cmsdev test -l --exclude-aliases); do
+            var_string+="  - ${test}\n"
+        done
+    fi
+
     var_string+="\n${is_vshasta}\n"
 
     echo -e "${var_string}" >> "$1"
