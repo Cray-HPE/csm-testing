@@ -33,7 +33,7 @@ command:
         # We do not want to log stdout from this command, so we call log_run with --no-stdout
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" --no-stdout \
-                /usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /root/spire/agent.sock -audience goss-test >/dev/null
+                /usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /var/lib/spire/agent.sock -audience goss-test >/dev/null
         exit-status: 0
         timeout: 20000
         skip: false
