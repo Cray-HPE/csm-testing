@@ -36,7 +36,7 @@ Version: %(echo $VERSION)
 Release: 1
 Source: %{name}-%{version}.tar.bz2
 Vendor: HPE
-BuildArchitectures: noarch
+BuildArchitectures: %(echo $ARCH)
 
 %description
 Tests to test the set-up during installation.
