@@ -101,9 +101,22 @@ if [ "$metallb_check" -gt "0" ] || [ "$sls_network_check" -gt "0" ];then
         err_exit 20 "canu validate network bgp --network nmn failed (rc=$?)"
 else
     # csm-1.2+ networking
-    echo "Running: canu validate network bgp --network all --password XXXXXXXX"
-    canu validate network bgp --network all --password $SW_ADMIN_PASSWORD ||
-        err_exit 25 "canu validate network bgp --network all failed (rc=$?)"
+    if [[ -v TARGET_NCN ]]; then
+      echo "Running: canu validate network bgp --verbose --network all --password XXXXXXXX"
+      output=$(canu validate network bgp --verbose --network all --password $SW_ADMIN_PASSWORD)
+      ips=$(cat /etc/hosts | grep "${TARGET_NCN}.nmn\|${TARGET_NCN}.cmn" | awk '{print $1}')
+      for ip in $ips; do
+        num_connections=$(echo "${output}" | grep "${ip}" | wc -l)
+        established_connections=$(echo "${output}" | grep "${ip}.*Established" | wc -l)
+        if [[ $num_connections -ne $established_connections ]]; then
+          err_exit 25 "canu validate network bgp --verbose --network all failed"
+        fi
+      done
+    else
+      echo "Running: canu validate network bgp --network all --password XXXXXXXX"
+      canu validate network bgp --network all --password $SW_ADMIN_PASSWORD ||
+      err_exit 25 "canu validate network bgp --network all failed (rc=$?)"
+    fi
 fi
 echo "PASS"
 exit 0
