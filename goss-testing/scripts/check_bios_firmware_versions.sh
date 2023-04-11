@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -42,7 +42,7 @@ usage() {
 #/    -b    Also execute /root/bin/bios-baseline.sh --check
 #/
 #/ Note: $BMC_USERNAME and $IPMI_PASSWORD must be set prior to running this script.
-#/ 
+#/
 
 # set_vars() sets some global variables used throughout the script
 function set_vars() {
@@ -58,12 +58,6 @@ function set_vars() {
 
   # Allow for output of documentation when needed
   rc=0
-
-  DL325_FW="2.46"
-  DL385_FW="2.46"
-
-  DL325_BIOS="v2.52"
-  DL385_BIOS="v2.52"
 
   # Allow for output of documentation when needed, 1 is yes, 0 is no
   DOCS=0
@@ -103,7 +97,7 @@ function set_vars() {
   # if this is running in pit-mode, check dnsmasq
   if [[ $HOSTNAME == *pit* ]]; then
 
-    # safely read in the management node names from the hosts file into an array    
+    # safely read in the management node names from the hosts file into an array
     IFS=$'\n' \
       read -r -d '' \
       -a NCN_BMCS \
@@ -135,15 +129,15 @@ check_if_bmcs_are_reachable() {
     | nmap -iL - \
       -oG "$portscan_file" \
       -p 443 \
-      1>/dev/null 
-  
+      1>/dev/null
+
   for i in "${NCN_BMCS[@]}"
-  do 
+  do
     if [[ "$i" == ncn-m001-mgmt ]]; then
 
       echo "$i will be executed locally"
       continue
-    
+
     fi
 
     if eval grep -E "$i\\.\\*Up" "$portscan_file" 1>/dev/null; then
@@ -176,31 +170,31 @@ enable_ilo_creds() {
   local cfgfile="/etc/ilorest/redfish.conf"
 
   if command -v ilorest > /dev/null; then
-    
+
     if [[ -f "$cfgfile" ]]; then
 
       chmod 600 "$cfgfile"
-      
+
       # Enable the username, uncommenting if needed
       sed -i "/^\(#username =\).*/s/^#//" "$cfgfile"
       sed -i "s/^\(username =\).*/username = $bmc_username/" "$cfgfile"
-      
+
       # Enable the password, uncommenting if needed
       sed -i "/^\(#password =\).*/s/^#//" "$cfgfile"
       sed -i "s/^\(password =\).*/password = $ipmi_password/" "$cfgfile"
-    
+
     else
-    
+
       echo "No ilorest config file found."
       exit 1
-    
+
     fi
 
   else
 
     echo "ilorest is not installed"
     exit 1
-  
+
   fi
 }
 
@@ -213,18 +207,11 @@ does_fw_meet_req() {
     || [[ "$VENDOR" = HP* ]] \
     || [[ "$VENDOR" = Hewlett* ]]; then
 
-   if [[ "$BOARD_PRODUCT" == *"DL325"* ]]; then
+   if [[ "$BOARD_PRODUCT" == *"DL325"* ]] || [[ "$BOARD_PRODUCT" == *"DL385"* ]]; then
       case "$fw_vers" in
-        "${DL325_FW}") echo "=====> $bmc: FW: $fw_vers OK" ;;
-        *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected ${DL325_FW})"
-          DOCS=1
-          rc=1
-            ;;
-      esac
-    elif [[ "$BOARD_PRODUCT" == *"DL385"* ]]; then
-      case "$fw_vers" in
-        "${DL385_FW}") echo "=====> $bmc: FW: $fw_vers OK" ;;
-        *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected ${DL385_FW})"
+        2.46) echo "=====> $bmc: FW: $fw_vers OK" ;;
+        2.81) echo "=====> $bmc: FW: $fw_vers OK" ;;
+        *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected 2.46 or 2.81)"
           DOCS=1
           rc=1
             ;;
@@ -234,7 +221,6 @@ does_fw_meet_req() {
   elif [[ "$VENDOR" == "GIGA"*"BYTE" ]]; then
 
     case $fw_vers in
-      12.84.09) echo "=====> $bmc: FW: $fw_vers OK" ;;
       12.84*) echo "=====> $bmc: FW: $fw_vers OK" ;;
       *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected 12.84*)"
          DOCS=1
@@ -259,7 +245,7 @@ check_firmware_version() {
     # add the credentials to the ilorest config file
     enable_ilo_creds "$bmc_username" "$ipmi_password"
 
-    # get the firmware version, filter on the know name "iLO 5" 
+    # get the firmware version, filter on the know name "iLO 5"
     fw_vers=$(ilorest --nologo \
       get \
       Version \
@@ -302,22 +288,12 @@ does_bios_meet_req() {
     || [[ "$VENDOR" = "HP"* ]] \
     || [[ "$VENDOR" = "Hewlett"* ]]; then
 
-    if [[ "$BOARD_PRODUCT" == *"DL325"* ]]; then
+    if [[ "$BOARD_PRODUCT" == *"DL325"* ]] || [[ "$BOARD_PRODUCT" == *"DL385"* ]]; then
 
       case "$bios_vers" in
-        "${DL325_BIOS}") echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-        *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected ${DL325_BIOS})"
-           DOCS=1
-           rc=1
-            ;;
-      esac
-
-    elif [[ "$BOARD_PRODUCT" == *"DL385"* ]]; then
-
-      case "$bios_vers" in
-        # these are the versions that are compatible
-        "${DL385_BIOS}") echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-        *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected ${DL385_BIOS})"
+        v2.52) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+        v2.54) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+        *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected v2.52 or v2.54)"
            DOCS=1
            rc=1
             ;;
@@ -332,7 +308,8 @@ does_bios_meet_req() {
       C21) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
       C27) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
       C33) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-      *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected C17, C21, C27, or C33)"
+      C37) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+      *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected C17, C21, C27, C33, C37)"
          DOCS=1
          rc=1
           ;;
@@ -424,7 +401,7 @@ check_if_bmcs_are_reachable
 
 # for each BMC
 for i in "${NCN_BMCS[@]}"
-do 
+do
 
   if [[ "$VENDOR" = *"Marvell"* ]] \
     || [[ "$VENDOR" = "HP"* ]] \
@@ -433,7 +410,7 @@ do
       # login locally
       ilorest --nologo login 1>/dev/null
     else
-      # login to the remote bmc 
+      # login to the remote bmc
       ilorest --nologo login "$i" 1>/dev/null
     fi
 
