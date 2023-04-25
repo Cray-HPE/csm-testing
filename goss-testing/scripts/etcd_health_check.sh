@@ -53,7 +53,7 @@ do
     members_msg=""
     min_members=3
     act_members=$(kubectl get statefulsets.apps -n services "${cluster}-bitnami-etcd" -o json | jq -r '.status.readyReplicas')
-    if [[ $act_members -ne 3 ]]; then
+    if [[ $act_members -lt 3 ]]; then
         members_msg="ERROR: Too few ready members. There are $act_members members, should be $min_members ready members."
         etcd_members_result=1
     else
