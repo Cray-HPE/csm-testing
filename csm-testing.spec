@@ -123,7 +123,7 @@ install -m 644 goss-testing/dat/*       %{buildroot}%{dat}
 mkdir -p %{buildroot}/usr/sbin
 mkdir -p %{buildroot}/etc/systemd/system/
 install -m 755 start-goss-servers.sh %{buildroot}/usr/sbin/
-install -m 755 goss-servers.service %{buildroot}/etc/systemd/system/
+install -m 644 goss-servers.service %{buildroot}/etc/systemd/system/
 
 %clean
 rm -rf %{buildroot}%{dat}
