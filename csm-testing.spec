@@ -91,7 +91,7 @@ chmod +x -R %{buildroot}%{ncn}/automated/
 mkdir -p %{buildroot}/usr/sbin
 mkdir -p %{buildroot}/etc/systemd/system/
 install -m 755 start-goss-servers.sh %{buildroot}/usr/sbin/
-install -m 755 goss-servers.service %{buildroot}/etc/systemd/system/
+install -m 644 goss-servers.service %{buildroot}/etc/systemd/system/
 
 %clean
 rm -rf %{buildroot}%{livecd}
@@ -106,6 +106,24 @@ rm -rf %{buildroot}%{ncn}
 
 %package -n goss-servers
 Summary: Goss Health Check Endpoint Service
+
+# helps when installing a program whose unit files makes use of a feature only available in a newer systemd version
+# If the program is installed on its own, it will have to make do with the available features
+# If a newer systemd package is planned to be installed in the same transaction as the program,
+# it can be beneficial to have systemd installed first, so that the features have become available by the time program is installed and restarted
+%{?systemd_ordering}
+
+%pre -n goss-servers
+%service_add_pre goss-servers.service
+
+%post -n goss-servers
+%service_add_post goss-servers.service
+
+%preun -n goss-servers
+%service_del_preun goss-servers.service
+
+%postun -n goss-servers
+%service_del_postun goss-servers.service
 
 %description -n goss-servers
 Sets up a systemd service for running Goss health check servers
