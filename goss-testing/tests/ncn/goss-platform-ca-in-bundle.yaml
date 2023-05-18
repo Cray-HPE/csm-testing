@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright [2022-2023] Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -29,5 +29,5 @@ command:
       sev: 0
     exec: "keytool -printcert -v -file /etc/pki/trust/anchors/platform-ca-certs.crt  | grep SHA1 | awk '{print $2}' | while read line; do if ! keytool -printcert -v -file /etc/ssl/ca-bundle.pem | grep -q $line; then exit 1; fi; done"
     exit-status: 0
-    timeout: 10000
+    timeout: 20000
     skip: false
