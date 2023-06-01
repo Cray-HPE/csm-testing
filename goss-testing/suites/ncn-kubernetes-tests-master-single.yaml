@@ -39,4 +39,3 @@ gossfile:
   ../tests/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
   ../tests/goss-k8s-verify-cluster.yaml: {}
   ../tests/goss-unbound-dns-entries.yaml: {}
-  ../tests/goss-k8s-nodes-master-taint.yaml: {}

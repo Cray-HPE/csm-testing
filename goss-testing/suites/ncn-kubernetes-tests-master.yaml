@@ -39,3 +39,4 @@ gossfile:
   ../tests/goss-ncn-xname.yaml: {}
   ../tests/goss-weave-health.yaml: {}
   ../tests/goss-weave-status-daemon-sets.yaml: {}
+  ../tests/goss-check-taints.yaml: {}
