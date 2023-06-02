@@ -22,13 +22,23 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 file:
-  /var/www/boot/ipxe.efi:
-    title: ipxe.efi Has Correct User and Group
+  /var/www/boot/ipxe.arm64.efi:
+    title: ipxe.arm64.efi exists with correct ownership and permissions
     meta:
-      desc: Validates that ipxe.efi has the correct user and group set.
+      desc: Validates that ipxe.arm64.efi exists with the right ownership and permissions for the tftp server to serve arm64 devices.
       sev: 0
     exists: true
     mode: "0644"
     owner: dnsmasq
     group: tftp
-    filetype: file # file,
+    filetype: file
+  /var/www/boot/ipxe.x86_64.efi:
+    title: ipxe.x86_64.efi exists with correct ownership and permissions
+    meta:
+      desc: Validates that ipxe.x86_64.efi exists with the right ownership and permissions for the tftp server to serve x86_64 devices.
+      sev: 0
+    exists: true
+    mode: "0644"
+    owner: dnsmasq
+    group: tftp
+    filetype: file
