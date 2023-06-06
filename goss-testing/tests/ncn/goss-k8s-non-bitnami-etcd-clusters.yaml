@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,20 +21,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-gossfile:
-  ../tests/goss-dns-nodes.yaml: {}
-  ../tests/goss-k8s-nodes-ready.yaml: {}
-  ../tests/goss-ceph-storage-health.yaml: {}
-  ../tests/goss-k8s-cray-cli-configured.yaml: {}
-  ../tests/goss-rgw-health.yaml: {}
-  ../tests/goss-k8s-nexus-pods-running.yaml: {}
-  ../tests/goss-k8s-ipxe-pod-running.yaml: {}
-  ../tests/goss-k8s-kea-pod-running.yaml: {}
-  ../tests/goss-k8s-tftp-pods-running.yaml: {}
-  ../tests/goss-postgresql-syncfailed.yaml: {}
-  ../tests/goss-ip-dns-check.yaml: {}
-  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
-  ../tests/goss-k8s-istio-endpoint.yaml: {}
-  ../tests/goss-k8s-istio-pod-containers-running.yaml: {}
-  ../tests/goss-k8s-istio-pods-running.yaml: {}
-  ../tests/goss-k8s-non-bitnami-etcd-clusters.yaml: {}
+
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+command:
+    {{ $testlabel := "non_bitnami_etcd_clusters" }}
+    {{$testlabel}}:
+        title: Verify Etcd Clusters have been migrated to bitmami helm chart
+        meta:
+            desc: Verifies Etcd clusters have been migrated to a supported version of Kubernetes 1.22. If this test fails, run "kubectl get etcdclusters.etcd.database.coreos.com -A --no-headers" to see which Etcd clusters need conversion.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" get etcdclusters.etcd.database.coreos.com -A --no-headers
+        stderr:
+            - "No resources found"
+        exit-status: 0
+        timeout: 20000
+        skip: false
