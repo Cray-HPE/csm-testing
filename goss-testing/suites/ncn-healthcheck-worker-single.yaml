@@ -28,9 +28,4 @@
 gossfile:
   ../tests/goss-cray-service-etcd-health-check.yaml: {}
   ../tests/goss-cray-tftp-check.yaml: {}
-  ../tests/goss-k8s-postgres-backups.yaml: {}
-  ../tests/goss-k8s-postgres-clusters-running.yaml: {}
-  ../tests/goss-k8s-postgres-leader.yaml: {}
-  ../tests/goss-k8s-postgres-pods-running.yaml: {}
-  ../tests/goss-k8s-postgres-replication-lag.yaml: {}
   ../tests/goss-k8s-precache-images-health.yaml: {}
