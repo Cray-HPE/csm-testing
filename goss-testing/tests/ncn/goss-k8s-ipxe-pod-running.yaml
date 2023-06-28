@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,18 +22,22 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+# This test specifically validates the iPXE pod that builds x86-64 binaries.
+# There is also an iPXE pod for aarch64 binaries, but we do not include it in our Goss
+# tests, since it is not needed for basic CSM functionality. Testing of that is
+# covered by the cmsdev tool in the cmstools RPM.
 {{ $kubectl := .Vars.kubectl }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
     {{ $testlabel := "k8s_service_ipxe_running" }}
     {{$testlabel}}:
-        title: Kubernetes Service 'cray-ipxe' Is Running
+        title: Kubernetes Service 'cray-ipxe-x86-64' Is Running
         meta:
-            desc: If this test fails, look at the state of the ipxe pod (kubectl get po -n services | grep cray-ipxe) to investigate.
+            desc: If this test fails, look at the state of the cray-ipxe-x86-64 pod (kubectl get po -n services | grep cray-ipxe-x86-64) to investigate.
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
-                "{{$kubectl}}" get pods -n services -l 'app.kubernetes.io/name=cray-ipxe' |
+                "{{$kubectl}}" get pods -n services -l 'app.kubernetes.io/name=cray-ipxe-x86-64' |
                 awk '{ print $3 }' |
                 grep Running
         exit-status: 0
