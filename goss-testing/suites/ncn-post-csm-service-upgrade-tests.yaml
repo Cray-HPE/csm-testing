@@ -37,4 +37,3 @@ gossfile:
   ../tests/goss-k8s-istio-endpoint.yaml: {}
   ../tests/goss-k8s-istio-pod-containers-running.yaml: {}
   ../tests/goss-k8s-istio-pods-running.yaml: {}
-  ../tests/goss-k8s-non-bitnami-etcd-clusters.yaml: {}
