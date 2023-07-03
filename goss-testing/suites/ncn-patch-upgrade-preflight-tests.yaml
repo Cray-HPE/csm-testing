@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -20,23 +20,30 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
 
-# This suite is run after an NCN worker node is rebuilt, possibly but NOT
-# necessarily during a CSM upgrade. The CSM services will have already
-# been upgraded to the current CSM version, however.
+# This suite is run from the prerequisites.sh script during a CSM upgrade
+# to a new patch version. It is not run from prerequisites.sh during a CSM
+# upgrade to a new major/minor version.
+#
+# When it is run, neither the services nor the NCNs have been upgraded. They
+# are still running the previous version of CSM.
 
 gossfile:
-  ../tests/goss-check-static-routes.yaml: {}
+  ../tests/goss-dns-nodes.yaml: {}
   ../tests/goss-k8s-nodes-ready.yaml: {}
-  ../tests/goss-check-mounts-worker.yaml: {}
-  ../tests/goss-dedicated-drive-worker.yaml: {}
-  ../tests/goss-k8s-nodes-have-running-pods.yaml: {}
-  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
-  ../tests/goss-check-clock-skew.yaml: {}
-  ../tests/goss-cray-service-etcd-health-check.yaml: {}
+  ../tests/goss-command-available.yaml: {}
+  ../tests/goss-bond-members-have-links.yaml: {}
+  ../tests/goss-unbound-ip.yaml: {}
+  ../tests/goss-bond-members-have-correct-mtu.yaml: {}
+  ../tests/goss-ceph-storage-health.yaml: {}
+  ../tests/goss-k8s-cray-cli-configured.yaml: {}
+  ../tests/goss-rgw-health.yaml: {}
   ../tests/goss-k8s-nexus-pods-running.yaml: {}
   ../tests/goss-k8s-ipxe-pod-running.yaml: {}
   ../tests/goss-k8s-kea-pod-running.yaml: {}
   ../tests/goss-k8s-tftp-pods-running.yaml: {}
-  ../tests/goss-k8s-istio-pods-running.yaml: {}
-  ../tests/goss-k8s-istio-pod-containers-running.yaml: {}
+  ../tests/goss-postgresql-syncfailed.yaml: {}
+  ../tests/goss-ip-dns-check.yaml: {}
+  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
+  ../tests/goss-k8s-nexus-space.yaml: {}
