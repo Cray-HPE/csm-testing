@@ -21,6 +21,11 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+# This suite is run after an NCN worker node is rebuilt, possibly but NOT
+# necessarily during a CSM upgrade. The CSM services will have already
+# been upgraded to the current CSM version, however.
+
 gossfile:
   ../tests/goss-k8s-nodes-ready.yaml: {}
   ../tests/goss-k8s-etcd-service.yaml: {}

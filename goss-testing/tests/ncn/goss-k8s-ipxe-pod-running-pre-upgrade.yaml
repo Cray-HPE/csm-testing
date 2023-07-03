@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -20,23 +20,26 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
 
-# This suite is run after an NCN worker node is rebuilt, possibly but NOT
-# necessarily during a CSM upgrade. The CSM services will have already
-# been upgraded to the current CSM version, however.
-
-gossfile:
-  ../tests/goss-check-static-routes.yaml: {}
-  ../tests/goss-k8s-nodes-ready.yaml: {}
-  ../tests/goss-check-mounts-worker.yaml: {}
-  ../tests/goss-dedicated-drive-worker.yaml: {}
-  ../tests/goss-k8s-nodes-have-running-pods.yaml: {}
-  ../tests/goss-switch-bgp-neighbor-aruba-or-mellanox.yaml: {}
-  ../tests/goss-check-clock-skew.yaml: {}
-  ../tests/goss-cray-service-etcd-health-check.yaml: {}
-  ../tests/goss-k8s-nexus-pods-running.yaml: {}
-  ../tests/goss-k8s-ipxe-pod-running.yaml: {}
-  ../tests/goss-k8s-kea-pod-running.yaml: {}
-  ../tests/goss-k8s-tftp-pods-running.yaml: {}
-  ../tests/goss-k8s-istio-pods-running.yaml: {}
-  ../tests/goss-k8s-istio-pod-containers-running.yaml: {}
+# This test is intended to be run BEFORE the CSM services have been upgraded
+# to CSM 1.5. It checks to make sure that the iPXE service is running.
+# The deployment of the iPXE service changed from CSM 1.4 to CSM 1.5, so
+# the same test cannot be run for both versions.
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+command:
+    {{ $testlabel := "k8s_service_ipxe_running_pre_upgrade" }}
+    {{$testlabel}}:
+        title: Kubernetes Service 'cray-ipxe' Is Running Pre-Upgrade
+        meta:
+            desc: If this test fails, look at the state of the iPXE pod (kubectl get po -n services | grep cray-ipxe) to investigate.
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$kubectl}}" get pods -n services -l 'app.kubernetes.io/name=cray-ipxe' |
+                awk '{ print $3 }' |
+                grep Running
+        exit-status: 0
+        timeout: 20000
+        skip: false
