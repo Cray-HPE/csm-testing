@@ -30,7 +30,7 @@ command:
     {{$testlabel}}:
         title: cray-tftp service is healthy
         meta:
-            desc: If this test fails, run `{{$cmsdev}} test tftp` on the target node for more information
+            desc: If this test fails, then run `{{$cmsdev}} test tftp` on the target node. For more information, see 'troubleshooting/known_issues/sms_health_check.md' in the CSM documentation.
             sev: 0
         # Run test in verbose mode, since we're capturing the output
         exec: |-            
