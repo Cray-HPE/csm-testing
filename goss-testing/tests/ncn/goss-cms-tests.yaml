@@ -22,11 +22,15 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $cmsdev := "/usr/local/bin/cmsdev" }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
   {{ range $test := index .Vars "cms_tests"}}
   cms-test-{{ $test }}:
-    exec: "{{$logrun}} -l cms-test-{{ $test }} /usr/local/bin/cmsdev test -v {{ $test }}"
+    title: Check {{ $test }} service
+    meta:
+      desc: Performs a basic health check on the {{ $test }} service. If this test fails, then manually run '{{ $cmsdev }} test {{ $test }}' on the same node where the test failed. For more information, see 'troubleshooting/known_issues/sms_health_check.md' in the CSM documentation.
+    exec: "{{$logrun}} -l cms-test-{{ $test }} {{ $cmsdev }} test -v {{ $test }}"
     exit-status: 0
     timeout: 300000
     skip: false
