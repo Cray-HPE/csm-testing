@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -29,13 +29,13 @@ command:
     {{$testlabel}}:
         title: Validate istio-ingressgateway pods are Running
         meta:
-            desc: Validates that istio-ingressgateway pods are running. If this test fails, run "kubectl get pods -n istio-system -o wide | awk '$1 ~ "istio-ingressgateway" && $3 != "Running"'" to see a list of failing pods to investigate.
+            desc: Validates that istio-ingressgateway pods are running or completed. If this test fails, run "kubectl get pods -n istio-system -o wide | awk '$1 ~ "istio-ingressgateway" && $3 != "Running" && $3 != "Completed"'" to see a list of failing pods to investigate.
             sev: 0
         exec: |-
             set -eo pipefail
             "{{$logrun}}" -l "{{$testlabel}}" \
                 "{{$kubectl}}" get pods -n istio-system |
-                awk '$1 ~ "istio-ingressgateway" { if ($3 != "Running") print "FAIL"; else print "PASS" }'
+                awk '$1 ~ "istio-ingressgateway" { if ($3 != "Running" && $3 != "Completed") print "FAIL"; else print "PASS" }'
         exit-status: 0
         stdout:
             - "!FAIL"
