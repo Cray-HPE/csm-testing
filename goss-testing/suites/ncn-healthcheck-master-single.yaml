@@ -27,6 +27,7 @@
 # corresponding suite file without the -single suffix.
 gossfile:
   ../tests/goss-bss-basecamp-valid.yaml: {}
+  ../tests/goss-hms-ct-tests.yaml: {}
   ../tests/goss-k8s-etcd-backups.yaml: {}
   ../tests/goss-k8s-etcd-cluster-balance.yaml: {}
   ../tests/goss-k8s-etcd-database-health.yaml: {}

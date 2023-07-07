@@ -22,11 +22,15 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $run_hms_ct_tests := "/opt/cray/csm/scripts/hms_verification/run_hms_ct_tests.sh" }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
   {{ range $test := index .Vars "hms_ct_tests"}}
   hms-ct-test-{{ $test }}:
-    exec: "{{$logrun}} -l hms-ct-test-{{ $test }} /opt/cray/csm/scripts/hms_verification/run_hms_ct_tests.sh -t {{ $test }} -p"
+    title: Check {{ $test }} service
+    meta:
+      desc: Performs a basic health check on the {{ $test }} service. If this test fails, then manually run '{{ $run_hms_ct_tests }} -t {{ $test }}' on the same node where the test failed. For more information, see 'troubleshooting/interpreting_hms_health_check_results.md' in the CSM documentation.
+    exec: "{{$logrun}} -l hms-ct-test-{{ $test }} {{ $run_hms_ct_tests }} -t {{ $test }} -p"
     exit-status: 0
     timeout: 300000
     skip: false

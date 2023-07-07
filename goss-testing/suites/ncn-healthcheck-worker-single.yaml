@@ -26,6 +26,6 @@
 # in the cluster. Tests that are executed on every worker node are in the
 # corresponding suite file without the -single suffix.
 gossfile:
+  ../tests/goss-cms-tests.yaml: {}
   ../tests/goss-cray-service-etcd-health-check.yaml: {}
-  ../tests/goss-cray-tftp-check.yaml: {}
   ../tests/goss-k8s-precache-images-health.yaml: {}
