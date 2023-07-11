@@ -22,12 +22,16 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-# This test is intended to be run BEFORE the CSM services have been upgraded
-# to CSM 1.5. It checks to make sure that the iPXE service is running.
+# This test is run during stage 0 of a CSM upgrade to CSM 1.5.x.
+# The CSM services have not yet been upgraded by stage 0, HOWEVER the
+# source CSM version of the upgrade may be CSM 1.4 or it may be CSM 1.5.
+#
 # The deployment of the iPXE service changed from CSM 1.4 to CSM 1.5, so
-# the same test cannot be run for both versions.
-{{ $kubectl := .Vars.kubectl }}
-{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+# this test calls a script which checks to make sure one of the two styles of
+# iPXE deployment is running.
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $check_ipxe_x86_64_pod_is_running := $scripts | printf "%s/check_ipxe_x86_64_pod_is_running.sh" }}
 command:
     {{ $testlabel := "k8s_service_ipxe_running_pre_upgrade" }}
     {{$testlabel}}:
@@ -37,9 +41,7 @@ command:
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
-                "{{$kubectl}}" get pods -n services -l 'app.kubernetes.io/name=cray-ipxe' |
-                awk '{ print $3 }' |
-                grep Running
+                "{{$check_ipxe_x86_64_pod_is_running}}" -v
         exit-status: 0
         timeout: 20000
         skip: false
