@@ -21,13 +21,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $k8s_pods_ips_in_nmn_pool_check := $scripts | printf "%s/check_goss_k8s_pods_ips_in_nmn_pool.sh" }}
 command:
-  check_k8s_pods_ips_in_nmn_pool:
+  {{ $testlabel := "check_k8s_pods_ips_in_nmn_pool" }}
+  {{$testlabel}}:
     title: Kubernetes Pod IPs in NMN Pool
     meta:
-      desc: Correct pods in kube-system namespace exist and are on the right network.
+      desc: If this test fails, run the script "{{$k8s_pods_ips_in_nmn_pool_check}}" to see a description of the offending IPs.
       sev: 0
-    exec: "cidr=$(cray sls search networks list --name NMN --format json | jq -r '.[].ExtraProperties.Subnets[] | select(.FullName == \"NMN Bootstrap DHCP Subnet\") | .CIDR' | cut -d. -f1,2) && kubectl -n kube-system get pods -o wide | grep -E '^kube-apiserver|^kube-controller-manager|^kube-multus-ds|^kube-proxy|^kube-scheduler|^weave-net' | awk '{print $(NF-3)}' | grep -v \"$cidr\" || echo PASS"
+    exec: |-
+        "{{$logrun}}" -l "{{$testlabel}}" \
+            "{{$k8s_pods_ips_in_nmn_pool_check}}"
     stdout:
       - PASS
     exit-status: 0
