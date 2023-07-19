@@ -44,7 +44,7 @@ function is_pit_node {
     [[ -f /etc/pit-release ]]
     return $?
 }
- 
+
 function is_vshasta_node {
     # This is the best check for an image specifically booted to vshasta
     [[ -f /etc/google_system ]] && return 0
@@ -153,7 +153,7 @@ function get_ncns {
     #
     # Regardless of the above, if --exclude-pit is specified, and this function is being called on the PIT node,
     # then ncn-m001 will be excluded from the results.
-    # 
+    #
     local type_char_pattern type_string
 
     local masters=N
@@ -242,7 +242,7 @@ function get_ncns {
                 print_warn "Unable to obtain ${type_string} list from '${sys_prep_dnsmasqd_statics}'"
             fi
         fi
-        
+
         # Final backup option is to use the live dnsmasq statics file
         local dnsmasqd_statics=/etc/dnsmasq.d/statics.conf
 
@@ -281,7 +281,7 @@ function get_ncns {
                 fi
                 print_warn "Unable to obtain ${type_string} list from /etc/hosts"
             fi
-            
+
             echo "${type_string} names could not be found. Sleeping for 30 seconds and retrying" 1>&2
             sleep 30
 
@@ -331,7 +331,7 @@ function get_ready_k8s_node
             node_pattern+=")"
         fi
     fi
-    node=$(kubectl get nodes --no-headers "$@" 2>/dev/null | 
+    node=$(kubectl get nodes --no-headers "$@" 2>/dev/null |
             grep -E "^${node_pattern}[[:space:]]{1,}Ready[[:space:]]" |
             awk '{ print $1 }' | head -1)
     [[ -n ${node} ]] && echo "${node}" && return 0
@@ -379,7 +379,45 @@ function healthcheck_urls_for_master_nodelist
 
     echo ${urls}
     return 0
-}    
+}
+
+function healthcheck_urls_for_master_nodelist_post_services_upgrade
+{
+    # Usage: healthcheck_urls_for_master_nodelist_post_services_upgrade <node1> [<node2>] ...
+    local suite after_pit_suite urls more_urls ready_node single_suite
+    if [[ $# -eq 0 ]]; then
+        print_error " healthcheck_urls_for_master_nodelist_post_services_upgrade: Function requires at least 1 argument"
+        return 1
+    fi
+
+    suite="ncn-healthcheck-master.yaml"
+    single_suite="ncn-healthcheck-master-single-post-service-upgrade.yaml"
+    after_pit_suite="ncn-afterpitreboot-healthcheck-master.yaml"
+
+    ready_node=$(get_ready_k8s_node "$@") || return 1
+
+    if ! urls=$(goss_endpoint_urls "${suite}" "$@") ; then
+        print_error "Error finding test URLs for ${suite} on $*"
+        return 1
+    fi
+
+    if ! more_urls=$(goss_endpoint_urls "${single_suite}" "${ready_node}") ; then
+        print_error "Error finding test URL for ${single_suite} on ${ready_node}"
+        return 1
+    fi
+    urls+=" ${more_urls}"
+
+    if ! is_pit_node ; then
+        if ! more_urls=$(goss_endpoint_urls "${after_pit_suite}" "$@") ; then
+            print_error "Error finding test URLs for ${after_pit_suite} on $*"
+            return 1
+        fi
+        urls+=" ${more_urls}"
+    fi
+
+    echo ${urls}
+    return 0
+}
 
 function healthcheck_urls_for_storage_nodelist
 {
@@ -389,7 +427,7 @@ function healthcheck_urls_for_storage_nodelist
         print_error "healthcheck_urls_for_storage_nodelist: Function requires at least 1 argument"
         return 1
     fi
-    
+
     suite="ncn-healthcheck-storage.yaml"
     after_pit_suite="ncn-afterpitreboot-healthcheck-storage.yaml"
 
@@ -408,7 +446,7 @@ function healthcheck_urls_for_storage_nodelist
 
     echo ${urls}
     return 0
-}    
+}
 
 function healthcheck_urls_for_worker_nodelist
 {
@@ -418,7 +456,7 @@ function healthcheck_urls_for_worker_nodelist
         print_error "healthcheck_urls_for_worker_nodelist: Function requires at least 1 argument"
         return 1
     fi
-    
+
     suite="ncn-healthcheck-worker.yaml"
     single_suite="ncn-healthcheck-worker-single.yaml"
     after_pit_suite="ncn-afterpitreboot-healthcheck-worker.yaml"
@@ -462,7 +500,7 @@ function k8s_check_urls_for_master_nodelist {
         print_error "k8s_check_urls_for_master_nodelist: Function requires at least 1 argument"
         return 1
     fi
-    
+
     suite="ncn-kubernetes-tests-master.yaml"
     single_suite="ncn-kubernetes-tests-master-single.yaml"
     after_pit_single_suite="ncn-afterpitreboot-kubernetes-tests-master-single.yaml"
@@ -492,6 +530,52 @@ function k8s_check_urls_for_master_nodelist {
     return 0
 }
 
+function k8s_check_urls_for_master_nodelist_post_services_upgrade {
+    # Usage: k8s_check_urls_for_master_nodelist_post_services_upgrade <node1> [<node2>] ...
+    local suite after_pit_suite urls more_urls ready_node single_suite after_pit_single_suite post_csm_upgrade_suite even_more_urls
+
+    if [[ $# -eq 0 ]]; then
+        print_error "k8s_check_urls_for_master_nodelist_post_services_upgrade: Function requires at least 1 argument"
+        return 1
+    fi
+
+    suite="ncn-kubernetes-tests-master.yaml"
+    single_suite="ncn-kubernetes-tests-master-single.yaml"
+    post_csm_upgrade_suite="ncn-post-csm-service-upgrade-tests.yaml"
+    after_pit_single_suite="ncn-afterpitreboot-kubernetes-tests-master-single.yaml"
+
+    ready_node=$(get_ready_k8s_node "$@") || return 1
+
+    if ! urls=$(goss_endpoint_urls "${suite}" "$@") ; then
+        print_error "Error finding test URLs for ${suite} on $*"
+        return 1
+    fi
+
+    if ! more_urls=$(goss_endpoint_urls "${single_suite}" "${ready_node}") ; then
+        print_error "Error finding test URL for ${single_suite} on ${ready_node}"
+        return 1
+    fi
+
+    if ! even_more_urls=$(goss_endpoint_urls "${post_csm_upgrade_suite}" "${ready_node}") ; then
+        print_error "Error finding test URL for ${post_csm_upgrade_suite} on ${ready_node}"
+        return 1
+    fi
+
+    urls+=" ${more_urls}"
+    urls+=" ${even_more_urls}"
+
+    if ! is_pit_node ; then
+        if ! more_urls=$(goss_endpoint_urls "${after_pit_single_suite}" "${ready_node}") ; then
+            print_error "Error finding test URL for ${after_pit_single_suite} on ${ready_node}"
+            return 1
+        fi
+        urls+=" ${more_urls}"
+    fi
+
+    echo ${urls}
+    return 0
+}
+
 function k8s_check_urls_for_worker_nodelist {
     # Usage: k8s_check_urls_for_worker_nodelist <node1> [<node2>] ...
     local suite after_pit_suite urls more_urls ready_node single_suite after_pit_single_suite
@@ -499,7 +583,7 @@ function k8s_check_urls_for_worker_nodelist {
         print_error "k8s_check_urls_for_worker_nodelist: Function requires at least 1 argument"
         return 1
     fi
-    
+
     suite="ncn-kubernetes-tests-worker.yaml"
     after_pit_single_suite="ncn-afterpitreboot-kubernetes-tests-worker-single.yaml"
 
@@ -546,12 +630,12 @@ function ncn_healthcheck_worker_urls {
 function run_goss_tests {
     # $1 tests/<whatever.yaml> or suites/<whatever.yaml>
     # $2+ additional arguments to goss validate (most often --format <blah>)
-    # Creates a temporary variables file and then 
+    # Creates a temporary variables file and then
     # calls goss -g "${GOSS_BASE}/$1" --vars "${tmpvars}" v $2
-    
+
     local tmpvars gossfile
     tmpvars=$(create_goss_variable_file) || return 1
-    
+
     if [[ $# -eq 0 ]]; then
         print_error "run_goss_tests: Function requires at least 1 argument"
         return 1
@@ -566,7 +650,7 @@ function run_goss_tests {
     fi
     shift
 
-    # Note that goss returns non-0 both in the case of test failures AND in the case of other errors, such as 
+    # Note that goss returns non-0 both in the case of test failures AND in the case of other errors, such as
     # syntax errors in test files. This function just passes the return code back to the caller, for them to
     # interpret how they wish.
     /usr/bin/goss -g "${gossfile}" --vars "${tmpvars}" v "$@"
@@ -618,7 +702,7 @@ function add_local_vars {
     else
         is_vshasta="\nvshasta: false\n"
         # Not vshasta -- call ipmitool to determine node manufacturer
-        this_node_manufacturer=$(ipmitool mc info | 
+        this_node_manufacturer=$(ipmitool mc info |
             grep -E "^Manufacturer Name[[:space:]]{1,}:[[:space:]]*[^[:space:]]" |
             sed -e 's/^Manufacturer Name[[:space:]]*:[[:space:]]*//' -e 's/[[:space:]]*$//')
     fi
@@ -628,7 +712,7 @@ function add_local_vars {
     # Add local nodename as variable
     this_node_name=$(hostname -s | grep -Eo '(ncn-[msw][0-9]{3}|.*-pit)$')
     var_string+="\n\nthis_node_name: \"${this_node_name}\"\n"
-    
+
     # Get NCN list
     nodes=$(get_ncns)
 
@@ -649,7 +733,7 @@ function add_local_vars {
     for node in $(echo "${nodes}" | grep -oE "ncn-[m][0-9]{3}") ; do
         var_string+="  - ${node}\n"
     done
-    
+
     # add list of storage nodes
     var_string+="\nstorage_nodes:\n"
     for node in $(echo "${nodes}" | grep -oE "ncn-s[0-9]{3}") ; do
@@ -688,9 +772,9 @@ function create_goss_variable_file {
         print_error "create_goss_variable_file: Directory does not exist: ${GOSS_BASE}/vars"
         return 1
     fi
-    
+
     local base_var_file tmpvars
-    
+
     if is_pit_node ; then
         base_var_file="${GOSS_BASE}/vars/variables-livecd.yaml"
     else
@@ -715,9 +799,9 @@ function create_goss_variable_file {
         print_error "create_goss_variable_file: Command failed: cp '${base_var_file}' '${tmpvars}'"
         return 1
     fi
-    
+
     add_local_vars "${tmpvars}" || return 1
-    
+
     echo "${tmpvars}"
     return 0
 }
