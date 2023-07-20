@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,22 +22,21 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-#
-# This suite is run:
-# * During CSM installs before CSM services have been deployed,
-# * During CSM Health Validation (after CSM services have been deployed),
-#   only after PIT redeployment
-#
-# This suite should be run on an NCN master node.
-#
-# This suite is run as part of the ncn_kubernetes_checks script. This suite is
-# only run locally on the NCN where the script is invoked (as opposed to
-# tests in the ncn-kubernetes-test-master/worker suites, which are run
-# on every master/worker node).
-#
-
-gossfile:
-  ../tests/goss-k8s-keycloak-localize-job-completed.yaml: {}
-  ../tests/goss-k8s-nexus-keycloak-integration.yaml: {}
-  # This suite is a superset of the following test suite:
-  common-kubernetes-tests-cluster.yaml: {}
+{{ $kubectl := .Vars.kubectl }}
+command:
+  k8s_nexus_keycloak_integration:
+    title: Kubernetes Secret 'nexus-keycloak-realm-config' matches 'system-nexus-client-auth'
+    meta:
+      desc: Validates that Kubernetes secret 'nexus-keycloak-realm-config' matches 'system-nexus-client-auth'. If test fails see /usr/share/doc/csm/troubleshooting/known_issues/nexus_fail_authentication_with_keycloak_user.md
+      sev: 0
+    exec: |-
+      # Set pipefail so that if any commands in the command pipeline fail, the test will fail
+      set -eo pipefail
+      nexus_secret=$("{{$kubectl}}" get secret -n nexus nexus-keycloak-realm-config -o jsonpath='{.data.keycloak\.json}' | base64 -d | jq -r '.credentials.secret')
+      keycloak_secret=$("{{$kubectl}}" get secret -n nexus system-nexus-client-auth -o jsonpath='{.data.client-secret}' | base64 -d)
+      if [ "$nexus_secret" != "$keycloak_secret"  ]; then echo FAIL; fi
+    exit-status: 0
+    stdout:
+    - "!FAIL"
+    timeout: 20000
+    skip: false
