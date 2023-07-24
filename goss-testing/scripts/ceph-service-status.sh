@@ -131,7 +131,7 @@ function check_service(){
       if [[ $verbose == "true" ]]
       then
         echo "Service $service on $node has been restarted and up for $diff seconds"
-        echo "$service is: $(ceph orch ps --daemon_type $service_name --hostname "$host" -f json-pretty|jq -r '.[].status_desc')"
+        echo "$service's status is: $(ceph orch ps --daemon_type $service_name --hostname "$host" -f json-pretty|jq -r '.[].status_desc')"
       fi
       # adding service_name_2 to make the selection more specific, sometimes a random string contains mds, rgw, etc. which fails a test
       service_name_2=$(echo $service|cut -d "." -f 2)
