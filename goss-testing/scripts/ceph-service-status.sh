@@ -248,7 +248,7 @@ then
        done
      elif [[ $service =~ "mds" ]]
      then
-       for mds in $(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty |jq -r '.[]|(.daemon_type+"."+.daemon_id)')
+       for service in $(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty |jq -r '.[]|(.daemon_type+"."+.daemon_id)')
        do
          check_service
        done
