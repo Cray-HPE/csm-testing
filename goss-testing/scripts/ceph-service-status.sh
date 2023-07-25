@@ -65,7 +65,7 @@ function check_service(){
       fi
       if [[ -n "$osd_id" ]] || [[ -n "$osd" ]]
       then
-        read -r -d "\n" service_unit status < <(pdsh -N -w "$host" podman ps --format json 2>&1 |grep -v "Permanently added"|jq --arg osd "$osd_prefix$osd_id" -r '.[]|select(.Names[]|contains($osd))|.Names[], .State')
+        read -r -d "\n" service_unit status < <(pdsh -N -w "$host" podman ps --format json 2>&1 |grep -v "Permanently added"|jq --arg osd "$osd_prefix$osd_id" -r '.[]|select(.Names[]|endswith($osd))|.Names[], .State')
         (( tests++ ))
         if [[ "$service_unit" =~ $FSID_STR-$osd_prefix$osd_id ]]
         then
@@ -85,42 +85,40 @@ function check_service(){
         echo "Status: $status"
       fi
 
-   elif [[ $service == "mds" ]]
+   elif [[ $service =~ "mds" ]]
      then
-     active_mds=$(ceph fs status -f json-pretty|jq -r '.mdsmap[]|select(.state=="active")|.name')
-     for mds in $(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty |jq -r '.[]|(.daemon_type+"."+.daemon_id)')
-     do
-       mds_id=$(echo "$mds"|cut -d '.' -f2,3,4)
-       current_start_time=$(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty |jq --arg mds_id "$mds_id" -r '.[]|select(.daemon_id==$mds_id)|.started')
-       current_epoch=$(date +%s)
-       if [[ -n "$current_start_time" ]]
-       then
-         current_start_epoch=$(date -d "$current_start_time" +%s 2>/dev/null)
-         diff=$((current_epoch-current_start_epoch))
-       elif [[ -z "$current_start_time" ]]
-       then
-         exit 1
-       fi
+      active_mds=$(ceph fs status -f json-pretty|jq -r '.mdsmap[]|select(.state=="active")|.name')
+      mds_id=$(echo "$service"|cut -d '.' -f2,3,4)
+      current_start_time=$(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty |jq --arg mds_id "$mds_id" -r '.[]|select(.daemon_id==$mds_id)|.started')
+      current_epoch=$(date +%s)
+      if [[ -n "$current_start_time" ]]
+      then
+        current_start_epoch=$(date -d "$current_start_time" +%s 2>/dev/null)
+        diff=$((current_epoch-current_start_epoch))
+      elif [[ -z "$current_start_time" ]]
+      then
+        exit 1
+      fi
 
-       active=$(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty|jq -r '.[].is_active')
-       if [[ $verbose == "true" ]]
-       then
-         echo "Service $mds on $node is reporting up for $diff seconds"
-         echo "$mds is_active: $active"
-       fi
-       if [[ "${active}" == "true" ]] && [[ "$mds" == "$service.$active_mds" ]]
-       then
-         (( active_test++ ))
-       fi
-       read -r -d "\n" service_unit status < <(pdsh -N -w "$host" podman ps --format json 2>&1|grep -v "Permanently added"|jq --arg service "$service" -r '.[]|select(.Names[]|contains($service))|.Names[], .State')
-       (( tests++ ))
-       if [[ "$service_unit" =~ $FSID_STR-$mds ]]
-       then
-         (( passed++ ))
-       fi
-       echo "Service unit name: $service_unit"
-       echo "Status: $status"
-     done
+      active=$(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty|jq --arg mds_id "$mds_id" -r '.[]|select(.daemon_id==$mds_id)|.is_active')
+      if [[ $verbose == "true" ]]
+      then
+        echo "Service $service on $node is reporting up for $diff seconds"
+        echo "$service is_active: $active"
+      fi
+      if [[ "${active}" == "true" ]] && [[ -n $( echo "$active_mds" | grep $service ) ]]
+      then
+        (( active_test++ ))
+      fi
+      service_name=$(echo "$service"|cut -d '.' -f2)
+      read -r -d "\n" service_unit status < <(pdsh -N -w "$host" podman ps --format json 2>&1|grep -v "Permanently added"|jq --arg service "mds-$service_name" -r '.[]|select(.Names[]|contains($service))|.Names[], .State')
+      (( tests++ ))
+      if [[ "$service_unit" =~ $FSID_STR-$service ]]
+      then
+        (( passed++ ))
+      fi
+      echo "Service unit name: $service_unit"
+      echo "Status: $status"
   else
       service_name=$(echo $service|cut -d "." -f 1)
       current_epoch=$(date +%s)
@@ -133,9 +131,11 @@ function check_service(){
       if [[ $verbose == "true" ]]
       then
         echo "Service $service on $node has been restarted and up for $diff seconds"
-        echo "$service's status is: $(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty|jq -r '.[].status_desc')"
+        echo "$service's status is: $(ceph orch ps --daemon_type $service_name --hostname "$host" -f json-pretty|jq -r '.[].status_desc')"
       fi
-      read -r -d "\n" service_unit status  < <(pdsh -N -w "$host" podman ps --format json 2>&1|grep -v "Permanently added"|jq --arg service "$service_name" -r '.[]|select(.Names[]|contains($service))|.Names[], .State')
+      # adding service_name_2 to make the selection more specific, sometimes a random string contains mds, rgw, etc. which fails a test
+      service_name_2=$(echo $service|cut -d "." -f 2)
+      read -r -d "\n" service_unit status  < <(pdsh -N -w "$host" podman ps --format json 2>&1|grep -v "Permanently added"|jq --arg service "${service_name}-${service_name_2}" -r '.[]|select(.Names[]|contains($service))|.Names[], .State')
       (( tests++ ))
       if [[ "$service_unit" =~ $FSID_STR-$service_name ]]
       then
@@ -207,6 +207,7 @@ for node_num in $(seq 1 "$num_storage_nodes"); do
  ssh-keyscan -H "$nodename" 2> /dev/null >> ~/.ssh/known_hosts
 done
 
+# check all services on all nodes
 if [[ $all == "true" ]]
 then
   for host in $(ceph orch host ls -f json-pretty |jq -r '.[].hostname');
@@ -223,6 +224,7 @@ then
   done
 fi
 
+# check all or a specific service on a specific node
 if [[ -n "${node+x}" ]]
 then
   for host in $node;
@@ -244,16 +246,22 @@ then
        do
          check_service 
        done
+     elif [[ $service =~ "mds" ]]
+     then
+       for service in $(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty |jq -r '.[]|(.daemon_type+"."+.daemon_id)')
+       do
+         check_service
+       done
      else
        check_service
      fi
   done
 fi
 
-
+# check specific service(s) on all nodes
 if [[ -n "${service+x}" && ! -n "${node+x}" ]]
   then
-    for host in $(ceph orch ps --daemon_type $service -f json-pretty |jq -r '.[].hostname');
+    for host in $(ceph orch ps --daemon_type $service -f json-pretty |jq -r '.[].hostname' | sort -u);
     do
       node=$host
       if [[ $verbose == "true" ]]
@@ -266,6 +274,12 @@ if [[ -n "${service+x}" && ! -n "${node+x}" ]]
          for osd in $(ceph orch ps --daemon_type osd --hostname "$host" -f json-pretty |jq -r '.[]|(.daemon_type+"."+.daemon_id)')
          do
           check_service
+         done
+      elif [[ $service =~ "mds" ]]
+        then
+          for service in $(ceph orch ps --daemon_type mds --hostname "$host" -f json-pretty |jq -r '.[]|(.daemon_type+"."+.daemon_id)')
+          do
+            check_service
          done
       else
          check_service
