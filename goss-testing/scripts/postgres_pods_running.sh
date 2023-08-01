@@ -56,7 +56,7 @@ do
     # If the sqlCluster.instanceCount is set in the customizations and it is not the same as that set in the postgresql cr then fails and continue to the next cluster.
     num_of_instances=$(kubectl get postgresql -n $c_ns ${c_name} -o json | jq -r '.spec.numberOfInstances')
     service_name=$(kubectl get postgresql -n $c_ns ${c_name} -o yaml | grep "meta.helm.sh/release-name:" | awk '{print $2}')
-    customization_instance_count=$(kubectl get secrets -n loftsman site-init -o jsonpath='{.data.customizations\.yaml}' | base64 -d | yq read customizations.yaml "spec.kubernetes.services.${service_name}.cray-service*.sqlCluster.instanceCount")
+    customization_instance_count=$(kubectl get secrets -n loftsman site-init -o jsonpath='{.data.customizations\.yaml}' | base64 -d | yq read - "spec.kubernetes.services.${service_name}.cray-service*.sqlCluster.instanceCount")
 
     if [[ ! -z $customization_instance_count ]]; then
         if [[ $num_of_instances -ne $customization_instance_count ]]; then
