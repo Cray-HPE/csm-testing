@@ -44,6 +44,14 @@ do
     esac
 done
 
+tmp_dir=$(mktemp -d)
+trap 'rm -rf "${tmp_dir}"; unset CRAY_CREDENTIALS' EXIT
+admin_secret=$(kubectl get secrets admin-client-auth -ojsonpath='{.data.client-secret}' | base64 -d)
+curl -k -s -d grant_type=client_credentials \
+        -d client_id=admin-client \
+        -d client_secret="$admin_secret" https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token > "${tmp_dir}/cray-token.json"
+export CRAY_CREDENTIALS="${tmp_dir}/cray-token.json"
+
 current_date_sec=$(date +"%s")
 
 # Given a timestamp, determine how many minutes have elapsed.
