@@ -114,7 +114,7 @@ pipeline {
                                     arch: "noarch",
                                     component: 'goss-servers',
                                     isStable: isStable,
-                                    os: "sle-${sles_major}sp${sles_minor}",
+                                    os: "noos",
                                     pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm",
                             )
                         }
