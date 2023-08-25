@@ -29,6 +29,11 @@
 # fail (i.e. exit non-0) if any of the commands in the chain fail
 set -o pipefail
 
+locOfScript=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+
+# Import helper functions
+. "${locOfScript}/sw_admin_password.sh"
+
 function err_exit
 {
     local rc
@@ -68,21 +73,12 @@ else
     usage "Too many arguments ($#): $*"
 fi
 
-
 SECRET=$(kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d) ||
     err_exit 10 "Command pipeline failed with return code $?: kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d"
 # We omit the client secret from the error message, so it is not recorded in the log.
 # Ideally we would not be passing it to curl on the command line either.
 TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret="$SECRET" https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token') ||
     err_exit 15 "Command pipeline failed with return code $?: curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=XXXXXX https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token'"
-
-# Set vault_check to 0 if healthy and unsealed.  Set to 1 otherwise.
-VAULTPOD=$(kubectl get pods -n vault | grep -E 'cray-vault-[[:digit:]].*Running' | awk 'NR==1{print $1}')
-if [ "$(kubectl -n vault exec -i ${VAULTPOD:-cray-vault-0} -c vault -- env VAULT_ADDR=http://cray-vault.vault:8200 VAULT_FORMAT=json vault status  | jq '.sealed')" = false ]; then
-    vault_check=0
-else
-    vault_check=1
-fi
 
 # check if metalLB configmap exists
 # Set metallb_check to 1 if we cannot get the metallb configmap from Kubernetes. Set to 0 otherwise.
@@ -96,21 +92,13 @@ fi
 curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN |
     jq -r .ExtraProperties.SystemDefaultRoute |
     grep -e CHN -e CAN
+
 # Set sls_network_check to 0 if the BICAN endpoint responds and
 # has the CAN or CHN strings in its ExtraProperties.SystemDefaultRoute field. Otherwise set to 1
 [[ $? -eq 0 ]] && sls_network_check=0 || sls_network_check=1
 
-# vault is running and checking for switch admin password in vault
-if [ -z "$SW_ADMIN_PASSWORD" ] && [ "$vault_check" -lt "1" ]; then
-    VAULT_PASSWD=$(kubectl -n vault get secrets cray-vault-unseal-keys -o json | jq -r '.data["vault-root"]' |  base64 -d)
-    SW_ADMIN_PASSWORD=$(kubectl -n vault exec -i cray-vault-0 -c vault -- env VAULT_TOKEN="$VAULT_PASSWD" VAULT_ADDR=http://127.0.0.1:8200 VAULT_FORMAT=json vault kv get secret/net-creds/switch_admin | jq -r  .data.admin) ||
-        err_exit 20 'Detected Vault is running.  Missing switch admin password from vault.  Please run the following commands:
-        VAULT_PASSWD=$(kubectl -n vault get secrets cray-vault-unseal-keys -o json | jq -r '"'"'.data["vault-root"]'"'"' |  base64 -d)
-        alias vault="kubectl -n vault exec -i cray-vault-0 -c vault -- env VAULT_TOKEN=\"$VAULT_PASSWD\" VAULT_ADDR=http://127.0.0.1:8200 VAULT_FORMAT=json vault"
-        vault kv put secret/net-creds/switch_admin admin=SWITCH_ADMIN_PASSWORD'
-fi
-# this is the case if vault is not running and env variable has not been set
-if [ -z "$SW_ADMIN_PASSWORD" ] && [ "$vault_check" -gt "0" ]; then
+# This function is defined in sw_admin_password.sh
+if ! set_sw_admin_password_if_needed; then
     # Do not prompt for the password if not running in interactive mode
     if [[ ${interactive} != 0 ]]; then
         err_exit 25 "Switch admin password not in SW_ADMIN_PASSWORD environment variable and not obtainable from Vault"
