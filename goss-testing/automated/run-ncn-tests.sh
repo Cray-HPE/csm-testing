@@ -84,9 +84,13 @@ GOSS_SERVERS_CONFIG=${GOSS_SERVERS_CONFIG:-"${GOSS_INSTALL_BASE_DIR}/dat/goss-se
 # Pattern to match 001-009: 00[1-9]
 ncn_num_pattern="([1-9][0-9][0-9]|0[1-9][0-9]|00[1-9])"
 
+# Import helper functions
+. "${GOSS_BASE}/scripts/sw_admin_password.sh"
+
 function sw_admin_pw_set {
-    if [[ -z ${SW_ADMIN_PASSWORD} ]]; then
-        print_error "Management switch 'admin' user password must be provided via the SW_ADMIN_PASSWORD environment variable"
+    # This function is defined in sw_admin_password.sh
+    if ! set_sw_admin_password_if_needed >/dev/null; then
+        print_error "Management switch 'admin' user password must be set in Vault or provided via the SW_ADMIN_PASSWORD environment variable"
         echo "Example: export SW_ADMIN_PASSWORD='changeme'"
         return 1
     fi
