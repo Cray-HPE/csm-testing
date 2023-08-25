@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -29,8 +29,6 @@
 # fail (i.e. exit non-0) if any of the commands in the chain fail
 set -o pipefail
 
-
-
 function err_exit
 {
     local rc
@@ -40,6 +38,36 @@ function err_exit
     echo "FAIL"
     exit $rc
 }
+
+function usage
+{
+    echo "usage: $0 [--interactive | --non-interactive]"
+    echo
+    err_exit 2 "$*"
+}
+
+# Set interactive to 0 if the test is being run in interactive mode (the default)
+# Otherwise set interactive to 1.
+interactive=0
+if [[ $# -eq 1 ]]; then
+    case "$1" in
+        "--non-interactive")
+            echo "Running in non-interactive mode ($1 specified)"
+            interactive=1
+            ;;
+        "--interactive")
+            echo "Running in interactive mode ($1 specified)"
+            ;;
+        *)
+            usage "Unrecognized argument: '$1'"
+            ;;
+    esac
+elif [[ $# -eq 0 ]]; then
+    echo "Running in interactive mode"
+else
+    usage "Too many arguments ($#): $*"
+fi
+
 
 SECRET=$(kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d) ||
     err_exit 10 "Command pipeline failed with return code $?: kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d"
@@ -83,6 +111,10 @@ if [ -z "$SW_ADMIN_PASSWORD" ] && [ "$vault_check" -lt "1" ]; then
 fi
 # this is the case if vault is not running and env variable has not been set
 if [ -z "$SW_ADMIN_PASSWORD" ] && [ "$vault_check" -gt "0" ]; then
+    # Do not prompt for the password if not running in interactive mode
+    if [[ ${interactive} != 0 ]]; then
+        err_exit 22 "Switch admin password not in SW_ADMIN_PASSWORD environment variable and not obtainable from Vault"
+    fi
     echo "******************************************"
     echo "******************************************"
     echo "**** Enter SSH password of switches: ****"
