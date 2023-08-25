@@ -43,7 +43,7 @@ function usage
 {
     echo "usage: $0 [--interactive | --non-interactive]"
     echo
-    err_exit 2 "$*"
+    err_exit 5 "$*"
 }
 
 # Set interactive to 0 if the test is being run in interactive mode (the default)
@@ -76,7 +76,7 @@ SECRET=$(kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret
 TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret="$SECRET" https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token') ||
     err_exit 15 "Command pipeline failed with return code $?: curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client -d client_secret=XXXXXX https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token'"
 
-# Set vault_check to 0 if healthy and unsealed.  Set to 0 otherwise.
+# Set vault_check to 0 if healthy and unsealed.  Set to 1 otherwise.
 VAULTPOD=$(kubectl get pods -n vault | grep -E 'cray-vault-[[:digit:]].*Running' | awk 'NR==1{print $1}')
 if [ "$(kubectl -n vault exec -i ${VAULTPOD:-cray-vault-0} -c vault -- env VAULT_ADDR=http://cray-vault.vault:8200 VAULT_FORMAT=json vault status  | jq '.sealed')" = false ]; then
     vault_check=0
@@ -113,7 +113,7 @@ fi
 if [ -z "$SW_ADMIN_PASSWORD" ] && [ "$vault_check" -gt "0" ]; then
     # Do not prompt for the password if not running in interactive mode
     if [[ ${interactive} != 0 ]]; then
-        err_exit 22 "Switch admin password not in SW_ADMIN_PASSWORD environment variable and not obtainable from Vault"
+        err_exit 25 "Switch admin password not in SW_ADMIN_PASSWORD environment variable and not obtainable from Vault"
     fi
     echo "******************************************"
     echo "******************************************"
@@ -130,24 +130,27 @@ if [ "$metallb_check" -gt "0" ] || [ "$sls_network_check" -gt "0" ];then
     # csm-1.0 networking
     echo "Running: canu validate network bgp --network nmn --password XXXXXXXX"
     canu validate network bgp --network nmn --password $SW_ADMIN_PASSWORD ||
-        err_exit 20 "canu validate network bgp --network nmn failed (rc=$?)"
+      err_exit 30 "canu validate network bgp --network nmn failed (rc=$?)"
 else
     # csm-1.2+ networking
     if [[ -v TARGET_NCN ]]; then
       echo "Running: canu validate network bgp --verbose --network all --password XXXXXXXX"
-      output=$(canu validate network bgp --verbose --network all --password $SW_ADMIN_PASSWORD)
+      output=$(canu validate network bgp --verbose --network all --password $SW_ADMIN_PASSWORD) ||
+        err_exit 35 "canu validate network bgp --verbose --network all failed (rc=$?)"
       ips=$(cat /etc/hosts | grep "${TARGET_NCN}.nmn\|${TARGET_NCN}.cmn" | awk '{print $1}')
+      fail_rc=45
       for ip in $ips; do
         num_connections=$(echo "${output}" | grep "${ip}" | wc -l)
         established_connections=$(echo "${output}" | grep "${ip}.*Established" | wc -l)
         if [[ $num_connections -ne $established_connections ]]; then
-          err_exit 25 "canu validate network bgp --verbose --network all failed"
+          err_exit "${fail_rc}" "Check failed for ${TARGET_NCN} IP $ip: num_connections=${num_connections} != established_connections=${established_connections}"
         fi
+        let fail_rc+=1
       done
     else
       echo "Running: canu validate network bgp --network all --password XXXXXXXX"
       canu validate network bgp --network all --password $SW_ADMIN_PASSWORD ||
-      err_exit 25 "canu validate network bgp --network all failed (rc=$?)"
+        err_exit 40 "canu validate network bgp --network all failed (rc=$?)"
     fi
 fi
 echo "PASS"
