@@ -141,5 +141,4 @@ else
         err_exit 40 "canu validate network bgp --network all failed (rc=$?)"
     fi
 fi
-echo "PASS"
 exit 0
