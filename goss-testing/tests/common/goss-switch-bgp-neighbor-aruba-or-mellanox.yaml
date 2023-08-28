@@ -38,5 +38,6 @@ command:
         exit-status: 0
         stdout:
             - "!FAIL"
+            - "!Connection Error"
         timeout: 20000
         skip: false
