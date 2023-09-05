@@ -109,12 +109,50 @@ pipeline {
                                     os: "noos",
                                     pattern: "dist/rpmbuild/SRPMS/*.rpm",
                             )
-
                             publishCsmRpms(
                                     arch: "noarch",
                                     component: 'goss-servers',
                                     isStable: isStable,
                                     os: "noos",
+                                    pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm",
+                            )
+                            // Publish to sp4 and sp3 until docs-csm is cut-over to use noos in its various directions that install csm-testing and goss-servers.
+                            publishCsmRpms(arch: "noarch",
+                                    component: env.NAME,
+                                    isStable: isStable,
+                                    os: "sle-15sp4",
+                                    pattern: "dist/rpmbuild/RPMS/noarch/*.rpm",
+                            )
+                            publishCsmRpms(arch: "src",
+                                    component: env.NAME,
+                                    isStable: isStable,
+                                    os: "sle-15sp4",
+                                    pattern: "dist/rpmbuild/SRPMS/*.rpm",
+                            )
+                            publishCsmRpms(
+                                    arch: "noarch",
+                                    component: 'goss-servers',
+                                    isStable: isStable,
+                                    os: "sle-15sp4",
+                                    pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm",
+                            )
+                            publishCsmRpms(arch: "noarch",
+                                    component: env.NAME,
+                                    isStable: isStable,
+                                    os: "sle-15sp3",
+                                    pattern: "dist/rpmbuild/RPMS/noarch/*.rpm",
+                            )
+                            publishCsmRpms(arch: "src",
+                                    component: env.NAME,
+                                    isStable: isStable,
+                                    os: "sle-15sp3",
+                                    pattern: "dist/rpmbuild/SRPMS/*.rpm",
+                            )
+                            publishCsmRpms(
+                                    arch: "noarch",
+                                    component: 'goss-servers',
+                                    isStable: isStable,
+                                    os: "sle-15sp3",
                                     pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm",
                             )
                         }
