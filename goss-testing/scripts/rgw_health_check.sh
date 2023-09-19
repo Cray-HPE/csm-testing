@@ -22,6 +22,32 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+function usage() {
+  echo "CSM check that RGW is healthy and you have the ability to upload and download a file to s3."
+  echo
+  echo "options:"
+  echo "--minimal-check       Check RGW is responsive. Skip the check that uploads and downloads a file to s3. This should be used on storage nodes without the ceph admin keyring."
+  echo
+}
+
+minimal_check=false
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --minimal-check)
+      minimal_check=true
+      shift # past argument
+      ;;
+    *)
+      echo
+      echo "Unknown option $1"
+      usage
+      exit 1
+      ;;
+  esac
+done
+
 echo "---Test that rgw-vip and storage nodes are reachable---"
 exit_code=0
 num_snodes=$(craysys metadata get num_storage_nodes)
@@ -88,78 +114,80 @@ else
 fi
 
 echo
-# check ability to upload and download using rgw, gets presigned url to upload
-echo "---Test ability to upload and download a file from bucket---"
-upload_file='/tmp/testing_rgw.txt'
-echo "Writing to a test file. -- test {} test" > $upload_file
-test_bucket='testb'
-key_name='test.file'
-download_file='/tmp/test_download.txt'
+if ! $minimal_check; then
+    # check ability to upload and download using rgw, gets presigned url to upload
+    echo "---Test ability to upload and download a file from bucket---"
+    upload_file='/tmp/testing_rgw.txt'
+    echo "Writing to a test file. -- test {} test" > $upload_file
+    test_bucket='testb'
+    key_name='test.file'
+    download_file='/tmp/test_download.txt'
 
-# check if test_bucket already exists
-bucket=$(radosgw-admin bucket list | grep ${test_bucket})
-if [[ ! -z $bucket ]]
-then
-    echo "Test bucket already exists, not creating new bucket."
-else
-    echo "-Created a test bucket."
-    ${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --create-bucket --bucket-name $test_bucket
-    if [[ $? != 0 ]]
+    # check if test_bucket already exists
+    bucket=$(radosgw-admin bucket list | grep ${test_bucket})
+    if [[ ! -z $bucket ]]
     then
-        echo "Unable to create a test bucket. Exiting."
-        exit 5 # all subsequent functions require this new bucket
+        echo "Test bucket already exists, not creating new bucket."
+    else
+        echo "-Created a test bucket."
+        ${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --create-bucket --bucket-name $test_bucket
+        if [[ $? != 0 ]]
+        then
+            echo "Unable to create a test bucket. Exiting."
+            exit 5 # all subsequent functions require this new bucket
+        fi
     fi
-fi
-# get presigned url and upload file
-url=$(${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --upload --bucket-name $test_bucket --key-name $key_name --file-name ${upload_file})
-# check that file is in bucket
-contents=$(${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --list --bucket-name $test_bucket | grep ${key_name})
-if [[ ! -z $contents ]]
-then
-    echo "-File successfully uploaded to bucket."
-else
-    echo "Error uploading file to bucket."
-    exit_code=4
-fi
-# download and check if there is a difference
-curl -s ${url} -o $download_file
-diff $download_file $upload_file
-if [[ $? == 0 ]]
-then
-    echo "-Successfully downloaded file."
-    rm $download_file # remove the downloaded file
-else
-    echo "Error downloading file from test bucket."
-    exit_code=4
-fi
-#delete file from bucket and folder
-${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --delete-file --bucket-name $test_bucket --key-name $key_name
-rm $upload_file
-#check that file was deleted
-contents=$(${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --list --bucket-name $test_bucket | grep ${key_name})
-if [[ -z $contents ]]
-then
-    echo "-File successfully deleted from bucket."
-else
-    echo "Error deleting file from bucket."
-    exit_code=4
-fi
-# remove test bucket
-${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --delete-bucket --bucket-name $test_bucket
-bucket=$(radosgw-admin bucket list | grep ${test_bucket})
-if [[ -z $bucket ]]
-then
-    echo "-Test bucket successfully deleted."
-else
-    echo "Error deleting test bucket."
-    exit_code=4
-fi
+    # get presigned url and upload file
+    url=$(${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --upload --bucket-name $test_bucket --key-name $key_name --file-name ${upload_file})
+    # check that file is in bucket
+    contents=$(${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --list --bucket-name $test_bucket | grep ${key_name})
+    if [[ ! -z $contents ]]
+    then
+        echo "-File successfully uploaded to bucket."
+    else
+        echo "Error uploading file to bucket."
+        exit_code=4
+    fi
+    # download and check if there is a difference
+    curl -s ${url} -o $download_file
+    diff $download_file $upload_file
+    if [[ $? == 0 ]]
+    then
+        echo "-Successfully downloaded file."
+        rm $download_file # remove the downloaded file
+    else
+        echo "Error downloading file from test bucket."
+        exit_code=4
+    fi
+    #delete file from bucket and folder
+    ${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --delete-file --bucket-name $test_bucket --key-name $key_name
+    rm $upload_file
+    #check that file was deleted
+    contents=$(${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --list --bucket-name $test_bucket | grep ${key_name})
+    if [[ -z $contents ]]
+    then
+        echo "-File successfully deleted from bucket."
+    else
+        echo "Error deleting file from bucket."
+        exit_code=4
+    fi
+    # remove test bucket
+    ${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --delete-bucket --bucket-name $test_bucket
+    bucket=$(radosgw-admin bucket list | grep ${test_bucket})
+    if [[ -z $bucket ]]
+    then
+        echo "-Test bucket successfully deleted."
+    else
+        echo "Error deleting test bucket."
+        exit_code=4
+    fi
 
-if [[ $exit_code != 4 ]]
-then
-    echo "Passed: successfully uploaded and downloaded a file from bucket."
-else
-    echo "Error. Not able to upload or download a file from bucket."
+    if [[ $exit_code != 4 ]]
+    then
+        echo "Passed: successfully uploaded and downloaded a file from bucket."
+    else
+        echo "Error. Not able to upload or download a file from bucket."
+    fi
 fi
 
 exit $exit_code
