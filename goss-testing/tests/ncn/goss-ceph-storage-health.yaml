@@ -21,19 +21,24 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+{{ $this_node_name := .Env.HOSTNAME }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-    {{ $testlabel := "ceph_storage_health" }}
-    {{$testlabel}}:
-        title: Ceph Service Healthy
-        meta:
-            desc: Checks that the Ceph service is in a healthy state. If this test fails, refer to 'operations/utility_storage/Ceph_Service_Check_Script_Usage.md' for more information.
-            sev: 0
-        exec: |-
-            # Now that we are logging, call script with verbose option
-            "{{$logrun}}" -l "{{$testlabel}}" \
-                "{{$scripts}}/ceph-service-status.sh" -v true
-        exit-status: 0
-        timeout: 20000
-        skip: false
+    # We expect the 'ceph.admin.keyring' on the first three storage nodes
+    # and any master node. That keyring is necessary for this test.
+    {{if $this_node_name | regexMatch "^ncn-(m|s00[1-3])"}}
+        {{ $testlabel := "ceph_storage_health" }}
+        {{$testlabel}}:
+            title: Ceph Service Healthy
+            meta:
+                desc: Checks that the Ceph service is in a healthy state. If this test fails, refer to 'operations/utility_storage/Ceph_Service_Check_Script_Usage.md' for more information.
+                sev: 0
+            exec: |-
+                # Now that we are logging, call script with verbose option
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    "{{$scripts}}/ceph-service-status.sh" -v true
+            exit-status: 0
+            timeout: 20000
+            skip: false
+    {{end}}
