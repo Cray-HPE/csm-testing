@@ -22,19 +22,24 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $this_node_name := .Env.HOSTNAME }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
 {{ $rgw_health_check := $scripts | printf "%s/rgw_health_check.sh" }}
 command:
-    {{ $testlabel := "verify_rgw_health" }}
-    {{$testlabel}}:
-        title: Verify rgw is healthy
-        meta:
-            desc: Check that rgw-vip and all storage nodes are up. Check rgw endpoint health by uploading and downloading a file from a bucket. For more detailed output, run 'GOSS_BASE={{.Env.GOSS_BASE}} {{$rgw_health_check}}'
-            sev: 0
-        exec: |-
-            "{{$logrun}}" -l "{{$testlabel}}" \
-                "{{$rgw_health_check}}"
-        exit-status: 0
-        timeout: 180000
-        skip: false
+    # We expect the 'ceph.admin.keyring' on the first three storage nodes
+    # and any master node. That keyring is necessary for this test.
+    {{if $this_node_name | regexMatch "^ncn-(m|s00[1-3])"}}
+        {{ $testlabel := "verify_rgw_health" }}
+        {{$testlabel}}:
+            title: Verify rgw is healthy
+            meta:
+                desc: Check that rgw-vip and all storage nodes are up. Check rgw endpoint health by uploading and downloading a file from a bucket. For more detailed output, run 'GOSS_BASE={{.Env.GOSS_BASE}} {{$rgw_health_check}}'
+                sev: 0
+            exec: |-
+                "{{$logrun}}" -l "{{$testlabel}}" \
+                    "{{$rgw_health_check}}"
+            exit-status: 0
+            timeout: 180000
+            skip: false
+    {{end}}
