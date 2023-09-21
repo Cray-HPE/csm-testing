@@ -84,6 +84,9 @@ GOSS_SERVERS_CONFIG=${GOSS_SERVERS_CONFIG:-"${GOSS_INSTALL_BASE_DIR}/dat/goss-se
 # Pattern to match 001-009: 00[1-9]
 ncn_num_pattern="([1-9][0-9][0-9]|0[1-9][0-9]|00[1-9])"
 
+# When cmsdev tests are run, these test areas will always be included
+default_cms_tests="bos cfs conman crus ims tftp vcs"
+
 # Import helper functions
 . "${GOSS_BASE}/scripts/sw_admin_password.sh"
 
@@ -611,7 +614,7 @@ function add_local_vars {
         return 1
     fi
 
-    local this_node_name this_node_manufacturer var_string node nodes is_vshasta
+    local this_node_name this_node_manufacturer var_string node nodes is_vshasta test cmsdev_test_list
 
     if is_vshasta_node; then
         # vshasta
@@ -654,10 +657,18 @@ function add_local_vars {
         var_string+="  - ${node}\n"
     done
 
-    # add list of CMS tests, if cmsdev utility is present
-    if [ -f /usr/local/bin/cmsdev ]; then
+    # add list of CMS tests, if not running on the PIT node
+    if ! is_pit_node; then
         var_string+="\ncms_tests:\n"
-        for test in $(/usr/local/bin/cmsdev test -l --exclude-aliases); do
+        # if cmsdev utility is present, query it to list possible additional tests to run
+        if [ -f /usr/local/bin/cmsdev ]; then
+            cmsdev_test_list=$(/usr/local/bin/cmsdev test -l --exclude-aliases)
+            # Added to help debug potential problems
+            echo "DEBUG: cmsdev_test_list='${cmsdev_test_list}'" >&2
+        else
+            cmsdev_test_list=""
+        fi
+        for test in $(echo "${default_cms_tests} ${cmsdev_test_list}" | tr ' ' '\n' | sort -u); do
             var_string+="  - ${test}\n"
         done
     fi

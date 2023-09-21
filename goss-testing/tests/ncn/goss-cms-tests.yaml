@@ -25,6 +25,7 @@
 {{ $cmsdev := "/usr/local/bin/cmsdev" }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
+  {{ $vshasta := .Vars.vshasta }}
   {{ range $test := index .Vars "cms_tests"}}
   cms-test-{{ $test }}:
     title: Check {{ $test }} service
@@ -33,5 +34,14 @@ command:
     exec: "{{$logrun}} -l cms-test-{{ $test }} {{ $cmsdev }} test -v {{ $test }}"
     exit-status: 0
     timeout: 300000
+    # If not on vshasta, do not skip any tests
+    {{ if ne true $vshasta }}
     skip: false
+    # Even on vshasta, if this is not the conman test, do not skip it
+    {{ else if ne "conman" $test }}
+    skip: false
+    # Skip the conman test when running on vshasta
+    {{ else }}
+    skip: true
+    {{ end }}
   {{ end }}
