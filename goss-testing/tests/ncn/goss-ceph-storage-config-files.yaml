@@ -22,6 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $this_node_name := .Env.HOSTNAME }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
     {{ $testlabel := "ceph_storage_config_files" }}
@@ -33,7 +34,14 @@ command:
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
                 ls -al /etc/ceph
+        # We expect the 'ceph.admin.keyring' on the first three storage nodes
+        # and any master node
+        {{if $this_node_name | regexMatch "^ncn-(m|s00[1-3])"}}
         stdout:
             - ceph.client.admin.keyring
             - ceph.conf
+        {{else}}
+        stdout:
+            - ceph.conf
+        {{end}}
         exit-status: 0
