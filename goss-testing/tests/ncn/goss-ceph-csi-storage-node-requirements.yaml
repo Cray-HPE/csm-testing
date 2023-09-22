@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,9 +22,14 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+# Use hostname from variable file, if set.
+# Otherwise use hostname from environment variable (or blank, if that is also not set)
+{{ $env_hostname := getEnv "HOSTNAME" }}
+{{ $vars_hostname := get .Vars "this_node_name" }}
+{{ $this_node_name := default $env_hostname $vars_hostname }}
+
 # set a var for vshasta
 {{ $vs := .Vars.vshasta}}
-{{ $this_node_name := .Vars.this_node_name }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 file:
     # These files only are checked on ncn-s001
