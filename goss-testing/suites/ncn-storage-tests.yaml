@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -26,7 +26,12 @@
 # This suite is run during CSM installs before CSM services have been deployed
 #
 
-{{ $this_node_name := .Vars.this_node_name }}
+# Use hostname from variable file, if set.
+# Otherwise use hostname from environment variable (or blank, if that is also not set)
+{{ $env_hostname := getEnv "HOSTNAME" }}
+{{ $vars_hostname := get .Vars "this_node_name" }}
+{{ $this_node_name := default $env_hostname $vars_hostname }}
+
 gossfile:
     {{if eq $this_node_name "ncn-s001"}}
     # This test checks for the presence of files which indicate that
