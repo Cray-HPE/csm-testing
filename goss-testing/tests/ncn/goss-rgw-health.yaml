@@ -22,7 +22,12 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $this_node_name := .Env.HOSTNAME }}
+# Use hostname from variable file, if set.
+# Otherwise use hostname from environment variable (or blank, if that is also not set)
+{{ $env_hostname := getEnv "HOSTNAME" }}
+{{ $vars_hostname := get .Vars "this_node_name" }}
+{{ $this_node_name := default $env_hostname $vars_hostname }}
+
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
 {{ $rgw_health_check := $scripts | printf "%s/rgw_health_check.sh" }}
