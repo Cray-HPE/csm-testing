@@ -47,7 +47,7 @@ command:
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
-                spire-agent healthcheck -socketPath /var/lib/spire/agent.sock
+                /opt/cray/cray-spire/spire-agent healthcheck -socketPath /var/lib/spire/agent.sock
         exit-status: 0
         timeout: 20000
         skip: false
