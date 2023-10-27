@@ -43,3 +43,4 @@ gossfile:
   ../tests/goss-network-interfaces.yaml: {}
   ../tests/goss-unbound-ip.yaml: {}
   ../tests/goss-rgw-cert-valid.yaml: {}
+  ../tests/goss-validate-certifi-version.yaml: {}
