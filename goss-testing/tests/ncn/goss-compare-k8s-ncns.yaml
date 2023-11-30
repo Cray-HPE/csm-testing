@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,21 +22,20 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-#
-# This suite is run:
-# * During CSM installs before CSM services have been deployed,
-# * During CSM Health Validation (after CSM services have been deployed), both
-#   before and after PIT redeployment
-#
-
-# During health validation, these tests are executed on a single master node
-# in the cluster. Tests that are executed on every master node are in the
-# corresponding suite file without the -single suffix.
-gossfile:
-  ../tests/goss-ceph-csi-k8s-requirements.yaml: {}
-  ../tests/goss-compare-k8s-ncns.yaml: {}
-  ../tests/goss-k8s-certmanager-certs-ready.yaml: {}
-  ../tests/goss-k8s-certmanager-issuers-ready.yaml: {}
-  ../tests/goss-k8s-pods-ips-in-nmn-pool.yaml: {}
-  ../tests/goss-k8s-verify-cluster.yaml: {}
-  ../tests/goss-unbound-dns-entries.yaml: {}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $compare_k8s_ncns := $scripts | printf "%s/python/compare_k8s_ncns.py" }}
+command:
+    {{ $testlabel := "compare_k8s_ncns" }}
+    {{$testlabel}}:
+        title: Kubernetes NCNs have matching configurations
+        meta:
+            desc: If this test fails, run {{$compare_k8s_ncns}} on any Kubernetes NCN for more information
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$compare_k8s_ncns}}"
+        exit-status: 0
+        stdout:
+            - PASSED
+        timeout: 20000
