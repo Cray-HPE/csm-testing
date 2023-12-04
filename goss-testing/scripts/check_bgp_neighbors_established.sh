@@ -83,19 +83,26 @@ TOKEN=$(curl -s -k -S -d grant_type=client_credentials -d client_id=admin-client
 # check if metalLB configmap exists
 # Set metallb_check to 1 if we cannot get the metallb configmap from Kubernetes. Set to 0 otherwise.
 if kubectl -n metallb-system get cm metallb ; then
+    echo "Able to get metallb configmap from Kubernetes"
     metallb_check=0
 else
+    echo "Not able to get metallb configmap from Kubernetes"
     metallb_check=1
 fi
 
 # check SLS Networks data for BiCAN toggle
-curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN |
+if curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN |
     jq -r .ExtraProperties.SystemDefaultRoute |
     grep -e CHN -e CAN
-
-# Set sls_network_check to 0 if the BICAN endpoint responds and
-# has the CAN or CHN strings in its ExtraProperties.SystemDefaultRoute field. Otherwise set to 1
-[[ $? -eq 0 ]] && sls_network_check=0 || sls_network_check=1
+then
+    # Set sls_network_check to 0 if the BICAN endpoint responds and
+    # has the CAN or CHN strings in its ExtraProperties.SystemDefaultRoute field. Otherwise set to 1
+    echo "BICAN endpoint responded with CAN or CHN string in ExtraProperties.SystemDefaultRoute field"
+    sls_network_check=0
+else
+    echo "BICAN endpoint did not respond or did not have CAN or CHN string in ExtraProperties.SystemDefaultRoute field"
+    sls_network_check=1
+fi
 
 # This function is defined in sw_admin_password.sh
 if ! set_sw_admin_password_if_needed; then
@@ -112,20 +119,24 @@ fi
 
 # We really shouldn't be passing a password in plaintext on the command line, but as long as we are, at least
 # we won't also include it in the error message on failure
-# RFE: https://jira-pro.its.hpecorp.net:8443/browse/CASMNET-880
+# RFE: https://jira-pro.it.hpe.com:8443/browse/CASMNET-880
 
 if [ "$metallb_check" -gt "0" ] || [ "$sls_network_check" -gt "0" ];then
     # csm-1.0 networking
+    echo "CSM 1.0 networking detected"
     echo "Running: canu validate network bgp --network nmn --password XXXXXXXX"
-    canu validate network bgp --network nmn --password $SW_ADMIN_PASSWORD ||
+    canu validate network bgp --network nmn --password "${SW_ADMIN_PASSWORD}" ||
       err_exit 30 "canu validate network bgp --network nmn failed (rc=$?)"
 else
     # csm-1.2+ networking
+    echo "CSM 1.2+ networking detected"
     if [[ -v TARGET_NCN ]]; then
+      echo "TARGET_NCN = '${TARGET_NCN}'"
       echo "Running: canu validate network bgp --verbose --network all --password XXXXXXXX"
-      output=$(canu validate network bgp --verbose --network all --password $SW_ADMIN_PASSWORD) ||
+      output=$(canu validate network bgp --verbose --network all --password "${SW_ADMIN_PASSWORD}") ||
         err_exit 35 "canu validate network bgp --verbose --network all failed (rc=$?)"
       ips=$(cat /etc/hosts | grep "${TARGET_NCN}.nmn\|${TARGET_NCN}.cmn" | awk '{print $1}')
+      echo "ips = '${ips}'"
       fail_rc=45
       for ip in $ips; do
         num_connections=$(echo "${output}" | grep "${ip}" | wc -l)
@@ -136,8 +147,9 @@ else
         let fail_rc+=1
       done
     else
+      echo "TARGET_NCN is not set"
       echo "Running: canu validate network bgp --network all --password XXXXXXXX"
-      canu validate network bgp --network all --password $SW_ADMIN_PASSWORD ||
+      canu validate network bgp --network all --password "${SW_ADMIN_PASSWORD}" ||
         err_exit 40 "canu validate network bgp --network all failed (rc=$?)"
     fi
 fi
