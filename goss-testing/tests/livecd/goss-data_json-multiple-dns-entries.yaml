@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,17 +21,22 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+{{ $datajson := .Vars.datajson }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $data_json_multiple_dns_server_entries := $scripts | printf "%s/python/data_json-multiple-dns_server-entries.py" }}
 command:
-  check_for_multiple_dns-server_entries:
+  {{ $testlabel := "check_for_multiple_dns-server_entries" }}
+  {{$testlabel}}:
     title: Single DNS Server Entry
     meta:
       desc: Fail if the count of dns-server entries in data.json > 1.
       sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/python/data_json-multiple-dns_server-entries.py {{.Vars.datajson}}"
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" \
+        "{{$data_json_multiple_dns_server_entries}}" "{{$datajson}}"
     stdout:
     - 1
     exit-status: 0
     timeout: 20000
     skip: false
-
-

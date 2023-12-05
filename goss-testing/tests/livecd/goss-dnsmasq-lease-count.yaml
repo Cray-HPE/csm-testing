@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,13 +21,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  dnsmasq-lease-count:
+  {{ $testlabel := "dnsmasq-lease-count" }}
+  {{$testlabel}}:
     title: Controller Lease Count
     meta:
       desc: Validates that dnsmasq has the correct number of controller leases.
       sev: 0
-    exec: "grep -Eo ncn-.*-mgmt /var/lib/misc/dnsmasq.leases | wc -l"
+    exec: |-
+      # If any commands in the pipeline happen to fail, the test should fail
+      set -o pipefail
+      # The logrun wrapper will capture the file contents, pre-grep and pre-wc
+      "{{$logrun}}" -l "{{$testlabel}}" \
+        cat /var/lib/misc/dnsmasq.leases | grep -Eo ncn-.*-mgmt | wc -l
     stdout:
     - >7
     exit-status: 0
