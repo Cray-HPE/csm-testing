@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,13 +21,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $pyTest_ips_in_dnsmasq_d_in_correct_order := $scripts | printf "%s/python/pyTest-ips-in-dnsmasq_d-in-correct-order.py" }}
 command:
-  dnsmasq_dhcp_pools_are_correctly_defined:
+  {{ $testlabel := "dnsmasq_dhcp_pools_are_correctly_defined" }}
+  {{$testlabel}}:
     title: Directives for dhcp-range Correct
     meta:
       desc: Ensures the dhcp-range directive in the /etc/dnsmasq.d/<net>.conf files are formed correctly.
       sev: 0
-    exec: {{.Env.GOSS_BASE}}/scripts/python/pyTest-ips-in-dnsmasq_d-in-correct-order.py
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" \
+        "{{$pyTest_ips_in_dnsmasq_d_in_correct_order}}"
     exit-status: 0
     stdout:
       - "!FAIL"
