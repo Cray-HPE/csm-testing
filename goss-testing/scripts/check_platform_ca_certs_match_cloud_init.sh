@@ -1,7 +1,8 @@
+#!/usr/bin/env bash
 #
 # MIT License
 #
-# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,24 +22,36 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-{{ $datajson := .Vars.datajson }}
-{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $check_remote_resolv_conf_against_data_json := $scripts | printf "%s/python/check-remote-resolv_conf-against-data_json.py" }}
-command:
-  {{ $testlabel := "check_remote_resolv_conf_against_data_json" }}
-  {{$testlabel}}:
-    title: Correct DNS Server
-    meta:
-      desc: Checks that remote NCN resolv.conf has a nameserver same as dns-server from data.json.
-      sev: 0
-    exec: |-
-      "{{$logrun}}" -l "{{$testlabel}}" \
-        "{{$check_remote_resolv_conf_against_data_json}}" "{{$datajson}}"
-    stdout:
-    - PASS
-    exit-status: 0
-    timeout: 20000
-    skip: false
 
+set -euo pipefail
 
+ci_cert=""
+etc_cert=""
+
+function remove_tmpfiles
+{
+  local tmpfile
+  for tmpfile in "${etc_cert}" "${ci_cert}" ; do
+    if [[ -n ${tmpfile} && -f ${tmpfile} ]]; then
+      rm "${tmpfile}" || echo "WARNING: Command failed: rm '${tmpfile}'" >&2
+    fi
+  done
+}
+
+function do_test
+{
+  ci_cert=$(mktemp /tmp/goss-sorted-cloud-init-cert-XXX.txt) || return 10
+  curl -s http://10.92.100.71:8888/meta-data | jq -r '.Global."ca-certs".trusted[]' | sed '/^$/d' | sort > "${ci_cert}" || return 20
+  etc_cert=$(mktemp /tmp/goss-sorted-etc-cert-XXX.txt) || return 30
+  sed '/^$/d' /etc/pki/trust/anchors/platform-ca-certs.crt | sort > "${etc_cert}" || return 40
+  diff "${etc_cert}" "${ci_cert}"
+  return $?
+}
+
+do_test
+rc=$?
+remove_tmpfiles
+if [[ $rc -eq 0 ]]; then
+  echo PASSED
+fi
+exit ${rc}

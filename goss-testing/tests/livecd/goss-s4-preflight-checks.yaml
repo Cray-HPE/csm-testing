@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,13 +21,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $s4_preflight_checks := $scripts | printf "%s/s4_preflight_checks.sh" }}
 command:
-  preflight_s4_checks:
+  {{ $testlabel := "preflight_s4_checks" }}
+  {{$testlabel}}:
     title: S4 Preflight Checks
     meta:
       desc: Runs the S4 preflight checks shell script and evaluates the output.
       sev: 0
-    exec: "{{.Env.GOSS_BASE}}/scripts/s4_preflight_checks.sh"
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" \
+        "{{$s4_preflight_checks}}"
     exit-status: 0
     timeout: 200000
     skip: false

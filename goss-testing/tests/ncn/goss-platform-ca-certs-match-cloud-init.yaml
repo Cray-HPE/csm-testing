@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,15 +21,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $check_platform_ca_certs_match_cloud_init := $scripts | printf "%s/check_platform_ca_certs_match_cloud_init.sh" }}
 command:
-  goss_platform_ca_certs_match_cloud_init:
+  {{ $testlabel := "goss_platform_ca_certs_match_cloud_init" }}
+  {{$testlabel}}:
     title: Validate that the local platform CA bundle matches the one in cloud-init
     meta:
       desc: Validates that the local platform CA bundle matches the one in cloud-init
       sev: 0
-    exec: "curl -s http://10.92.100.71:8888/meta-data | jq -r '.Global.\"ca-certs\".trusted[]' | sed '/^$/d' | sort > /tmp/goss-sorted-meta-cert.txt;\
-           cat /etc/pki/trust/anchors/platform-ca-certs.crt | sed '/^$/d' | sort > /tmp/goss-sorted-cert.txt;\
-           diff /tmp/goss-sorted-cert.txt /tmp/goss-sorted-meta-cert.txt"
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" \
+        "{{$check_platform_ca_certs_match_cloud_init}}"
+    stdout:
+    - PASSED
     exit-status: 0
     timeout: 20000
     skip: false
