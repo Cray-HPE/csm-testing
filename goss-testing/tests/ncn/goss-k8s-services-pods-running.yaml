@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,14 +22,23 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Variable set: pods_services
+
+{{ $kubectl := .Vars.kubectl }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
   {{range $label := index .Vars "pods_services"}}
-  k8s_service_{{$label}}_running:
+  {{ $testlabel := $label | printf "k8s_service_%s_running" }}
+  {{$testlabel}}:
     title: Kubernetes Service '{{$label}}' Running
     meta:
       desc: Validates that Kubernetes service with label '{{$label}}' is running.
       sev: 0
-    exec: kubectl get pods -n services -l {{$label}} | awk '{ print $3 }' | grep Running
+    exec: |-
+      # If the kubectl command happens to fail, the test should fail
+      set -o pipefail
+      # The logrun wrapper will capture the entire kubectl output, pre-awk and pre-grep
+      "{{$logrun}}" -l "{{$testlabel}}" \
+        "{{$kubectl}}" get pods -n services -l {{$label}} | awk '{ print $3 }' | grep Running
     exit-status: 0
     timeout: 20000
     skip: false

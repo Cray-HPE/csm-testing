@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,13 +21,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+{{ $datajson := .Vars.datajson }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
-  ca_certs_check:
+  {{ $testlabel := "ca_certs_check" }}
+  {{$testlabel}}:
     title: ca-certs patched into data.json
     meta:
       desc: Validate that - csi patch ca - command executed. ca-certs are patched into data.json file on PIT node.
       sev: 0
-    exec: cat /var/www/ephemeral/configs/data.json | jq | grep ca-certs
+    exec: |-
+      # If the jq command happens to fail, the test should fail
+      set -o pipefail
+      # The logrun wrapper will capture the entire jq output, pre-grep
+      jq "{{$datajson}}" | grep ca-certs
     exit-status: 0
     timeout: 20000
     skip: false

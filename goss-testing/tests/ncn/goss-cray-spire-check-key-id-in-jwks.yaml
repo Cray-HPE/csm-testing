@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,13 +21,21 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $check_key_id_in_jwks := $scripts | printf "%s/check_key_id_in_jwks.sh" }}
 command:
-  spire_check_key_id_in_jwks:
+  {{ $testlabel := "spire_check_key_id_in_jwks" }}
+  {{$testlabel}}:
     title: Validate token key ID exists in cray-spire jwks
     meta:
-      desc: Validate token key ID exists in spire jwks. If this fails, try running kubectl rollout restart -n spire daemonset cray-spire-agent and kubectl rollout restart -n spire deployment cray-spire-jwks
+      desc: Validate token key ID exists in spire jwks. If this fails, try running 'kubectl rollout restart -n spire daemonset cray-spire-agent' and 'kubectl rollout restart -n spire deployment cray-spire-jwks'
       sev: 0
-    exec: kubectl exec -itn spire spire-postgres-0 -c postgres -- curl http://cray-spire-jwks/keys | jq -r '.[][].kid' | grep $(/usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /var/lib/spire/agent.sock -audience goss-test | head -n2 | awk -F. 'FNR==2{sub(/^[ \t]+/, ""); print $1}' | base64 -d 2>/dev/null| jq -r .kid)
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" \
+        "{{$check_key_id_in_jwks}}"
     exit-status: 0
+    stdout:
+    - PASSED
     timeout: 20000
     skip: false
