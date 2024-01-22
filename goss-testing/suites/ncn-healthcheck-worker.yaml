@@ -44,3 +44,4 @@ gossfile:
   ../tests/goss-spire-healthcheck.yaml: {}
   ../tests/goss-unbound-ip.yaml: {}
   ../tests/goss-validate-certifi-version.yaml: {}
+  ../tests/goss-validate-iscsi-sbps-config.yaml: {}
