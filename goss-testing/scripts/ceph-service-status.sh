@@ -178,7 +178,7 @@ fi
 tests=0
 passed=0
 active_test=0
-num_storage_nodes=$(craysys metadata get num-storage-nodes)
+num_storage_nodes=$(craysys metadata get num_storage_nodes)
 version=$(ceph version --format json|jq -r '.["version"]'|awk '{print $3}'|awk -F "." '{print $1}')
 
 
