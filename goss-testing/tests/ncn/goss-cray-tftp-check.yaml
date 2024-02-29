@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -26,6 +26,7 @@
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
 {{ $cmsdev := "/usr/local/bin/cmsdev" }}
 command:
+    {{ $vshasta := .Vars.vshasta }}
     {{ $testlabel := "cray_tftp_check" }}
     {{$testlabel}}:
         title: cray-tftp service is healthy
@@ -41,4 +42,9 @@ command:
             - SUCCESS
         # 3 minute test timeout
         timeout: 180000
+        # This test has to be skipped on vshasta for CSM 1.4
+        {{ if eq true $vshasta }}
+        skip: true
+        {{ else }}
         skip: false
+        {{ fi }}
