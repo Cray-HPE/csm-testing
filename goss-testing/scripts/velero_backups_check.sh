@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -68,7 +68,7 @@ cleanup_velero_backups() {
                     time_from_schedule_creation_to_backup=$(( $backup_creation_date_sec - $schedule_creation_date_sec ))
                     if [[ ! -z $backup_creation_date_sec && ${time_from_schedule_creation_to_backup} -ge 0 && ${time_from_schedule_creation_to_backup} -lt $ten_minutes ]]
                     then
-                        delete_count+=1
+                        (( delete_count+=1 ))
 		        echo "velero backup delete ${backup_name}"
 	                velero backup delete ${backup_name} --confirm
                         ns=$(kubectl get backups -A -o json | jq -re ".items[] | select (.metadata.name == \"${backup_name}\") | .metadata.namespace")
