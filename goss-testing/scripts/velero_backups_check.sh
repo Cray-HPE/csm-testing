@@ -1,4 +1,28 @@
 #!/bin/bash
+#
+# MIT License
+#
+# (C) Copyright 2022, 2024 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+
 
 # Due to a velero bug, a backup is created anytime the backup schedule is created or updated.
 # Backups should only occurs based upon the cron schedule and not when the schedule itself is created.. 
@@ -45,7 +69,7 @@ cleanup_velero_backups() {
                     time_from_schedule_creation_to_backup=$(( $backup_creation_date_sec - $schedule_creation_date_sec ))
                     if [[ ! -z $backup_creation_date_sec && ${time_from_schedule_creation_to_backup} -ge 0 && ${time_from_schedule_creation_to_backup} -lt $ten_minutes ]]
                     then
-                        delete_count+=1
+                        (( delete_count+=1 ))
 		        echo "velero backup delete ${backup_name}"
 	                velero backup delete ${backup_name} --confirm
                     fi
