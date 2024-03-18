@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022, 2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -46,7 +46,7 @@ rc=$?
 if [[ ${rc} -ne 0 ]]
 then
     # Split into two echo commands for code readability
-    echo -n "ERROR: Command pipeline failed (return code $?): " 1>&2
+    echo -n "ERROR: Command pipeline failed (return code $rc): " 1>&2
     echo "kubectl get pods -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == \"kyverno\").status.containerStatuses[0].state.running] | length'" 1>&2
     echo "FAIL"
     exit 10
