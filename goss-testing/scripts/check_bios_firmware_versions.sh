@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -64,7 +64,7 @@ function set_vars() {
   # Links for documentation
   FIRMWARE_DOCS=
   BIOS_DOCS=
-  CSM_DOCS="https://github.com/Cray-HPE/docs-csm/blob/release/1.2/operations/index.md#update-firmware-with-fas"
+  CSM_DOCS="https://cray-hpe.github.io/docs-csm/en-15/operations/firmware/update_firmware_with_fas/"
   HFP_DOCS="Documentation in the HFP-firmware tarball"
 
   # Set a sane default username
@@ -209,9 +209,10 @@ does_fw_meet_req() {
 
    if [[ "$BOARD_PRODUCT" == *"DL325"* ]] || [[ "$BOARD_PRODUCT" == *"DL385"* ]]; then
       case "$fw_vers" in
-        2.46) echo "=====> $bmc: FW: $fw_vers OK" ;;
-        2.81) echo "=====> $bmc: FW: $fw_vers OK" ;;
-        *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected 2.46 or 2.81)"
+        1.53) echo "=====> $bmc: FW: $fw_vers OK" ;;
+        2.78) echo "=====> $bmc: FW: $fw_vers OK" ;;
+        2.98) echo "=====> $bmc: FW: $fw_vers OK" ;;
+        *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected 1.53, 2.78 or 2.98)"
           DOCS=1
           rc=1
             ;;
@@ -291,9 +292,11 @@ does_bios_meet_req() {
     if [[ "$BOARD_PRODUCT" == *"DL325"* ]] || [[ "$BOARD_PRODUCT" == *"DL385"* ]]; then
 
       case "$bios_vers" in
-        v2.52) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-        v2.54) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-        *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected v2.52 or v2.54)"
+        v1.48) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+        v1.50) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+        v1.69) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+        v2.84) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+        *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected v1.48, v1.50, v1.69 or v2.84"
            DOCS=1
            rc=1
             ;;
@@ -304,12 +307,8 @@ does_bios_meet_req() {
   elif [[ "$VENDOR" == "GIGA"*"BYTE" ]]; then
 
     case "$bios_vers" in
-      C17) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-      C21) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-      C27) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-      C33) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-      C37) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-      *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected C17, C21, C27, C33, C37)"
+      C38) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+      *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected C38)"
          DOCS=1
          rc=1
           ;;
