@@ -28,7 +28,7 @@ command:
     {{$testlabel}}:
         title: Weave Health
         meta:
-            desc: Check that Weave is healthy.
+            desc: Check that Weave is healthy. Run "weave --local status connections" on any unhealthy node and check the MTU.
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
@@ -41,5 +41,6 @@ command:
         # We fail if the following message shows up in stdout
         stdout:
             - "!IP allocation was seeded by different peers"
+            - "!/.*sleeve/"
         timeout: 20000
         skip: false
