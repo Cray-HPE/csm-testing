@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -121,10 +121,19 @@ do
     # Get the cluster details from the leader
     c_cluster_details=$(kubectl exec ${c_leader} -c postgres -n ${c_ns} -- patronictl list -f json)
 
+    # Determine if a reinit is in progress (member state is "creating replica")
+    c_cluster_state=$(echo $c_cluster_details | jq '.[] | ."State"' | grep "creating replica" | wc -l)
+
     # Determine the max lag across all members, unknown lag count across all members, list of lagging member by pod name
     c_max_lag=$(echo $c_cluster_details | jq '[.[] | select((."Lag in MB" != "unknown"))."Lag in MB"] | max')
     c_unknown_lag=$(echo $c_cluster_details | jq '.[] | ."Lag in MB"' | grep "unknown" | wc -l)
     c_members_lagging=$(echo $c_cluster_details | jq -r '.[] | select(((."Lag in MB" > 0) or (."Lag in MB" == "unknown"))).Member')
+
+    # Exit with success if any member state is "creating replica"
+    if [[ $c_cluster_state -gt 0 ]]; then
+        echo "  Cluster member is already being reinit'ed for $c_name cluster - patroni service restart not needed."
+        continue
+    fi
 
     # Exit with success if no lag is found
     if [[ $c_unknown_lag -eq 0 ]] && [[ $c_max_lag -eq 0 ]]; then
