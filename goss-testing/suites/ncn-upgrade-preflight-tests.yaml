@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2014-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -37,7 +37,7 @@ gossfile:
   ../tests/goss-k8s-cray-cli-configured.yaml: {}
   ../tests/goss-rgw-health.yaml: {}
   ../tests/goss-k8s-nexus-pods-running.yaml: {}
-  ../tests/goss-k8s-ipxe-pod-running-pre-upgrade.yaml: {}
+  ../tests/goss-k8s-ipxe-pod-running.yaml: {}
   ../tests/goss-k8s-kea-pod-running.yaml: {}
   ../tests/goss-k8s-tftp-pods-running.yaml: {}
   ../tests/goss-postgresql-syncfailed.yaml: {}
