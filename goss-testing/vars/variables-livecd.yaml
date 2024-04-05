@@ -66,8 +66,7 @@ services_running:
   - basecamp
   - conman
 
-datajson:
-  - "/var/www/ephemeral/configs/data.json"
+datajson: "/var/www/ephemeral/configs/data.json"
 
 staticsconf:
   - "/etc/dnsmasq.d/statics.conf"

@@ -35,7 +35,7 @@ command:
       # If the jq command happens to fail, the test should fail
       set -o pipefail
       # The logrun wrapper will capture the entire jq output, pre-grep
-      jq "{{$datajson}}" | grep ca-certs
+      jq . "{{$datajson}}" | grep ca-certs
     exit-status: 0
     timeout: 20000
     skip: false
