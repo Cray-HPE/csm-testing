@@ -121,10 +121,8 @@ cp -a goss-testing/suites/ncn-*         %{buildroot}%{ncn}/suites
 install -m 644 goss-testing/dat/*       %{buildroot}%{dat}
 
 # goss-servers files
-mkdir -p %{buildroot}/usr/sbin
-mkdir -p %{buildroot}/etc/systemd/system/
-install -m 755 start-goss-servers.sh %{buildroot}/usr/sbin/
-install -m 644 goss-servers.service %{buildroot}/etc/systemd/system/
+install -D -m 0755 -t %{buildroot}%{_sbindir} systemd/start-goss-servers.sh
+install -D -m 0644 -t %{buildroot}%{_unitdir} systemd/goss-servers.service
 
 %clean
 rm -rf %{buildroot}%{dat}
@@ -167,5 +165,5 @@ Summary: Goss Health Check Endpoint Service
 Sets up a systemd service for running Goss health check servers
 
 %files -n goss-servers
-/usr/sbin/start-goss-servers.sh
-/etc/systemd/system/goss-servers.service
+%{_sbindir}/start-goss-servers.sh
+%{_unitdir}/goss-servers.service
