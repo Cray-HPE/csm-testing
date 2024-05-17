@@ -121,8 +121,9 @@ cp -a goss-testing/suites/ncn-*         %{buildroot}%{ncn}/suites
 install -m 644 goss-testing/dat/*       %{buildroot}%{dat}
 
 # goss-servers files
-install -D -m 0755 -t %{buildroot}%{_sbindir} systemd/start-goss-servers.sh
-install -D -m 0644 -t %{buildroot}%{_unitdir} systemd/goss-servers.service
+install -D -m 0755 -t %{buildroot}%{_sbindir}           systemd/start-goss-servers.sh
+install -D -m 0644 -t %{buildroot}%{_unitdir}           systemd/goss-servers.service
+install -D -m 0644 -t %{buildroot}%{_unitdir}-preset/   systemd/90-goss-servers.preset
 
 %clean
 rm -rf %{buildroot}%{dat}
@@ -167,3 +168,4 @@ Sets up a systemd service for running Goss health check servers
 %files -n goss-servers
 %{_sbindir}/start-goss-servers.sh
 %{_unitdir}/goss-servers.service
+%{_unitdir}-preset/90-goss-servers.preset
