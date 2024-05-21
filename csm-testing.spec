@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -37,6 +37,7 @@ Release: 1
 Source: %{name}-%{version}.tar.bz2
 Vendor: HPE
 BuildArchitectures: %(echo $ARCH)
+BuildRequires: systemd-rpm-macros
 
 %description
 Tests to test the set-up during installation.
@@ -120,10 +121,9 @@ cp -a goss-testing/suites/ncn-*         %{buildroot}%{ncn}/suites
 install -m 644 goss-testing/dat/*       %{buildroot}%{dat}
 
 # goss-servers files
-mkdir -p %{buildroot}/usr/sbin
-mkdir -p %{buildroot}/etc/systemd/system/
-install -m 755 start-goss-servers.sh %{buildroot}/usr/sbin/
-install -m 644 goss-servers.service %{buildroot}/etc/systemd/system/
+install -D -m 0755 -t %{buildroot}%{_sbindir}           systemd/start-goss-servers.sh
+install -D -m 0644 -t %{buildroot}%{_unitdir}           systemd/goss-servers.service
+install -D -m 0644 -t %{buildroot}%{_unitdir}-preset/   systemd/90-goss-servers.preset
 
 %clean
 rm -rf %{buildroot}%{dat}
@@ -166,5 +166,6 @@ Summary: Goss Health Check Endpoint Service
 Sets up a systemd service for running Goss health check servers
 
 %files -n goss-servers
-/usr/sbin/start-goss-servers.sh
-/etc/systemd/system/goss-servers.service
+%{_sbindir}/start-goss-servers.sh
+%{_unitdir}/goss-servers.service
+%{_unitdir}-preset/90-goss-servers.preset
