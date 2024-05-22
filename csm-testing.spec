@@ -143,6 +143,7 @@ rmdir %{buildroot}%{logs} || true
 
 %package -n goss-servers
 Summary: Goss Health Check Endpoint Service
+Requires: goss
 
 # helps when installing a program whose unit files makes use of a feature only available in a newer systemd version
 # If the program is installed on its own, it will have to make do with the available features
