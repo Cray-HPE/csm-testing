@@ -47,4 +47,4 @@ command:
         skip: true
         {{ else }}
         skip: false
-        {{ fi }}
+        {{ end }}
