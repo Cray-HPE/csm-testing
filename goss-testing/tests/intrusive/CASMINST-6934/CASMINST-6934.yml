@@ -1,0 +1,203 @@
+---
+- name: validate the bos/v2/applystaged endpoint
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    # this integration test will target a specific node
+    - name: set target node
+      set_fact:
+        current_node: "x3000c0s51b0n0" # nid000001
+        operation: "boot"
+        session_template_name: "goss-id-12345678-90ab-cdef-1234-567890abcdef"
+
+    # first check for existing sessiontemplates and create one   
+    - name: check for existing sessiontemplates
+      block:
+        - name: create a sessiontemplate 
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/sessiontemplates/{{ session_template_name }}"
+            method: PUT
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+            body: >
+              {
+                "description": "{{ session_template_name }}",
+                "enable_cfs": true,
+                "cfs": {
+                  "configuration": ""
+                },
+                "boot_sets": {
+                  "vshasta-goss-test": {
+                    "name": "session_template_name",
+                    "path": "s3://boot-images/9e3c75e1-ac42-42c7-873c-e758048897d6/manifest.json",
+                    "cfs": {
+                      "configuration": ""
+                    },
+                    "type": "s3",
+                    "etag": "1cc4eef4f407bd8a62d7d66ee4b9e9c8",
+                    "kernel_parameters": "console=ttyS0,115200 bad_page=panic crashkernel=340M hugepagelist=2m-2g intel_iommu=off intel_pstate=disable iommu=pt ip=dhcp numa_interleave_omit=headless numa_zonelist_order=node oops=panic pageblock_order=14 pcie_ports=native printk.synchronous=y rd.neednet=1 rd.retry=10 rd.shell turbo_boost_limit=999 spire_join_token=${SPIRE_JOIN_TOKEN}",
+                    "node_list": [
+                      "{{ current_node }}",
+                    ],
+                    "node_roles_groups": [
+                      "Compute",
+                    ],
+                    "node_groups": [
+                      "string"
+                    ],
+                    "arch": "X86",
+                    "rootfs_provider": "cpss3",
+                    "rootfs_provider_passthrough": "dvs:api-gw-service-nmn.local:300:nmn0"
+                  }
+                }
+              }
+            body_format: json
+          register: stage_result
+
+        - name: show the sessiontemplate creation result
+          debug:
+            msg: "{{ stage_result }}"
+
+        - name: get existing sessiontemplates
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/sessiontemplates"
+            method: GET
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+          register: sessiontemplates
+
+        - name: find boot_sets.compute.path from each template
+          set_fact:
+            session_template: "{{ sessiontemplates.json | first }}" # arbitrarily pick the first session template
+
+        - name: show the sessiontemplate image path
+          debug:
+            msg: "First compute path: {{ session_template.boot_sets.compute.path }}"
+
+        - name: show the sessiontemplate 
+          debug:
+            msg: "template name: {{ session_template.name }}"
+
+    # get the current staged state of the node
+    - name: get the staged state for {{ current_node }}
+      block:
+        - name: query the staged state for {{ current_node }}
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/components/{{ current_node }}"
+            method: GET
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+          register: components
+
+        # for this test, we need to compare the old image to the new image, so get the current one
+        - name: find the old image for {{ current_node }}
+          set_fact:
+            old_image: "{{ components.json | json_query('[].staged_state.boot_artifacts.kernel') }}"
+        - name: show the old image for {{ current_node }}
+          debug:
+            msg: "{{ old_image }}"
+
+    # set the staged state for the current node
+    - name: set the staged state for {{ current_node }}
+      block:
+        # for predictability, create a new session name
+        - name: generate a session name
+          set_fact:
+            session_string: "session-{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+        - name: show the session name
+          debug:
+            msg: "{{ session_string }}"
+        
+        # this call sets the staged state for the node
+        - name: set the staged state for {{ current_node }}
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/sessions"
+            method: POST
+            status_code: 201
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+            # here we are telling the node to reboot using a certain session template
+            body: >
+              {
+                "name": "{{ session_string }}",
+                "operation": "{{ operation }}",
+                "template_name": "{{ session_template.name }}",
+                "limit": "{{ current_node }}",
+                "stage": true,
+                "include_disabled": false
+              }
+            body_format: json
+          register: stage_result
+
+        - name: show the staged state
+          debug:
+            msg: "{{ stage_result }}"
+
+        # # curl -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' https://api-gw-service-nmn.local/apis/bos/v2/sessions/session-20240731202359 | jq '.status'
+        - name: wait until the session's status is running for {{ session_string }}
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/sessions/{{ session_string }}"
+            method: GET
+            status_code: 200
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+          register: session_response
+          until: session_response.json.status.status == "running" or session_response.json.status.status == "complete"
+          retries: 20
+          delay: 1
+
+    # apply the staged state for the current node
+    - name: apply the staged state for {{ current_node }}
+      block:
+        - name: apply the staged state for {{ current_node }}
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/applystaged"
+            method: POST
+            status_code: 200
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+            body: >
+              {
+                "xnames": ["{{ current_node }}"]
+              }
+            body_format: json
+          register: applystaged_result
+
+        - name: show the applystaged result
+          debug:
+            msg: "{{ applystaged_result }}"
+
+    # - name: query {{ current_node }} staged state again
+    #   uri:
+    #     url: "https://api-gw-service-nmn.local/apis/bos/v2/components/{{ current_node }}"
+    #     method: GET
+    #     headers:
+    #       Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+    #       Accept: "application/json"
+    #       Content-Type: "application/json"
+    #   register: components_again
+
+    # - name: find the new image for {{ current_node }}
+    #   set_fact:
+    #     new_image: "{{ components_again.json | json_query('[].staged_state.boot_artifacts.kernel') }}"
+
+    # - name: show the new image for {{ current_node }}
+    #   debug:
+    #     msg: "{{ new_image }}"
+
+    # - name: compare the new image to the old image for {{ current_node }}
+    #   debug:
+    #     msg: "{{ new_image }} == {{ old_image }}"
