@@ -1,0 +1,242 @@
+---
+- name: validate the bos/v2/applystaged endpoint
+  hosts: localhost
+  connection: local # this is usually run ad-hoc or just from one node, so use a local connection
+  gather_facts: false # speed up exection, since we do not really need any facts besdies the ones we set
+  tasks:
+    # there is a multitenancy bug prior to 2.21.0
+    - name: check bos version
+      block:
+        - name: check bos version
+          shell: helm history -n services cray-bos | grep -Eo '^[0-9]+\s+.*\s+([0-9]+\.[0-9]+\.[0-9]+)' | head -n 1 | awk '{print $NF}'
+          register: bos_version_output
+          changed_when: false
+
+        - name: fail if bos version is less than 2.21.0
+          fail:
+            msg: "This test requires BOS version greater than 2.20.0"
+          when: bos_version_output.stdout is version('2.21.0', '<')
+
+    # Ensure the TOKEN environment variable is set, needed for API calls
+    - name: check if TOKEN environment variable is set
+      fail:
+        msg: "The TOKEN environment variable is not set. Please set it before running the playbook."
+      when: lookup('env', 'TOKEN') == ''
+
+    # this integration test will target a specific node with a specific operation
+    # a sessiontemplate name is also needed and set here for consistency
+    - name: set playbook facts
+      set_fact:
+        current_node: "x3000c0s51b0n0" # nid000001
+        operation: "boot" # boot, reboot, shutdown
+        session_template_name: "goss-id-12345678-90ab-cdef-1234-567890abcdef" # make an arbitrary name, letting users know it is part of a goss test
+        boot_set_name: "vshasta2-goss-test"
+        session_string: "session-{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+
+
+    # get images
+    - name: get images
+      block:
+        # curl -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' https://api-gw-service-nmn.local/apis/ims/v3/images | jq
+        - name: get available images
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/ims/v3/images"
+            method: GET
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+          register: available_images
+
+        - name: filter images with arch x86_64 and name containing compute
+          set_fact:
+            filtered_images: "{{ available_images.json | json_query('[?arch==`x86_64`]') | json_query('[?contains(name, `compute`)]') }}"
+
+        - name: select a random image from {{ filtered_images | length }} available image(s)
+          set_fact:
+            selected_image: "{{ filtered_images | random }}"
+
+    - name: set more facts
+      set_fact:
+        create_sessiontemplate_body: >
+          {
+            "description": "{{ session_template_name }}",
+            "enable_cfs": true,
+            "cfs": {
+              "configuration": ""
+            },
+            "boot_sets": {
+              "{{ boot_set_name }}": {
+                "name": "{{ session_template_name }}",
+                "path": "{{ selected_image.link.path }}",
+                "cfs": {
+                  "configuration": ""
+                },
+                "type": "{{ selected_image.link.type }}",
+                "etag": "{{ selected_image.link.etag }}",
+                "kernel_parameters": "console=ttyS0,115200 bad_page=panic crashkernel=340M hugepagelist=2m-2g intel_iommu=off intel_pstate=disable iommu=pt ip=dhcp numa_interleave_omit=headless numa_zonelist_order=node oops=panic pageblock_order=14 pcie_ports=native printk.synchronous=y rd.neednet=1 rd.retry=10 rd.shell turbo_boost_limit=999 spire_join_token=${SPIRE_JOIN_TOKEN}",
+                "node_list": [
+                  "{{ current_node }}",
+                ],
+                "node_roles_groups": [
+                  "Compute",
+                ],
+                "node_groups": [
+                  "string"
+                ],
+                "arch": "X86",
+                "rootfs_provider": "cpss3",
+                "rootfs_provider_passthrough": "dvs:api-gw-service-nmn.local:300:nmn0"
+              }
+            }
+          }
+
+
+    # create a new session template for this test
+    - name: create a sessiontemplate and get its details
+      block:
+        # curl -X PUT -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' -d '{{create_sessiontemplate_body | to_json }}' https://api-gw-service-nmn.local/apis/bos/v2/sessiontemplates/goss-id-12345678-90ab-cdef-1234-567890abcdef
+        - name: create a sessiontemplate
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/sessiontemplates/{{ session_template_name }}"
+            method: PUT
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+            body: "{{ create_sessiontemplate_body }}"
+            body_format: json
+          register: sessiontemplate_created_result
+
+        # curl -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' https://api-gw-service-nmn.local/apis/bos/v2/sessiontemplates/goss-id-12345678-90ab-cdef-1234-567890abcdef
+        - name: get sessiontemplate {{ session_template_name }}
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/sessiontemplates/{{ session_template_name }}"
+            method: GET
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+          register: sessiontemplate
+
+        - name: set the session_template fact
+          set_fact:
+            session_template: "{{ sessiontemplate.json }}"
+
+
+    # get the current staged state of the node
+    - name: get the staged state for {{ current_node }}
+      block:
+        # curl -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' https://api-gw-service-nmn.local/apis/bos/v2/components/x3000c0s51b0n0
+        - name: query the staged state for {{ current_node }}
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/components/{{ current_node }}"
+            method: GET
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+          register: components
+
+        # for this test, we need to compare the old image to the new image, so get the current one
+        - name: find the old image for {{ current_node }}
+          set_fact:
+            old_image: "{{ components.json.staged_state.boot_artifacts.kernel }}"
+            
+
+    # set the staged state for the current node
+    - name: set the staged state for {{ current_node }}
+      block:
+        # this call sets the staged state for the node
+        # curl -X POST -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"name": "{{ session_string }}","operation": "{{ operation }}","template_name": "goss-id-12345678-90ab-cdef-1234-567890abcdef","stage": true,"include_disabled": false}' https://api-gw-service-nmn.local/apis/bos/v2/sessions
+        - name: "{{ operation }} {{ current_node }} using sessiontemplate {{ session_string }}"
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/sessions"
+            method: POST
+            status_code: 201
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+            # here we are telling the node to reboot using a certain session template
+            body: >
+              {
+                "name": "{{ session_string }}",
+                "operation": "{{ operation }}",
+                "template_name": "{{ session_template.name }}",
+                "limit": "{{ current_node }}",
+                "stage": true,
+                "include_disabled": false
+              }
+            body_format: json
+          register: set_staged_result
+
+        # curl -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' https://api-gw-service-nmn.local/apis/bos/v2/sessions | jq '.[].name'
+        # curl -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' https://api-gw-service-nmn.local/apis/bos/v2/sessions/session-20240731202359 | jq '.status'
+        - name: wait until {{ session_string }} is running or completed for {{ current_node }}
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/sessions/{{ session_string }}"
+            method: GET
+            status_code: 200
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+          register: session_status_response
+          until: session_status_response.json.status.status == "running" or session_status_response.json.status.status == "complete"
+          retries: 20
+          delay: 1
+
+
+    # apply the staged state for the current node
+    - name: apply the staged state for {{ current_node }}
+      block:
+          # curl -X POST -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' -d '{"xnames": ["x3000c0s51b0n0"]}' https://api-gw-service-nmn.local/apis/bos/v2/applystaged
+        - name: apply the staged state for {{ current_node }}
+          uri:
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/applystaged"
+            method: POST
+            status_code: 200
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+            body: >
+              {
+                "xnames": ["{{ current_node }}"]
+              }
+            body_format: json
+          register: applystaged_result
+
+        - name: query components for {{ current_node }} again
+          uri:
+            # curl -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' https://api-gw-service-nmn.local/apis/bos/v2/components/x3000c0s51b0n0 | jq .status
+            # curl -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' https://api-gw-service-nmn.local/apis/bos/v2/components/x3000c0s51b0n0 | jq .staged_state
+            # curl -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' https://api-gw-service-nmn.local/apis/bos/v2/components/x3000c0s51b0n0 | jq .desired_state
+            # curl -H "Authorization: Bearer $TOKEN" -H 'accept: application/json' -H 'Content-Type: application/json' https://api-gw-service-nmn.local/apis/bos/v2/components/x3000c0s51b0n0 | jq .actual_state
+            url: "https://api-gw-service-nmn.local/apis/bos/v2/components/{{ current_node }}"
+            method: GET
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+          register: components_again
+
+        - name: show desired, actual, and staged states
+          debug:
+            msg: "{{ item }}"
+          loop:
+            - "{{ components_again.json.desired_state.boot_artifacts }}"
+            - "{{ components_again.json.actual_state.boot_artifacts }}"
+            - "{{ components_again.json.staged_state.boot_artifacts }}"
+       
+        - name: find the new image for {{ current_node }}
+          set_fact:
+            new_image: "{{ components_again.json.staged_state.boot_artifacts.kernel }}"
+
+        - name: compare the old staged image to the new staged image for {{ current_node }}
+          debug:
+            msg: "{{ item }}"
+          loop:
+            - "old image: {{ old_image }}"
+            - "new image: {{ new_image }}"
