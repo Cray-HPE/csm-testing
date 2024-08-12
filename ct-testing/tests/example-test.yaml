@@ -1,0 +1,14 @@
+---
+# type: goss
+command:
+    fish:
+        title: Example Test
+        exec: |-
+            echo "Example Test"
+            echo 'out_dir: {{ get .Vars "out_dir" }}'
+            echo 'src_dir: {{ get .Vars "src_dir" }}'
+            echo 'log_dir: {{ get .Vars "log_dir" }}'
+            echo 'node: {{ get .Vars "node" }}'
+        exit-status: 0
+
+

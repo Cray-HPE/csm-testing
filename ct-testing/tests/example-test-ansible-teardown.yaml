@@ -1,0 +1,8 @@
+---
+- name: node-consistency-teardown
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: teardown
+      shell: echo "Running node consistency teardown."

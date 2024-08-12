@@ -1,0 +1,10 @@
+# type: setup
+resources:
+    - resource: node
+      type: Node # hsm type
+      actions:
+        - on
+        - off
+        - reimage
+extra_impact_messages:
+    - The system will be stressed
