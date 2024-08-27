@@ -67,12 +67,20 @@ def write_config(out_dir: str, src_dir: str, xname: str) -> str:
 
 def list_tests(src_dir: str) -> tuple[list[str], list[str]]:
     test_dir = os.path.join(src_dir, "tests")
-    tests = os.listdir(test_dir)
-    tests = [t.removesuffix('.yaml') for t in tests if not t.endswith(('-setup.yaml', '-teardown.yaml', '-config.yaml'))]
+    tests = []
+    if os.path.isdir(test_dir):
+        tests = os.listdir(test_dir)
+        tests = [t.removesuffix('.yaml') for t in tests if not t.endswith(('-setup.yaml', '-teardown.yaml', '-config.yaml'))]
+    else:
+        logger.debug(f"Tests directory not present: {test_dir}")
 
     suites_dir = os.path.join(src_dir, "suites")
-    suites = os.listdir(suites_dir)
-    suites = [s.removesuffix('.yaml') for s in suites if not s.endswith(('-setup.yaml', '-teardown.yaml', '-config.yaml'))]
+    suites = []
+    if os.path.isdir(suites_dir):
+        suites = os.listdir(suites_dir)
+        suites = [s.removesuffix('.yaml') for s in suites if not s.endswith(('-setup.yaml', '-teardown.yaml', '-config.yaml'))]
+    else:
+        logger.debug(f"Suites directory not present: {suites_dir}")
 
     return tests, suites
 
