@@ -3,6 +3,22 @@
   hosts: localhost
   connection: local # this is usually run ad-hoc or just from one node, so use a local connection
   gather_facts: false # speed up exection, since we do not really need any facts besdies the ones we set
+  # the playbook needs to check several cases:
+  # set stage: zero components
+  # set stage: one component
+  # set stage: multiple components
+  # set stage: non-existent component
+  # clear_stage=true
+  # clear_stage=false
+  # apply stage: zero components
+  # apply stage: one component
+  # apply stage: multiple components
+  # apply stage: non-existent component
+  vars:
+    matrix:
+      - { var1: "value1a", var2: "value2a", var3: "value3a" }
+      - { var1: "value1b", var2: "value2b", var3: "value3b" }
+      - { var1: "value1c", var2: "value2c", var3: "value3c" }
   tasks:
     # there is a multitenancy bug prior to 2.21.0
     - name: check bos version
