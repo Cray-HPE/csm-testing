@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -36,11 +36,11 @@ command:
         {{$testlabel}}:
             title: master-taint 
             meta:
-                desc: Checks that the node-role.kubernetes.io/master:NoSchedule taint exists on this master node. If this tests fails, make the node-role.kubernetes.io/master:NoSchedule gets added to this node. 
+                desc: Checks that the node-role.kubernetes.io/control-plane:NoSchedule taint exists on this master node. If this tests fails, make the node-role.kubernetes.io/control-plane:NoSchedule gets added to this node. 
                 sev: 0
             exec: |-
                 "{{$logrun}}" -l "{{$testlabel}}" \
-                    {{$kubectl}} get node {{$this_node_name}}  -o jsonpath='{range .spec.taints[*]}{.key}:{.effect}{"\n"}{end}' | grep "node-role.kubernetes.io/master:NoSchedule" 
+                    {{$kubectl}} get node {{$this_node_name}}  -o jsonpath='{range .spec.taints[*]}{.key}:{.effect}{"\n"}{end}' | grep "node-role.kubernetes.io/control-plane:NoSchedule" 
             exit-status: 0
             timeout: 20000
     {{end}}
