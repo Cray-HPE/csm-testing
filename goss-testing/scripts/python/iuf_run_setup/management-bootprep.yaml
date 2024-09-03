@@ -1,0 +1,138 @@
+# (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
+---
+schema_version: 1.0.2
+configurations:
+# - name: "{{default.note}}management-{{recipe.version}}{{default.suffix}}"
+#   layers:
+#   - name: csm-ncn-nodes-{{csm.version}}
+#     playbook: ncn_nodes.yml
+#     product:
+#       name: csm
+#       version: "{{csm.version}}"
+#   - name: shs-{{default.network_type}}_install-{{slingshot_host_software.working_branch}}
+#     playbook: shs_{{default.network_type}}_install.yml
+#     product:
+#       name: slingshot-host-software
+#       version: "{{slingshot_host_software.version}}"
+#       branch: "{{slingshot_host_software.working_branch}}"
+#     special_parameters:
+#       ims_require_dkms: true
+#   - name: sat-ncn-{{sat.version}}
+#     playbook: sat-ncn.yml
+#     product:
+#       name: sat
+#       version: "{{sat.version}}"
+#   - name: uss-ncn-{{uss.working_branch}}
+#     playbook: ncn.yml
+#     product:
+#       name: uss
+#       version: "{{uss.version}}"
+#       branch: "{{uss.working_branch}}"
+#     special_parameters:
+#       ims_require_dkms: true
+#   - name: csm-diags-ncn-{{csm_diags.version}}
+#     playbook: csm-diags-ncn.yml
+#     product:
+#       name: csm-diags
+#       version: "{{csm_diags.version}}"
+#   - name: sma-base-config-{{sma.version}}
+#     playbook: sma-base-config.yml
+#     product:
+#       name: sma
+#       version: "{{sma.version}}"
+#   - name: sma-ldms-ncn-{{sma.version}}
+#     playbook: sma-ldms-ncn.yml
+#     product:
+#       name: sma
+#       version: "{{sma.version}}"
+#   - name: cpe-pe_deploy-{{cpe.working_branch}}
+#     playbook: pe_deploy.yml
+#     product:
+#       name: cpe
+#       version: "{{cpe.version}}"
+#       branch: "{{cpe.working_branch}}"
+#   - name: csm-ncn-initrd-{{csm.version}}
+#     playbook: ncn-initrd.yml
+#     product:
+#       name: csm
+#       version: "{{csm.version}}"
+
+# this configuration can be used to personalize the storage nodes with SMA and Diags
+# - name: "{{default.note}}storage-{{recipe.version}}{{default.suffix}}"
+#   layers:
+#   - name: csm-ncn-nodes-{{csm.version}}
+#     playbook: ncn_nodes.yml
+#     product:
+#       name: csm
+#       version: "{{csm.version}}"
+#   - name: csm-diags-ncn-{{csm_diags.version}}
+#     playbook: csm-diags-ncn.yml
+#     product:
+#       name: csm-diags
+#       version: "{{csm_diags.version}}"
+#   - name: sma-base-config-{{sma.version}}
+#     playbook: sma-base-config.yml
+#     product:
+#       name: sma
+#       version: "{{sma.version}}"
+#   - name: sma-ldms-ncn-{{sma.version}}
+#     playbook: sma-ldms-ncn.yml
+#     product:
+#       name: sma
+#       version: "{{sma.version}}"
+#   - name: csm-ncn-initrd-{{csm.version}}
+#     playbook: ncn-initrd.yml
+#     product:
+#       name: csm
+#       version: "{{csm.version}}"
+
+- name: "config-minimal-management-dummy-1.0.0"
+  layers:
+  - name: csm-ncn-nodes-{{csm.version}}
+    playbook: ncn_nodes.yml
+    product:
+      name: csm
+      version: "{{csm.version}}"
+  - name: csm-ncn-initrd-{{csm.version}}
+    playbook: ncn-initrd.yml
+    product:
+      name: csm
+      version: "{{csm.version}}"
+
+images:
+- name: "worker-image-dummy-product"
+  base:
+    product:
+      name: csm
+      version: "{{csm.version}}"
+      type: image
+      filter:
+        prefix: secure-kubernetes
+  configuration: "config-minimal-management-dummy-1.0.0"
+  configuration_group_names:
+  - Management_Worker
+
+- name: "master-image-dummy-product"
+  base:
+    product:
+      name: csm
+      version: "{{csm.version}}"
+      type: image
+      filter:
+        prefix: secure-kubernetes
+  configuration: "config-minimal-management-dummy-1.0.0"
+  configuration_group_names:
+  - Management_Master
+
+- name: "storage-image-dummy-product"
+  base:
+    product:
+      name: csm
+      version: "{{csm.version}}"
+      type: image
+      filter:
+        prefix: secure-storage-ceph
+  configuration: "config-minimal-management-dummy-1.0.0"
+  configuration_group_names:
+  - Management_Storage
+
