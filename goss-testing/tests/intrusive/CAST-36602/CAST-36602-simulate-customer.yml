@@ -1,0 +1,67 @@
+---
+# 
+# this is really only needed by HPE so they can simuilate a customer environment by loading services with some data
+- name: simulate customer environment for sls and bss
+  hosts: localhost
+  connection: local # this is usually run ad-hoc or just from one node, so use a local connection
+  gather_facts: false # speed up exection, since we do not really need any facts besdies the ones we set
+  vars_files:
+    - customer_vars.yml
+  tasks:
+    - name: verify prerequisites
+      block:
+        - name: check if TOKEN environment variable is set
+          fail:
+            msg: "The TOKEN environment variable is not set. Please set it before running the playbook."
+          when: lookup('env', 'TOKEN') == ''
+
+        - name: check bss version
+          shell: kubectl get deployment -n services cray-bss -o=jsonpath='{$.spec.template.spec.containers[:1].image}' | sed 's/.*://'
+          register: bss_version_output
+          changed_when: false
+
+        - name: fail if bss version does match the customer
+          fail:
+            msg: "this test must have a matching bss version of {{ customer_bss_version }} but found {{ bss_version_output.stdout }}"
+          when: bss_version_output.stdout is not version(customer_bss_version, '=')
+
+        - name: check sls version
+          shell: kubectl get deployment -n services cray-sls -o=jsonpath='{$.spec.template.spec.containers[:1].image}' | sed 's/.*://'
+          register: sls_version_output
+          changed_when: false
+          loop:
+
+        - name: fail if sls version does match the customer
+          fail:
+            msg: "this test must have a matching sls version of {{ customer_sls_version }} but found {{ sls_version_output.stdout }}"
+          when: sls_version_output.stdout is not version(customer_sls_version, '=')
+      tags:
+        - always
+
+    - name: load simulated customer data to sls and bss
+      block:
+        # curl -X POST -H "Authorization: Bearer $TOKEN" -F "sls_dump=@customer_sls.json" http://api-gw-service-nmn.local/apis/sls/v1/loadstate
+        - name: load sls with simulated customer data
+          command: "curl -X POST -H 'Authorization: Bearer {{ lookup('env', 'TOKEN') }}' -F 'sls_dump=@{{ customer_sls_dump }}' https://{{ api_gateway }}/apis/sls/v1/loadstate"
+          register: load_sls_result
+          tags: 
+            - sls
+
+        # bss changes may not be strictly necessary for this test
+        - name: load bss with simulated customer data
+          uri:
+            url: "https://{{ api_gateway }}/apis/bss/boot/v1/bootparameters"
+            method: POST
+            status_code: 201
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+            body: "{{ item }}"
+            body_format: json
+          loop: "{{ lookup('file', customer_bootparams) | from_json }}"
+          register: load_bss_result
+          tags: 
+            - bss
+ 
+
