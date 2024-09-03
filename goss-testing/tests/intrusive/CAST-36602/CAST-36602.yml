@@ -1,0 +1,149 @@
+---
+- name: replicate customer issue CAST-36602 with hardware-topology-assistant
+  hosts: localhost
+  connection: local # this is usually run ad-hoc or just from one node, so use a local connection
+  gather_facts: false # speed up exection, since we do not really need any facts besdies the ones we set
+  vars:
+    customer_sls_dump: ./sls_dump.json
+    customer_smd_sql: ./smd.sql
+    customer_bootparams: ./bootparameters.json
+    customer_application_node_metadata: ./application_node_metadata.yaml
+    customer_paddle_file: ./paddle_file.json
+    customer_purge_script: ./sls_purge_nids.json
+  tasks:
+    - name: set playbook facts
+      set_fact:
+        api_gateway: "localhost:8443"
+        customer_smd_version: "2.11.15"
+        customer_hta_version: "0.2.0"
+        customer_sls_version: ""
+        customer_bss_version: ""
+      tags: 
+        - sls
+        - smd
+        - bss
+    # - name: verify prerequisites
+    #   block:
+    #     - name: check sls version
+    #       shell: kubectl get deployment -n services cray-sls -o=jsonpath='{$.spec.template.spec.containers[:1].image}' | sed 's/.*://'
+    #       register: sls_version_output
+    #       changed_when: false
+
+    #     - name: fail if sls version does match the customer
+    #       fail:
+    #         msg: "this test must have a matching sls version of {{ customer_sls_version }}"
+    #       when: smd_version_output.stdout is version('{{ customer_sls_version }}', '=')
+
+    #     - name: check smd version
+    #       shell: kubectl get deployment -n services cray-smd -o=jsonpath='{$.spec.template.spec.containers[:1].image}' | sed 's/.*://'
+    #       register: smd_version_output
+    #       changed_when: false
+
+    #     - name: fail if smd version does match the customer
+    #       fail:
+    #         msg: "this test must have a matching smd version of {{ customer_smd_version }}"
+    #       when: smd_version_output.stdout is version('{{ customer_smd_version }}', '=')
+
+    #     - name: check bss version
+    #       shell: kubectl get deployment -n services cray-bss -o=jsonpath='{$.spec.template.spec.containers[:1].image}' | sed 's/.*://'
+    #       register: bss_version_output
+    #       changed_when: false
+
+    #     - name: fail if bss version does match the customer
+    #       fail:
+    #         msg: "this test must have a matching bss version of {{ customer_bss_version }}"
+    #       when: bss_version_output.stdout is version('{{ customer_bss_version }}', '=')
+
+    # Ensure the TOKEN environment variable is set, needed for API calls
+    - name: check if TOKEN environment variable is set
+      fail:
+        msg: "The TOKEN environment variable is not set. Please set it before running the playbook."
+      when: lookup('env', 'TOKEN') == ''
+      tags: 
+        - sls
+        - smd
+        - bss
+
+    - name: load customer data to replicate site
+      block:
+        # curl -X POST -F "sls_dump=@/tmp/sls_dump.json" http://localhost:8443/apis/sls/v1/loadstate
+        - name: load sls with customer data
+          uri:
+            url: "https://{{ api_gateway }}/apis/sls/v1/loadstate"
+            method: POST
+            status_code: 201
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+            body_format: form-multipart
+            body:
+              sls_dump:
+                filename: "{{ customer_sls_dump }}"
+                content: "{{ lookup('file', customer_sls_dump) | from_json }}"
+            validate_certs: false
+          register: load_sls_result
+          tags: 
+            - sls
+
+        - name: load smd with customer data
+          command: |
+            docker cp {{ customer_smd_sql }} hms-simulation-environment-cray-smd-postgres-1:/var/tmp/smd.sql
+            docker exec -it hms-simulation-environment-cray-smd-postgres-1 sh -c 'psql -U hmsdsuser hmsds -c "drop schema if exists public cascade;"'
+            docker exec -it hms-simulation-environment-cray-smd-postgres-1 sh -c 'psql -U hmsdsuser hmsds < /var/tmp/smd.sql'
+          register: load_smd_result
+          tags: 
+            - smd
+
+        # total=$(jq length $data_file)
+        # i=0
+        # while [ $i -lt $total ]
+        # do
+        # data=$(jq '.['$i']' "$data_file")
+        # curl -X POST -H 'Content-Type: application/json' -H 'accept: application/json' https://localhost:8443/apis/bss/boot/v1 -d "'$data'" -k
+        # i=$((i+1))
+        # done
+        - name: load bss with customer data
+          uri:
+            url: "http://{{ api_gateway }}/apis/bss/boot/v1/bootparameters"
+            method: POST
+            status_code: 201
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+              Content-Type: "application/json"
+            body: "{{ item | to_json }}"
+            body_format: json
+            validate_certs: false
+            follow_redirects: all
+          loop: "{{ lookup('file', customer_bootparams) | from_json }}"
+          register: load_bss_result
+          tags: 
+            - bss
+
+    # ./hta update ./paddle.json --sls-url https://localhost:8443/apis/sls --bss-url https://localhost:8443/apis/bss --hsm-url https://localhost:8443/apis/smd/hsm --application-node-metadata ./application_node_metadata.yaml --dry-run
+    - name: replicate customer issue
+      block: 
+      - name: run hardware-topology-assistant to replicate customer issue
+        command: |
+          podman run --rm -it \
+            --name hardware-topology-assistant \
+            -v "$(realpath .)":/work \
+            -e TOKEN \
+            registry.local/artifactory.algol60.net/csm-docker/stable/hardware-topology-assistant:{{ customer_hta_version }} \
+              update \
+              {{ customer_paddle_file }} \
+              --dry-run \
+              --application-node-metadata={{ customer_application_node_metadata }}
+        register: run_hta_result
+        tags: 
+          - sls
+          - smd
+          - bss
+
+    - name: purge rogue nodes from sls
+      block: 
+      - name: purge rogue nodes from sls with script
+        command: |
+          {{ customer_purge_script }}
+        register: run_purge_result
+        tags: 
+          - sls
