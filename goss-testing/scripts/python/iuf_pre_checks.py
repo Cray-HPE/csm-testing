@@ -34,11 +34,10 @@ from packaging import version
 
 def run_command(command):
     try:
-        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        return result.stdout.strip()
+        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        return result.stdout.strip(), result.returncode
     except subprocess.CalledProcessError as e:
-        print(f"Error: {e.stderr.strip()}")
-        sys.exit(1)
+        return e.stderr.strip(), e.returncode
 
 def compare_versions(version1, version2):
     
@@ -54,27 +53,41 @@ def compare_versions(version1, version2):
         print(f"INFO: Version {version1} is greater than required version {version2}")
 
 def check_k8s_version(minimum_version):
-    k8s_version = run_command("kubectl version --short | grep -i 'server version' | awk '{print $3}'")
+    k8s_version, returncode = run_command("kubectl version --short | grep -i 'server version' | awk '{print $3}'")
+    if returncode != 0:
+        print(f"Error: Failed to get Kubernetes version. Return code: {returncode}")
+        sys.exit(1)
+
     print(f"INFO: Kubernetes version: {k8s_version}")
     compare_versions(k8s_version, minimum_version)
 
 def check_iuf_cli_version(minimum_version):
-    iuf_cli_version = run_command("rpm -qa | grep iuf-cli | awk -F- '{print $3}'")
+    iuf_cli_version, returncode = run_command("rpm -qa | grep iuf-cli | awk -F- '{print $3}'")
+    if returncode != 0:
+        print("Error: Failed to get iuf-cli version. Return code: {returncode}")
+        sys.exit(1)
+
     if not iuf_cli_version:
         print("Error: iuf-cli rpm is not installed")
         sys.exit(1)
     else:
         print(f"INFO: iuf-cli rpm is installed: {iuf_cli_version}")
+
     compare_versions(iuf_cli_version, minimum_version)
 
 def check_pod_status():
-    nls_pods = run_command("kubectl get po -n argo | grep -i '^cray-' | grep -v 'Running'")
-    if nls_pods:
+    nls_pods, returncode = run_command("kubectl get po -n argo | grep -i '^cray-' | grep -v 'Running'")
+    if returncode == 1:
+        print("INFO: All cray-* pods are running")
+    elif returncode == 0 and nls_pods:
         print("Error: Some pods are not running")
         print(nls_pods)
         sys.exit(1)
     else:
-        print("INFO: All cray-* pods are running")
+        print(f"Unexpected error: Return code {returncode}")
+        print(nls_pods)
+        sys.exit(1)
+
 
 def check_available_space():
     total, used, free = shutil.disk_usage("/etc/cray/upgrade/csm/")
