@@ -24,15 +24,15 @@
 
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 command:
-    {{ $testlabel := "iuf_list_stages" }}
+    {{ $testlabel := "iuf_list_activities" }}
     {{$testlabel}}:
-        title: IUF list-stages/ls
+        title: IUF list-activities/la
         meta:
-            desc: Lists all the stages of IUF.
+            desc: Lists all the IUF activities on the cluster.
             sev: 0
         exec: |-
                 "{{$logrun}}" -l "{{$testlabel}}" \
-                    /usr/bin/iuf ls
+                    /usr/bin/iuf la
             exit-status: 0
             timeout: 20000
             skip: false
