@@ -24,19 +24,24 @@
 
 {{ $pre_checks := .Vars.pre_checks }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/python/iuf_run_setup" }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
+{{ $iuf_run := $scripts | printf "%s/python/iuf_run.py" }}
+{{ $iuf_cleanup := $scripts | printf "%s/python/iuf_cleanup.py" }}
 command:
-  {{ $testlabel := "iuf_list_activities" }}
+  {{ $testlabel := "iuf_activity" }}
   {{$testlabel}}:
-    title: IUF list-activities/la
+    title: iuf activity info
     meta:
-      desc: Lists all the IUF activities on the cluster.
+      desc: Gives data for a particular IUF activity.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      /usr/bin/iuf la
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" && \
+      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a test-activity activity && \
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
     exit-status: 0
-    timeout: 20000
+    timeout: 180000
     skip: false

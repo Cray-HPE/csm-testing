@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # MIT License
 #
@@ -22,21 +23,4 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $pre_checks := .Vars.pre_checks }}
-{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
-{{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
-command:
-  {{ $testlabel := "iuf_list_activities" }}
-  {{$testlabel}}:
-    title: IUF list-activities/la
-    meta:
-      desc: Lists all the IUF activities on the cluster.
-      sev: 0
-    exec: |-
-      "{{$logrun}}" -l "{{$testlabel}}" \
-      "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      /usr/bin/iuf la
-    exit-status: 0
-    timeout: 20000
-    skip: false
+echo "INFO Completed pre-install-check prehook"

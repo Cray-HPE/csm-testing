@@ -26,16 +26,57 @@
 This script executes iuf run command for creating an activity.
 """
 
+import shutil
 import subprocess
 import sys
+import os
 
 ACTIVITY_NAME = "test-activity"
+FOLDER_NAME = "dummy-1.0.0" 
+MEDIA_DIR = "/etc/cray/upgrade/csm/automation-tests"
 
-def main(media_dir):
-    command = f"iuf -a {ACTIVITY_NAME} run -m {media_dir} -rv {media_dir}/product_vars.yaml -r process-media"
+def create_tar(tar_dir):
+    os.chdir(tar_dir)
+    
+    # Create the tar file
+    tar_command = f"tar -cvf {FOLDER_NAME}.tar {FOLDER_NAME}/"
     try:
-        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        # print("Command output:", result.stdout)
+        subprocess.run(tar_command, shell=True, check=True)
+        print(f"Successfully created {FOLDER_NAME}.tar")
+    except subprocess.CalledProcessError as e:
+        print(f"Error creating tar file: {e}")
+        sys.exit(1)
+
+def compress_tar():
+    # Compress the tar file with pigz
+    pigz_command = f"pigz -9 -c {FOLDER_NAME}.tar > {FOLDER_NAME}.tar.gz"
+    try:
+        subprocess.run(pigz_command, shell=True, check=True)
+        print(f"Successfully compressed {FOLDER_NAME}.tar to {FOLDER_NAME}.tar.gz")
+    except subprocess.CalledProcessError as e:
+        print(f"Error compressing tar file: {e}")
+        sys.exit(1)
+
+def main():
+    try:
+        os.makedirs(MEDIA_DIR, exist_ok=True)
+        print(f"Directory {MEDIA_DIR} created successfully.")
+    except OSError as e:
+        print(f"Error creating directory {MEDIA_DIR}: {e}")
+        sys.exit(1)
+    
+    try:
+        shutil.copy(f"{tar_dir}/{FOLDER_NAME}.tar.gz", MEDIA_DIR)
+        shutil.copy(f"{tar_dir}/product_vars.yaml", MEDIA_DIR)
+        print(f"Files copied successfully to {MEDIA_DIR}.")
+    except IOError as e:
+        print(f"Error copying files: {e}")
+        sys.exit(1)
+
+    command = f"iuf -a {ACTIVITY_NAME} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml -r process-media"
+    try:
+        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        print("Command output:", result.stdout)
         
     except subprocess.CalledProcessError as e:
         print(f"Error: {e.stderr.strip()}")
@@ -45,9 +86,11 @@ def main(media_dir):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: script.py <MEDIA_DIR>")
+        print("Usage: script.py <tar_dir>")
         sys.exit(1)
     
-    media_dir = sys.argv[1]
-    exit_code = main(media_dir)
+    tar_dir = sys.argv[1]
+    create_tar(tar_dir)
+    compress_tar()
+    exit_code = main()
     sys.exit(exit_code)

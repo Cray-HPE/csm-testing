@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -20,23 +20,8 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-#
 
-{{ $pre_checks := .Vars.pre_checks }}
-{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
-{{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
-command:
-  {{ $testlabel := "iuf_list_activities" }}
-  {{$testlabel}}:
-    title: IUF list-activities/la
-    meta:
-      desc: Lists all the IUF activities on the cluster.
-      sev: 0
-    exec: |-
-      "{{$logrun}}" -l "{{$testlabel}}" \
-      "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      /usr/bin/iuf la
-    exit-status: 0
-    timeout: 20000
-    skip: false
+pre_checks:
+  - v1.22.13
+  - "iuf-cli-1.6.11-1.x86_64"
+  - "starlord"

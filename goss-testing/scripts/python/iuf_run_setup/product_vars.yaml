@@ -1,0 +1,9 @@
+default:
+  working_branch: "integration-{{version_x_y_z}}"
+  network_type: "mellanox"
+  note: ""
+  suffix: ""
+  wlm: "future use"
+
+dummy:
+  version: 1.0.0
