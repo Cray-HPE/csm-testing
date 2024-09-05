@@ -32,7 +32,7 @@ import sys
 ACTIVITY_NAME = "test-activity"
 
 
-def main(media_dir):
+def main():
     command = f"iuf -a {ACTIVITY_NAME} abort"
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -45,10 +45,6 @@ def main(media_dir):
     return 0
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: script.py <MEDIA_DIR>")
-        sys.exit(1)
     
-    media_dir = sys.argv[1]
-    exit_code = main(media_dir)
+    exit_code = main()
     sys.exit(exit_code)

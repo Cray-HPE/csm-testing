@@ -52,16 +52,14 @@ def main():
     command_delete_media_dir = f"rm -r {MEDIA_DIR}"
     try:
         result = subprocess.run(command_delete_logs, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        print("Command output:", result.stdout)
-        result = subprocess.run(command_delete_media_dir, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        print("Command output:", result.stdout)
-
-        workflows = get_workflow()
         for workflow in workflows:
             command_delete_workflow = f"kubectl delete workflow {workflow} -n argo"
             result = subprocess.run(command_delete_workflow, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             print("Command output:", result.stdout)
-                  
+        result = subprocess.run(command_delete_logs, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        print("Command output:", result.stdout)
+        result = subprocess.run(command_delete_media_dir, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        print("Command output:", result.stdout)                  
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
         return e.returncode
