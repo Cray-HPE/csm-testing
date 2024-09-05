@@ -28,6 +28,7 @@
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
 {{ $iuf_run := $scripts | printf "%s/python/iuf_run.py" }}
+{{ $iuf_cleanup := $scripts | printf "%s/python/iuf_cleanup.py" }}
 command:
   {{ $testlabel := "iuf_activity_abort" }}
   {{$testlabel}}:
@@ -38,8 +39,9 @@ command:
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" && \
-      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a test-activity abort
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" & \
+      sleep 60 && "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a test-activity abort && \
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
     exit-status: 0
     timeout: 180000
     skip: false
