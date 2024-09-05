@@ -22,6 +22,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
 """
 This script executes logs deletion for an iuf activity.
 """
@@ -33,7 +34,7 @@ ACTIVITY_NAME = "test-activity"
 LOG_DIR= "/etc/cray/upgrade/csm/iuf"
 MEDIA_DIR= "/etc/cray/upgrade/csm/automation-tests"
 
-def get_workflow():
+def get_workflows():
     command = f"iuf -a {ACTIVITY_NAME} workflow"
     workflows=[]
     try:
@@ -51,15 +52,13 @@ def main():
     command_delete_logs = f"rm -r {LOG_DIR}/{ACTIVITY_NAME}"
     command_delete_media_dir = f"rm -r {MEDIA_DIR}"
     try:
-        result = subprocess.run(command_delete_logs, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        workflows = get_workflows()
         for workflow in workflows:
             command_delete_workflow = f"kubectl delete workflow {workflow} -n argo"
             result = subprocess.run(command_delete_workflow, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             print("Command output:", result.stdout)
         result = subprocess.run(command_delete_logs, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        print("Command output:", result.stdout)
         result = subprocess.run(command_delete_media_dir, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        print("Command output:", result.stdout)                  
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
         return e.returncode
