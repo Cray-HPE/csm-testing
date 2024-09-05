@@ -36,7 +36,7 @@ command:
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      /usr/bin/iuf la
+      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf la
     exit-status: 0
     timeout: 20000
     skip: false
