@@ -1,0 +1,143 @@
+---
+- name: fix existing customer data
+  hosts: localhost
+  connection: local # this is usually run ad-hoc or just from one node, so use a local connection
+  gather_facts: false # speed up exection, since we do not really need any facts besdies the ones we set
+  vars_files:
+    - customer-vars.yml
+  tasks:
+    - name: verify prerequisites
+      block:
+        - name: check if TOKEN environment variable is set
+          fail:
+            msg: "The TOKEN environment variable is not set. Please set it before running the playbook."
+          when: lookup('env', 'TOKEN') == ''
+
+        - name: check bss version
+          shell: kubectl get deployment -n services cray-bss -o=jsonpath='{$.spec.template.spec.containers[:1].image}' | sed 's/.*://'
+          register: bss_version_output
+          changed_when: false
+
+        - name: fail if bss version does match the customer
+          fail:
+            msg: "this test must have a matching bss version of {{ customer_bss_version }} but found {{ bss_version_output.stdout }}"
+          when: bss_version_output.stdout is not version(customer_bss_version, '=')
+
+        - name: check sls version
+          shell: kubectl get deployment -n services cray-sls -o=jsonpath='{$.spec.template.spec.containers[:1].image}' | sed 's/.*://'
+          register: sls_version_output
+          changed_when: false
+          loop:
+
+        - name: fail if sls version does match the customer
+          fail:
+            msg: "this test must have a matching sls version of {{ customer_sls_version }} but found {{ sls_version_output.stdout }}"
+          when: sls_version_output.stdout is not version(customer_sls_version, '=')
+      tags:
+        - always
+
+    - name: scrub data
+      block:
+        - name: get current sls dumpstate
+          uri:
+            url: "https://{{ api_gateway }}/apis/sls/v1/dumpstate"
+            method: GET
+            status_code: 200
+            headers:
+              Authorization: "Bearer {{ lookup('env', 'TOKEN') }}"
+              Accept: "application/json"
+          register: sls_dumpstate_result
+          tags:
+            - sls
+
+        - name: save current sls dumpstate to file
+          copy:
+            content: "{{ sls_dumpstate_result.json }}"
+            dest: "{{ current_sls_dump }}"
+          tags:
+            - sls
+
+        - name: scrub nids from {{ current_sls_dump | basename }}
+          command: "python3 {{ scrub_sls_script }} {{ current_sls_dump }} {{ scrubbed_sls_dump }}"
+          register: scrub_sls_result
+          tags: 
+            - sls
+
+        - name: scrub uan computes from {{ customer_ccj_file | basename }}
+          command: "python3 {{ scrub_ccj_script }} {{ customer_ccj_file }} {{ scrubbed_ccj_file }}"
+          register: scrub_ccj_result
+          tags: 
+            - ccj
+
+        - name: scrub node metadata from {{ customer_application_node_metadata | basename }}
+          set_fact:
+            scrubbed_application_node_metadata: "{{ playbook_dir }}/scrubbed-application_node_metadata.yaml"
+          tags: 
+            - app
+      tags:
+        - scrub
+
+    - name: load scrubbed data back into sls
+      block:
+        - name: load sls with {{ scrubbed_sls_dump | basename }}
+          command: "curl -X POST -H 'Authorization: Bearer {{ lookup('env', 'TOKEN') }}' -F 'sls_dump=@{{ scrubbed_sls_dump }}' https://{{ api_gateway }}/apis/sls/v1/loadstate"
+          register: load_sls_result
+      tags: 
+        - sls
+        - load
+
+    # podman run --rm -it --name hardware-topology-assistant -v "$(realpath .)":/work -e TOKEN registry.local/artifactory.algol60.net/csm-docker/stable/hardware-topology-assistant:0.2.0 update full-paddle.json --application-node-metadata=application_node_metadata.yaml --dry-run
+    - name: replicate customer activity by running hardware-topology-assistant with scrubbed data
+      block: 
+        - name: run hardware-topology-assistant with scrubbed data
+          containers.podman.podman_container:
+            name: hardware-topology-assistant
+            image: registry.local/artifactory.algol60.net/csm-docker/stable/hardware-topology-assistant:{{ customer_hta_version }}
+            detach: false
+            remove: true
+            env: 
+              TOKEN: "{{ lookup('env', 'TOKEN') }}"
+            volume:
+              - "{{ playbook_dir }}:/work"
+            command:
+              - update
+              - "{{ scrubbed_ccj_file | basename }}"
+              - "--application-node-metadata={{ scrubbed_application_node_metadata | basename }}"
+              - "--dry-run"
+          register: run_hta_result
+          ignore_errors: true
+
+        - name: show stderr
+          debug:
+            var: run_hta_result.stderr_lines
+
+        - name: show stdout
+          debug:
+            var: run_hta_result.stdout_lines
+      tags:
+        - hta
+ 
+    - name: make fixed files
+      block:
+        - name: rename scrubbed files to fixed
+          copy:
+            src: "{{ item.src }}"
+            dest: "{{ item.dest }}"
+          loop:
+            - {src: "{{ scrubbed_sls_dump }}", dest: "{{ fixed_sls_dump }}"}
+            - {src: "{{ scrubbed_ccj_file }}", dest: "{{ fixed_ccj_file }}"}
+            - {src: "{{ scrubbed_application_node_metadata }}", dest: "{{ fixed_application_node_metadata }}"}
+
+        - name: remove scrubbed and current files to avoid confusion
+          file: 
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - "{{ current_sls_dump }}"
+            - "{{ scrubbed_sls_dump }}"
+            - "{{ scrubbed_ccj_file }}"
+            - "{{ scrubbed_application_node_metadata }}"
+          
+      when: 
+        - run_hta_result.rc == 0
+        - not run_hta_result.failed

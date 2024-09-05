@@ -1,0 +1,24 @@
+---
+api_gateway: "api-gw-service-nmn.local"
+# customer files
+customer_sls_dump: "{{ playbook_dir }}/g7-dumpstate.json"
+customer_bootparams: "{{ playbook_dir }}/g7-bootparameters.json"
+customer_application_node_metadata: "{{ playbook_dir }}/g7-application_node_metadata.yaml"
+customer_ccj_file: "{{ playbook_dir }}/g7-ccj.json"
+customer_hta_version: "0.2.0"
+customer_sls_version: "2.2.0"
+customer_bss_version: "1.26.0"
+# HPE-provided scripts
+subrack_script: "{{ playbook_dir }}/scrub_shcd.py" # fixes excel shcd aided by human-intervention--not used in ansible directly
+scrub_sls_script: "{{ playbook_dir }}/scrub_sls_nids.py" # removes invalid hardware from sls
+scrub_ccj_script: "{{ playbook_dir }}/scrub_ccj_uan_computes.py" # fixes repurposed nodes as uans
+# files to use during fix
+current_sls_dump: "{{ playbook_dir }}/current-dumpstate.json"
+# scrubbed files
+scrubbed_ccj_file: "{{ playbook_dir }}/scrubbed-ccj.json"
+scrubbed_sls_dump: "{{ playbook_dir }}/scrubbed-dumpstate.json"
+scrubbed_application_node_metadata: "{{ playbook_dir }}/scrubbed-application_node_metadata.yaml"
+# fixed files
+fixed_sls_dump: "{{ playbook_dir }}/fixed-dumpstate.json"
+fixed_ccj_file: "{{ playbook_dir }}/fixed-ccj.json"
+fixed_application_node_metadata: "{{ playbook_dir }}/fixed-application_node_metadata.yaml"
