@@ -31,18 +31,19 @@
 {{ $iuf_run := $scripts | printf "%s/python/iuf_run.py" }}
 {{ $iuf_cleanup := $scripts | printf "%s/python/iuf_cleanup.py" }}
 command:
-  {{ $testlabel := "iuf_activity" }}
+  {{ $testlabel := "iuf_invalid_activity_name" }}
   {{$testlabel}}:
-    title: iuf activity info
+    title: invalid activity name for IUF run
     meta:
-      desc: Gives data for a particular IUF activity.
+      desc: The output of IUF id invalid activity name is used.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" && \
-      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a "{{ index $activity 0 }}" activity && \
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" "{{ index $activity 1 }}" && \
       "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
-    exit-status: 0
+    exit-status: 1
+    stderr:
+     - "Activity {{ index $activity 1 }} invalid. Names must only contain lowercase letters, numbers, periods, and dashes"
     timeout: 180000
     skip: false

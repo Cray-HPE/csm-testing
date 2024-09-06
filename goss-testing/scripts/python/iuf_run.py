@@ -31,14 +31,13 @@ import subprocess
 import sys
 import os
 
-ACTIVITY_NAME = "test-activity"
+# ACTIVITY_NAME = "test-activity"
 FOLDER_NAME = "dummy-1.0.0" 
 MEDIA_DIR = "/etc/cray/upgrade/csm/automation-tests"
 
 def create_tar(tar_dir):
     os.chdir(tar_dir)
     
-    # Create the tar file
     tar_command = f"tar -cvf {FOLDER_NAME}.tar {FOLDER_NAME}/"
     try:
         subprocess.run(tar_command, shell=True, check=True)
@@ -48,7 +47,6 @@ def create_tar(tar_dir):
         sys.exit(1)
 
 def compress_tar():
-    # Compress the tar file with pigz
     pigz_command = f"pigz -9 -c {FOLDER_NAME}.tar > {FOLDER_NAME}.tar.gz"
     try:
         subprocess.run(pigz_command, shell=True, check=True)
@@ -57,7 +55,7 @@ def compress_tar():
         print(f"Error compressing tar file: {e}")
         sys.exit(1)
 
-def main():
+def main(ACTIVITY_NAME):
     try:
         os.makedirs(MEDIA_DIR, exist_ok=True)
         print(f"Directory {MEDIA_DIR} created successfully.")
@@ -85,12 +83,13 @@ def main():
     return 0
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: script.py <tar_dir>")
+    if len(sys.argv) != 3:
+        print("Usage: script.py <tar_dir> <ACTIVITY_NAME>")
         sys.exit(1)
     
     tar_dir = sys.argv[1]
+    ACTIVITY_NAME = sys.argv[2]
     create_tar(tar_dir)
     compress_tar()
-    exit_code = main()
+    exit_code = main(ACTIVITY_NAME)
     sys.exit(exit_code)

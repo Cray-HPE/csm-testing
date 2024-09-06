@@ -1,0 +1,49 @@
+#
+# MIT License
+#
+# (C) Copyright 2024 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+
+{{ $pre_checks := .Vars.pre_checks }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/python/iuf_run_setup" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+{{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
+{{ $iuf_run := $scripts | printf "%s/python/iuf_run.py" }}
+{{ $iuf_abort := $scripts | printf "%s/python/iuf_abort.py" }}
+{{ $iuf_cleanup := $scripts | printf "%s/python/iuf_cleanup.py" }}
+command:
+  {{ $testlabel := "iuf_activity_restart" }}
+  {{$testlabel}}:
+    title: iuf activity restart
+    meta:
+      desc: Executes restart for a particular IUF activity.
+      sev: 0
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" \
+      "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" & \
+      sleep 60 && "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_abort}}" && \
+      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a test-activity restart && \
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
+    exit-status: 0
+    timeout: 180000
+    skip: false

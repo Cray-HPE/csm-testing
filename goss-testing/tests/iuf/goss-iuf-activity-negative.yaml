@@ -28,21 +28,25 @@
 {{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/python/iuf_run_setup" }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
-{{ $iuf_run := $scripts | printf "%s/python/iuf_run.py" }}
-{{ $iuf_cleanup := $scripts | printf "%s/python/iuf_cleanup.py" }}
 command:
-  {{ $testlabel := "iuf_activity" }}
+  {{ $testlabel := "iuf_activity_negative" }}
   {{$testlabel}}:
-    title: iuf activity info
+    title: iuf activity info 
     meta:
-      desc: Gives data for a particular IUF activity.
+      desc: Gives data for an IUF activity which does not exist
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" && \
-      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a "{{ index $activity 0 }}" activity && \
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
+      output=$("{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a "{{ index $activity 2 }}" activity) && \
+      echo "$output" 
     exit-status: 0
-    timeout: 180000
+    stdout:
+      - "+------------------------------------------------------------------------------------+"
+      - "| Activity: {{ index $activity 2 }} [local only]                                           |"
+      - "+-----------------+----------+-------------------------+--------+----------+---------+"
+      - "| Start / Session | Category | Command / Argo Workflow | Status | Duration | Comment |"
+      - "+-----------------+----------+-------------------------+--------+----------+---------+"
+      - "+-----------------+----------+-------------------------+--------+----------+---------+"
+    timeout: 20000
     skip: false
