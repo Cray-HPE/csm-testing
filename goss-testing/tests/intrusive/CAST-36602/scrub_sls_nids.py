@@ -44,7 +44,7 @@ if __name__ == "__main__":
                     print(f"{xname} is compute {node_number} for removal")
                 else:
                     print(f"{xname} is application {node_number} for removal")
-                    print(f"{sls_hardware[xname]}")
+                    application_node_save_dict.update
                 bad_node_list.append(xname)
                 bad_node_parent_list.append(sls_hardware[xname].get("Parent"))
 
