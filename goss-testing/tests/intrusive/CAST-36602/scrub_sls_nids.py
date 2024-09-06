@@ -29,25 +29,24 @@ if __name__ == "__main__":
     # Find the bad nodes to be deleted and their parents
     bad_node_list = []
     bad_node_parent_list = []
-    bad_nid_number_list = []
+    application_node_save_dict = {}
     for xname in list(sls_hardware.keys()):
         node_type = sls_hardware[xname].get("Type")
         node_class = sls_hardware[xname].get("Class")
-
         if node_class == "River" and node_type == "comptype_node":
             node_properties = sls_hardware[xname].get("ExtraProperties")
             node_role = node_properties.get("Role")
             node_number = node_properties.get("NID")
             if node_number is None:
                 continue
-            # NID > 8 is a safety gate
-            if node_role == "Compute" and node_number > 8:
-                print(f"{xname} is compute {node_number} for removal")
+            if node_role == "Compute" or node_role == "Application":
+                if node_role == "Compute":
+                    print(f"{xname} is compute {node_number} for removal")
+                else:
+                    print(f"{xname} is application {node_number} for removal")
+                    print(f"{sls_hardware[xname]}")
                 bad_node_list.append(xname)
                 bad_node_parent_list.append(sls_hardware[xname].get("Parent"))
-            if node_role == "Application" and node_number < 9:
-                print(f"{xname} is uan and needs NID entry removed")
-                bad_nid_number_list.append(xname)
 
     # Find mgmt network connectors for the bad nodes
     bad_connector_list = []
@@ -86,10 +85,6 @@ if __name__ == "__main__":
         for connector in bad_connector_list:
             if connector in children:
                 children.remove(connector)
-
-    # Remove bad NID numbers in UANs
-    for node in bad_nid_number_list:
-        sls_hardware[node]["ExtraProperties"].pop("NID")
 
     # Remove bad nodes from the HSN Networks
     old_hsn_reservations = sls_networks["HSN"]["ExtraProperties"]["Subnets"][0]["IPReservations"]

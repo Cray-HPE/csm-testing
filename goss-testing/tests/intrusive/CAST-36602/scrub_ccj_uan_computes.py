@@ -2,10 +2,8 @@
 """
 CAST-36602 script to scrub CCJ where computes are used as UAN.
 
-1. Persuade cn1-8 to be UANs to fall into this hole: https://github.com/Cray-HPE/hardware-topology-assistant/blob/8171f0b0e4e128cea29aae6e4bddf919930a01ce/pkg/ccj/sls_state_generator.go#L313
-2. Overcome CANU bug CASMNET-2246 "common_name": "SubRack001-cmc" to "SubRack-001-CMC"
-3. Set location of node to be SubRack/chassis location, not node location to appease HTA
-4. Reset River Compute numbering to 1 (1-8 were moved to UAN)
+1. Overcome CANU bug CASMNET-2246 "common_name": "SubRack001-cmc" to "SubRack-001-CMC"
+2. Set location of node to be SubRack/chassis location, not node location to appease HTA
 """
 
 import argparse
@@ -21,18 +19,6 @@ if __name__ == "__main__":
 
     with open(args.input_file, "r") as file:
         ccj = json.load(file)
-
-    # Rename computes 1-8 to uan 1-8
-    for node in ccj["topology"]:
-        old_name = node["common_name"]
-        node_prefix = old_name[:2]
-        if node_prefix != "cn":
-            continue
-        node_number = int(old_name[2:])
-        if node_number < 9:
-            new_name = "uan" + old_name[2:]
-            print(f"Renaming {old_name} to {new_name}")
-            node["common_name"] = new_name
 
     # Correct SubRack###-cmc to SubRack-###-CMC to match Parent
     for node in ccj["topology"]:
@@ -55,17 +41,6 @@ if __name__ == "__main__":
         if "parent" in node["location"]:
             print(f'Resetting {node["common_name"]} from {node["location"]["elevation"]} to SubRack elevation {subrack_location_lookup[node["location"]["parent"]]}')
             node["location"]["elevation"] = subrack_location_lookup[node["location"]["parent"]]
-
-    # Reset cn/nid numbers to begin at 1
-    for node in ccj["topology"]:
-        old_name = node["common_name"]
-        node_prefix = old_name[:2]
-        if node_prefix != "cn":
-            continue
-        node_number = int(old_name[2:]) - 8
-        new_name = f"{node_prefix}{node_number:04}"
-        print(f"Renaming {old_name} to {new_name}")
-        node["common_name"] = new_name
 
     with open(args.output_file, "w") as file:
         json.dump(ccj, file, indent=4)
