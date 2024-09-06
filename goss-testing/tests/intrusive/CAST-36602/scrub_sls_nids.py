@@ -29,7 +29,6 @@ if __name__ == "__main__":
     # Find the bad nodes to be deleted and their parents
     bad_node_list = []
     bad_node_parent_list = []
-    application_node_save_dict = {}
     for xname in list(sls_hardware.keys()):
         node_type = sls_hardware[xname].get("Type")
         node_class = sls_hardware[xname].get("Class")
@@ -44,7 +43,6 @@ if __name__ == "__main__":
                     print(f"{xname} is compute {node_number} for removal")
                 else:
                     print(f"{xname} is application {node_number} for removal")
-                    application_node_save_dict.update
                 bad_node_list.append(xname)
                 bad_node_parent_list.append(sls_hardware[xname].get("Parent"))
 
