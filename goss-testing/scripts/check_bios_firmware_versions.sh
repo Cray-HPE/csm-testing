@@ -212,7 +212,8 @@ does_fw_meet_req() {
         1.53) echo "=====> $bmc: FW: $fw_vers OK" ;;
         2.78) echo "=====> $bmc: FW: $fw_vers OK" ;;
         2.98) echo "=====> $bmc: FW: $fw_vers OK" ;;
-        *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected 1.53, 2.78 or 2.98)"
+        3.01) echo "=====> $bmc: FW: $fw_vers OK" ;;
+        *) echo "=====> $bmc: FW: $fw_vers Unsupported (expected 1.53, 2.78, 2.98 or 3.01)"
           DOCS=1
           rc=1
             ;;
@@ -296,7 +297,8 @@ does_bios_meet_req() {
         v1.50) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
         v1.69) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
         v2.84) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
-        *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected v1.48, v1.50, v1.69 or v2.84"
+        v2.90) echo "=====> $bmc: BIOS: $bios_vers OK" ;;
+        *) echo "=====> $bmc: BIOS: $bios_vers Unsupported (expected v1.48, v1.50, v1.69, v2.84 or v2.90)"
            DOCS=1
            rc=1
             ;;
