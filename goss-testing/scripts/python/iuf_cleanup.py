@@ -58,10 +58,10 @@ def main(activity_name = "test-activity"):
                 print("Command output:", result.stdout)
         logs_path = Path(f"{LOG_DIR}/{activity_name}")
         if logs_path.is_dir():
-            print(f"{logs_path} exists.")
+            print(f"{logs_path} exists. Deleting log directory for activity: {activity_name}")
             result = subprocess.run(command_delete_logs, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         else:
-            print(f"{logs_path} does not exist.")
+            print(f"{logs_path} does not exist. Deleting media directory for activity: {activity_name}")
         media_path = Path(MEDIA_DIR)         
         if media_path.is_dir():
             print(f"{media_path} exists.")

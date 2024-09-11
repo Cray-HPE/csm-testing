@@ -37,9 +37,14 @@ command:
       desc: Gives data for an IUF activity which does not exist
       sev: 0
     exec: |-
+      # Run prechecks for IUF
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
+
+      # Execute iuf activity test case
       "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a "{{ index $activity 2 }}" activity && \
+
+      # Cleanup the log and media directories
       "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}" 
     exit-status: 0
     stdout:
