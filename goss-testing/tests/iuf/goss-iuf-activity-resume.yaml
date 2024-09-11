@@ -41,7 +41,7 @@ command:
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
       "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" & \
-      sleep 60 && "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_abort}}" && \
+      (sleep 60 && "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_abort}}") && \
       "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a test-activity resume && \
       "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
     exit-status: 0

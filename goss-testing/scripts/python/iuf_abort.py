@@ -29,22 +29,21 @@ This script executes iuf abort command for aborting an activity.
 import subprocess
 import sys
 
-ACTIVITY_NAME = "test-activity"
-
+ACTIVITY_NAME = "test-activity" 
 
 def main():
     command = f"iuf -a {ACTIVITY_NAME} abort"
     try:
-        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        print("Command output:", result.stdout)
+        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        print("Command output:", result.stderr)
         
     except subprocess.CalledProcessError as e:
-        print(f"Error: {e.stderr.strip()}")
+        print(f"Error: {e.stdout}")
         return e.returncode
     
     return 0
 
 if __name__ == "__main__":
-    
+
     exit_code = main()
     sys.exit(exit_code)

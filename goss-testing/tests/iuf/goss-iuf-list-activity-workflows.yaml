@@ -25,6 +25,7 @@
 {{ $pre_checks := .Vars.pre_checks }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/python/iuf_run_setup" }}
+{{ $activity := .Vars.activity }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
 {{ $iuf_run := $scripts | printf "%s/python/iuf_run.py" }}
@@ -37,10 +38,17 @@ command:
       desc: Gives List of workflows for a particular IUF activity.
       sev: 0
     exec: |-
+      # Run pre-checks for IUF
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" && \
+
+      # Setup and IUF run
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" "{{ index $activity 0 }}" && \
+
+      # test IUF list workflow command
       "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a test-activity workflow && \
+
+      # Cleanup the created activity workflow,log and media directory
       "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
     exit-status: 0
     timeout: 180000

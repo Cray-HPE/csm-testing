@@ -23,26 +23,30 @@
 #
 
 {{ $pre_checks := .Vars.pre_checks }}
+{{ $activity := .Vars.activity }}
+{{ $logdir := .Vars.logdir }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/python/iuf_run_setup" }}
-{{ $activity := .Vars.activity }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
 {{ $iuf_run := $scripts | printf "%s/python/iuf_run.py" }}
-{{ $iuf_abort := $scripts | printf "%s/check_iuf_abort.sh" }}
 {{ $iuf_cleanup := $scripts | printf "%s/python/iuf_cleanup.py" }}
 command:
-  {{ $testlabel := "iuf_activity_abort" }}
+  {{ $testlabel := "iuf_run_invalid_log_dir" }}
   {{$testlabel}}:
-    title: iuf activity abort
+    title: iuf run_invalid_log_dir
     meta:
-      desc: Executes Abort for a particular IUF activity.
+      desc: Run IUF with invalid log dir. 
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      "{{$logrun}}" -l "{{$testlabel}}"  "{{$iuf_abort}}" && \
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
-    exit-status: 0
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" "{{ index $activity 0 }}"  "{{ index $logdir 0 }}"
+    exit-status: 1
     timeout: 180000
+    skip: false
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}" "{{ index $activity 0 }}"
+    exit-status: 0
+    timeout: 10000
     skip: false

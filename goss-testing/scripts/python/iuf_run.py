@@ -55,7 +55,13 @@ def compress_tar():
         print(f"Error compressing tar file: {e}")
         sys.exit(1)
 
-def main(ACTIVITY_NAME):
+def main(*args):
+    ACTIVITY_NAME=args[0]
+    if len(args)== 2:
+        LOG_DIR=args[1]
+        command = f"iuf -a {ACTIVITY_NAME} -m {MEDIA_DIR} --log-dir {LOG_DIR} run -rv {MEDIA_DIR}/product_vars.yaml -r process-media"
+    else:
+        command = f"iuf -a {ACTIVITY_NAME} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml -r process-media"
     try:
         os.makedirs(MEDIA_DIR, exist_ok=True)
         print(f"Directory {MEDIA_DIR} created successfully.")
@@ -71,25 +77,29 @@ def main(ACTIVITY_NAME):
         print(f"Error copying files: {e}")
         sys.exit(1)
 
-    command = f"iuf -a {ACTIVITY_NAME} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml -r process-media"
+    
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         print("Command output:", result.stdout)
         
     except subprocess.CalledProcessError as e:
-        print(f"Error: {e.stderr.strip()}")
+        print(f"Error: {e}")
         return e.returncode
     
     return 0
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
         print("Usage: script.py <tar_dir> <ACTIVITY_NAME>")
         sys.exit(1)
-    
-    tar_dir = sys.argv[1]
-    ACTIVITY_NAME = sys.argv[2]
-    create_tar(tar_dir)
-    compress_tar()
-    exit_code = main(ACTIVITY_NAME)
-    sys.exit(exit_code)
+    else:
+        tar_dir = sys.argv[1]
+        ACTIVITY_NAME = sys.argv[2]
+        create_tar(tar_dir)
+        compress_tar()
+        if len(sys.argv) ==3:
+            exit_code = main(ACTIVITY_NAME)
+        else:
+            LOG_DIR = sys.argv[3]
+            exit_code = main(ACTIVITY_NAME,LOG_DIR)
+        sys.exit(exit_code)

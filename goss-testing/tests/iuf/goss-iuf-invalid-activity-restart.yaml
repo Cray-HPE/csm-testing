@@ -23,26 +23,23 @@
 #
 
 {{ $pre_checks := .Vars.pre_checks }}
-{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/python/iuf_run_setup" }}
 {{ $activity := .Vars.activity }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
-{{ $iuf_run := $scripts | printf "%s/python/iuf_run.py" }}
-{{ $iuf_abort := $scripts | printf "%s/check_iuf_abort.sh" }}
 {{ $iuf_cleanup := $scripts | printf "%s/python/iuf_cleanup.py" }}
 command:
-  {{ $testlabel := "iuf_activity_abort" }}
+  {{ $testlabel := "iuf_restart_on_non_existing_activity" }}
   {{$testlabel}}:
-    title: iuf activity abort
+    title: iuf restart on non existing activity
     meta:
-      desc: Executes Abort for a particular IUF activity.
+      desc: Run IUF restart on non existing activity .
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      "{{$logrun}}" -l "{{$testlabel}}"  "{{$iuf_abort}}" && \
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
+      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a "{{ index $activity 2 }}" restart && \
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}" "{{ index $activity 2 }}"
     exit-status: 0
-    timeout: 180000
+    timeout: 20000
     skip: false

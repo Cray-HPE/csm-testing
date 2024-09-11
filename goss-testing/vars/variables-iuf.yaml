@@ -30,3 +30,8 @@ activity:
   - "test-activity"
   - "INVALID_ACTIVITY"
   - "new-activity-auto"
+  - "test-not-run-activity"
+
+logdir:
+  - "/etc/cray/upgrade/csm/non_existing_directory"
+  - "/etc/cray/upgrade/csm/csm-testing"

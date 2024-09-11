@@ -24,6 +24,7 @@
 
 {{ $pre_checks := .Vars.pre_checks }}
 {{ $activity := .Vars.activity }}
+{{ $logdir := .Vars.logdir }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/python/iuf_run_setup" }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
@@ -31,17 +32,23 @@
 {{ $iuf_run := $scripts | printf "%s/python/iuf_run.py" }}
 {{ $iuf_cleanup := $scripts | printf "%s/python/iuf_cleanup.py" }}
 command:
-  {{ $testlabel := "iuf_run" }}
+  {{ $testlabel := "iuf_run_specified_log_dir" }}
   {{$testlabel}}:
-    title: iuf run
+    title: iuf run_specified_log_dir
     meta:
-      desc: Run IUF with dummy product.
+      desc: Run IUF with specified log dir. 
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" "{{ index $activity 0 }}" && \
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}" "{{ index $activity 0 }}"
-    exit-status: 0
+      mkdir "{{ index $logdir 1}}" && \
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" "{{ index $activity 0 }}"  "{{ index $logdir 1}}"
+    exit-status: 1
     timeout: 180000
+    skip: false
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}" "{{ index $activity 0 }}" && \
+      rm -r "{{ index $logdir 1}}" 
+    exit-status: 0
+    timeout: 10000
     skip: false
