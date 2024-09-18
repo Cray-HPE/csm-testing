@@ -26,6 +26,7 @@
 This script validates run some pre checks for IUF.
 """
 
+import os
 import subprocess
 import sys
 import requests
@@ -52,6 +53,30 @@ def compare_versions(version1, version2):
     else:
         print(f"INFO: Version {version1} is greater than required version {version2}")
 
+def check_proxy():
+    env_lower = {key.lower(): value for key, value in os.environ.items()}
+
+    http_proxy = os.environ.get('http_proxy')
+    https_proxy = os.environ.get('https_proxy')
+    no_proxy = os.environ.get('no_proxy')
+
+    proxy_variables = {
+        "http_proxy": http_proxy,
+        "https_proxy": https_proxy,
+        "no_proxy": no_proxy
+    }
+
+    set_proxies = {key: value for key, value in proxy_variables.items() if value}
+
+    if set_proxies:
+        for key, value in set_proxies.items():
+            print(f"{key} is set to: {value}")
+        
+        print("Error: Proxy variables should not be set.")
+        sys.exit(1)
+    else:
+        print("No proxy variables are set.")
+
 def check_k8s_version(minimum_version):
     k8s_version, returncode = run_command("kubectl version --short | grep -i 'server version' | awk '{print $3}'")
     if returncode != 0:
@@ -75,7 +100,7 @@ def check_iuf_cli_version(minimum_version):
 
     compare_versions(iuf_cli_version, minimum_version)
 
-def check_pod_status():
+def check_nls_pod_status():
     nls_pods, returncode = run_command("kubectl get po -n argo | grep -i '^cray-' | grep -v 'Running'")
     if returncode == 1:
         print("INFO: All cray-* pods are running")
@@ -88,6 +113,60 @@ def check_pod_status():
         print(nls_pods)
         sys.exit(1)
 
+def check_cfs():
+    cfs_api_pods, returncode= run_command("kubectl get po -n services | grep -i '^cray-cfs-api' | grep -v 'Running'")
+    if returncode == 1:
+        print("INFO: All cray-cfs-api* pods are running")
+    elif returncode == 0 and cfs_api_pods:
+        print("Error: Some cray-cfs-api pods are not running")
+        print(cfs_api_pods)
+        sys.exit(1)
+    else:
+        print(f"Unexpected error: Return code {returncode}")
+        print(cfs_api_pods)
+        sys.exit(1)
+
+    cfs_ara_pods,returncode= run_command("kubectl get po -n services | grep -i '^cfs-ara-postgres' | grep -v 'Running'")
+    if returncode == 1:
+        print("INFO: All cfs-ara-postgres* pods are running")
+    elif returncode == 0 and cfs_ara_pods:
+        print("Error: Some pods are not running")
+        print(cfs_ara_pods)
+        sys.exit(1)
+    else:
+        print(f"ERROR: Return code {returncode}")
+        print(cfs_ara_pods)
+        sys.exit(1)
+    
+def check_sat():
+    sat, returncode= run_command("sat --version")
+    if returncode==0:
+        print(f"INFO: sat is installed. {sat}")
+    else:
+        print("ERROR: Unable to run sat.Please verify if sat is installed and working")
+        sys.exit(1)
+
+def check_docs_and_libcsm():
+    docs_csm, returncode= run_command("rpm -qa | grep docs-csm")
+    if returncode==0:
+        print(f"INFO: docs-csm rpm is installed. Version: {docs_csm}")
+    else:
+        print("ERROR: Unable to find docs. Please verify if docs is installed.")
+        sys.exit(1)
+    lib_csm, returncode= run_command("rpm -qa | grep docs-csm")
+    if returncode==0:
+        print(f"INFO: lib-csm is installed. Version: {lib_csm}")
+    else:
+        print("ERROR: Unable to find libcsm. Please verify if libcsm is installed.")
+        sys.exit(1)
+
+def check_cpc():
+    cpc, returncode= run_command("kubectl get cm -n services | grep cray-product-catalog")
+    if returncode==0:
+        print(f"INFO: Cray-Product-Catalog configmap exists in services namespace")
+    else:
+        print("ERROR: Unable to find Cray-Product-Catalog configmap.")
+        sys.exit(1)
 
 def check_available_space():
     total, used, free = shutil.disk_usage("/etc/cray/upgrade/csm/")
@@ -117,6 +196,22 @@ def check_url_status(cluster_name):
             print(f"Error: {url} Unreachable. Exception: {e}")
             sys.exit(1)
 
+def check_ssh():
+    # Check SSH connectivity to ncn-m002
+    ssh_command = "ssh -o BatchMode=yes -q ncn-m002 exit"
+    ssh_output, returncode = run_command(ssh_command)
+
+    if returncode == 0:
+        print("INFO: SSH to ncn-m002 successful. Now going back to ncn-m001...")
+        ssh_command_2 = "ssh -o BatchMode=yes -q ncn-m001 exit"
+        ssh_output_2, rc = run_command(ssh_command_2)
+        if rc == 0:
+            print("INFO: SSH to ncn-m001 successful.")
+        else:
+            print("ERROR: Unable to SSH to ncn-m001. Error:", ssh_output_2)
+    else:
+        print("ERROR: Unable to SSH to ncn-m002. Error:", ssh_output)
+
 def main():
     if len(sys.argv) != 4:
         print("Usage: script.py <K8S_MINIMUM_VERSION> <IUF_CLI_MINIMUM_VERSION> <CLUSTER_NAME>")
@@ -126,11 +221,17 @@ def main():
     iuf_cli_minimum_version = sys.argv[2]
     cluster_name = sys.argv[3]
     
+    check_proxy()
     check_k8s_version(k8s_minimum_version)
     check_iuf_cli_version(iuf_cli_minimum_version)
-    check_pod_status()
+    check_nls_pod_status()
+    check_cfs()
+    check_sat()
+    check_docs_and_libcsm()
+    check_cpc()
     check_available_space()
     check_url_status(cluster_name)
+    check_ssh()
 
 if __name__ == "__main__":
     main()
