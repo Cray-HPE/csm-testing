@@ -45,6 +45,8 @@ command:
       # Run IUF activity
       "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" "{{ index $activity 0 }}" && \
       "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a "{{ index $activity 0 }}" ls && \
+
+      # Run cleanup step independently
       "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}" "{{ index $activity 0 }}"
     exit-status: 0
     timeout: 180000

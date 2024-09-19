@@ -40,11 +40,15 @@ command:
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
       "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a "{{ index $activity 0 }}" run -rv "{{$media_dir}}/product_vars.yaml" -r process-media
+      run_exit_code=$?
+
+      # Run cleanup step independently
+      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}" "{{ index $activity 0 }}"
+
+      # Exit with code 1 if the iuf_run command failed with exit code 1
+      if [ $run_exit_code -eq 1 ]; then
+        exit 1
+      fi
     exit-status: 1
     timeout: 50000
-    skip: false
-    exec: |-
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}" "{{ index $activity 0 }}"
-    exit-status: 0
-    timeout: 10000
     skip: false

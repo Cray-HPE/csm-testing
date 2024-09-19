@@ -28,7 +28,7 @@
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
 {{ $iuf_run := $scripts | printf "%s/python/iuf_run.py" }}
-{{ $iuf_abort := $scripts | printf "%s/python/iuf_abort.py" }}
+{{ $iuf_abort := $scripts | printf "%s/check_iuf_abort.sh" }}
 {{ $iuf_cleanup := $scripts | printf "%s/python/iuf_cleanup.py" }}
 command:
   {{ $testlabel := "iuf_activity_resume" }}
@@ -38,11 +38,16 @@ command:
       desc: Executes resume for a particular IUF activity.
       sev: 0
     exec: |-
+      # Run prechecks for IUF
       "{{$logrun}}" -l "{{$testlabel}}" \
       "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" & \
-      (sleep 60 && "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_abort}}") && \
-      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a test-activity resume && \
+
+      # Run an IUF session and abort it
+      "{{$logrun}}" -l "{{$testlabel}}"  "{{$iuf_abort}}" && \
+      sleep 30 && \
+      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a test-activity resume
+
+      # Cleanup the workflows,log and media dir
       "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
     exit-status: 0
     timeout: 180000
