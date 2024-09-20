@@ -22,3 +22,22 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $validate_iuf_manifest := .Env.GOSS_BASE | printf "%s/scripts/python/validate_iuf_manifest.py" }}
+{{ $manifest := .Vars.iuf_manifest }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+
+command:
+  {{ $testlabel := "iuf_validate_product_manifest" }}
+  {{$testlabel}}:
+    title: iuf validate product_manifest
+    meta:
+      desc: Validates iuf_product_manifest.yaml
+      sev: 0
+    exec: |-
+      # validate iuf product manifest
+      
+      "{{$logrun}}" -l "{{$testlabel}}" "{{ $validate_iuf_manifest }}" "{{ index $manifest 0 }}"
+    exit-status: 0
+    timeout: 2000
+    skip: false

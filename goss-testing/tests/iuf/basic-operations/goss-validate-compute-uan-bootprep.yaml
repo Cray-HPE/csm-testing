@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -20,24 +20,24 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
+#
 
-pre_checks:
-  - v1.22.13
-  - "iuf-cli-1.6.11-1.x86_64"
-  - "starlord"
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $sat_validate_bootprep := .Env.GOSS_BASE | printf "%s/scripts/python/sat_validate_bootprep.py" }}
+{{ $bootprep := .Vars.bootprep }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 
-activity:
-  - "test-activity"
-  - "INVALID_ACTIVITY"
-  - "new-activity-auto"
-
-logdir:
-  - "/etc/cray/upgrade/csm/non_existing_directory"
-  - "/etc/cray/upgrade/csm/csm-testing"
-
-iuf_manifest:
-  - "/etc/cray/upgrade/csm/iuf-product-manifest.yaml"
-
-bootprep:
-  - "/etc/cray/upgrade/csm/management-bootprep.yaml"
-  - "/etc/cray/upgrade/csm/compute-and-uan-bootprep.yaml"
+command:
+  {{ $testlabel := "iuf_validate_compute_uan_bootprep" }}
+  {{$testlabel}}:
+    title: iuf validate compute and uan bootprep
+    meta:
+      desc: Validates compute-and-uan-bootprep.yaml
+      sev: 0
+    exec: |-
+      # validate compute-and-uan-bootprep
+      
+      "{{$logrun}}" -l "{{$testlabel}}" "{{ $sat_validate_bootprep }}" "{{ index $bootprep 1 }}"
+    exit-status: 0
+    timeout: 2000
+    skip: false
