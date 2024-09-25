@@ -29,7 +29,7 @@ from jsonschema import validate, ValidationError, SchemaError
 import sys
 
 # Constants
-SCHEMA_FILE = "/opt/cray/tests/install/dat/iuf/iuf-manifest-schema.yaml"  # Path to your product manifest schema file
+SCHEMA_FILE = "/opt/cray/tests/install/ncn/scripts/python/iuf_schemas/iuf-manifest-schema.yaml"  # Path to your product manifest schema file
 
 # Custom exception for IUF Product Manifest validation errors
 class ProductManifestValidationError(Exception):

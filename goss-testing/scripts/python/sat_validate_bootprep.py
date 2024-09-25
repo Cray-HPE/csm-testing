@@ -29,7 +29,7 @@ from jsonschema import validate, ValidationError, SchemaError
 import sys
 
 # Constants
-SCHEMA_FILE = "/opt/cray/tests/install/dat/iuf/bootprep-schema.yaml"  # Path to bootprep schema file
+SCHEMA_FILE = "/opt/cray/tests/install/ncn/scripts/python/iuf_schemas/bootprep-schema.yaml"  # Path to bootprep schema file
 
 class BootPrepValidationError(Exception):
     """Custom exception for BootPrep validation errors."""
