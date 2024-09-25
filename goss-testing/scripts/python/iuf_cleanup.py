@@ -75,6 +75,7 @@ def main(activity_name = "test-activity"):
     return 0
 
 if __name__ == "__main__":
+    print("Running IUF cleanup script..")
     if len(sys.argv) > 2:
         print("Usage: script.py <ACTIVITY_NAME>")
         sys.exit(1)

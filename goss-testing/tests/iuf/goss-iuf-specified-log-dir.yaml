@@ -39,17 +39,21 @@ command:
       desc: Run IUF with specified log dir. 
       sev: 0
     exec: |-
-      # Run pre-checks for IUF
-      "{{$logrun}}" -l "{{$testlabel}}" \
-      "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      mkdir "{{ index $logdir 1}}" && \
-    
-      # Run IUF
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" "{{ index $activity 0 }}"  "{{ index $logdir 1}}" && \
-    
-      # Run cleanup step independently
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}" "{{ index $activity 1 }}" && \
-      rm -r "{{ index $logdir 1}}"
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Run pre-checks for IUF
+        "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
+        mkdir "{{ index $logdir 1}}" && \
+
+        # Run IUF
+        "{{$iuf_run}}" "{{$media_dir}}" "{{ index $activity 0 }}" "{{ index $logdir 1}}" && \
+
+        # Run post-checks for IUF
+        "{{$iuf_post_checks}}" "{{ index $activity 0 }}"
+
+        # Run cleanup step
+        "{{$iuf_cleanup}}" "{{ index $activity 0 }}" && \
+        rm -r "{{ index $logdir 1}}"
+      '
     exit-status: 0
     timeout: 180000
     skip: false

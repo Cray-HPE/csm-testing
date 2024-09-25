@@ -75,7 +75,7 @@ def check_proxy():
         print("Error: Proxy variables should not be set.")
         sys.exit(1)
     else:
-        print("No proxy variables are set.")
+        print("INFO: No proxy variables are set.")
 
 def check_k8s_version(minimum_version):
     k8s_version, returncode = run_command("kubectl version --short | grep -i 'server version' | awk '{print $3}'")
@@ -100,18 +100,98 @@ def check_iuf_cli_version(minimum_version):
 
     compare_versions(iuf_cli_version, minimum_version)
 
+def check_nls_image(minimum_version):
+    cray_nls_version, returncode = run_command("kubectl get deployment cray-nls -n argo -o=jsonpath='{.spec.template.spec.containers[*].image}'")
+    cray_nls_version=cray_nls_version.split(":")[1]
+    if returncode != 0:
+        print(f"Error: Failed to get cray-nls version. Return code: {returncode}")
+        sys.exit(1)
+
+    print(f"INFO: cray-nls version: {cray_nls_version}")
+    compare_versions(cray_nls_version, minimum_version)
+
 def check_nls_pod_status():
-    nls_pods, returncode = run_command("kubectl get po -n argo | grep -i '^cray-' | grep -v 'Running'")
-    if returncode == 1:
-        print("INFO: All cray-* pods are running")
-    elif returncode == 0 and nls_pods:
-        print("Error: Some pods are not running")
+    nls_pods, returncode = run_command("kubectl get deployment cray-nls -n argo -o=jsonpath='{.status.availableReplicas}'")
+        
+    if returncode == 0 and int(nls_pods) ==3:
+        print("INFO: All cray-nls pods are running")
+    elif returncode == 0:
+        print("Error: Some cray-nls pods are not running")
         print(nls_pods)
         sys.exit(1)
     else:
         print(f"Unexpected error: Return code {returncode}")
         print(nls_pods)
         sys.exit(1)
+
+def check_nls_workflow_server():
+    nls_workflow_server, returncode = run_command("kubectl get deployment cray-nls-argo-workflows-server -n argo -o=jsonpath='{.status.availableReplicas}'")
+        
+    if returncode == 0 and int(nls_workflow_server) == 3:
+        print("INFO: All cray-nls-argo-workflows-server pods are running")
+    elif returncode == 0:
+        print("Error: Some cray-nls-argo-workflows-server pods are not running")
+        print(nls_workflow_server)
+        sys.exit(1)
+    else:
+        print(f"Unexpected error: Return code {returncode}")
+        print(nls_workflow_server)
+        sys.exit(1)
+
+def check_nls_workflow_controller():
+    nls_controller_pods, returncode = run_command("kubectl get deployment cray-nls-argo-workflows-workflow-controller -n argo -o=jsonpath='{.status.availableReplicas}'")
+        
+    if returncode == 0 and int(nls_controller_pods) == 2:
+        print("INFO: All cray-nls-argo-workflows-workflow-controller pods are running")
+    elif returncode == 0:
+        print("Error: Some cray-nls-argo-workflows-workflow-controller pods are not running")
+        print(nls_controller_pods)
+        sys.exit(1)
+    else:
+        print(f"Unexpected error: Return code {returncode}")
+        print(nls_controller_pods)
+        sys.exit(1)
+
+def check_nls_postgres():
+    nls_postgres, returncode = run_command("kubectl get statefulset cray-nls-postgres -n argo -o=jsonpath='{.status.availableReplicas}'")
+        
+    if returncode == 0 and int(nls_postgres) == 3:
+        print("INFO: All cray-nls pods are running")
+    elif returncode == 0:
+        print("Error: Some cray-nls pods are not running")
+        print(nls_postgres)
+        sys.exit(1)
+    else:
+        print(f"Unexpected error: Return code {returncode}")
+        print(nls_postgres)
+        sys.exit(1)
+def check_cray_iuf_chart(minimum_version):
+    cray_iuf_chart_version, returncode = run_command("helm get values cray-iuf -n argo  -o json | jq -r '.global.chart.version'")
+    if returncode != 0:
+        print("Error: Failed to get cray iuf chart version. Return code: {returncode}")
+        sys.exit(1)
+
+    if not cray_iuf_chart_version:
+        print("Error: cray iuf chart  is not installed")
+        sys.exit(1)
+    else:
+        print(f"INFO: cray iuf chart is installed: {cray_iuf_chart_version}")
+
+    compare_versions(cray_iuf_chart_version, minimum_version)
+
+def check_cray_nls_chart(minimum_version):
+    cray_nls_chart_version, returncode = run_command("helm get values cray-nls -n argo  -o json | jq -r '.global.chart.version'")
+    if returncode != 0:
+        print("Error: Failed to get cray nls chart version. Return code: {returncode}")
+        sys.exit(1)
+
+    if not cray_nls_chart_version:
+        print("Error: cray nls chart  is not installed")
+        sys.exit(1)
+    else:
+        print(f"INFO: cray nls chart is installed: {cray_nls_chart_version}")
+
+    compare_versions(cray_nls_chart_version, minimum_version)
 
 def check_cfs():
     cfs_api_pods, returncode= run_command("kubectl get po -n services | grep -i '^cray-cfs-api' | grep -v 'Running'")
@@ -213,18 +293,28 @@ def check_ssh():
         print("ERROR: Unable to SSH to ncn-m002. Error:", ssh_output)
 
 def main():
-    if len(sys.argv) != 4:
-        print("Usage: script.py <K8S_MINIMUM_VERSION> <IUF_CLI_MINIMUM_VERSION> <CLUSTER_NAME>")
+    print("INFO: Running IUF pre-checks")
+    if len(sys.argv) != 7 :
+        print("Usage: script.py <K8S_MINIMUM_VERSION> <IUF_CLI_MINIMUM_VERSION> <CLUSTER_NAME> <CRAY_NLS_IMAGE_MINIMUM_VERSION> <IUF_CHART_MINIMUM_VERSION> <CRAY_NLS_CHART_MINIMUM_VERSION>")
         sys.exit(1)
     
     k8s_minimum_version = sys.argv[1]
     iuf_cli_minimum_version = sys.argv[2]
     cluster_name = sys.argv[3]
-    
+    nls_minimum_version=sys.argv[4]
+    iuf_chart_minimum_version=sys.argv[5]
+    nls_chart_minimum_version=sys.argv[6]
+
     check_proxy()
     check_k8s_version(k8s_minimum_version)
     check_iuf_cli_version(iuf_cli_minimum_version)
+    check_nls_image(nls_minimum_version)
     check_nls_pod_status()
+    check_nls_workflow_server()
+    check_nls_workflow_controller()
+    check_nls_postgres()
+    check_cray_iuf_chart(iuf_chart_minimum_version)
+    check_cray_nls_chart(nls_chart_minimum_version)
     check_cfs()
     check_sat()
     check_docs_and_libcsm()
@@ -235,3 +325,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+    print("------------------------ END OF PRE-CHECKS ------------------------")
+    print()
+

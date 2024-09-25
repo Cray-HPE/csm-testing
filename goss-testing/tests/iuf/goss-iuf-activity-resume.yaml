@@ -38,17 +38,18 @@ command:
       desc: Executes resume for a particular IUF activity.
       sev: 0
     exec: |-
-      # Run prechecks for IUF
-      "{{$logrun}}" -l "{{$testlabel}}" \
-      "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
+    "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Run prechecks for IUF
+        "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
 
-      # Run an IUF session and abort it
-      "{{$logrun}}" -l "{{$testlabel}}"  "{{$iuf_abort}}" && \
-      sleep 30 && \
-      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a test-activity resume
+        # Run an IUF session and abort it
+        "{{$logrun}}" -l "{{$testlabel}}"  "{{$iuf_abort}}" && \
+        sleep 30 && \
+        "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a test-activity resume
 
-      # Cleanup the workflows,log and media dir
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
+        # Cleanup the workflows,log and media dir
+        "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
+      '
     exit-status: 0
     timeout: 180000
     skip: false

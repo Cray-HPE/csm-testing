@@ -37,15 +37,16 @@ command:
       desc: Lists stages for an IUF activity which does not exist
       sev: 0
     exec: |-
-      # Run pre-checks for IUF
-      "{{$logrun}}" -l "{{$testlabel}}" \
-      "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-    
-      # Run IUF
-      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a "{{ index $activity 2 }}" ls 
-    
-      # Run cleanup step independently
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}" "{{ index $activity 2 }}"
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Run pre-checks for IUF
+        "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
+
+        # Run IUF
+        /usr/bin/iuf -a "{{ index $activity 2 }}" ls && \
+
+        # Run cleanup step
+        "{{$iuf_cleanup}}" "{{ index $activity 2 }}"
+      '
     exit-status: 0
     stdout:
       - "+----------------------------+---------------------------------------------------------------------------------------+--------+----------+"

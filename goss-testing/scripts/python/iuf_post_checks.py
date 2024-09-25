@@ -59,28 +59,30 @@ def check_configmap(activity):
 def check_state(activity):
     STATE_DIR=f"/etc/cray/upgrade/csm/iuf/{activity}/state"
 
-    print("Checking for state folder contents")
+    print("INFO: Checking for state folder contents")
     if os.path.exists(STATE_DIR):
         print(f"State directory exists for activity: {activity}")
         if os.path.exists(f"{STATE_DIR}/activity_dict.yaml"):
-            print("activity_dict.yaml present for {activity} in state folder")
+            print(f"activity_dict.yaml present for {activity} in state folder")
         else:
-            print("activity_dict.yaml not present for {activity} in state folder")
+            print(f"activity_dict.yaml not present for {activity} in state folder")
         
         if os.path.exists(f"{STATE_DIR}/stage_hist.yaml"):
-            print("stage_hist.yaml present for {activity} in state folder")
+            print(f"stage_hist.yaml present for {activity} in state folder")
         else:
-            print("stage_hist.yaml not present for {activity} in state folder")
+            print(f"stage_hist.yaml not present for {activity} in state folder")
     else:
         print(f"State directory does NOT exist for activity: {activity}")
 
     print("Checking session_vars")
     if os.path.exists(f"{MEDIA_DIR}/session_vars.yaml"):
-        print("session_vars present for {activity} ")
+        print(f"session_vars present for {activity} ")
     else:
-        print("session_vars not present for {activity} ")
+        print(f"session_vars not present for {activity} ")
 
 if __name__ == "__main__":
+    print()
+    print("INFO: Running IUF post-checks...")
     if len(sys.argv) > 2:
         print("Usage: iuf_post_checks.py <ACTIVITY_NAME>")
         sys.exit(1)
@@ -88,4 +90,6 @@ if __name__ == "__main__":
     exit_code =check_logs(activity_name)
     exit_code = check_configmap(activity_name)
     exit_code = check_state(activity_name)
+    print("------------------------ END OF POST-CHECKS ------------------------")
+    print()
     sys.exit(exit_code)

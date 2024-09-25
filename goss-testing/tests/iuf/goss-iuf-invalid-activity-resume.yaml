@@ -37,15 +37,16 @@ command:
       desc: Run IUF resume on non existing activity .
       sev: 0
     exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
       # Run pre-checks for IUF
-      "{{$logrun}}" -l "{{$testlabel}}" \
-      "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
+      "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
     
       # Run IUF
-      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a "{{ index $activity 2 }}" resume && \
+      /usr/bin/iuf -a "{{ index $activity 2 }}" resume && \
     
       # Run cleanup step independently
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}" "{{ index $activity 2 }}"
+      "{{$iuf_cleanup}}" "{{ index $activity 2 }}"
+      '
     exit-status: 0
     timeout: 50000
     skip: false

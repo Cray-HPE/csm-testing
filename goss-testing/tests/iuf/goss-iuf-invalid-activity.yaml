@@ -38,23 +38,25 @@ command:
       desc: The output of IUF if invalid activity name is used.
       sev: 0
     exec: |-
-      # Run pre-checks
-      "{{$logrun}}" -l "{{$testlabel}}" \
-      "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      
-      # Run the main IUF run step and check for exit code 1
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" "{{ index $activity 1 }}"
-      
-      # Capture the exit code of the iuf_run step
-      run_exit_code=$?
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
 
-      # Run cleanup step independently
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}" "{{ index $activity 1 }}"
+        # Run pre-checks
+        "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
+      
+        # Run the main IUF run step and check for exit code 1
+        "{{$iuf_run}}" "{{$media_dir}}" "{{ index $activity 1 }}"
+      
+        # Capture the exit code of the iuf_run step
+        run_exit_code=$?
 
-      # Exit with code 1 if the iuf_run command failed with exit code 1
-      if [ $run_exit_code -eq 1 ]; then
-        exit 1
-      fi
+        # Run cleanup step independently
+        "{{$iuf_cleanup}}" "{{ index $activity 1 }}"
+
+        # Exit with code 1 if the iuf_run command failed with exit code 1
+        if [ $run_exit_code -eq 1 ]; then
+          exit 1
+        fi
+      '
     exit-status: 1
     timeout: 180000
     skip: false

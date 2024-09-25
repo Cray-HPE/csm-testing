@@ -81,7 +81,7 @@ def main(*args):
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         print("Command output:", result.stdout)
-        
+        print("------------------------ IUF RUN COMPLETED ------------------------")
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
         return e.returncode

@@ -77,12 +77,14 @@ def main(manifest_file):
     # Validate the product manifest file against the schema
     try:
         validate_instance(manifest_instance, schema)
-        print(f"INFO: IUF product manifest file '{manifest_file}' is valid against the schema.")
+        print(f"SUCCESS: IUF product manifest file '{manifest_file}' is valid against the schema.")
+        print("SUCCESS: Passed")
     except ProductManifestValidationError as err:
         print(f"{err}")
         sys.exit(1)
 
 if __name__ == "__main__":
+    print("Test Case: validate_iuf_product_manifest")
     if len(sys.argv) != 2:
         print("Usage: validate_product_manifest.py <manifest_file>")
         sys.exit(1)

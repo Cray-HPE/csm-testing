@@ -37,19 +37,20 @@ command:
     meta:
       desc: Gives List of workflows for a particular IUF activity.
       sev: 0
-    exec: |-
-      # Run pre-checks for IUF
-      "{{$logrun}}" -l "{{$testlabel}}" \
-      "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
+   exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Run pre-checks for IUF
+        "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
 
-      # Setup and IUF run
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_run}}" "{{$media_dir}}" "{{ index $activity 0 }}" && \
+        # Setup and IUF run
+        "{{$iuf_run}}" "{{$media_dir}}" "{{ index $activity 0 }}" && \
 
-      # test IUF list workflow command
-      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf -a test-activity workflow && \
+        # Test IUF list workflow command
+        /usr/bin/iuf -a test-activity workflow && \
 
-      # Cleanup the created activity workflow,log and media directory
-      "{{$logrun}}" -l "{{$testlabel}}" "{{$iuf_cleanup}}"
+        # Cleanup the created activity workflow, log, and media directory
+        "{{$iuf_cleanup}}"
+      '
     exit-status: 0
     timeout: 180000
     skip: false

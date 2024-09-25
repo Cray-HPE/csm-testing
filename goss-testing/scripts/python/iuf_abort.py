@@ -44,6 +44,6 @@ def main():
     return 0
 
 if __name__ == "__main__":
-
+    print("Running IUF abort script")
     exit_code = main()
     sys.exit(exit_code)

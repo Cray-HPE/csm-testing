@@ -34,12 +34,13 @@ command:
       desc: Lists all the IUF activities on the cluster.
       sev: 0
     exec: |-
-      # Run pre-checks for IUF
-      "{{$logrun}}" -l "{{$testlabel}}" \
-      "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" && \
-      
-      # Run IUF
-      "{{$logrun}}" -l "{{$testlabel}}" /usr/bin/iuf la
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Run pre-checks for IUF
+        "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
+
+        # Run IUF
+        /usr/bin/iuf la
+      '
     exit-status: 0
     timeout: 20000
     skip: false

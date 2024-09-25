@@ -76,7 +76,8 @@ def main(bootprep_file):
     # Validate the bootprep file against the schema
     try:
         validate_instance(bootprep_instance, schema)
-        print(f"INFO: Bootprep file '{bootprep_file}' is valid against the schema.")
+        print(f"SUCCESS: Bootprep file '{bootprep_file}' is valid against the schema.")
+        print("SUCCESS: Passed")
     except BootPrepValidationError as err:
         print(f"{err}")
         sys.exit(1)

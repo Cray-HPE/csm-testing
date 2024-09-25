@@ -25,6 +25,9 @@ pre_checks:
   - v1.22.13
   - "iuf-cli-1.6.11-1.x86_64"
   - "starlord"
+  - "4.0.12"
+  - "4.0.13"
+  - "4.0.13"
 
 activity:
   - "test-activity"
