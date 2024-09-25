@@ -90,6 +90,13 @@ else
     metallb_check=1
 fi
 
+# the test should fail if metallb-speaker is not running
+printf "metallb-speaker pods: "
+if ! kubectl -n metallb-system get po -l app.kubernetes.io/name=metallb -l app.kubernetes.io/component=speaker -o json | jq -e 'all(.items[].status.containerStatuses[].ready; . == true)' ; then
+    err_exit 16 "metallb-speaker pods are not ready, which can cause this test to fail"
+fi
+
+
 # check SLS Networks data for BiCAN toggle
 if curl -s -k -H "Authorization: Bearer ${TOKEN}" https://api-gw-service-nmn.local/apis/sls/v1/networks/BICAN |
     jq -r .ExtraProperties.SystemDefaultRoute |
