@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -90,6 +90,12 @@ else
     # run NCN local Kubernetes cluster tests plus the NCN worker BGP test
     run_goss_tests_print_results suites/ncn-combined-k8s-bgp-tests.yaml ${test_urls}
     rc=$?
+fi
+
+# Additional check to verify script is run from iuf hook script
+# To get original return code to validate goss-tests in iuf hook script
+if [[ -n "$1" && "$1" == "iuf" ]]; then
+    exit $rc
 fi
 
 # This script does not exit with non-0 return code just for test failures
