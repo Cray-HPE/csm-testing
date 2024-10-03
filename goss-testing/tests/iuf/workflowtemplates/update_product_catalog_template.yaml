@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: update-product-catalog-template-auto
+  namespace: argo
+  labels:
+    version: "4.0.1"
+spec:
+  entrypoint: catalog-update
+  templates:
+  - name: catalog-update
+    inputs:
+      parameters:
+        - name: product-catalog-configmap-name
+          value: "cray-product-catalog-dummy"
+        - name: product-catalog-configmap-namespace
+          value: "auto"
+        - name: product-name
+          value: "dummy"
+        - name: product-version
+          value: "1.0.0"
+        - name: yaml-content
+          value: "content"
+    container:
+      image: artifactory.algol60.net/csm-docker/stable/cray-product-catalog-update:2.0.1
+      command: [catalog_update]
+      env:
+        - name: PRODUCT
+          value: "dummy"
+        - name: PRODUCT_VERSION
+          value: "1.0.0"
+        - name: CONFIG_MAP
+          value: "cray-product-catalog-dummy"
+        - name: CONFIG_MAP_NAMESPACE
+          value: "auto"
+        - name: YAML_CONTENT_STRING
+          value: |
+            key1: value1
+            key2:
+              subkey1: subvalue1
+              subkey2: subvalue2
+        - name: REMOVE_ACTIVE_FIELD
+          value: "true"
