@@ -92,6 +92,12 @@ else
     rc=$?
 fi
 
+# Additional check to verify script is run from iuf hook script
+# To get original return code to validate goss-tests in iuf hook script
+if [[ -n "$1" && "$1" == "iuf" ]]; then
+    exit $rc
+fi
+
 # This script does not exit with non-0 return code just for test failures
 [[ $rc -le 1 ]] && exit 0
 exit 1
