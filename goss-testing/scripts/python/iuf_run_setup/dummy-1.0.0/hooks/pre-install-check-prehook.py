@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env python3
 #
 # MIT License
 #
@@ -23,4 +23,5 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-echo "INFO Completed pre-install-check prehook"
+if __name__=="__main__":
+    print("This is a test pre hook script to check functionality")
