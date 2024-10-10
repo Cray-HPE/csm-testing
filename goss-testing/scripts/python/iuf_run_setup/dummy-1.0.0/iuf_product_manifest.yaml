@@ -23,10 +23,18 @@ content:
   helm:
   - path: helm
 
+  loftsman:
+  - path: manifests/cos-services.yaml
+    use_manifestgen: true
+    deploy: true
+
   rpms:
   - path: rpms/cray-sles15-sp5-ncn
     repository_name: cos-2.6.99-sle-15sp5
     repository_type: raw
+
+  vcs:
+    path: vcs
 
   ims:
     content_dirs:

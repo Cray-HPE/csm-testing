@@ -24,4 +24,4 @@
 #
 
 if __name__=="__main__":
-    print("This is a test pre hook script to check functionality")
+    print("INFO: This is a test pre hook script to check functionality")

@@ -24,4 +24,4 @@
 #
 
 if __name__=="__main__":
-    print("This is a test on-exit script for pre-install-check stage")
+    print("INFO: This is a test on-exit script for pre-install-check stage")

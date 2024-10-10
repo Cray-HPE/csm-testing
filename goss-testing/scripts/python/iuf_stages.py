@@ -57,18 +57,18 @@ def check_product_data(dummy_product):
     if not dummy_product.recipes:
         print("Error: Recipes are empty!")
         return False
-    # if not dummy_product.configuration:
-    #     print("Error: Configuration is empty!")
-    #     return False
-    # if not dummy_product.loftsman_manifests:
-    #     print("Error: Manifests are empty!")
-    #     return False
+    if not dummy_product.manifests:
+        print("Error: Loftsman manifests are empty!")
+        return False
     if not dummy_product.helm_charts:
         print("Error: Helm charts are empty!")
         return False
-    # if not dummy_product.images:
-    #     print("Error: Images are empty!")
-    #     return False
+    if not dummy_product.images:
+        print("Error: Images are empty!")
+        return False
+    if not dummy_product.repositories:
+        print("Error: No repositories present!")
+        return False
     return True
 
 # Run iuf_run.py script
@@ -187,11 +187,76 @@ def deliver_product(ACTIVITY_NAME):
         return e.returncode
     return 0
 
+def update_vcs_config(ACTIVITY_NAME):
+    try:
+        cray_product_catalog= ProductCatalog(name='cray-product-catalog', namespace='services')
+        dummy_product=cray_product_catalog.get_product('dummy','1.0.0')
+        if not dummy_product.configurations:
+            print("Error: No configurations present!")
+            exit(1)
+
+        command = f"iuf -a {ACTIVITY_NAME} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml -bm {MEDIA_DIR}/management-bootprep.yaml -r update-vcs-config"
+        run_command(command)
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return e.returncode
+    return 0
+
+def update_cfs_config(ACTIVITY_NAME):
+    try:
+        command = f"iuf -a {ACTIVITY_NAME} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml -bm {MEDIA_DIR}/management-bootprep.yaml -r update-cfs-config"
+        run_command(command)
+
+        # Check output of kubectl command
+        kubectl_command = (
+            f"kubectl get configmaps -n argo {ACTIVITY_NAME} -o jsonpath="
+            "'{.data.iuf_activity}' | jq '.operation_outputs.stage_params"
+            '["update-cfs-config"]["update-management-cfs-config"]'
+            '["sat-bootprep-run"].script_stdout' + "' | xargs -0 echo -e"
+        )
+        
+        kubectl_output = run_command(kubectl_command)
+
+        # Exit with error if the output is null/empty
+        if not kubectl_output:
+            print("Error: The output is null or empty.")
+            exit(1)        
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return e.returncode
+    return 0
+
+def prepare_images(ACTIVITY_NAME):
+    try:
+        command = f"iuf -a {ACTIVITY_NAME} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml -bm {MEDIA_DIR}/management-bootprep.yaml -r prepare_images"
+        run_command(command)
+
+        # Check output of kubectl command
+        kubectl_command = (
+            f"kubectl get configmaps -n argo {ACTIVITY_NAME} -o jsonpath="
+            "'{.data.iuf_activity}' | jq '.operation_outputs.stage_params"
+            '["prepare-images"]["prepare-management-images"]'
+            '["sat-bootprep-run"].script_stdout' + "' | xargs -0 echo -e"
+        )
+        
+        kubectl_output = run_command(kubectl_command)
+
+        # Exit with error if the output is null/empty
+        if not kubectl_output:
+            print("Error: The output is null or empty.")
+            exit(1)        
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return e.returncode
+    return 0
+
 # Main function
 def main(*args):
     process_media(tar_dir,ACTIVITY_NAME)
     pre_install_check(ACTIVITY_NAME)
     deliver_product(ACTIVITY_NAME)
+    update_vcs_config(ACTIVITY_NAME)
+    update_cfs_config(ACTIVITY_NAME)
 
 if __name__ == "__main__":
     if len(sys.argv) < 3 or len(sys.argv) > 4:

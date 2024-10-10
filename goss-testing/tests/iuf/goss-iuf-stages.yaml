@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 #
 # MIT License
 #
@@ -23,5 +22,29 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-if __name__=="__main__":
-    print("INFO: This is a test post hook script for pre-install-check stage")
+{{ $pre_checks := .Vars.pre_checks }}
+{{ $activity := .Vars.activity }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/python/iuf_run_setup" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+{{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
+{{ $iuf_stages := $scripts | printf "%s/python/iuf_stages.py }}
+
+command:
+  {{ $testlabel := "iuf_stages" }}
+  {{$testlabel}}:
+    title: iuf stages
+    meta:
+      desc: Executes IUF from process-media to prepare-images with dummy product
+      sev: 0
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Run pre-checks for IUF
+        "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
+
+        # TEST CASE: Run IUF stages
+        "{{$iuf_stages}}" "{{$media_dir}}" "{{ index $activity 0 }}" 
+      '
+    exit-status: 0
+    timeout: 1800000
+    skip: false
