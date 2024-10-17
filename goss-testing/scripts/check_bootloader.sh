@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -57,7 +57,7 @@ function verify_initrd {
     local needed_initrd_name
     local needed_initrd
     
-    needed_initrd_name="$(grep -oP '(?<=initrdefi \$prefix/\.\./)(initrd[a-zA-Z.\-_]*)' ${BOOTRAID}/boot/grub2/grub.cfg)"
+    needed_initrd_name="$(grep -oE '(initrd|initrdefi)\s+\$prefix\/\.\.\/initrd[a-zA-Z.\-_]*' ${BOOTRAID}/boot/grub2/grub.cfg | awk -F'/' '{print $NF}')"
     needed_initrd="${BOOTRAID}/boot/${needed_initrd_name}"
     if [ ! -f $needed_initrd ]; then
 
