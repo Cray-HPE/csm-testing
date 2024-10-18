@@ -33,7 +33,7 @@ fi
 # the following taint is expected in CSM 1.6+ which has K8s 1.24+
 taint="node-role.kubernetes.io/control-plane:NoSchedule"
 
-k8s_version=$(kubectl version --short -o json | jq -r '.serverVersion')
+k8s_version=$(kubectl version -o json | jq -r '.serverVersion')
 major=$(echo $k8s_version | jq -r '.major')
 minor=$(echo $k8s_version | jq -r '.minor')
 if [[ $major -ne 1 ]]; then
