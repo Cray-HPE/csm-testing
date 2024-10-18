@@ -23,6 +23,7 @@
 #
 
 {{ $pre_checks := .Vars.pre_checks }}
+{{ $template_images := .Vars.images }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
 {{ $workflows_dir := "/opt/cray/tests/install/iuf/workflows" }}
@@ -42,10 +43,10 @@ command:
         "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
 
         # TEST CASE: Run IUF CPC template
-        "{{$check_workflows}}" "{{$workflowtemplates_dir}}/update_product_catalog_template.yaml" "{{$workflows}}/update_cpc_workflow.yaml" 
+        "{{$check_workflows}}" "{{$workflowtemplates_dir}}/update_product_catalog_template.yaml" "{{$workflows}}/update_cpc_workflow.yaml  {{ index $template_images 0 }}" 
 
         # TEST CASE: Run iuf base template
-        "{{$check_workflows}}" "{{$workflowtemplates_dir}}/iuf_base_template.yaml" "{{$workflows}}/iuf_base_workflow.yaml"
+        "{{$check_workflows}}" "{{$workflowtemplates_dir}}/iuf_base_template.yaml" "{{$workflows}}/iuf_base_workflow.yaml {{ index $template_images 1 }}"
       '
     exit-status: 0
     timeout: 1800000

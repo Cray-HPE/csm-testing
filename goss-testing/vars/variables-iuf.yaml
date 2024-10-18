@@ -44,3 +44,7 @@ iuf_manifest:
 bootprep:
   - "/etc/cray/upgrade/csm/management-bootprep.yaml"
   - "/etc/cray/upgrade/csm/compute-and-uan-bootprep.yaml"
+
+images:
+  - "2.4.1"
+  - "v0.1.12"

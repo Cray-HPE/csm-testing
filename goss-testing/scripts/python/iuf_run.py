@@ -35,25 +35,25 @@ import os
 FOLDER_NAME = "dummy-1.0.0" 
 MEDIA_DIR = "/etc/cray/upgrade/csm/automation-tests"
 
-def create_tar(tar_dir):
-    os.chdir(tar_dir)
+# def create_tar(tar_dir):
+#     os.chdir(tar_dir)
     
-    tar_command = f"tar -cvf {FOLDER_NAME}.tar {FOLDER_NAME}/"
-    try:
-        subprocess.run(tar_command, shell=True, check=True)
-        print(f"Successfully created {FOLDER_NAME}.tar")
-    except subprocess.CalledProcessError as e:
-        print(f"Error creating tar file: {e}")
-        sys.exit(1)
+#     tar_command = f"tar -cvf {FOLDER_NAME}.tar {FOLDER_NAME}/"
+#     try:
+#         subprocess.run(tar_command, shell=True, check=True)
+#         print(f"Successfully created {FOLDER_NAME}.tar")
+#     except subprocess.CalledProcessError as e:
+#         print(f"Error creating tar file: {e}")
+#         sys.exit(1)
 
-def compress_tar():
-    pigz_command = f"pigz -9 -c {FOLDER_NAME}.tar > {FOLDER_NAME}.tar.gz"
-    try:
-        subprocess.run(pigz_command, shell=True, check=True)
-        print(f"Successfully compressed {FOLDER_NAME}.tar to {FOLDER_NAME}.tar.gz")
-    except subprocess.CalledProcessError as e:
-        print(f"Error compressing tar file: {e}")
-        sys.exit(1)
+# def compress_tar():
+#     pigz_command = f"pigz -9 -c {FOLDER_NAME}.tar > {FOLDER_NAME}.tar.gz"
+#     try:
+#         subprocess.run(pigz_command, shell=True, check=True)
+#         print(f"Successfully compressed {FOLDER_NAME}.tar to {FOLDER_NAME}.tar.gz")
+#     except subprocess.CalledProcessError as e:
+#         print(f"Error compressing tar file: {e}")
+        # sys.exit(1)
 
 def main(*args):
     ACTIVITY_NAME=args[0]
@@ -72,6 +72,7 @@ def main(*args):
     try:
         shutil.copy(f"{tar_dir}/{FOLDER_NAME}.tar.gz", MEDIA_DIR)
         shutil.copy(f"{tar_dir}/product_vars.yaml", MEDIA_DIR)
+        shutil.copy(f"{tar_dir}/management-bootprep.yaml", MEDIA_DIR)
         print(f"Files copied successfully to {MEDIA_DIR}.")
     except IOError as e:
         print(f"Error copying files: {e}")

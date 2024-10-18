@@ -39,7 +39,6 @@ NAMESPACE = "services"
 CONFIGMAP_NAME = "cray-product-catalog"
 PRODUCT_NAME = "dummy"
 PRODUCT_VERSION = "1.0.0"
-DIRECTORY_PATH="/etc/cray/upgrade/csm/iuf/deletion"
 
 def run_command(command):
     try:
@@ -62,9 +61,6 @@ def check_product_data(dummy_product):
         return False
     if not dummy_product.helm_charts:
         print("Error: Helm charts are empty!")
-        return False
-    if not dummy_product.images:
-        print("Error: Images are empty!")
         return False
     if not dummy_product.repositories:
         print("Error: No repositories present!")
@@ -111,7 +107,6 @@ def process_media(*args):
             sys.exit(1)
 
 def pre_install_check(ACTIVITY_NAME):
-    print("Running test cases for pre-install-check stage")
     command = f"iuf -a {ACTIVITY_NAME} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml -r pre-install-check"
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
@@ -123,7 +118,6 @@ def pre_install_check(ACTIVITY_NAME):
     return 0
 
 def deliver_product(ACTIVITY_NAME):
-    print("Running test cases for deliver-product stage")
     command = f"iuf -a {ACTIVITY_NAME} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml -r deliver-product"
     try:
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
@@ -191,7 +185,7 @@ def update_vcs_config(ACTIVITY_NAME):
     try:
         cray_product_catalog= ProductCatalog(name='cray-product-catalog', namespace='services')
         dummy_product=cray_product_catalog.get_product('dummy','1.0.0')
-        if not dummy_product.configurations:
+        if not dummy_product.configuration:
             print("Error: No configurations present!")
             exit(1)
 
@@ -220,7 +214,14 @@ def update_cfs_config(ACTIVITY_NAME):
         # Exit with error if the output is null/empty
         if not kubectl_output:
             print("Error: The output is null or empty.")
-            exit(1)        
+            exit(1)
+        cfs_command = "cray cfs configurations list | grep 'config-minimal-management-dummy-1.0.0'"
+        cfs_output = run_command(cfs_command)
+        if not cfs_output:
+            print("Error: No configuration found in cfs")
+            exit(1)
+        print(f"CFS configuration found {cfs_output}")
+
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
         return e.returncode
@@ -243,8 +244,49 @@ def prepare_images(ACTIVITY_NAME):
 
         # Exit with error if the output is null/empty
         if not kubectl_output:
-            print("Error: The output is null or empty.")
-            exit(1)        
+            print("Error: The output for configmap entry of images is null or empty.")
+            exit(1)
+        else:
+            print("Found the cm entry...")
+            print(kubectl_output)
+
+        images_info_cmd = f"""
+        kubectl get configmaps -n argo {ACTIVITY_NAME} -o jsonpath='{{.data.iuf_activity}}' \
+        | jq -r '.operation_outputs.stage_params["prepare-images"]["prepare-management-images"]["sat-bootprep-run"].script_stdout | fromjson | .images[] | "\(.name):\(.final_image_id)"'
+        """ 
+
+        images_name_and_ids = run_command(images_info_cmd)
+
+        if images_name_and_ids:
+            image_lines = images_name_and_ids.splitlines()
+
+            # Loop through each line and process it
+            print("Test case: Checking ims images...")
+            for image in image_lines:
+                name, final_image_id = image.split(':')
+                
+                # Print a custom message for each image
+                print(f"Checking cray ims images for image Name: {name.strip()} with image ID: {final_image_id.strip()}")
+                check_ims_cmd=f"cray ims images describe {final_image_id.strip()}"
+                ims_info = run_command(check_ims_cmd)
+                if not ims_info:
+                        print(f"Could not find ims image for {name}")
+                        sys.exit(1)
+                print(ims_info)
+
+            print("Test case: Checking boot-images artifacts..")
+            for image in image_lines:
+                name, final_image_id = image.split(':')
+                print(f"Checking cray artifacts boot-images for image Name: {name.strip()}")
+                check_boot_images_cmd=f"cray artifacts describe boot-images {final_image_id.strip()}/manifest.json "
+                boot_images_info = run_command(check_boot_images_cmd)
+                if not boot_images_info:
+                    print(f"Could not find boot-image for {name}")
+                    sys.exit(1)
+                print(boot_images_info)
+        else:
+            print("ERROR: No images names and id found")
+            sys.exit(1)
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
         return e.returncode
@@ -252,11 +294,29 @@ def prepare_images(ACTIVITY_NAME):
 
 # Main function
 def main(*args):
+    print("TEST CASE: process-media stage")
     process_media(tar_dir,ACTIVITY_NAME)
+    print("----------------------- PROCESS-MEDIA tests completed ------------------------------")
+    
+    print("TEST CASES: pre-install-check stage")
     pre_install_check(ACTIVITY_NAME)
+    print("----------------------- PRE-INSTALL-CHECK tests completed ------------------------------")
+    
+    print("TEST CASES: deliver-product stage")
     deliver_product(ACTIVITY_NAME)
+    print("----------------------- DELIVER-PRODUCT tests completed ------------------------------")
+    
+    print("TEST CASES: update-vcs-config stage")
     update_vcs_config(ACTIVITY_NAME)
+    print("----------------------- UPDATE-VCS-CONFIG tests completed ------------------------------")
+    
+    print("TEST CASES: update_cfs_config stage")
     update_cfs_config(ACTIVITY_NAME)
+    print("----------------------- UPDATE-CFS-CONFIG tests completed ------------------------------")
+    
+    print("TEST CASES: prepare_images stage")
+    prepare_images(ACTIVITY_NAME)
+    print("----------------------- PREPARE-IMAGES tests completed ------------------------------")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3 or len(sys.argv) > 4:
