@@ -31,7 +31,6 @@ file:
             desc: "Check that kubectl command exists"
             sev: 0
         exists: true
-        filetype: symlink
 command:
     {{range $configmap := index .Vars "k8s_ceph_csi_configmaps"}}
         {{ $testlabel := $configmap | printf "k8s_cm_%s" }}
