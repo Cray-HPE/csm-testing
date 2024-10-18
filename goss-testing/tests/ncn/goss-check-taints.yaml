@@ -27,8 +27,9 @@
 {{ $env_hostname := getEnv "HOSTNAME" }}
 {{ $vars_hostname := get .Vars "this_node_name" }}
 {{ $this_node_name := default $env_hostname $vars_hostname }}
-{{ $kubectl := .Vars.kubectl }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+{{ $master_taints_check := $scripts | printf "%s/check_master_taints.sh" }}
 command:
     # We are only checking for this taint on master nodes 
     {{if $this_node_name | regexMatch "^ncn-m.*" }}
@@ -36,11 +37,11 @@ command:
         {{$testlabel}}:
             title: master-taint 
             meta:
-                desc: Checks that the node-role.kubernetes.io/control-plane:NoSchedule taint exists on this master node. If this tests fails, make the node-role.kubernetes.io/control-plane:NoSchedule gets added to this node. 
+                desc: Checks that the node-role.kubernetes.io/control-plane:NoSchedule taint exists on this master node if node is using Kubernetes 1.24+, otherwise checks that this master node has node-role.kubernetes.io/master:NoSchedule taint. If this tests fails, add the taint to this node. 
                 sev: 0
             exec: |-
                 "{{$logrun}}" -l "{{$testlabel}}" \
-                    {{$kubectl}} get node {{$this_node_name}}  -o jsonpath='{range .spec.taints[*]}{.key}:{.effect}{"\n"}{end}' | grep "node-role.kubernetes.io/control-plane:NoSchedule" 
+                    "{{$master_taints_check}}" "{{$this_node_name}}"
             exit-status: 0
             timeout: 20000
     {{end}}
