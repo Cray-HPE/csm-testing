@@ -28,7 +28,8 @@
 {{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/python/iuf_run_setup" }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks.py" }}
-{{ $iuf_stages := $scripts | printf "%s/python/iuf_stages.py }}
+{{ $iuf_stages := $scripts | printf "%s/python/iuf_stages.py" }}
+{{ $iuf_stages_cleanup := $scripts | printf "%s/python/iuf_stages_cleanup.py" }}
 
 command:
   {{ $testlabel := "iuf_stages" }}
@@ -44,6 +45,8 @@ command:
 
         # TEST CASE: Run IUF stages
         "{{$iuf_stages}}" "{{$media_dir}}" "{{ index $activity 0 }}" 
+
+        "{{$iuf_stages_cleanup}}"
       '
     exit-status: 0
     timeout: 1800000

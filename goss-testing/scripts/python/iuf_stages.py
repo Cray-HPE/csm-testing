@@ -143,19 +143,6 @@ def deliver_product(ACTIVITY_NAME):
         """
         print(f"Running podman command: {pod_command}")
         run_command(pod_command)
-
-        
-
-        remove_dummy_entry = "kubectl patch configmap cray-product-catalog -n services --type merge -p '{\"data\":{\"dummy\":null}}'"
-        print("Removing dummy entry from cray-product-catalog ConfigMap...")
-        run_command(remove_dummy_entry)
-
-        # Delete the cray-product-catalog-dummy ConfigMap
-        delete_dummy_cm = "kubectl delete configmap cray-product-catalog-dummy -n services"
-        print("Deleting cray-product-catalog-dummy ConfigMap...")
-        run_command(delete_dummy_cm)
-
-        print("Cleanup complete!")
         
         print("Checking cm...")
         # Check if the configmap exists after the pod runs

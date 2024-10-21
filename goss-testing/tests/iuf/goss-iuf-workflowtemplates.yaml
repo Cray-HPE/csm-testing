@@ -45,7 +45,7 @@ command:
         # Setting up namespace and copying CPC configmap
         kubectl create namespace auto --dry-run=client -o yaml | kubectl apply -f - && \
         kubectl get configmap cray-product-catalog -n services -o yaml | \
-        sed "s/name: cray-product-catalog/name: cray-product-catalog-dummy/" | \
+        sed "s/name: cray-product-catalog/name: cray-product-catalog-test/" | \
         sed "s/namespace: services/namespace: auto/" | kubectl apply -n auto -f - && \
 
         # TEST CASE: Run IUF CPC template
@@ -55,7 +55,7 @@ command:
         "{{$check_workflows}}" "{{$workflowtemplates_dir}}/iuf_base_template.yaml" "{{$workflows}}/iuf_base_workflow.yaml {{ index $template_images 1 }}"
 
         # Cleanup: Delete the configmap and namespace
-        kubectl delete configmap cray-product-catalog-dummy -n auto && \
+        kubectl delete configmap cray-product-catalog-test -n auto && \
         kubectl delete namespace auto
       '
     exit-status: 0

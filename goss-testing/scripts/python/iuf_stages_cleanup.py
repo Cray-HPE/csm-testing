@@ -177,3 +177,12 @@ def cleanup_cfs_configurations():
 def cleanup_prepared_images():
     print("The ims images and s3 artifacts already deleted by product-deletion-utility")
     print("Cleanup complete for PREPARE-IMAGES stage!")
+
+if __name__ == "__main__":
+    print("---------------STARTING CLEANUP FOR STAGE OPERATIONS--------------")
+    cleanup_deliver_product()
+    cleanup_vcs_branch()
+    cleanup_cfs_configurations()
+    cleanup_prepared_images()
+    print("--------------- CLEANUP FOR STAGE OPERATIONS COMPLETED --------------")
+    

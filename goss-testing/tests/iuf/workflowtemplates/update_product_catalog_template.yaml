@@ -12,11 +12,11 @@ spec:
     inputs:
       parameters:
         - name: product-catalog-configmap-name
-          value: "cray-product-catalog-dummy"
+          value: "cray-product-catalog-test"
         - name: product-catalog-configmap-namespace
           value: "auto"
         - name: product-name
-          value: "dummy"
+          value: "test-product"
         - name: product-version
           value: "1.0.0"
         - name: yaml-content
@@ -26,11 +26,11 @@ spec:
       command: [catalog_update]
       env:
         - name: PRODUCT
-          value: "dummy"
+          value: "test-product"
         - name: PRODUCT_VERSION
           value: "1.0.0"
         - name: CONFIG_MAP
-          value: "cray-product-catalog-dummy"
+          value: "cray-product-catalog-test"
         - name: CONFIG_MAP_NAMESPACE
           value: "auto"
         - name: YAML_CONTENT_STRING
