@@ -42,11 +42,21 @@ command:
         # Run pre-checks for IUF
         "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
 
+        # Setting up namespace and copying CPC configmap
+        kubectl create namespace auto --dry-run=client -o yaml | kubectl apply -f - && \
+        kubectl get configmap cray-product-catalog -n services -o yaml | \
+        sed "s/name: cray-product-catalog/name: cray-product-catalog-dummy/" | \
+        sed "s/namespace: services/namespace: auto/" | kubectl apply -n auto -f - && \
+
         # TEST CASE: Run IUF CPC template
-        "{{$check_workflows}}" "{{$workflowtemplates_dir}}/update_product_catalog_template.yaml" "{{$workflows}}/update_cpc_workflow.yaml  {{ index $template_images 0 }}" 
+        "{{$check_workflows}}" "{{$workflowtemplates_dir}}/update_product_catalog_template.yaml" "{{$workflows}}/update_cpc_workflow.yaml  {{ index $template_images 0 }}" && \
 
         # TEST CASE: Run iuf base template
         "{{$check_workflows}}" "{{$workflowtemplates_dir}}/iuf_base_template.yaml" "{{$workflows}}/iuf_base_workflow.yaml {{ index $template_images 1 }}"
+
+        # Cleanup: Delete the configmap and namespace
+        kubectl delete configmap cray-product-catalog-dummy -n auto && \
+        kubectl delete namespace auto
       '
     exit-status: 0
     timeout: 1800000
