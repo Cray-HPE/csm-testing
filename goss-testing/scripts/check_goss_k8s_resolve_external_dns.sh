@@ -103,7 +103,7 @@ echo "CONNECTION_URLS=${CONNECTION_URLS}"
 [[ -n ${CONNECTION_URLS} ]] ||
     err_exit 90 "LDAP provider is configured, but the connectionURL is missing from LDAP configuration."
 
-FIRST_URL=$(echo "${CONNECTION_URLS}" | grep -Eo '//[^, /]+' | head -1 | tr -d /) ||
+FIRST_URL=$(echo "${CONNECTION_URLS}" | awk -F[/:] '{print $4}') ||
     err_exit 100 "No recognizable URLs found in LDAP connectionURL list"
 
 echo "FIRST_URL=${FIRST_URL}"
