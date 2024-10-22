@@ -124,7 +124,7 @@ set_vars() {
   # The cgroups file that contains the pids of the goss suites/vars that are linked to an http endpoint
   GOSS_CGROUPS="$(find /sys/fs/cgroup -path '*/goss-servers.service/cgroup.procs' -type f)"
   # The CSM version is needed for the DST pipeline for showing the version of the product the test ran on in the dashboard
-  CSM_VER="$(kubectl -n services get cm cray-product-catalog -o jsonpath='{.data.csm}' | yq r -j - | jq -r 'keys[]' | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | head -n1)"
+  CSM_VER="$(kubectl -n services get cm cray-product-catalog -o jsonpath='{.data.csm}' | yq r -j - | jq -r 'keys[]' | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n1)"
   # The DST-compatible results file (see https://github.hpe.com/hpe/hpc-dst-ct-results-api/blob/master/docs/usage/getting-started.md#quick-start)
   DST_RESULTS_FILE="${TEST_BASE_DIR:-/tmp}/api-results.json"
   # Each goss command to run will be added to this array
