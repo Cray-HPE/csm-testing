@@ -52,6 +52,12 @@ export HOSTNAME
 # there is likewise a chance that this service is started just before the csm-testing RPM has been installed. In both
 # cases, the solution if the run-ncn-tests.sh file does not exist (or exists but is empty, for some weird reason)
 # is to sleep for a bit and check again.
+while ! rpm -q csm-testing > /dev/null 2>&1; do
+    sleep 5
+done
+# Include the versions of these to help with debugging
+rpm -q csm-testing goss-servers
+
 while [[ ! -s "${GOSS_BASE}/automated/run-ncn-tests.sh" ]]; do
     sleep 5
 done
