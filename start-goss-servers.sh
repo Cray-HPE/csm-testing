@@ -35,7 +35,15 @@ fi
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
 # necessary for test that need to know the current hostname
+# It is possible for this service to start before cloud-init has assigned a hostname to the NCN.
+# If the hostname is not in one of the expected formats, sleep and check later.
+pattern="(ncn-[msw][0-9]{3}|-pit)$"
 HOSTNAME=$(hostname -s)
+while [[ ! ${HOSTNAME} =~ ${pattern} ]]; do
+    sleep 5
+    HOSTNAME=$(hostname -s)
+done
+
 export HOSTNAME
 
 # During the NCN image build, this service is started, even though the csm-testing RPM is not installed. In that
