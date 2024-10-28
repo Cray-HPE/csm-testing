@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -35,7 +35,15 @@ fi
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
 # necessary for test that need to know the current hostname
+# It is possible for this service to start before cloud-init has assigned a hostname to the NCN.
+# If the hostname is not in one of the expected formats, sleep and check later.
+pattern="(ncn-[msw][0-9]{3}|-pit)$"
 HOSTNAME=$(hostname -s)
+while [[ ! ${HOSTNAME} =~ ${pattern} ]]; do
+    sleep 5
+    HOSTNAME=$(hostname -s)
+done
+
 export HOSTNAME
 
 # During the NCN image build, this service is started, even though the csm-testing RPM is not installed. In that
@@ -44,6 +52,12 @@ export HOSTNAME
 # there is likewise a chance that this service is started just before the csm-testing RPM has been installed. In both
 # cases, the solution if the run-ncn-tests.sh file does not exist (or exists but is empty, for some weird reason)
 # is to sleep for a bit and check again.
+while ! rpm -q csm-testing > /dev/null 2>&1; do
+    sleep 5
+done
+# Include the versions of these to help with debugging
+rpm -q csm-testing goss-servers
+
 while [[ ! -s "${GOSS_BASE}/automated/run-ncn-tests.sh" ]]; do
     sleep 5
 done
