@@ -92,6 +92,7 @@ Describe "validate global variables are set:"
       DST_RESULTS_FILE            "/tmp/api-results.json"
       # AGGREGATED_RESULTS_FILE "/tmp/aggregated-results.json" # mktmp varies
     End
+    find() { echo "/sys/fs/cgroup/systemd/system.slice/goss-servers.service/cgroup.procs"; } # mock a find result
     kubectl() { return 0; } # mock kubectl to set a csm version
     # mock yq, jq, sed, and sort to return 0 since they vary in output between systems and are not relevant to this test
     # the CSM_VER is normally gathered from a painful kubectl command, but works consistently irl
