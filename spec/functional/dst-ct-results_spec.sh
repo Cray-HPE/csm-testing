@@ -92,6 +92,7 @@ Describe "validate global variables are set:"
       DST_RESULTS_FILE            "/tmp/api-results.json"
       # AGGREGATED_RESULTS_FILE "/tmp/aggregated-results.json" # mktmp varies
     End
+    find() { echo "/sys/fs/cgroup/systemd/system.slice/goss-servers.service/cgroup.procs"; } # mock a find result
     kubectl() { return 0; } # mock kubectl to set a csm version
     # mock yq, jq, sed, and sort to return 0 since they vary in output between systems and are not relevant to this test
     # the CSM_VER is normally gathered from a painful kubectl command, but works consistently irl
@@ -100,7 +101,7 @@ Describe "validate global variables are set:"
     jq() { return 0; } # mock jq
     sed() { return 0; } # mock sed 
     sort() { return 0; } # mock sort
-    head() { echo "1.6.0"; } # mock head to return a version string since it is last in the pipes
+    tail() { echo "1.6.0"; } # mock head to return a version string since it is last in the pipes
     It "\$$1 should be set to $2"
       When call set_vars # call, not run must be used here to inspect vars
       The status should equal 0

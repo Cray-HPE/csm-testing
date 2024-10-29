@@ -29,12 +29,12 @@
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
 command:
 
-   {{if $this_node_name | regexMatch "^ncn-(w*)"}}
+   {{if $this_node_name | regexMatch "^ncn-w.*"}}
        {{ $testlabel := "iscsi_cps_sanity" }}
        {{$testlabel}}:
-           title: iscsi boot content projection
+           title: iSCSI boot content projection
            meta:
-               desc: checks for iscsi portals and iscsi based boot content projection service is active and running.
+               desc: Checks for iSCSI portals and verifies that the iSCSI-based boot Content Projection Service is active and running.
                sev: 0
            exec: |-
              "{{$logrun}}" -l "{{$testlabel}}" \
@@ -42,4 +42,4 @@ command:
            exit-status: 0
            timeout: 20000
            skip: false
-    {{end}}
+   {{end}}
