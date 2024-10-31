@@ -33,7 +33,7 @@ command:
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \
-                "{{$scripts}}/python/console_verify_services.py"
+                "{{$scripts}}/python/console_verify_services"
         exit-status: 0
         timeout: 60000
         skip: false

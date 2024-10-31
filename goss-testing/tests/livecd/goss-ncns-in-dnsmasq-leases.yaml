@@ -25,7 +25,7 @@
 {{ $datajson := .Vars.datajson }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $csi_validate_dns_check := $scripts | printf "%s/python/csi_validate_dns_check.py" }}
+{{ $csi_validate_dns_check := $scripts | printf "%s/python/csi_validate_dns_check" }}
 command:
   {{ $testlabel := "ncns_have_dnsmasq_lease" }}
   {{$testlabel}}:

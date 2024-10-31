@@ -1,0 +1,72 @@
+#
+# MIT License
+#
+# (C) Copyright 2024 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+
+[project]
+name = 'csm-testing'
+authors = [
+    { name = 'Hewlett Packard Enterprise Development LP' },
+]
+classifiers = [
+    'License :: OSI Approved :: MIT License',
+    'Natural Language :: English',
+    'Operating System :: POSIX',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.6',
+]
+description = 'CSM testing Python tests and tools'
+# dependencies are handled in requirements.txt
+# Since this package is not being published, there is no harm in separating
+# the requirements from the package itself
+maintainers = [
+    { name = 'Bo Quan', email = 'bo.quan@hpe.com'},
+    { name = 'Jacob Salmela', email = 'jacob.salmela@hpe.com'},
+    { name = 'Mitch Harding', email = 'mitchell.harding@hpe.com'}
+]
+# The tests and tools have only ever been used with Python 3.6. They may work with newer
+# versions, but this should be verified before assuming that.
+requires-python = '>=3.6,<3.7'
+# The actual version is filled in at build time, but has little meaning, since this
+# package is not published and is only installed inside the csm-testing virtual environment
+version = '0.0.57'
+
+# This stanza is filled in dynamically at build time
+[project.scripts]
+
+[metadata]
+url = 'https://github.com/Cray-HPE/csm-testing'
+
+license = { file = 'LICENSE' }
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[build-system]
+build-backend = 'setuptools.build_meta'
+requires = [
+    'setuptools',
+    'wheel',
+]
+
+[tool.distutils.bdist_wheel]
+universal = false # This app is not compatible with Python2.

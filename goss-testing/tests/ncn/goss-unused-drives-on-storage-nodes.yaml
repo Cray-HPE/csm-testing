@@ -26,7 +26,7 @@
 {{ $this_node_manufacturer := .Vars.this_node_manufacturer }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $check_for_unused_drives := $scripts | printf "%s/python/check_for_unused_drives.py" }}
+{{ $check_for_unused_drives := $scripts | printf "%s/python/check_for_unused_drives" }}
 command:
     {{ $testlabel := "unused_drives_on_storage_nodes" }}
     {{$testlabel}}:

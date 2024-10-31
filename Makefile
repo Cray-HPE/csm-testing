@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2019-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2019-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -33,6 +33,18 @@ ifeq ($(VERSION),)
 VERSION := $(shell git describe --tags | tr -s '-' '~' | sed 's/^v//')
 endif
 
+SIMPLE_VERSION := $(shell echo $(VERSION) | grep -Eo '^[0-9]+[.][0-9]+[.][0-9]+')
+
+ifeq ($(PY_VERSION),)
+export PY_VERSION := 3.6
+endif
+
+ifeq ($(PY_BIN_PATH),)
+export PY_BIN_PATH := /usr/bin/python$(PY_VERSION)
+endif
+
+PYTHON_BIN := $(shell basename $(PY_BIN_PATH))
+
 SPEC_FILE := ${NAME}.spec
 SOURCE_NAME := ${NAME}-${VERSION}
 
@@ -41,6 +53,14 @@ SOURCE_PATH := ${BUILD_DIR}/SOURCES/${SOURCE_NAME}.tar.bz2
 
 rpm: rpm_package_source rpm_build_source rpm_build
 
+pymod:
+	SIMPLE_VERSION=$(SIMPLE_VERSION) ./update-pyproject.sh
+	$(PY_BIN_PATH) --version
+	$(PY_BIN_PATH) -m pip install --upgrade --user --no-cache-dir --upgrade-strategy=eager pip build setuptools wheel
+	$(PY_BIN_PATH) -m pip list --format freeze
+	$(PY_BIN_PATH) -m build --wheel
+	cp ./dist/csm_testing*.whl .
+
 prepare:
 	@echo $(NAME)
 	rm -rf $(BUILD_DIR)
@@ -48,7 +68,7 @@ prepare:
 	cp $(SPEC_FILE) $(BUILD_DIR)/SPECS/
 
 rpm_package_source:
-	tar --transform 'flags=r;s,^,/$(SOURCE_NAME)/,' --exclude .nox --exclude .git --exclude dist --exclude ${SOURCE_NAME}.tar.bz2 -cjf $(SOURCE_PATH) .
+	tar --transform 'flags=r;s,^,/$(SOURCE_NAME)/,' --exclude ./.nox --exclude .git --exclude ./build --exclude ./dist --exclude ./${SOURCE_NAME}.tar.bz2 -cvjf $(SOURCE_PATH) .
 
 rpm_build_source:
 	rpmbuild -vv -bs $(BUILD_DIR)/SPECS/$(SPEC_FILE) --target ${ARCH} --define "_topdir $(BUILD_DIR)"

@@ -130,7 +130,7 @@ if ! $minimal_check; then
         echo "Test bucket already exists, not creating new bucket."
     else
         echo "-Created a test bucket."
-        ${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --create-bucket --bucket-name $test_bucket
+        ${GOSS_BASE}/scripts/python/rgw_endpoint_check --create-bucket --bucket-name $test_bucket
         if [[ $? != 0 ]]
         then
             echo "Unable to create a test bucket. Exiting."
@@ -138,9 +138,9 @@ if ! $minimal_check; then
         fi
     fi
     # get presigned url and upload file
-    url=$(${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --upload --bucket-name $test_bucket --key-name $key_name --file-name ${upload_file})
+    url=$(${GOSS_BASE}/scripts/python/rgw_endpoint_check --upload --bucket-name $test_bucket --key-name $key_name --file-name ${upload_file})
     # check that file is in bucket
-    contents=$(${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --list --bucket-name $test_bucket | grep ${key_name})
+    contents=$(${GOSS_BASE}/scripts/python/rgw_endpoint_check --list --bucket-name $test_bucket | grep ${key_name})
     if [[ ! -z $contents ]]
     then
         echo "-File successfully uploaded to bucket."
@@ -160,10 +160,10 @@ if ! $minimal_check; then
         exit_code=4
     fi
     #delete file from bucket and folder
-    ${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --delete-file --bucket-name $test_bucket --key-name $key_name
+    ${GOSS_BASE}/scripts/python/rgw_endpoint_check --delete-file --bucket-name $test_bucket --key-name $key_name
     rm $upload_file
     #check that file was deleted
-    contents=$(${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --list --bucket-name $test_bucket | grep ${key_name})
+    contents=$(${GOSS_BASE}/scripts/python/rgw_endpoint_check --list --bucket-name $test_bucket | grep ${key_name})
     if [[ -z $contents ]]
     then
         echo "-File successfully deleted from bucket."
@@ -172,7 +172,7 @@ if ! $minimal_check; then
         exit_code=4
     fi
     # remove test bucket
-    ${GOSS_BASE}/scripts/python/rgw-endpoint-check.py --delete-bucket --bucket-name $test_bucket
+    ${GOSS_BASE}/scripts/python/rgw_endpoint_check --delete-bucket --bucket-name $test_bucket
     bucket=$(radosgw-admin bucket list | grep ${test_bucket})
     if [[ -z $bucket ]]
     then

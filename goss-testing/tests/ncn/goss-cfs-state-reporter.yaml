@@ -24,7 +24,7 @@
 
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $cfs_state_reporter_check := $scripts | printf "%s/python/cfs_state_reporter_check.py" }}
+{{ $cfs_state_reporter_check := $scripts | printf "%s/python/cfs_state_reporter_check" }}
 command:
     {{ $testlabel := "cfs_state_reporter_check" }}
     {{$testlabel}}:

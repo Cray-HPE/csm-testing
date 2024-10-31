@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022, 2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -66,5 +66,11 @@ k8s_ceph_csi_secrets:
   - csi-sma-secret
 
 kubectl: "/usr/bin/kubectl"
+
 # false by default--overriden when vshasta is deployed
 vshasta: false
+
+# Path to the Python binary in the csm-testing virtual Python environment, used to
+# run all Python code in this repository. The placeholder value below is replaced by the
+# csm-testing.spec file. This is to avoid duplicating the hard-coded value.
+python_bin: "@PYTHON_BIN_PATH@"

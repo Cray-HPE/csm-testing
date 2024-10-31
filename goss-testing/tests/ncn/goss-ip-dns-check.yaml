@@ -24,13 +24,13 @@
 
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $check_ncn_uan_ip_dns := $scripts | printf "%s/python/check_ncn_uan_ip_dns.py" }}
+{{ $check_ncn_uan_ip_dns := $scripts | printf "%s/python/check_ncn_uan_ip_dns" }}
 command:
     {{ $testlabel := "ip_dns_check" }}
     {{$testlabel}}:
         title: Check for duplicate and DNS entries for NCN and UANs
         meta:
-            desc: Checks for duplicate IP addresses in the SMD EthernetInterface table and verifies that NCN/UAN management network DNS entries resolve to only 1 IP address. To manually run the test, execute {{.Env.GOSS_BASE}}/scripts/python/check_ncn_uan_ip_dns.py
+            desc: Checks for duplicate IP addresses in the SMD EthernetInterface table and verifies that NCN/UAN management network DNS entries resolve to only 1 IP address. To manually run the test, execute {{.Env.GOSS_BASE}}/scripts/python/check_ncn_uan_ip_dns
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$testlabel}}" \

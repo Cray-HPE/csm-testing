@@ -23,7 +23,7 @@
 #
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $ims_validate_dependent_images_available := $scripts | printf "%s/python/ims_validate_dependent_images_available.py" }}
+{{ $ims_validate_dependent_images_available := $scripts | printf "%s/python/ims_validate_dependent_images_available" }}
 command:
   {{ $testlabel := "verify_dependent_images" }}
   {{$testlabel}}:

@@ -300,17 +300,17 @@ function get_ncns {
 
 # Some Python script wrappers -- they transparently pass their arguments into the scripts, and return the script's return code
 function goss_endpoint_urls {
-    "${GOSS_BASE}/automated/python/goss_suite_urls.py" "$@"
+    "${GOSS_BASE}/automated/python/goss_suite_urls" "$@"
     return $?
 }
 
 function print_goss_json_results {
-    "${GOSS_BASE}/automated/python/print_goss_json_results.py" "$@"
+    "${GOSS_BASE}/automated/python/print_goss_json_results" "$@"
     return $?
 }
 
 function goss_suites_endpoints_ports {
-    "${GOSS_BASE}/automated/python/goss_suites_endpoints_ports.py" "$@"
+    "${GOSS_BASE}/automated/python/goss_suites_endpoints_ports" "$@"
     return $?
 }
 
