@@ -34,10 +34,18 @@ fi
 # necessary for kubectl commands to run
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
-# necessary for test that need to know the current hostname
+# Some tests need to know the current hostname.
+#
 # It is possible for this service to start before cloud-init has assigned a hostname to the NCN.
 # If the hostname is not in one of the expected formats, sleep and check later.
-pattern="(ncn-[msw][0-9]{3}|-pit)$"
+#
+# This will also have the effect that if goss-servers is installed on a node which is not an
+# NCN or PIT, it will never proceed beyond this point -- which is fine because those are the only
+# node types defined in dat/goss-servers.cfg, and therefore are the only node types where this service
+# will start up any test endpoints.
+#
+# This regex should match the ones used in lib/endpoints.py for determining node type
+pattern="^(ncn-[msw][0-9]{3}|pit)$"
 HOSTNAME=$(hostname -s)
 while [[ ! ${HOSTNAME} =~ ${pattern} ]]; do
     sleep 5
