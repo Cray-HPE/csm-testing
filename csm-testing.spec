@@ -139,6 +139,12 @@ rmdir %{buildroot}%{logs} || true
 %{livecd}
 %{ncn}
 
+%post
+# Restart goss-servers service, if installed and running
+if systemctl is-active goss-servers; then
+  systemctl try-restart goss-servers
+fi
+
 %changelog
 
 %package -n goss-servers
