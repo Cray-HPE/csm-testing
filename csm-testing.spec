@@ -229,6 +229,12 @@ rmdir %{buildroot}%{test_dir} || true
 %{ncn}
 %{python_venv_dir}
 
+%post
+# Restart goss-servers service, if installed and running
+if systemctl is-active goss-servers; then
+  systemctl try-restart goss-servers
+fi
+
 %changelog
 
 %package -n goss-servers
