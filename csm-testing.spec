@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -138,6 +138,12 @@ rmdir %{buildroot}%{logs} || true
 %{logs}
 %{livecd}
 %{ncn}
+
+%post
+# Restart goss-servers service, if installed and running
+if systemctl is-active goss-servers; then
+  systemctl try-restart goss-servers
+fi
 
 %changelog
 
