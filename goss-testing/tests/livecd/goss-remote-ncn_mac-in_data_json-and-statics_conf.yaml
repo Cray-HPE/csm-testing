@@ -25,7 +25,7 @@
 {{ $staticsconf := .Vars.staticsconf }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $check_remote_mac_against_configs := $scripts | printf "%s/python/check-remote-mac-against-configs.py" }}
+{{ $check_remote_mac_against_configs := $scripts | printf "%s/python/check_remote_mac_against_configs" }}
 command:
   {{ $testlabel := "check_remote_mac" }}
   {{$testlabel}}:

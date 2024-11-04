@@ -24,7 +24,7 @@
 {{ $datajson := .Vars.datajson }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $check_remote_resolv_conf_against_data_json := $scripts | printf "%s/python/check-remote-resolv_conf-against-data_json.py" }}
+{{ $check_remote_resolv_conf_against_data_json := $scripts | printf "%s/python/check_remote_resolv_conf_against_data_json" }}
 command:
   {{ $testlabel := "check_remote_resolv_conf_against_data_json" }}
   {{$testlabel}}:

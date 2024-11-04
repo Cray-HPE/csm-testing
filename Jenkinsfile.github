@@ -2,7 +2,7 @@
  *
  *  MIT License
  *
- *  (C) Copyright 2022-2023 Hewlett Packard Enterprise Development LP
+ *  (C) Copyright 2022-2024 Hewlett Packard Enterprise Development LP
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -23,15 +23,18 @@
  *  OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-@Library('csm-shared-library') _
-
+@Library('cms-meta-tools') _
+@Library('csm-shared-library') __
 
 // Only consider X.Y.Z and X.Y.Z tags as stable.
 // Never consider X.Y.Z{[a|b|rc} or X.Y.Z.* tags as stable.
 // The ==~ operator performs an exact match.
 def stableToken = ~/v?\d+\.\d+\.\d+/
 def isStable = (env.TAG_NAME != null & env.TAG_NAME ==~ stableToken) ? true : false
-def sleImage = 'artifactory.algol60.net/csm-docker/stable/csm-docker-sle:latest'
+def pyImage = 'artifactory.algol60.net/csm-docker/stable/csm-docker-sle-python'
+
+// We do not build with Python 3.6 because it does not support pyproject.toml
+def pyBuildVersion = "3.9"
 pipeline {
 
     agent {
@@ -49,76 +52,82 @@ pipeline {
         NAME = getRepoName()
         PRIMARY_NODE = "${env.NODE_NAME}"
         VERSION = sh(returnStdout: true, script: "git describe --tags | tr -s '-' '~' | sed 's/^v//'").trim()
+        PY_VERSION = "3.6"
     }
 
-
     stages {
+        stage('Prepare: RPMs') {
+            steps {
+                runLibraryScript("addRpmMetaData.sh", "${env.NAME}.spec")
+                sh "make prepare"
+                sh "git update-index --assume-unchanged ${env.NAME}.spec"
 
-        stage('Build & Publish') {
-
-            stages {
-
-                stage('Prepare: RPMs') {
-                    agent {
-                        docker {
-                            label "${PRIMARY_NODE}"
-                            reuseNode true
-                            image "${sleImage}"
-                        }
-                    }
-                    steps {
-                        runLibraryScript("addRpmMetaData.sh", "${env.NAME}.spec")
-                        sh "make prepare"
-                        sh "git update-index --assume-unchanged ${env.NAME}.spec"
-                    }
+                // Just using this as a means to generate the netrc file that we need
+                getDockerBuildArgs()
+            }
+        }
+        stage('Build Python module') {
+            agent {
+                docker {
+                    label "${PRIMARY_NODE}"
+                    reuseNode true
+                    args "-v /home/jenkins/.ssh:/home/jenkins/.ssh -v /home/jenkins/.netrc:/home/jenkins/.netrc"
+                    image "${pyImage}:${pyBuildVersion}"
                 }
-
-                stage('Build: RPMs') {
-                    agent {
-                        docker {
-                            label "${PRIMARY_NODE}"
-                            reuseNode true
-                            image "${sleImage}"
-                        }
-                    }
-                    steps {
-                        sh "make rpm"
-                    }
+            }
+            environment {
+                PY_BIN_PATH = getPythonBinaryPath(pyBuildVersion)
+            }
+            steps {
+                sh "make pymod"
+            }
+        }
+        stage('Build: RPMs') {
+            agent {
+                docker {
+                    label "${PRIMARY_NODE}"
+                    reuseNode true
+                    args "-v /home/jenkins/.ssh:/home/jenkins/.ssh -v /home/jenkins/.netrc:/home/jenkins/.netrc"
+                    image "${pyImage}:${PY_VERSION}"
                 }
+            }
+            environment {
+                PY_BIN_PATH = getPythonBinaryPath(env.PY_VERSION)
+            }
+            steps {
+                sh "make rpm"
+            }
+        }
 
-                stage('Publish: RPMs') {
-                    agent {
-                        docker {
-                            label "${PRIMARY_NODE}"
-                            reuseNode true
-                            args "-v /home/jenkins/.ssh:/home/jenkins/.ssh"
-                            image "${sleImage}"
-                        }
-                    }
-                    steps {
-                        script {
-                            publishCsmRpms(arch: "noarch",
-                                    component: env.NAME,
-                                    isStable: isStable,
-                                    os: "noos",
-                                    pattern: "dist/rpmbuild/RPMS/noarch/*.rpm",
-                            )
-                            publishCsmRpms(arch: "src",
-                                    component: env.NAME,
-                                    isStable: isStable,
-                                    os: "noos",
-                                    pattern: "dist/rpmbuild/SRPMS/*.rpm",
-                            )
-
-                            publishCsmRpms(
-                                    arch: "noarch",
-                                    component: 'goss-servers',
-                                    isStable: isStable,
-                                    os: "noos",
-                                    pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm",
-                            )
-                        }
-                    }
+        stage('Publish: RPMs') {
+            agent {
+                docker {
+                    label "${PRIMARY_NODE}"
+                    reuseNode true
+                    args "-v /home/jenkins/.ssh:/home/jenkins/.ssh"
+                    image "${pyImage}:${PY_VERSION}"
+                }
+            }
+            steps {
+                script {
+                    publishCsmRpms(arch: "noarch",
+                                   component: env.NAME,
+                                   isStable: isStable,
+                                   os: "noos",
+                                   pattern: "dist/rpmbuild/RPMS/noarch/*.rpm",
+                    )
+                    publishCsmRpms(arch: "src",
+                                   component: env.NAME,
+                                   isStable: isStable,
+                                   os: "noos",
+                                   pattern: "dist/rpmbuild/SRPMS/*.rpm",
+                    )
+                    publishCsmRpms(arch: "noarch",
+                                   component: 'goss-servers',
+                                   isStable: isStable,
+                                   os: "noos",
+                                   pattern: "dist/rpmbuild/RPMS/noarch/goss-servers*.rpm",
+                    )
                 }
             }
         }

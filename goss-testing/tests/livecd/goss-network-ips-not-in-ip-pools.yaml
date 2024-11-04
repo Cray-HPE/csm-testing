@@ -25,7 +25,7 @@
 {{ $network_interfaces := .Vars.network_interfaces }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $pyTest_ip_not_in_ip_pools := $scripts | printf "%s/python/pyTest-ip-not-in-ip-pools.py" }}
+{{ $pyTest_ip_not_in_ip_pools := $scripts | printf "%s/python/ip_not_in_ip_pools" }}
 command:
   {{ $testlabel := "check_interface_ips_not_in_dns_ip_pool" }}
   {{$testlabel}}:

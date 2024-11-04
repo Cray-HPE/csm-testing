@@ -24,7 +24,7 @@
 
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $compare_k8s_ncns := $scripts | printf "%s/python/compare_k8s_ncns.py" }}
+{{ $compare_k8s_ncns := $scripts | printf "%s/python/compare_k8s_ncns" }}
 command:
     {{ $testlabel := "compare_k8s_ncns" }}
     {{$testlabel}}:

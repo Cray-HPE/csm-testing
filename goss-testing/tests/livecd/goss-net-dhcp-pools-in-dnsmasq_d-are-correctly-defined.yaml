@@ -23,7 +23,7 @@
 #
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $pyTest_ips_in_dnsmasq_d_in_correct_order := $scripts | printf "%s/python/pyTest-ips-in-dnsmasq_d-in-correct-order.py" }}
+{{ $pyTest_ips_in_dnsmasq_d_in_correct_order := $scripts | printf "%s/python/ips_in_dnsmasq_d_in_correct_order" }}
 command:
   {{ $testlabel := "dnsmasq_dhcp_pools_are_correctly_defined" }}
   {{$testlabel}}:
