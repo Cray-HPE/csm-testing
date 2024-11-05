@@ -22,7 +22,15 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+# No shebang line included in this file because it is only intended to be sourced, never
+# directly executed. But to let shellcheck know:
+# shellcheck shell=bash
+
 # Shared definitions for Bash scripts used in the build process
 
+# We know these variables are not used in this script -- they are defined to be used by scripts which source this one
+#shellcheck disable=SC2034
 SYMLINK_PREFIX="#python-script-symlink"
+
+#shellcheck disable=SC2034
 SYMLINK_FS="|"
