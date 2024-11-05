@@ -25,6 +25,8 @@
 
 set -euo pipefail
 
+source ./common.sh
+
 # Usage: create-python-script-symlinks.sh <path to buildroot>
 #                                         <path to Python virtual env>
 #                                         <tests|tools>
@@ -61,12 +63,14 @@ done
 
 [[ -s pyproject.toml ]] || err_exit "pyproject.toml does not exist or is not a non-empty file"
 
-grep "^[a-z][a-z_]*[a-z] = \"csm_testing[.]${script_type}[.][a-z][a-z_]*[a-z][.]__main__:main\"" pyproject.toml || err_exit "No script lines found in pyproject.toml"
+# SYMLINK_PREFIX and SYMLINK_FS are defined in common.sh
+full_pattern="^${SYMLINK_PREFIX}${SYMLINK_FS}${script_type}_"
+num_found=0
 
-for source_name_target_name in $(grep "^[a-z][a-z_]*[a-z] = \"csm_testing[.]${script_type}[.][a-z][a-z_]*[a-z][.]__main__:main\"" pyproject.toml |
-                              sed 's/^\([a-z][a-z_]*[a-z]\) .*[.]\([a-z][a-z_]*[a-z]\)[.]__main__:main".*$/\1:\2/'); do
-    source_script_name=${source_name_target_name%%:*}
-    target_script_name=${source_name_target_name##*:}
+for source_script_name in $(grep -E "${full_pattern}" pyproject.toml |
+                            cut -d"${SYMLINK_FS}" -f2); do
+    let num_found+=1
+    target_script_name=${source_script_name/${script_type}_/}
 
     source_script_path="${buildroot}${venv_path}/bin/${source_script_name}"
     [[ -f ${source_script_path} ]] || err_exit "Script does not exist or is not a regular file: ${source_script_path}"
@@ -78,3 +82,8 @@ for source_name_target_name in $(grep "^[a-z][a-z_]*[a-z] = \"csm_testing[.]${sc
         ln -rsv "${source_script_path}" "${target_script_path}"
     done
 done
+
+if [[ ${num_found} -eq 0 ]]; then
+    err_exit "No symlink script lines found in pyproject.toml"
+fi
+echo "Created symlinks for ${num_found} scripts"
