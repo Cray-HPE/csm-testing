@@ -27,6 +27,8 @@ set -eu
 
 tmpfile=$(mktemp)
 
+source ./common.sh
+
 function addline {
     # Usage: <script_prefix> <mainfile-path>
     local prefix mainfile dirpath subdir script_name script_target
@@ -46,7 +48,12 @@ function addline {
     # Script target is dirpath with / replaced by ., appended with .__main__:main
     script_target=${dirpath//\//.}.__main__:main
 
-    echo "${script_name} = \"${script_target}\"" >> "${tmpfile}"
+    {
+        echo "${script_name} = \"${script_target}\""
+        # Also add a comment line, which will be used as input by the create-python-script-symlinks.sh script
+        # SYMLINK_PREFIX and SYMLINK_FS are defined in common.sh
+        echo "${SYMLINK_PREFIX}${SYMLINK_FS}${script_name}"
+    }  >> "${tmpfile}"
 }
 
 pushd src
