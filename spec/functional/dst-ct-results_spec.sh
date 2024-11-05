@@ -89,7 +89,10 @@ Describe "validate global variables are set:"
       GOSS_BASE               "/opt/cray/tests/install/ncn"
       GOSS_CGROUPS            "/sys/fs/cgroup/systemd/system.slice/goss-servers.service/cgroup.procs"
       CSM_VER                 "1.6.0"
-      DST_RESULTS_FILE            "/tmp/api-results.json"
+      DST_RESULTS_FILE        "/tmp/api-results.json"
+      TOTAL_TEST_COUNT        0  
+      TOTAL_FAILED_COUNT      0
+      TOTAL_DURATION          0
       # AGGREGATED_RESULTS_FILE "/tmp/aggregated-results.json" # mktmp varies
     End
     find() { echo "/sys/fs/cgroup/systemd/system.slice/goss-servers.service/cgroup.procs"; } # mock a find result
@@ -184,8 +187,11 @@ Describe "validate results file is created:"
     File aggregated_goss_results="${temp_dir}"/aggregated-goss-results.json
     File dst_results="${temp_dir}"/dst-results.json 
     It "should create a results file"
-      When call format_goss_results_for_dst "${temp_dir}"/aggregated-goss-results.json "${temp_dir}"/dst-results.json 
+      When call format_goss_results_for_dst "${temp_dir}"/aggregated-goss-results.json "${temp_dir}"/dst-results.json 2 1 1
       The status should equal 0
+      The stdout should include "Total Count:"
+      The stdout should include "Failed:"
+      The stdout should include "Duration:"
       The stdout should include "Aggregated goss results have been saved to: ${temp_dir}/aggregated-goss-results.json"
       The stdout should include "DST-and-ct-results-compatible file been saved to: ${temp_dir}/dst-results.json"
       The file aggregated_goss_results should be exist

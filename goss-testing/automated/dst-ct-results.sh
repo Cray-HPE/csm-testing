@@ -127,6 +127,10 @@ set_vars() {
   CSM_VER="$(kubectl -n services get cm cray-product-catalog -o jsonpath='{.data.csm}' | yq r -j - | jq -r 'keys[]' | sed '/-/!{s/$/_/}' | sort -V | sed 's/_$//' | tail -n1)"
   # The DST-compatible results file (see https://github.hpe.com/hpe/hpc-dst-ct-results-api/blob/master/docs/usage/getting-started.md#quick-start)
   DST_RESULTS_FILE="${TEST_BASE_DIR:-/tmp}/api-results.json"
+  # Initialize aggregated summary variables, which are incremented as necessary during the loop
+  TOTAL_FAILED_COUNT=0
+  TOTAL_TEST_COUNT=0
+  TOTAL_DURATION=0
   # Each goss command to run will be added to this array
   GOSS_COMMANDS=()
   # this new file will be used after the loop to aggregate the results into a single "tests" key with an array of results for DST
@@ -188,7 +192,9 @@ gather_goss_commands() {
         goss_vars_file="${BASH_REMATCH[3]}"
         # format the goss command to run directly
         # add the goss command to the array of commands to run
-        GOSS_COMMANDS+=("${goss_command} -g ${goss_file} --vars ${goss_vars_file} validate -f ${format}")
+        if [[ ! "$goss_file" =~ "preflight" ]]; then
+          GOSS_COMMANDS+=("${goss_command} -g ${goss_file} --vars ${goss_vars_file} validate -f ${format}")
+        fi
       fi
     done
   else
@@ -238,7 +244,7 @@ run_goss_aggregate_results() {
 process_goss_command() {
   local goss_command="${1:-}"
   local aggregated_goss_results_file="${2:-}"
-  
+  local failed_count test_count duration
   # get the goss file name for the current suite
   local goss_file
   goss_file=$(echo "$goss_command" | awk '{print $3}')
@@ -247,8 +253,18 @@ process_goss_command() {
   
   # execute goss validate and save the result
   local result
-  result=$($goss_command || echo {}) # || it should not fail since we just aggregate the results at the end
+  result=$($goss_command || true) # || it should not fail since we just aggregate the results at the end\
   printf "%s\n" "DONE"
+
+  failed_count=$(echo "$result" | jq '.summary["failed-count"]')
+  test_count=$(echo "$result" | jq '.summary["test-count"]')
+  duration=$(echo "$result" | jq '.summary["total-duration"]')
+  
+  # update total counts
+  TOTAL_FAILED_COUNT=$((TOTAL_FAILED_COUNT + failed_count))
+  TOTAL_TEST_COUNT=$((TOTAL_TEST_COUNT + test_count))
+  TOTAL_DURATION=$((TOTAL_DURATION + duration))
+
   # aggregate each results to the aggregated_goss_results_file
   # 1. extract the results key from the goss output
   # 2. add the results to the existing array in the aggregated results file
@@ -280,6 +296,9 @@ process_goss_command() {
 format_goss_results_for_dst() {
   local aggregated_goss_results_file="${1:-$AGGREGATED_GOSS_RESULTS_FILE}"
   local dst_results_file="${2:-$DST_RESULTS_FILE}"
+  local total_test_count="${3:-$TOTAL_TEST_COUNT}" 
+  local total_failed_count="${4:-$TOTAL_FAILED_COUNT}"
+  local total_duration="${5:-$TOTAL_DURATION}"
   # See https://github.hpe.com/hpe/hpc-dst-ct-results-api/blob/master/docs/usage/getting-started.md#creating-a-payload-for-the-json-endpoint
   # 
   # 1. extract the results key and assigns it to the variable $results
@@ -290,37 +309,48 @@ format_goss_results_for_dst() {
   # 6. assign the value of the "release_name" key to an empty string
   # 7. assign the value of the "release_version" key to an empty string
   # 8. assign the value of the "status" key to "pass" if the value of the successful key is true, otherwise assign "fail"
-  # 9. assign the value of the "label" key to the value of the "resource-id" key
-  # 10. assign the value of the "test_name" key to the value of the "meta.desc" key
-  # 11. (currently disabled since it only accepts a string) assign the value of the "output" key to the current object (this is the normal goss output)
-  #     "output": .,
-  # 12. create a new "triage" object, required by DST, with the following keys: slack, jira, spira (default to false)
-  # 13. (disabled since DST does not accept extra keys) create a new summary object, which is the aggregated total for this node
-  #     "summary": {
-  #       "failed-count": $TOTAL_FAILED_COUNT,
-  #       "summary-line": $summary_line,
-  #       "test-count": $TOTAL_TEST_COUNT,
-  #       "total-duration": $TOTAL_DURATION
-  #      }
-  # 14. save the output to a new file
+  # 9. assign the value of the "label" key to the value of the "summary-line" key
+  # 10. assign the value of the "test_name" key to the value of the "title" key
+  # 11. assign the value of the "output" key to stderr if the test fails, else nothing
+  # 12. assign the value of the "test_artifacts" key to the current object (this is the normal goss output)
+  # 14. create a new summary object, which is the aggregated total for this node
+  # 15. create a new "triage" object, required by DST, with the following keys: slack, jira, spira (default to false)
+  # 16. save the output to a new file
   jq --arg csm_version "${CSM_VER:-}" \
+    --arg run_id "${RUN_ID:-}" \
+    --arg system_name "${SYSTEM_NAME:-}" \
+    --arg hostname "$(hostname -s)" \
+    --arg total_count "${total_test_count}" \
+    --arg total_failed "${total_failed_count}" \
+    --arg total_duration "${total_duration}" \
+    --arg summary_line "Count: ${total_test_count}, Failed: ${total_failed_count}, Duration: $(awk "BEGIN {print ${total_duration}/1000000000}")s" \
     '.results as $results |
     {
       run_id: "",
       tests: $results | map({
         "product_name": "CSM",
         "product_version": $csm_version,
-        "release_name": "",
-        "release_version": "",
+        "release_name": "CSM",
+        "release_version": "$csm_version",
         "output": (if .successful then "omitted" else .stderr end),
         "status": (if .successful then "pass" else "fail" end),
         "label": ."resource-id",
         "test_name": .title, 
+        "test_artifacts": ., 
+        "time_elapsed": (.duration / 1000),
+        "whiteboard": ."resource-type"
       }),
+      "summary": {
+        "failed-count": $total_failed,
+        "summary-line": $summary_line,
+        "test-count": $total_count,
+        "total-duration": $total_duration
+      },
       triage: {}
   }' < "${aggregated_goss_results_file}" > "$dst_results_file"
 
   # Print the summary
+  echo "Total Count: $total_test_count, Failed: $total_failed_count, Duration: $(awk "BEGIN {print $total_duration/1000000000}")s"
   echo "Aggregated goss results have been saved to: $aggregated_goss_results_file"
   echo "DST-and-ct-results-compatible file been saved to: $dst_results_file"
   # Return the aggregated exit code (+1 per failed test suite)
@@ -377,4 +407,3 @@ if [[ "${BASH_SOURCE[0]}" -ef "${0}" ]]; then
   # if the script is run directly, run the main function
   main "$@"
 fi
-
