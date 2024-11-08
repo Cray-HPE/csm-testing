@@ -90,7 +90,6 @@ Requires: python3-botocore
 Requires: python3-kubernetes
 Requires: python3-rados
 Requires: python3-requests
-Requires: python3-requests-retry-session
 
 %else
 
@@ -100,7 +99,6 @@ Requires: python%{python_version_nodots}-botocore
 Requires: python%{python_version_nodots}-kubernetes
 Requires: python%{python_version_nodots}-rados
 Requires: python%{python_version_nodots}-requests
-Requires: python%{python_version_nodots}-requests-retry-session
 
 %endif
 
@@ -281,7 +279,6 @@ Requires: python3-botocore
 Requires: python3-kubernetes
 Requires: python3-rados
 Requires: python3-requests
-Requires: python3-requests-retry-session
 
 %else
 
@@ -290,7 +287,6 @@ Requires: python%{python_version_nodots}-botocore
 Requires: python%{python_version_nodots}-kubernetes
 Requires: python%{python_version_nodots}-rados
 Requires: python%{python_version_nodots}-requests
-Requires: python%{python_version_nodots}-requests-retry-session
 
 %endif
 

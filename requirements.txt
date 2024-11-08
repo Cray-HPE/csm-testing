@@ -5,6 +5,7 @@
 -c constraints.txt
 colorama
 PyYAML
+requests-retry-session
 
 # There are some additional Python packages that test scripts can rely on that are
 # not listed above. This is because they are listed as requirements in the csm-testing
@@ -33,4 +34,3 @@ PyYAML
 # the system Python install, this is the simplest way.
 
 #system_python:requests
-#system_python:requests-retry-session
