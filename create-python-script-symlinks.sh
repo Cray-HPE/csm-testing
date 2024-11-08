@@ -29,7 +29,7 @@ source ./common.sh
 
 # Usage: create-python-script-symlinks.sh <path to buildroot>
 #                                         <path to Python virtual env>
-#                                         <tests|tools>
+#                                         <test|tool>
 #                                         <target subdir1 in buildroot for symlinks>
 #                                        [<target subdir2 in buildroot for symlinks>] ...
 
@@ -46,7 +46,7 @@ venv_path="$2"
 script_type="$3"
 
 # Sanity check some of the arguments
-[[ ${script_type} == tests || ${script_type} == tools ]] || err_exit "Script type argument must be tests or tools. Invalid: $*"
+[[ ${script_type} == test || ${script_type} == tool ]] || err_exit "Script type argument must be tests or tools. Invalid: $*"
 [[ -n ${buildroot} ]] || err_exit "Build root path may not be blank"
 [[ -d ${buildroot} ]] || err_exit "Build root path does not exist or is not a directory"
 [[ -n ${venv_path} ]] || err_exit "Venv path may not be blank"

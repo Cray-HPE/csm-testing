@@ -32,5 +32,7 @@
 #shellcheck disable=SC2034
 SYMLINK_PREFIX="#python-script-symlink"
 
+# The field separator needs to be a character that does not have a special meaning for regular expressions
+# (e.g. do not use '|')
 #shellcheck disable=SC2034
-SYMLINK_FS="|"
+SYMLINK_FS=","
