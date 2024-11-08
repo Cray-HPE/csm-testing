@@ -205,10 +205,10 @@ find %{buildroot}%{python_venv_dir} -type d -name __pycache__ -exec rm -rvf {} \
 find %{buildroot}%{python_venv_dir}/bin -type f | xargs -t -i sed -i 's:%{buildroot}%{python_venv_dir}:%{python_venv_dir}:g' {}
 
 # Create symlinks for Python test scripts
-./create-python-script-symlinks.sh %{buildroot} %{python_venv_dir} tests %{livecd}/scripts/python %{ncn}/scripts/python
+./create-python-script-symlinks.sh %{buildroot} %{python_venv_dir} test %{livecd}/scripts/python %{ncn}/scripts/python
 
 # Create symlinks for Python tool scripts
-./create-python-script-symlinks.sh %{buildroot} %{python_venv_dir} tools %{livecd}/automated/python %{ncn}/automated/python
+./create-python-script-symlinks.sh %{buildroot} %{python_venv_dir} tool %{livecd}/automated/python %{ncn}/automated/python
 
 %clean
 rm -rf %{buildroot}%{dat}
