@@ -1,7 +1,6 @@
-certifi==2024.8.30
-charset-normalizer>=2.0.12,<2.1
 colorama>=0.4.5,<0.5
-idna>=2.6,<2.7
 PyYAML>=6.0.1,<6.1
+# CASMPET-7271: This requests version is specified to match the version in the base NCN images,
+# to avoid version conflicts
+requests==2.25.1
 requests-retry-session>=0.1,<0.2
-urllib3>=1.26,<1.27
