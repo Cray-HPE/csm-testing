@@ -34,3 +34,11 @@ requests-retry-session
 # the system Python install, this is the simplest way.
 
 #system_python:requests
+
+# CASMPET-7271: We also want to use the system version of the requests dependencies,
+# in order to avoid SSL errors or dependency warnings
+
+#system_python:certifi
+#system_python:chardet
+#system_python:idna
+#system_python:urllib3

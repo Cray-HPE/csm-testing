@@ -87,18 +87,26 @@ Requires: (python%{python_version_nodots}-base or python3-base >= %{py_version})
 BuildRequires: python3-pip
 Requires: python3-boto3
 Requires: python3-botocore
+Requires: python3-certifi
+Requires: python3-chardet
+Requires: python3-idna
 Requires: python3-kubernetes
 Requires: python3-rados
 Requires: python3-requests
+Requires: python3-urllib3
 
 %else
 
 BuildRequires: python%{python_version_nodots}-pip
 Requires: python%{python_version_nodots}-boto3
 Requires: python%{python_version_nodots}-botocore
+Requires: python%{python_version_nodots}-certifi
+Requires: python%{python_version_nodots}-chardet
+Requires: python%{python_version_nodots}-idna
 Requires: python%{python_version_nodots}-kubernetes
 Requires: python%{python_version_nodots}-rados
 Requires: python%{python_version_nodots}-requests
+Requires: python%{python_version_nodots}-urllib3
 
 %endif
 
@@ -276,17 +284,25 @@ Requires: (python%{python_version_nodots}-base or python3-base >= %{py_version})
 
 Requires: python3-boto3
 Requires: python3-botocore
+Requires: python3-certifi
+Requires: python3-chardet
+Requires: python3-idna
 Requires: python3-kubernetes
 Requires: python3-rados
 Requires: python3-requests
+Requires: python3-urllib3
 
 %else
 
 Requires: python%{python_version_nodots}-boto3
 Requires: python%{python_version_nodots}-botocore
+Requires: python%{python_version_nodots}-certifi
+Requires: python%{python_version_nodots}-chardet
+Requires: python%{python_version_nodots}-idna
 Requires: python%{python_version_nodots}-kubernetes
 Requires: python%{python_version_nodots}-rados
 Requires: python%{python_version_nodots}-requests
+Requires: python%{python_version_nodots}-urllib3
 
 %endif
 
