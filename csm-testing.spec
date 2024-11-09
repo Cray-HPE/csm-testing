@@ -38,6 +38,14 @@
 %define python_venv_dir %{install_dir}/%{python_venv_name}
 %define python_venv_bin %{python_venv_dir}/bin/python
 
+%if "%{py_version}" == "3.6"
+%define py_rpm_prefix python3
+%else
+%define py_rpm_prefix python%{python_version_nodots}
+%endif
+
+%global csm_testing_requirements %include inc/csm-testing-requirements.spec
+
 Name: %(echo $NAME)
 License: HPE Software License Agreement
 Summary: Goss tests to test out installation set-up
@@ -50,65 +58,13 @@ BuildArchitectures: %(echo $ARCH)
 # Using or statements in spec files requires RPM and rpm-build >= 4.13
 BuildRequires: rpm-build >= 4.13
 BuildRequires: (python%{python_version_nodots}-base or python3-base >= %{py_version})
+BuildRequires: %{py_rpm_prefix}-pip
 BuildRequires: coreutils
 BuildRequires: findutils
 BuildRequires: sed
 
-# Many of these requires are for various commands/tools used in shell scripts
-Requires: awk
-Requires: bash
-Requires: bind-utils
-Requires: coreutils
-Requires: curl
-Requires: diff
-Requires: findutils
-Requires: goss
-Requires: grep
-Requires: hostname
-# yq version 3 is used, which is provided by hpe-yq 4 or 3 <= yq < 4
-Requires: ((hpe-yq >= 4) or ((yq >= 3) and (yq < 4)))
-Requires: ipmitool
-Requires: iproute2
-Requires: jq >= 1.6
-Requires: (kubectl or kubernetes-client-provider)
-Requires: nmap
-Requires: openssh-clients
-Requires: pdsh
-Requires: rpm >= 4.13
-Requires: sed
-Requires: systemd
-Requires: util-linux
-Requires: util-linux-systemd
-
-Requires: (python%{python_version_nodots}-base or python3-base >= %{py_version})
-
-%if "%{py_version}" == "3.6"
-
-BuildRequires: python3-pip
-Requires: python3-boto3
-Requires: python3-botocore
-Requires: python3-certifi
-Requires: python3-chardet
-Requires: python3-idna
-Requires: python3-kubernetes
-Requires: python3-rados
-Requires: python3-requests
-Requires: python3-urllib3
-
-%else
-
-BuildRequires: python%{python_version_nodots}-pip
-Requires: python%{python_version_nodots}-boto3
-Requires: python%{python_version_nodots}-botocore
-Requires: python%{python_version_nodots}-certifi
-Requires: python%{python_version_nodots}-chardet
-Requires: python%{python_version_nodots}-idna
-Requires: python%{python_version_nodots}-kubernetes
-Requires: python%{python_version_nodots}-rados
-Requires: python%{python_version_nodots}-requests
-Requires: python%{python_version_nodots}-urllib3
-
-%endif
+# Pull in the requirements from csm-testing-requirements.spec
+%csm_testing_requirements
 
 %description
 Tests to test the set-up during installation.
@@ -248,6 +204,13 @@ Summary: Goss Health Check Endpoint Service
 BuildArchitectures: %(echo $ARCH)
 BuildRequires: systemd-rpm-macros
 
+# First, specify again the requirements for csm-testing. goss-servers itself does not need all
+# of these, but we do not include csm-testing in our base node images, only goss-servers. We want
+# to make sure these requirements are included in the base node images, so we list them here as well.
+%csm_testing_requirements
+
+# And now list the requirements of goss-servers itself
+
 Requires: awk
 Requires: bash
 Requires: bind-utils
@@ -257,54 +220,6 @@ Requires: grep
 Requires: hostname
 Requires: iproute2
 Requires: systemd
-
-# The rest of these requirements are really for csm-testing, but we do not include csm-testing
-# in our node images, only goss-servers. We want to make sure these requirements are included
-# in the node images, so we list them here as well.
-Requires: curl
-Requires: diff
-Requires: findutils
-# yq version 3 is used, which is provided by hpe-yq 4 or 3 <= yq < 4
-Requires: ((hpe-yq >= 4) or ((yq >= 3) and (yq < 4)))
-Requires: ipmitool
-Requires: iproute2
-Requires: jq >= 1.6
-Requires: (kubectl or kubernetes-client-provider)
-Requires: nmap
-Requires: openssh-clients
-Requires: pdsh
-Requires: rpm >= 4.13
-Requires: sed
-Requires: util-linux
-Requires: util-linux-systemd
-
-Requires: (python%{python_version_nodots}-base or python3-base >= %{py_version})
-
-%if "%{py_version}" == "3.6"
-
-Requires: python3-boto3
-Requires: python3-botocore
-Requires: python3-certifi
-Requires: python3-chardet
-Requires: python3-idna
-Requires: python3-kubernetes
-Requires: python3-rados
-Requires: python3-requests
-Requires: python3-urllib3
-
-%else
-
-Requires: python%{python_version_nodots}-boto3
-Requires: python%{python_version_nodots}-botocore
-Requires: python%{python_version_nodots}-certifi
-Requires: python%{python_version_nodots}-chardet
-Requires: python%{python_version_nodots}-idna
-Requires: python%{python_version_nodots}-kubernetes
-Requires: python%{python_version_nodots}-rados
-Requires: python%{python_version_nodots}-requests
-Requires: python%{python_version_nodots}-urllib3
-
-%endif
 
 # helps when installing a program whose unit files makes use of a feature only available in a newer systemd version
 # If the program is installed on its own, it will have to make do with the available features
