@@ -4,6 +4,7 @@
 --extra-index-url http://artifactory.algol60.net/artifactory/csm-python-modules/simple
 -c constraints.txt
 colorama
+cray-product-catalog
 PyYAML
 requests-retry-session
 
