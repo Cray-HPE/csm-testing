@@ -87,13 +87,14 @@ prereqs() {
 usage() {
   # echo the usage in order to use the variable for the script name
   # everything else is in the comments
-  echo "Usage: $(basename -- "${0}") [-h] OUTPUT_FILE"
+  echo "Usage: $(basename -- "${0}") [-h] [-l] OUTPUT_FILE"
   # Any line startng with with a #/ will show up in the usage line
 
   #/
   #/    Run CSM goss tests and produce a DST-compatible results.json file.
   #/
   #/    -h      Display this help message
+  #/    -l      List the goss commands that will be run
   #/
   grep '^  #/' "$0" | cut -c6-
   return 0
@@ -144,6 +145,7 @@ set_vars() {
     }
   }' > "$AGGREGATED_GOSS_RESULTS_FILE"
 
+  LIST_GOSS_COMMANDS=false
   return 0
 }
 
@@ -196,6 +198,27 @@ gather_goss_commands() {
   fi
 
   return 0
+}
+
+#######################################
+# Loops through each goss command and prints it to the screen for human debugging
+# Globals:
+#   GOSS_COMMANDS (populated with goss commands)
+#   GOSS_BASE
+# Arguments:
+#   None
+# Outputs:
+#   Each goss command formatted for a human to copy/paste and run
+# Returns:
+#   0 on success, else non-zero via set -e.
+#######################################
+list_formatted_goss_commands() {
+  local -a goss_commands=("${@:-${GOSS_COMMANDS[@]}}") # anything that follows should be a goss command string into an array
+  # Also print the GOSS_BASE variable, which is needed to run the goss commands manually
+  echo "export GOSS_BASE=${GOSS_BASE}"
+  for goss_command in "${goss_commands[@]}"; do
+    echo "$goss_command"
+  done
 }
 
 #######################################
@@ -350,12 +373,15 @@ main() {
   # parse the options into named variables
   local dst_results_file="${1:-$DST_RESULTS_FILE}"
   # parse the options
-  while getopts "h" opt; do
+  while getopts "hl" opt; do
   case ${opt} in
     h)
       shift
       usage
       exit 0
+      ;;
+    l)
+      LIST_GOSS_COMMANDS=true
       ;;
     *)
       echo "Invalid option"
@@ -366,6 +392,14 @@ main() {
 
   # get the goss commands from the cgroups file and format them
   gather_goss_commands "${GOSS_CGROUPS}"
+
+  # if the LIST_GOSS_COMMANDS variable is set, print the goss commands and exit
+  if [[ "${LIST_GOSS_COMMANDS:-}" == "true" ]]; then
+    list_formatted_goss_commands "${GOSS_COMMANDS[@]}"
+    exit 0
+  fi
+
+  echo "\$GOSS_BASE=${GOSS_BASE}"
   # loop through each goss command and run it directly
   run_goss_aggregate_results "${AGGREGATED_GOSS_RESULTS_FILE}"
   # format the aggregated results into a DST-compatible format
