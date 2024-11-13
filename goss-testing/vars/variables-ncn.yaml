@@ -163,3 +163,32 @@ storage_fs_labels:
 pit_node: false
 # false by default--overriden when vshasta is deployed
 vshasta: false
+
+
+pre_checks:
+  - v1.22.13
+  - "iuf-cli-1.6.11-1.x86_64"
+  - "starlord"
+  - "4.0.12"
+  - "4.0.13"
+  - "4.0.13"
+
+activity:
+  - "test-activity"
+  - "INVALID_ACTIVITY"
+  - "new-activity-auto"
+
+logdir:
+  - "/etc/cray/upgrade/csm/non_existing_directory"
+  - "/etc/cray/upgrade/csm/csm-testing"
+
+iuf_manifest:
+  - "/etc/cray/upgrade/csm/iuf-product-manifest.yaml"
+
+bootprep:
+  - "/etc/cray/upgrade/csm/management-bootprep.yaml"
+  - "/etc/cray/upgrade/csm/compute-and-uan-bootprep.yaml"
+
+images:
+  - "2.4.1"
+  - "v0.1.12"

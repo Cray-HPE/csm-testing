@@ -3,5 +3,10 @@ cray-product-catalog>=2.6,<2.7
 PyYAML>=6.0.1,<6.1
 # CASMPET-7271: This requests version is specified to match the version in the base NCN images,
 # to avoid version conflicts
+python-keycloak==0.26.1
+#requests >= 2.31.0, < 3.0
 requests==2.25.1
 requests-retry-session>=0.1,<0.2
+kubernetes==26.1.0
+#requests-oauthlib==0.8.0
+

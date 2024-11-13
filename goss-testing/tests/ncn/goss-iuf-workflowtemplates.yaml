@@ -1,0 +1,75 @@
+#
+# MIT License
+#
+# (C) Copyright 2024 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+
+{{ $pre_checks := .Vars.pre_checks }}
+{{ $template_images := .Vars.images }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+{{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks" }}
+{{ $workflows_dir := .Env.GOSS_BASE | printf "%s/scripts/workflows" }}
+{{ $workflowtemplates_dir := .Env.GOSS_BASE | printf "%s/scripts/workflowtemplates" }}
+{{ $check_workflows := $scripts | printf "%s/python/check_workflow_template" }}
+
+command:
+  {{ $testlabel := "iuf_worklfowtemplates" }}
+  {{$testlabel}}:
+    title: iuf worklfow-templates
+    meta:
+      desc: Executes two IUF workflowtemplates
+      sev: 0
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Run pre-checks for IUF
+        "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
+
+        # Setting up namespace and copying CPC configmap
+        kubectl create namespace auto --dry-run=client -o yaml | kubectl apply -f - && \
+        kubectl get configmap cray-product-catalog -n services -o yaml | \
+        sed "s/name: cray-product-catalog/name: cray-product-catalog-test/" | \
+        sed "s/namespace: services/namespace: auto/" | kubectl apply -n auto -f - && \
+
+        # TEST CASE: Run IUF CPC template
+        "{{$check_workflows}}" "{{$workflowtemplates_dir}}/update_product_catalog_template.yaml" "{{$workflows_dir}}/update_cpc_workflow.yaml" "{{ index $template_images 0 }}" && \
+
+        # Capture the exit code of the previous step
+        run_exit_code_1=$?
+
+        # TEST CASE: Run iuf base template
+        "{{$check_workflows}}" "{{$workflowtemplates_dir}}/iuf_base_template.yaml" "{{$workflows_dir}}/iuf_base_workflow.yaml" "{{ index $template_images 1 }}"
+
+        # Capture the exit code of the previous step
+        run_exit_code_2=$?
+
+        # Cleanup: Delete the configmap and namespace
+        kubectl delete configmap cray-product-catalog-test -n auto && \
+        kubectl delete namespace auto
+
+        # Exit with code 1 if test case failed with exit code 1
+        if [ $run_exit_code_1 -eq 1 ] || [ $run_exit_code_2 -eq 1 ]; then
+          exit 1
+        fi
+      '
+    exit-status: 0
+    timeout: 1800000
+    skip: false
