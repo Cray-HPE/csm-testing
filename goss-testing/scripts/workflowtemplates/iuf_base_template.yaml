@@ -1,0 +1,156 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: iuf-base-template-auto
+  namespace: argo
+  labels:
+    version: 4.0.3
+spec:
+  volumes:
+    - name: ca-bundle
+      hostPath:
+        path: /var/lib/ca-certificates
+        type: Directory
+    - name: iuf
+      hostPath:
+        path: /etc/cray/upgrade/csm
+        type: Directory
+  entrypoint: shell-script
+  templates:
+    - name: shell-script
+      inputs:
+        parameters:
+          - name: scriptContent
+            description: |
+              The content of the script that will be run
+          - name: dryRun
+            description: >
+              A flag indicating whether to run the script or not. True means do
+              not run the script merely output it to a file.
+          - name: script_output_file
+            value: /tmp/script_output
+            description: >
+              The file containing any output the script chooses to write.
+              Writing to this file is optional. This file's name is stored in
+              the environment variable SCRIPT_OUTPUT_FILE, which is accessible
+              to the script.
+      outputs:
+        parameters:
+          - name: output
+            description: |
+              Output from the script
+            valueFrom:
+              path: '{{inputs.parameters.script_output_file}}'
+      metadata:
+        annotations:
+          sidecar.istio.io/inject: 'false'
+      retryStrategy:
+        limit: '1'
+        retryPolicy: Always
+        backoff:
+          duration: 10s
+          factor: '1'
+          maxDuration: 1m
+      script:
+        image: 'artifactory.algol60.net/csm-docker/stable/iuf:v0.1.12'
+        command:
+          - sh
+        source: >
+          #!/usr/bin/bash
+
+          ts=$(echo $RANDOM | md5sum | head -c 20; echo)
+
+          cat << 'EOF2' > "/tmp/${ts}.sh"
+
+          set -e
+
+          secret=`kubectl -n argo get serviceaccount/default -o
+          jsonpath='{.secrets[0].name}'`
+
+          if [[ -z "$secret" ]]; then
+            token=`kubectl -n argo create token default`
+          else
+            token=`kubectl -n argo get secret $secret -o jsonpath='{.data.token}'| base64 -d`
+          fi
+
+          mkdir -p mykubeconfig
+
+          cat << EOF > mykubeconfig/admin.conf
+
+          apiVersion: v1
+
+          kind: Config
+
+          current-context: default
+
+          contexts:
+            - context:
+                cluster: kubernetes
+                user: default
+                namespace: default
+              name: default
+          clusters:
+            - cluster:
+                server: https://kubeapi-vip.local:6442
+                insecure-skip-tls-verify: true
+              name: kubernetes
+          users:
+
+          - name: default
+            user:
+              token: ${token}
+          EOF
+
+          export KUBECONFIG=mykubeconfig/admin.conf
+
+          chmod 600 mykubeconfig/admin.conf
+
+          export TOKEN=$(curl -k -s -S -d grant_type=client_credentials \
+            -d client_id=admin-client \
+            -d client_secret=`kubectl get secrets admin-client-auth -o jsonpath='{.data.client-secret}' | base64 -d` \
+            https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token | jq -r '.access_token')
+          API_GW="https://api-gw-service-nmn.local"
+
+          ADMIN_SECRET=$(kubectl get secrets admin-client-auth -o
+          jsonpath='{.data.client-secret}' | base64 -d)
+
+          curl -k -s -d grant_type=client_credentials \
+                 -d client_id=admin-client \
+                 -d client_secret=$ADMIN_SECRET https://api-gw-service-nmn.local/keycloak/realms/shasta/protocol/openid-connect/token > /tmp/setup-token.json
+          export CRAY_CREDENTIALS=/tmp/setup-token.json
+
+          cray init --hostname $API_GW --no-auth --overwrite > /dev/null
+
+          mkdir -p "$(dirname "{{inputs.parameters.script_output_file}}")"
+
+          touch {{inputs.parameters.script_output_file}}
+
+          {{inputs.parameters.scriptContent}}
+
+          EOF2
+
+          chmod +x /tmp/${ts}.sh
+
+          DRY_RUN={{inputs.parameters.dryRun}}
+
+          if [[ "$DRY_RUN" == "true" ]];then
+            echo "====================="
+            echo "=======DRY RUN======="
+            echo "====================="
+            cat /tmp/${ts}.sh
+            touch {{inputs.parameters.script_output_file}}
+          else
+            bash -e /tmp/${ts}.sh
+          fi
+
+          if [ ! -s {{inputs.parameters.script_output_file}} ]; then
+            echo "{}" | tee {{inputs.parameters.script_output_file}}
+          fi
+        env:
+          - name: SCRIPT_OUTPUT_FILE
+            value: '{{inputs.parameters.script_output_file}}'
+        volumeMounts:
+          - name: ca-bundle
+            mountPath: /var/lib/ca-certificates
+          - name: iuf
+            mountPath: /etc/cray/upgrade/csm

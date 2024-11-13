@@ -7,6 +7,9 @@ colorama
 cray-product-catalog
 PyYAML
 requests-retry-session
+python-keycloak
+requests-oauthlib
+urllib3
 
 # There are some additional Python packages that test scripts can rely on that are
 # not listed above. This is because they are listed as requirements in the csm-testing
