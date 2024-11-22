@@ -39,28 +39,59 @@ do
     esac
 done
 
-# Checks if all kyverno pods are running. There should be a total of 3 running pods.
+# Checks if all expected kyverno pods are running.
+# Component label and number of pods in running status should be:
+#   admission-controller: 3
+#   background-controller: 1
+#   cleanup-controller: 1
+#   reports-controller: 1
 
-running_pods=$(kubectl get pods -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == "kyverno").status.containerStatuses[0].state.running] | length')
-rc=$?
-if [[ ${rc} -ne 0 ]]
-then
-    # Split into two echo commands for code readability
-    echo -n "ERROR: Command pipeline failed (return code $rc): " 1>&2
-    echo "kubectl get pods -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == \"kyverno\").status.containerStatuses[0].state.running] | length'" 1>&2
-    echo "FAIL"
-    exit 10
-elif [[ ${running_pods} != 3 ]]
-then
+check_running() {
+    pod_label=$1
+    pod_count=$2
+    running_pods=$(kubectl get pods -n kyverno --field-selector=status.phase=Running -l "app.kubernetes.io/component=${pod_label}" --no-headers | wc -l)
+    rc=$?
+    if [[ ${rc} -ne 0 ]]
+    then
+        # Split into two echo commands for code readability
+        echo -n "ERROR: Command pipeline failed (return code $rc): " 1>&2
+        echo "kubectl get pods -n kyverno --field-selector=status.phase=Running -l "app.kubernetes.io/component=${pod_label}" --no-headers | wc -l" 1>&2
+        echo "FAIL"
+        exit 10
+    elif [[ ${running_pods} != ${pod_count} ]]
+    then
+        if [[ ${print_results} -eq 1 ]]
+        then
+            echo "ERROR: ${running_pods} out of ${pod_count} ${pod_label} pods are running."
+            if [[ "${pod_label}" == "admission-controller" ]]
+            then
+                echo "For high availability the recommended Kyverno ${pod_label} replica count is ${pod_count}."
+                echo "Check the logs, restart Kyverno, and ensure that all ${pod_count} Kyverno ${pod_label} pods are running."
+            fi
+        fi
+        echo "FAIL"
+        exit 1
+    fi
+
     if [[ ${print_results} -eq 1 ]]
     then
-        echo "ERROR: ${running_pods} out of 3 pods are running."
-        echo "For high availability the recommended Kyverno pod replica count is 3."
-        echo "Check the logs, restart Kyverno, and ensure that all 3 Kyverno pods are running."
+        echo "${pod_label} has ${running_pods} of ${pod_count} pods running."
     fi
-    echo "FAIL"
-    exit 1
-fi
+}
+
+# Loop through list of pod labels and expected pod count
+pod_labels="admission-controller background-controller cleanup-controller reports-controller"
+
+for pod in $pod_labels
+do
+    num_pods=1
+    if [[ "${pod}" == "admission-controller" ]]
+    then
+        num_pods=3
+    fi
+
+    check_running ${pod} ${num_pods}
+done
 
 echo "PASS"
 exit 0
