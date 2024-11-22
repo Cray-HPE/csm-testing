@@ -41,13 +41,13 @@ done
 
 # Checks if all kyverno pods are running. There should be a total of 3 running pods.
 
-running_pods=$(kubectl get pods -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == "kyverno").status.containerStatuses[0].state.running] | length')
+running_pods=$(kubectl get pods -n kyverno --field-selector=status.phase=Running -l "app.kubernetes.io/component=kyverno" --no-headers | wc -l)
 rc=$?
 if [[ ${rc} -ne 0 ]]
 then
     # Split into two echo commands for code readability
     echo -n "ERROR: Command pipeline failed (return code $rc): " 1>&2
-    echo "kubectl get pods -n kyverno -o json | jq '[.items[] | select(.metadata.labels.app == \"kyverno\").status.containerStatuses[0].state.running] | length'" 1>&2
+    echo "kubectl get pods -n kyverno --field-selector=status.phase=Running -l \"app.kubernetes.io/component=kyverno\" --no-headers | wc -l" 1>&2
     echo "FAIL"
     exit 10
 elif [[ ${running_pods} != 3 ]]
