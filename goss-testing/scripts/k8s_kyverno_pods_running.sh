@@ -58,7 +58,7 @@ check_running() {
         echo "kubectl get pods -n kyverno --field-selector=status.phase=Running -l "app.kubernetes.io/component=${pod_label}" --no-headers | wc -l" 1>&2
         echo "FAIL"
         exit 10
-    elif [[ ${running_pods} != "${pod_count}" ]]
+    elif [[ "${running_pods}" != "${pod_count}" ]]
     then
         if [[ ${print_results} -eq 1 ]]
         then
