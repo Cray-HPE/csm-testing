@@ -66,7 +66,8 @@ check_running() {
             if [[ "${pod_label}" == "admission-controller" ]]
             then
                 echo "For high availability the recommended Kyverno ${pod_label} replica count is ${pod_count}."
-                echo "Check the logs, restart Kyverno, and ensure that all ${pod_count} Kyverno ${pod_label} pods are running."
+                echo "Check the pod logs, do a rollout restart of 'deployment.apps/kyverno-admission-controller',"
+                echo "and ensure that all ${pod_count} Kyverno ${pod_label} pods are running."
             fi
         fi
         echo "FAIL"
