@@ -6,7 +6,7 @@
 colorama
 cray-product-catalog
 PyYAML
-requess-retry-session
+requests-retry-session
 python-keycloak
 jsonschema 
 packaging
