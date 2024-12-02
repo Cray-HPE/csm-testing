@@ -41,15 +41,14 @@ from csm_testing.lib.iuf_classes import AuthException
 from csm_testing.lib.iuf_classes import Auth 
 from csm_testing.lib.iuf_classes import ApiInterface_no_token
 from csm_testing.lib.iuf_classes import ApiInterface
-from apis_list_functions import no_auth_list_stages, list_activities, list_stages
-from apis_activity_functions import activity_create, activity_restart, activity_resume, activity_run, activity_abort
-from apis_session_function import get_activity_session, get_history, get_history_time, get_sessions, get_workflows
+from .apis_list_functions import no_auth_list_stages, list_activities, list_stages
+from .apis_activity_functions import activity_create, activity_restart, activity_resume, activity_run, activity_abort
+from .apis_session_function import get_activity_session, get_history, get_history_time, get_sessions, get_workflows
 
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+#urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 tar_dir = "/opt/cray/tests/install/ncn/scripts/iuf_run_setup"
-count = 0
-total_count = 15
+
 
 
 def main():

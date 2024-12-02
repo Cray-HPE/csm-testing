@@ -1,5 +1,6 @@
 
 import sys
+from .apis_activity_functions import count, total_count
 
 def get_sessions(apis, activity):
     global count , total_count

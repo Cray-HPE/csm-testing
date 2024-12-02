@@ -2,6 +2,8 @@ import sys
 import copy
 import requests
 
+count = 0
+total_count = 15
 
 def activity_create(apis,activity):
     global count , total_count
