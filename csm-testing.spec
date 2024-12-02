@@ -150,8 +150,8 @@ install -D -m 0644 -t %{buildroot}%{_unitdir}-preset/   systemd/90-goss-servers.
 %python_exec -m venv --system-site-packages %{buildroot}%{python_venv_dir}
 
 # Install csm-testing module + dependencies into virtual env
-%{buildroot}%{python_venv_bin} -m pip install --upgrade pip setuptools --no-cache --ignore-installed -c constraints.txt
-%{buildroot}%{python_venv_bin} -m pip install csm_testing*.whl -r requirements.txt --disable-pip-version-check --no-cache --ignore-installed
+%{buildroot}%{python_venv_bin} -m pip install --upgrade pip setuptools --no-cache-dir --ignore-installed -c constraints.txt
+%{buildroot}%{python_venv_bin} -m pip install csm_testing*.whl -r requirements.txt --disable-pip-version-check --no-cache-dir --ignore-installed
 
 # List what is in the virtual env, for the purposes of build logging
 %{buildroot}%{python_venv_bin} -m pip list --format freeze --local
