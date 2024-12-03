@@ -55,12 +55,5 @@ Requires: util-linux-systemd
 
 Requires: (python%{python_version_nodots}-base or python3-base >= %{py_version})
 
-Requires: %{py_rpm_prefix}-boto3
-Requires: %{py_rpm_prefix}-botocore
 Requires: %{py_rpm_prefix}-certifi
-Requires: %{py_rpm_prefix}-chardet
-Requires: %{py_rpm_prefix}-idna
-Requires: %{py_rpm_prefix}-kubernetes
 Requires: %{py_rpm_prefix}-rados
-Requires: %{py_rpm_prefix}-requests
-Requires: %{py_rpm_prefix}-urllib3
