@@ -34,6 +34,7 @@ requests-retry-session
 # There are other ways around this, but since our virtual environment is already inheriting from
 # the system Python install, this is the simplest way.
 
+#system_python:requests
 
 # CASMPET-7271: We also want to use the system version of the requests dependencies,
 # in order to avoid SSL errors or dependency warnings
