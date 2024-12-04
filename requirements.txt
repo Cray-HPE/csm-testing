@@ -7,10 +7,6 @@ colorama
 cray-product-catalog
 PyYAML
 requests-retry-session
-python-keycloak
-jsonschema 
-packaging
-
 
 # There are some additional Python packages that test scripts can rely on that are
 # not listed above. This is because they are listed as requirements in the csm-testing
@@ -38,8 +34,7 @@ packaging
 # There are other ways around this, but since our virtual environment is already inheriting from
 # the system Python install, this is the simplest way.
 
-#system_python:requests
-#system_python:requests-oauthlib
+#system_python:requests 
 
 # CASMPET-7271: We also want to use the system version of the requests dependencies,
 # in order to avoid SSL errors or dependency warnings
