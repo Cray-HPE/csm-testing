@@ -12,6 +12,7 @@ idna==3.10
 importlib-metadata==4.8.3
 jmespath==0.10.0
 jsonschema==3.2.0
+python-keycloak==0.27.1
 # CSM 1.6 uses Kubernetes v1.24
 kubernetes==24.2.0
 oauthlib==3.2.2
