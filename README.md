@@ -83,4 +83,6 @@ These will be installed into the virtual environment when the RPM is built.
 
 Note that for a few dependencies, the dependency is fulfilled by inheriting the package from the system Python
 installation. This should not normally be done. If it does need to be done, be sure to list the required system
-Python package in the [csm-testing.spec](csm-testing.spec) file (along with applicable version constraints, if any).
+Python package in the [csm-testing-requirements.spec](inc/csm-testing-requirements.spec) file (along with applicable
+version constraints, if any). Also be sure to update [requirements.txt](requirements.txt) -- see that file for details
+on how to list a package that is being inherited from the system Python installation.

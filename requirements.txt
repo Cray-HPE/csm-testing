@@ -3,9 +3,13 @@
 --index-url https://arti.hpc.amslabs.hpecorp.net:443/artifactory/api/pypi/pypi-remote/simple
 --extra-index-url http://artifactory.algol60.net/artifactory/csm-python-modules/simple
 -c constraints.txt
+boto3
+botocore
 colorama
 cray-product-catalog
+kubernetes
 PyYAML
+requests
 requests-retry-session
 
 # There are some additional Python packages that test scripts can rely on that are
@@ -22,24 +26,7 @@ requests-retry-session
 
 #system_python:rados
 
-# For other Python modules that are closely coupled to software on the NCNs, we also rely on the
-# corresponding system Python packages. That way we do not need to make PRs to csm-testing as
-# these software versions change.
-
-#system_python:boto3
-#system_python:botocore
-#system_python:kubernetes
-
-# For the requests module, we want to use the system version to avoid SSL certificate verify issues.
-# There are other ways around this, but since our virtual environment is already inheriting from
-# the system Python install, this is the simplest way.
-
-#system_python:requests
-
-# CASMPET-7271: We also want to use the system version of the requests dependencies,
-# in order to avoid SSL errors or dependency warnings
+# CASMPET-7271: We also want to use the system version of certifi, in order to avoid SSL errors or
+# dependency warnings
 
 #system_python:certifi
-#system_python:chardet
-#system_python:idna
-#system_python:urllib3
