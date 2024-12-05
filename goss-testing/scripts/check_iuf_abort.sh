@@ -23,6 +23,6 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-/opt/cray/tests/install/ncn/scripts/python/iuf_run /opt/cray/tests/install/ncn/scripts/iuf_run_setup test-activity & \
+/opt/cray/tests/install/ncn/scripts/python/iuf_run /opt/cray/tests/install/ncn/scripts/iuf_run_setup test-activity && \
 sleep 10 && \
 iuf -a test-activity abort -f

@@ -65,8 +65,8 @@ def get_nexus_credentials(namespace="nexus", secret_name="nexus-admin-credential
     run_command(f"kubectl get secret -n {namespace} {secret_name}")
 
     # Retrieve and decode credentials
-    username_base64 = run_command(f"kubectl get secret -n {namespace} {secret_name} --template={{{{.data.username}}}}")
-    password_base64 = run_command(f"kubectl get secret -n {namespace} {secret_name} --template={{{{.data.password}}}}")
+    username_base64, _ = run_command(f"kubectl get secret -n {namespace} {secret_name} --template={{{{.data.username}}}}")
+    password_base64, _ = run_command(f"kubectl get secret -n {namespace} {secret_name} --template={{{{.data.password}}}}")
 
     if username_base64 and password_base64:
         username = base64.b64decode(username_base64).decode()

@@ -86,8 +86,8 @@ def cleanup_deliver_product():
 
 def cleanup_vcs_branch():
     # getting vcs creds
-    vcs_user = run_command("kubectl get secret -n services vcs-user-credentials --template={{.data.vcs_username}} | base64 --decode")
-    vcs_password = run_command("kubectl get secret -n services vcs-user-credentials --template={{.data.vcs_password}} | base64 --decode")
+    vcs_user, _ = run_command("kubectl get secret -n services vcs-user-credentials --template={{.data.vcs_username}} | base64 --decode")
+    vcs_password, _ = run_command("kubectl get secret -n services vcs-user-credentials --template={{.data.vcs_password}} | base64 --decode")
 
     configmap_name = 'cray-configmap-ca-public-key'
     gitea_base_url="https://api-gw-service-nmn.local/vcs"
@@ -120,7 +120,7 @@ def cleanup_vcs_branch():
 
 def cleanup_cfs_configurations():
     cfs_delete_command = "cray cfs configurations delete config-minimal-management-dummy-1.0.0"
-    cfs_delete_output = run_command(cfs_delete_command)
+    run_command(cfs_delete_command)
     print("INFO: Cleanup complete for UPDATE-CFS-CONFIG stage!")
 
 def cleanup_prepared_images():

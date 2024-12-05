@@ -134,7 +134,7 @@ def process_media(*args):
             sys.exit(1)
         
         check_configmap_command = f"kubectl get configmap {ACTIVITY_NAME} -n argo"
-        configmap_output = run_command(check_configmap_command)
+        configmap_output, _ = run_command(check_configmap_command)
 
         if configmap_output:
             print(f"TEST CASE: ConfigMap found.")
@@ -178,7 +178,7 @@ def deliver_product(ACTIVITY_NAME):
         test_cases += 5
         print("INFO: Checking cm...")
         check_configmap_command = f"kubectl get configmap {CONFIGMAP_NAME} -n {NAMESPACE} -o json"
-        configmap_output = run_command(check_configmap_command)
+        configmap_output, _ = run_command(check_configmap_command)
         if configmap_output:
             print(f"INFO: ConfigMap found. Checking for entry 'dummy' in the product name...")
 
@@ -219,8 +219,8 @@ def update_vcs_config(ACTIVITY_NAME):
         command = f"iuf -a {ACTIVITY_NAME} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml -bm {MEDIA_DIR}/management-bootprep.yaml -r update-vcs-config"
         run_command(command)
 
-        vcs_user = run_command("kubectl get secret -n services vcs-user-credentials --template={{.data.vcs_username}} | base64 --decode")
-        vcs_password = run_command("kubectl get secret -n services vcs-user-credentials --template={{.data.vcs_password}} | base64 --decode")
+        vcs_user, _ = run_command("kubectl get secret -n services vcs-user-credentials --template={{.data.vcs_username}} | base64 --decode")
+        vcs_password, _ = run_command("kubectl get secret -n services vcs-user-credentials --template={{.data.vcs_password}} | base64 --decode")
 
         configmap_name = 'cray-configmap-ca-public-key'
         gitea_base_url="https://api-gw-service-nmn.local/vcs"
@@ -289,7 +289,7 @@ def update_cfs_config(ACTIVITY_NAME):
             '["sat-bootprep-run"].script_stdout' + "' | xargs -0 echo -e"
         )
         
-        kubectl_output = run_command(kubectl_command)
+        kubectl_output, _ = run_command(kubectl_command)
 
         if not kubectl_output:
             print(f"ERROR: The output for cfs configurations is null or empty in the {ACTIVITY_NAME} configmap.")
@@ -300,7 +300,7 @@ def update_cfs_config(ACTIVITY_NAME):
             test_cases += 1
 
         cfs_command = "cray cfs configurations list | grep 'config-minimal-management-dummy-1.0.0'"
-        cfs_output = run_command(cfs_command)
+        cfs_output, _ = run_command(cfs_command)
         if not cfs_output:
             print("ERROR: No configuration found in cfs")
             print(f"INFO: Total test cases executed for stage operations: {test_cases}")
@@ -324,7 +324,7 @@ def prepare_images(ACTIVITY_NAME):
             '["prepare-images"]["prepare-management-images"]'
             '["sat-bootprep-run"].script_stdout' + "' | xargs -0 echo -e"
         )
-        kubectl_output = run_command(kubectl_command)
+        kubectl_output, _ = run_command(kubectl_command)
 
         if not kubectl_output:
             print("Error: The output for configmap entry of images is null or empty.")
@@ -340,7 +340,7 @@ def prepare_images(ACTIVITY_NAME):
         | jq -r '.operation_outputs.stage_params["prepare-images"]["prepare-management-images"]["sat-bootprep-run"].script_stdout | fromjson | .images[] | "\(.name):\(.final_image_id)"'
         """ 
 
-        images_name_and_ids = run_command(images_info_cmd)
+        images_name_and_ids, _ = run_command(images_info_cmd)
 
         if images_name_and_ids:
             image_lines = images_name_and_ids.splitlines()
@@ -351,7 +351,7 @@ def prepare_images(ACTIVITY_NAME):
                 
                 print(f"INFO: Checking cray ims images for image Name: {name.strip()} with image ID: {final_image_id.strip()}")
                 check_ims_cmd=f"cray ims images describe {final_image_id.strip()}"
-                ims_info = run_command(check_ims_cmd)
+                ims_info, _ = run_command(check_ims_cmd)
                 if not ims_info:
                         print(f"ERROR: Could not find ims image for {name}")
                         print(f"INFO: Total test cases executed for stage operations: {test_cases}")
@@ -363,7 +363,7 @@ def prepare_images(ACTIVITY_NAME):
                 name, final_image_id = image.split(':')
                 print(f"INFO: Checking cray artifacts boot-images for image Name: {name.strip()}")
                 check_boot_images_cmd=f"cray artifacts describe boot-images {final_image_id.strip()}/manifest.json "
-                boot_images_info = run_command(check_boot_images_cmd)
+                boot_images_info, _ = run_command(check_boot_images_cmd)
                 if not boot_images_info:
                     print(f"ERROR: Could not find boot-image for {name}")
                     print(f"INFO: Total test cases executed for stage operations: {test_cases}")
