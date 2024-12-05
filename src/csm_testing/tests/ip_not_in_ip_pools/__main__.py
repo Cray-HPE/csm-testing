@@ -69,8 +69,9 @@ def is_ip_between(ip, start_ip, end_ip, file):
 
     if ips >= start_ip and ips <= end_ip:
         print("Failed: This IP is in the pool range.")
-        print("This IP = ", ips, "Pool start IP = ", start_ip, "Pool end IP = ", end_ip)
-        logging.error("This IP = ", ips, "Pool start IP = ", start_ip, "Pool end IP = ", end_ip)
+        msg = f"This IP = {ips} Pool start IP = {start_ip} Pool end IP = {end_ip}"
+        print(msg)
+        logging.error(msg)
         return "FAIL"
     else:
         return "PASS"

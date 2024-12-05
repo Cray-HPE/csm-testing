@@ -43,7 +43,8 @@ in the Goss summarized output where the test failed.
 import argparse
 import json
 import logging
-import rados
+# The rados package is not available when we run pylint
+import rados # pylint: disable=import-error
 import sys
 
 CEPH_CONFIG_FILE = "/etc/ceph/ceph.conf"
