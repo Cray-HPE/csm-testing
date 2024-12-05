@@ -324,7 +324,7 @@ class DurationSeconds:
 
 
 class ResultsEntry:
-    def __init__(self, result_entry_raw: dict):
+    def __init__(self, result_entry_raw: Dict):
         self.result_raw = result_entry_raw["result"]
         self.title = result_entry_raw["title"]
         self.summary = result_entry_raw["summary-line"]
@@ -375,7 +375,7 @@ class ResultsEntry:
                  "Node": node_name }
 
 
-def extract_results_data(json_results: dict) -> Tuple[List[ResultsEntry], int, DurationSeconds]:
+def extract_results_data(json_results: Dict) -> Tuple[List[ResultsEntry], int, DurationSeconds]:
     try:
         results = json_results["results"]
         # Make list of results with a numeric result

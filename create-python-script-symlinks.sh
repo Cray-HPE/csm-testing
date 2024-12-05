@@ -33,12 +33,6 @@ source ./common.sh
 #                                         <target subdir1 in buildroot for symlinks>
 #                                        [<target subdir2 in buildroot for symlinks>] ...
 
-function err_exit
-{
-    echo "$0: ERROR: $*" >&2
-    exit 1
-}
-
 [[ $# -ge 4 ]] || err_exit "Too few arguments ($#): $*"
 
 buildroot="$1"

@@ -82,6 +82,22 @@ pipeline {
                 sh "make pymod"
             }
         }
+        stage('Validate Python module') {
+            agent {
+                docker {
+                    label "${PRIMARY_NODE}"
+                    reuseNode true
+                    args "-v /home/jenkins/.ssh:/home/jenkins/.ssh -v /home/jenkins/.netrc:/home/jenkins/.netrc"
+                    image "${pyImage}:${PY_VERSION}"
+                }
+            }
+            environment {
+                PY_BIN_PATH = getPythonBinaryPath(PY_VERSION)
+            }
+            steps {
+                sh "make pylint"
+            }
+        }
         stage('Build: RPMs') {
             agent {
                 docker {

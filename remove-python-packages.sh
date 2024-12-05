@@ -36,10 +36,7 @@ set -eu
 # command line, in which case those too will be removed from the virtual
 # environment, if they are present
 
-function err_exit {
-    echo "ERROR: $0: $*" >&2
-    exit 1
-}
+source ./common.sh
 
 common_pip_flags='--no-cache-dir --disable-pip-version-check'
 
