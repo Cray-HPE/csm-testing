@@ -114,7 +114,7 @@ def main() -> int:
         logger.info("Beginning verification that all console services are running")
 
         # Find that all services are present
-        pods = check_services_running()
+        check_services_running()
 
         logger.info("Verification of console services succeeded")
         return 0

@@ -146,7 +146,7 @@ def get_url_and_upload(bucket_name, key_name, file_name):
         try:
             s3client.delete_object(Bucket=bucket_name, Key=key_name)
         except Exception as delete_err:
-            echo("Unsuccessful upload. Unable to delete object: Error: %s" % delete_err)
+            print("Unsuccessful upload. Unable to delete object: Error: %s" % delete_err)
         sys.exit(str(err))
 
     try:
@@ -167,7 +167,7 @@ def get_url_and_upload(bucket_name, key_name, file_name):
         try:
             s3client.delete_object(Bucket=bucket_name, Key=key_name)
         except Exception as delete_err:
-            echo("Unsuccessful upload. Unable to delete object: Error: %s" % delete_err)
+            print("Unsuccessful upload. Unable to delete object: Error: %s" % delete_err)
         sys.exit(str(err))
 
 def list_objects(bucket_name):

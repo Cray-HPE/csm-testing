@@ -36,3 +36,9 @@ SYMLINK_PREFIX="#python-script-symlink"
 # (e.g. do not use '|')
 #shellcheck disable=SC2034
 SYMLINK_FS=","
+
+function err_exit
+{
+    echo "$0: ERROR: $*" >&2
+    exit 1
+}

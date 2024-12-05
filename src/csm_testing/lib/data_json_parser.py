@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-from __future__ import print_function
 
 """
 dataJson is a convenience class to work with the data.json file
@@ -48,8 +47,10 @@ Functions:
 
 """
 
+from __future__ import print_function
 import json
 import re
+import sys
 
 class dataJson:
     def __init__(self, data_json_path='/mnt/configs/data.json'):
@@ -61,7 +62,7 @@ class dataJson:
             try:
                 self.payload = json.load(obj)
             except:
-                print("Unable to open " + objFile + ". Possibly malformed json?")
+                print("Unable to open " + self.objFile + ". Possibly malformed json?")
                 sys.exit()
 
         self.keys = self.payload.keys()
