@@ -33,7 +33,7 @@ from urllib.parse import urljoin
 from kubernetes import client, config
 
 
-class APIRequest(object):
+class APIRequest:
     """
 
     Example use:
@@ -88,20 +88,16 @@ class APIRequest(object):
         response = http.request(method=method, url=url, headers=headers, **kwargs)
 
         if 'data' in kwargs:
-            log.debug(f"{method} {url} with headers:"
-                      f"{json.dumps(headers, indent=4)}"
-                      f"and data:"
-                      f"{json.dumps(kwargs['data'], indent=4)}")
+            log.debug("%s %s with headers: %s and data: %s", method, url,
+                      json.dumps(headers, indent=4), json.dumps(kwargs['data'], indent=4))
         elif 'json' in kwargs:
-            log.debug(f"{method} {url} with headers:"
-                      f"{json.dumps(headers, indent=4)}"
-                      f"and JSON:"
-                      f"{json.dumps(kwargs['json'], indent=4)}")
+            log.debug("%s %s with headers: %s and JSON: %s", method, url,
+                      json.dumps(headers, indent=4), json.dumps(kwargs['json'], indent=4))
         else:
-            log.debug(f"{method} {url} with headers:"
-                      f"{json.dumps(headers, indent=4)}")
-        log.debug(f"Response to {method} {url} => {response.status_code} {response.reason}"
-                  f"{response.text}")
+            log.debug("%s %s with headers: %s", method, url, json.dumps(headers, indent=4))
+
+        log.debug("Response to %s %s => %d %s %s", method, url, response.status_code,
+                  response.reason, response.text)
 
         return response
 
@@ -131,7 +127,8 @@ def token():
     token = base64.b64decode(secret['client-secret']).decode('utf-8')
 
     # create post data to keycloak istio ingress
-    token_data = {'grant_type': 'client_credentials', 'client_id': 'admin-client', 'client_secret': token}
+    token_data = {'grant_type': 'client_credentials', 'client_id': 'admin-client',
+                  'client_secret': token}
 
     # query keycloack
     token_url = '/keycloak/realms/shasta/protocol/openid-connect/token'
@@ -141,8 +138,7 @@ def token():
 
     return access_token
 
-def main():
-
+def main(): # pylint: disable=missing-function-docstring
     error_found = False
 
     bearer_token = token()
@@ -169,28 +165,29 @@ def main():
                 # print (ip)
                 if ip != '':
                     if ip in ip_set:
-                        log.error(f'Error: found duplicate IP: {ip}')
+                        log.error('Error: found duplicate IP: %s', ip)
                         error_found = True
                         nslookup_cmd = subprocess.Popen(('nslookup', ip), stdout=subprocess.PIPE,
                                                         stderr=subprocess.PIPE)
-                        output, errors = nslookup_cmd.communicate()
-                        print("output.decode('ascii')")
+                        output, _ = nslookup_cmd.communicate()
+                        print(output.decode('ascii'))
                     else:
                         ip_set.add(ip)
 
     hostname_list = []
 
-    for i in range(len(sls_hardware)):
-        if 'ExtraProperties' in sls_hardware[i]:
-            if 'Role' in sls_hardware[i]['ExtraProperties'] and (
-                    sls_hardware[i]['ExtraProperties']['Role'] == 'Application' or sls_hardware[i]['ExtraProperties'][
-                'Role'] == 'Management'):
-                hostname_list.append(sls_hardware[i]['ExtraProperties']['Aliases'][0] + '.nmn')
-                hostname_list.append(sls_hardware[i]['ExtraProperties']['Aliases'][0] + '.can')
-                hostname_list.append(sls_hardware[i]['ExtraProperties']['Aliases'][0] + '.hmn')
-                hostname_list.append(sls_hardware[i]['ExtraProperties']['Aliases'][0] + '-mgmt')
-                hostname_list.append(sls_hardware[i]['ExtraProperties']['Aliases'][0] + '.cmn')
-                hostname_list.append(sls_hardware[i]['ExtraProperties']['Aliases'][0] + '.chn')
+    for hardware in sls_hardware:
+        if 'ExtraProperties' not in hardware:
+            continue
+        if 'Role' not in hardware['ExtraProperties']:
+            continue
+        if hardware['ExtraProperties']['Role'] in {'Application', 'Management'}:
+            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] + '.nmn')
+            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] + '.can')
+            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] + '.hmn')
+            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] + '-mgmt')
+            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] + '.cmn')
+            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] + '.chn')
 
     for hostname in hostname_list:
 
@@ -199,8 +196,9 @@ def main():
         result = int(wc_cmd.decode('ascii').strip())
         if result > 1:
             error_found = True
-            log.error(f'ERROR: {hostname} has more than 1 DNS entry')
-            nslookup_cmd = subprocess.Popen(('nslookup', hostname), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            log.error('ERROR: %s has more than 1 DNS entry', hostname)
+            nslookup_cmd = subprocess.Popen(('nslookup', hostname), stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE)
             output, errors = nslookup_cmd.communicate()
             print(f"{output.decode('ascii')}")
 

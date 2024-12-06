@@ -27,7 +27,7 @@ import sys, logging
 logging.basicConfig(filename='/tmp/data_json_dns_server_test.log', level=logging.DEBUG)
 logging.info("Starting up")
 
-def main() -> int:
+def main() -> int: # pylint: disable=missing-function-docstring
     # Goss sends [.Args.datajson] as string with the brackets
     filename = sys.argv[1].strip('[').strip(']')
     logging.debug("Using file: %s", filename)

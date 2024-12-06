@@ -88,9 +88,9 @@ def check_services_running():
                     #  gather what information we can.
                     if c.ready != True:
                         if c.state.terminated != None:
-                            logger.error(f"Pod: {i.metadata.name} Container Terminated: {c.name}, " + 
+                            logger.error(f"Pod: {i.metadata.name} Container Terminated: {c.name}, " +
                                             f"Exit Code: {c.state.terminated.exit_code}, " +
-                                            f"Reason: {c.state.terminated.reason}, " + 
+                                            f"Reason: {c.state.terminated.reason}, " +
                                             f"Message: {c.state.terminated.message}")
                             ok = False
                         if c.state.waiting != None:
@@ -108,7 +108,7 @@ def check_services_running():
         logger.error(f"Found pods: {foundPods}")
         raise ConsoleException
 
-def main() -> int:
+def main() -> int: # pylint: disable=missing-function-docstring
     try:
         return_value = True
         logger.info("Beginning verification that all console services are running")

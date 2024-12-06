@@ -30,7 +30,7 @@ Validates that the system has:
 * Exactly 12 OSDs per storage node, if Gigabyte hardware
 * At least 1 OSD per storage node, if Intel hardware
 * Or that (#_osds / #_storage_nodes) has no remainder
- 
+
 The test fails if the above validation fails.
 If the system has a different hardware type or the test is unable
 to determine it, the test fails.
@@ -144,7 +144,7 @@ def get_num_osds():
         sys.exit(5)
     return num_osds
 
-def main():
+def main(): # pylint: disable=missing-function-docstring
     min_expected_osds, max_expected_osds, n_storage_nodes = parse_args()
     num_osds = get_num_osds()
     if num_osds < min_expected_osds:

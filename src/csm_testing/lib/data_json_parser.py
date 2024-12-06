@@ -26,11 +26,11 @@
 dataJson is a convenience class to work with the data.json file
 
 data.json exists as key:value file where key can be either a mac address that is inconsistent depending on the environment
-Or ... everything else - which IS consistent Storage, Default, Global, etc. 
+Or ... everything else - which IS consistent Storage, Default, Global, etc.
 Convenience functions are included to easily dig out the most likely needed data
 
 Parameters:
-dataJson(/path/to/data.json) 
+dataJson(/path/to/data.json)
 
 Exposes:
     payload: A dictionary of the entire data.json file

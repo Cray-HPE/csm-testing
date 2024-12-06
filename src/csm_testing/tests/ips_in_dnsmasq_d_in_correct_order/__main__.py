@@ -51,10 +51,10 @@ l_lvl = logging.INFO
 logging.basicConfig(filename='/tmp/' + sys.argv[0].split('/')[-1] + '.log',  level=l_lvl)
 logging.info(now()+" Starting up")
 
-def main() -> int:
+def main() -> int: # pylint: disable=missing-function-docstring
     fileDir = "/etc/dnsmasq.d/"
     fileNames = ['CAN', 'NMN', 'HMN', 'mtl' ]
-    contents =[] 
+    contents =[]
 
     # Iterate over the list of filenames and try to open the file
     for fileName in fileNames:
@@ -69,7 +69,7 @@ def main() -> int:
             print("Unable to open file: "+fileName+".conf")
             return 1
 
-        # if the contents of the file !NULL - read the file line-by-line 
+        # if the contents of the file !NULL - read the file line-by-line
         # and check if the line contains 'dhcp-range'
         # it's a really good bet that the format of that line will not change
         line = f.readline()

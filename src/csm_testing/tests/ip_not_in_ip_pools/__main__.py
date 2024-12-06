@@ -85,7 +85,7 @@ def get_start_last_from_dnsmask_d(fileName):
             end = line.split(',')[2]
     return start, end
 
-def main() -> int:
+def main() -> int: # pylint: disable=missing-function-docstring
     if len(sys.argv) <2:
         print("Incorrect number of arguments")
         return 2
