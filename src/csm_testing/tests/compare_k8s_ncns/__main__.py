@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 Checks to make sure that all masters have the same kernel version,
 all workers have the same kernel version, and all Kubernetes NCNs have the
@@ -31,8 +30,11 @@ same values for several other fields (enumerated below in KubernetesNodeInfoFiel
 import kubernetes
 import sys
 
-KubernetesNodeInfoFields = [ "container_runtime_version", "kube_proxy_version",
-                             "kubelet_version", "os_image" ]
+KubernetesNodeInfoFields = [
+    "container_runtime_version", "kube_proxy_version", "kubelet_version",
+    "os_image"
+]
+
 
 def print_err(msg: str) -> None:
     """
@@ -41,7 +43,7 @@ def print_err(msg: str) -> None:
     sys.stderr.write(f"ERROR: {msg}\n")
 
 
-def main() -> None: # pylint: disable=missing-function-docstring
+def main() -> None:  # pylint: disable=missing-function-docstring
     print("Loading Kubernetes configuration")
     kubernetes.config.load_kube_config()
     print("Initializing Kubernetes client")
@@ -53,7 +55,7 @@ def main() -> None: # pylint: disable=missing-function-docstring
 
     master_kernel_version = {}
     worker_kernel_version = {}
-    node_info_values = { field: {} for field in KubernetesNodeInfoFields }
+    node_info_values = {field: {} for field in KubernetesNodeInfoFields}
 
     num_workers = 0
     num_masters = 0
@@ -84,21 +86,24 @@ def main() -> None: # pylint: disable=missing-function-docstring
             ncn_kver = node_info.kernel_version
             print(f"kernel_version = '{ncn_kver}'")
             if not ncn_kver:
-                print_err(f"Empty kernel version field in node_info for {ncn_name}")
+                print_err(
+                    f"Empty kernel version field in node_info for {ncn_name}")
                 passed = False
             elif worker_ncn:
                 if ncn_kver in worker_kernel_version:
                     worker_kernel_version[ncn_kver].append(ncn_name)
                 else:
-                    worker_kernel_version[ncn_kver] = [ ncn_name ]
+                    worker_kernel_version[ncn_kver] = [ncn_name]
             else:
                 # master NCN
                 if ncn_kver in master_kernel_version:
                     master_kernel_version[ncn_kver].append(ncn_name)
                 else:
-                    master_kernel_version[ncn_kver] = [ ncn_name ]
+                    master_kernel_version[ncn_kver] = [ncn_name]
         except AttributeError:
-            print_err(f"Unable to find kernel_version field in node_info for {ncn_name}")
+            print_err(
+                f"Unable to find kernel_version field in node_info for {ncn_name}"
+            )
             passed = False
 
         for field in KubernetesNodeInfoFields:
@@ -106,20 +111,23 @@ def main() -> None: # pylint: disable=missing-function-docstring
                 ncn_field_value = getattr(node_info, field)
                 print(f"{field} = '{ncn_field_value}'")
                 if not ncn_field_value:
-                    print_err(f"Empty {field} field in node_info for {ncn_name}")
+                    print_err(
+                        f"Empty {field} field in node_info for {ncn_name}")
                     passed = False
                     continue
                 if ncn_field_value in node_info_values[field]:
                     node_info_values[field][ncn_field_value].append(ncn_name)
                 else:
-                    node_info_values[field][ncn_field_value] = [ ncn_name ]
+                    node_info_values[field][ncn_field_value] = [ncn_name]
             except AttributeError:
-                print_err(f"Unable to find {field} field in node_info for {ncn_name}")
+                print_err(
+                    f"Unable to find {field} field in node_info for {ncn_name}"
+                )
                 passed = False
 
     # The purpose of this test is not to make sure the number of NCNs found is correct. However,
-    # because at least 2 masters and 2 workers are needed in order to do any value comparisons, this
-    # test will fail if that is not the case.
+    # because at least 2 masters and 2 workers are needed in order to do any value comparisons,
+    # this test will fail if that is not the case.
     if num_masters == 0:
         print_err("No master NCNs found in list")
         passed = False

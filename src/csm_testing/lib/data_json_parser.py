@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 dataJson is a convenience class to work with the data.json file
 
@@ -52,9 +51,13 @@ import json
 import re
 import sys
 
+
 class dataJson:
+
     def __init__(self, data_json_path='/mnt/configs/data.json'):
-        self.macRegex = re.compile('[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]')
+        self.macRegex = re.compile(
+            '[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]'
+        )
         #self.objFile = 'data.json'
         self.objFile = data_json_path
 
@@ -62,7 +65,8 @@ class dataJson:
             try:
                 self.payload = json.load(obj)
             except:
-                print("Unable to open " + self.objFile + ". Possibly malformed json?")
+                print("Unable to open " + self.objFile +
+                      ". Possibly malformed json?")
                 sys.exit()
 
         self.keys = self.payload.keys()
@@ -79,7 +83,8 @@ class dataJson:
         # Make a dictionary of all the ncns for easy checking
         self.ncnList = {}
         for ncnKey in self.ncnKeys:
-            self.ncnList[self.payload[ncnKey]['user-data']['hostname']] = ncnKey
+            self.ncnList[self.payload[ncnKey]['user-data']
+                         ['hostname']] = ncnKey
 
     def getGlobalMD(self):
         '''Convenience function that returns just the Global mete-data'''
@@ -97,13 +102,13 @@ class dataJson:
         '''Convenience function - reverse lookup by hostname and return the user-data'''
         return self.payload[self.ncnList[ncn]]['user-data']
 
+
 if __name__ == '__main__':
     # this is just for testing purposes
     dj = dataJson()
-    print (dj.keys)
+    print(dj.keys)
     for key in dj.ncnKeys:
-        print (key)
+        print(key)
 
     print(dj.payload)
     print(dj.getNcnDataU('ncn-w001'))
-

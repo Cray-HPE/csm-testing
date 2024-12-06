@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 Usage: print_goss_json_results <filename|stdin[:label]|url>
                                [<filename|stdin[:label]|url>] ...
@@ -100,7 +99,6 @@ from csm_testing.lib.grok_exporter_logger import grok_exporter_log,      \
                                                  GROK_EXPORTER_LOG_DIR,  \
                                                  JSONDict
 
-
 RC_TESTFAIL = 1
 RC_USAGE = 2
 RC_ERROR = 3
@@ -111,11 +109,13 @@ GROK_EXPORTER_OUTFILE = None
 MY_BASENAME = strip_path(__file__)
 
 
-def log_to_grok_exporter(msg: str, data: JSONDict=None) -> None:
+def log_to_grok_exporter(msg: str, data: JSONDict = None) -> None:
     """
     Add a line to the grok-exporter log file.
     """
-    grok_exporter_log(message=msg, script_name=MY_BASENAME, outfile=GROK_EXPORTER_OUTFILE,
+    grok_exporter_log(message=msg,
+                      script_name=MY_BASENAME,
+                      outfile=GROK_EXPORTER_OUTFILE,
                       data=data)
 
 
@@ -132,24 +132,30 @@ def outfile_print(outstring: str) -> None:
         stderr_print(msg)
         OUTFILE = None
 
+
 def print_newline() -> None:
     multi_print("", outfile_print, stdout_print)
+
 
 def error(outstring: str) -> None:
     stderr_print(err_text(f"ERROR: {outstring}"))
     logging.error(outstring)
     outfile_print(f"ERROR: {outstring}")
 
+
 def warning(outstring: str) -> None:
     stderr_print(warn_text(f"WARNING: {outstring}"))
     logging.warning(outstring)
     outfile_print(f"WARNING: {outstring}")
 
+
 def is_url(would_be_url: str) -> bool:
     """
     Very basic check to see if string appears to be a URL
     """
-    return would_be_url.find("http://") == 0 or would_be_url.find("https://") == 0
+    return would_be_url.find("http://") == 0 or would_be_url.find(
+        "https://") == 0
+
 
 def get_node_from_url(url: str) -> str:
     # The node name we use (as a label for results) is the first string after the //, up until
@@ -165,13 +171,16 @@ def get_node_from_url(url: str) -> str:
         return node[:colon_index]
     return node
 
+
 def print_reading_test_results_message(node: str, label: str = "") -> None:
     if label:
-        stdout_print(f"Reading test results for node {warn_text(node)} ({label})")
+        stdout_print(
+            f"Reading test results for node {warn_text(node)} ({label})")
         outfile_print(f"Reading test results for node {node} ({label})")
     else:
         stdout_print(f"Reading test results for node {warn_text(node)}")
         outfile_print(f"Reading test results for node {node}")
+
 
 def read_and_decode_json(input_file: str, node: str) -> dict:
     if input_file == "stdin" or input_file[:6] == "stdin:":
@@ -201,10 +210,12 @@ def read_and_decode_json(input_file: str, node: str) -> dict:
         print_newline()
         log_values(logging.debug, read_input=read_input)
         multi_print(traceback.format_exc(), outfile_print, logging.error)
-        raise ScriptException(f"Error decoding JSON from {input_file}. {fmt_exc(exc)}") from exc
+        raise ScriptException(
+            f"Error decoding JSON from {input_file}. {fmt_exc(exc)}") from exc
 
 
 class JsonResultsCollection:
+
     def __init__(self):
         self.lock = threading.Lock()
         self.results_map = {}
@@ -232,21 +243,26 @@ class JsonResultsCollection:
         try:
             resp = requests.get(input_url)
         except Exception as exc:
-            logging.error("Unexpected error attempting GET request to %s: %s", input_url,
-                          traceback.format_exc())
-            self.send_result(input_url, "Unexpected error attempting GET request to "
-                             f"{input_url}: {fmt_exc(exc)}")
+            logging.error("Unexpected error attempting GET request to %s: %s",
+                          input_url, traceback.format_exc())
+            self.send_result(
+                input_url, "Unexpected error attempting GET request to "
+                f"{input_url}: {fmt_exc(exc)}")
             return
 
-        JsonResultsCollection.log_values(logging.debug, input_url=input_url,
-                                         status_code=resp.status_code, reason=resp.reason,
-                                         headers=resp.headers, ok=resp.ok)
+        JsonResultsCollection.log_values(logging.debug,
+                                         input_url=input_url,
+                                         status_code=resp.status_code,
+                                         reason=resp.reason,
+                                         headers=resp.headers,
+                                         ok=resp.ok)
         # Expected responses are 200 (meaning no tests failed) or 503 (which can mean either that
         # there were test failures OR that there was another Goss issue, like syntax errors in the
         # test files).
-        if resp.status_code not in { 200, 503 }:
-            err_msg = (f"Status code {resp.status_code} received from Goss URL "
-                       f"{input_url}: {resp.text}")
+        if resp.status_code not in {200, 503}:
+            err_msg = (
+                f"Status code {resp.status_code} received from Goss URL "
+                f"{input_url}: {resp.text}")
             logging.error(err_msg)
             self.send_result(input_url, err_msg)
             return
@@ -255,23 +271,32 @@ class JsonResultsCollection:
         try:
             json_results = resp.json()
         except Exception as exc:
-            logging.error("Unexpected error decoding JSON response from %s: %s", input_url,
-                          traceback.format_exc())
-            JsonResultsCollection.log_values(logging.debug, input_url=input_url, text=resp.text)
-            self.send_result(input_url, "Unexpected error decoding JSON response from "
-                             f"{input_url}: {fmt_exc(exc)}")
+            logging.error(
+                "Unexpected error decoding JSON response from %s: %s",
+                input_url, traceback.format_exc())
+            JsonResultsCollection.log_values(logging.debug,
+                                             input_url=input_url,
+                                             text=resp.text)
+            self.send_result(
+                input_url, "Unexpected error decoding JSON response from "
+                f"{input_url}: {fmt_exc(exc)}")
             return
 
-        JsonResultsCollection.log_values(logging.debug, input_url=input_url,
+        JsonResultsCollection.log_values(logging.debug,
+                                         input_url=input_url,
                                          json_results=json_results)
         logging.info("Successfully decoded JSON response from %s", input_url)
         self.send_result(input_url, json_results)
         return
 
     def run_goss_decode_json(self, suite_or_test: str) -> None:
-        cmd_list = ["/usr/bin/goss", "-g", suite_or_test, "v", "--format", "json"]
+        cmd_list = [
+            "/usr/bin/goss", "-g", suite_or_test, "v", "--format", "json"
+        ]
         logging.debug("Running: %s", cmd_list)
-        cmd_result = subprocess.run(cmd_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        cmd_result = subprocess.run(cmd_list,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
                                     check=False)
         cmd_out = cmd_result.stdout
         cmd_err = cmd_result.stderr
@@ -283,27 +308,36 @@ class JsonResultsCollection:
         # If the stderr is not empty, we log these values as warnings. Otherwise we log them as
         # debug.
         if len(cmd_err) != 0:
-            JsonResultsCollection.log_values(logging.warning, cmd_list=cmd_list,
-                                             returncode=cmd_result.returncode, stderr=cmd_err)
+            JsonResultsCollection.log_values(logging.warning,
+                                             cmd_list=cmd_list,
+                                             returncode=cmd_result.returncode,
+                                             stderr=cmd_err)
         else:
-            JsonResultsCollection.log_values(logging.debug, cmd_list=cmd_list,
-                                             returncode=cmd_result.returncode, stderr=cmd_err)
+            JsonResultsCollection.log_values(logging.debug,
+                                             cmd_list=cmd_list,
+                                             returncode=cmd_result.returncode,
+                                             stderr=cmd_err)
         logging.info("Command completed: %s", cmd_list)
         try:
             json_results = json.loads(cmd_out)
         except Exception as exc:
             # This is most likely going to happen if the goss command failed
-            JsonResultsCollection.log_values(logging.error, cmd_list=cmd_list,
+            JsonResultsCollection.log_values(logging.error,
+                                             cmd_list=cmd_list,
                                              returncode=cmd_result.returncode,
-                                             stdout=cmd_out, stderr=cmd_err)
-            logging.error("Unexpected error decoding JSON output from %s: %s", cmd_list,
-                          traceback.format_exc())
-            self.send_result(suite_or_test, "Unexpected error decoding JSON output from "
-                             f"{cmd_list}: {fmt_exc(exc)}")
+                                             stdout=cmd_out,
+                                             stderr=cmd_err)
+            logging.error("Unexpected error decoding JSON output from %s: %s",
+                          cmd_list, traceback.format_exc())
+            self.send_result(
+                suite_or_test, "Unexpected error decoding JSON output from "
+                f"{cmd_list}: {fmt_exc(exc)}")
             return
-        JsonResultsCollection.log_values(logging.debug, cmd_list=cmd_list,
+        JsonResultsCollection.log_values(logging.debug,
+                                         cmd_list=cmd_list,
                                          returncode=cmd_result.returncode,
-                                         stdout=cmd_out, stderr=cmd_err)
+                                         stdout=cmd_out,
+                                         stderr=cmd_err)
         logging.info("Successfully decoded JSON output from %s", cmd_list)
         self.send_result(suite_or_test, json_results)
         return
@@ -343,6 +377,7 @@ class DurationSeconds:
 
 
 class ResultsEntry:
+
     def __init__(self, result_entry_raw: Dict):
         self.result_raw = result_entry_raw["result"]
         self.title = result_entry_raw["title"]
@@ -368,13 +403,13 @@ class ResultsEntry:
         Return a string of the results formatted as a multi-line string,
         followed by a blank line
         """
-        return ( f"Result: {self.result_string}\n"
-                 f"Source: {source}\n"
-                 f"Test Name: {self.title}\n"
-                 f"Description: {self.description}\n"
-                 f"Test Summary: {self.summary}\n"
-                 f"Execution Time: {self.duration_seconds} seconds\n"
-                 f"Node: {node_name}\n\n" )
+        return (f"Result: {self.result_string}\n"
+                f"Source: {source}\n"
+                f"Test Name: {self.title}\n"
+                f"Description: {self.description}\n"
+                f"Test Summary: {self.summary}\n"
+                f"Execution Time: {self.duration_seconds} seconds\n"
+                f"Node: {node_name}\n\n")
 
     def dict(self, source: str, node_name: str) -> dict:
         """
@@ -384,24 +419,30 @@ class ResultsEntry:
         for the grok exporter that parses the log), we record it here as a string in the
         non-scientific format.
         """
-        return { "Result Code": self.result_raw,
-                 "Result String": self.result_string,
-                 "Source": source,
-                 "Test Name": self.title,
-                 "Description": self.description,
-                 "Test Summary": self.summary,
-                 "Execution Time (seconds)": self.duration_seconds,
-                 "Execution Time (nanoseconds)": self.duration_seconds.to_nanoseconds(),
-                 "Node": node_name }
+        return {
+            "Result Code": self.result_raw,
+            "Result String": self.result_string,
+            "Source": source,
+            "Test Name": self.title,
+            "Description": self.description,
+            "Test Summary": self.summary,
+            "Execution Time (seconds)": self.duration_seconds,
+            "Execution Time (nanoseconds)":
+            self.duration_seconds.to_nanoseconds(),
+            "Node": node_name
+        }
 
 
-def extract_results_data(json_results: Dict) -> Tuple[List[ResultsEntry], int, DurationSeconds]:
+def extract_results_data(
+        json_results: Dict) -> Tuple[List[ResultsEntry], int, DurationSeconds]:
     try:
         results = json_results["results"]
         # Make list of results with a numeric result
-        selected_results = [ ResultsEntry(result_entry_raw=result_entry)
-                             for result_entry in results
-                             if isinstance(result_entry["result"], int) ]
+        selected_results = [
+            ResultsEntry(result_entry_raw=result_entry)
+            for result_entry in results
+            if isinstance(result_entry["result"], int)
+        ]
 
         # Get some of the summary fields
         summary = json_results["summary"]
@@ -421,43 +462,46 @@ def extract_results_data(json_results: Dict) -> Tuple[List[ResultsEntry], int, D
     selected_results.sort(key=lambda r: (r.title, r.result_raw))
     return selected_results, failed_count, total_duration
 
-def show_results(source: str, selected_results: List[ResultsEntry], failed_count: int,
-                 total_duration: DurationSeconds, node_name: str) -> Tuple[int, int, int]:
+
+def show_results(source: str, selected_results: List[ResultsEntry],
+                 failed_count: int, total_duration: DurationSeconds,
+                 node_name: str) -> Tuple[int, int, int]:
     """
     Prints all results to OUTFILE.
     Prints failures to stderr.
     Prints warnings if no tests executed or the Goss data contains inconsistencies.
     Returns (# of passes, # of failures, # of unknown results)
     """
-    manual_unknown_count=0
-    manual_pass_count=0
-    manual_fail_count=0
-    manual_skip_count=0
-    total_count=len(selected_results)
+    manual_unknown_count = 0
+    manual_pass_count = 0
+    manual_fail_count = 0
+    manual_skip_count = 0
+    total_count = len(selected_results)
     for res in selected_results:
         bad_result = False
         # Goss result 0 -> pass, 1 -> fail, 2 -> skip
         if res.result_string == "PASS":
             # Test passed
-            manual_pass_count+=1
+            manual_pass_count += 1
         elif res.result_string == "FAIL":
             # Test failed
-            manual_fail_count+=1
+            manual_fail_count += 1
             bad_result = True
         elif res.result_string == "SKIPPED":
             # Test was skipped (this is not usually due to error)
-            manual_skip_count+=1
+            manual_skip_count += 1
         else:
             # This should never happpen
-            manual_unknown_count+=1
+            manual_unknown_count += 1
             bad_result = True
 
         # Write to output file
-        result_lines=res.multiline_string(source=source, node_name=node_name)
+        result_lines = res.multiline_string(source=source, node_name=node_name)
         outfile_print(result_lines)
 
         # Write to grok-exporter log
-        log_to_grok_exporter("Test result", data=res.dict(source=source, node_name=node_name))
+        log_to_grok_exporter("Test result",
+                             data=res.dict(source=source, node_name=node_name))
 
         # If the test failed or had an unknown result, also print to stderr in red
         if bad_result:
@@ -474,33 +518,42 @@ def show_results(source: str, selected_results: List[ResultsEntry], failed_count
         "Total Failed": manual_fail_count,
         "Total Skipped": manual_skip_count,
         "Total Unknown": manual_unknown_count,
-        "Total Execution Time": f"{total_duration} seconds" }
-    summary = ', '.join([ f"{key}: {value}" for key, value in summary_data.items() ])
+        "Total Execution Time": f"{total_duration} seconds"
+    }
+    summary = ', '.join(
+        [f"{key}: {value}" for key, value in summary_data.items()])
     multi_print(summary, logging.info, outfile_print)
     log_to_grok_exporter("Source test results summary", summary_data)
     if failed_count != manual_fail_count:
         # If no errors have been reported yet for this source, add a newline first
         if manual_fail_count == 0:
             print_newline()
-        mismatch=(f"failed_count in results ({failed_count}) does not match manual tally of test "
-                  f"failures ({manual_fail_count})")
+        mismatch = (
+            f"failed_count in results ({failed_count}) does not match manual tally of test "
+            f"failures ({manual_fail_count})")
         stderr_print(warn_text(f"WARNING: {mismatch}"))
         logging.warning(mismatch)
-        multi_print(f"WARNING: {mismatch}", outfile_print, log_to_grok_exporter)
+        multi_print(f"WARNING: {mismatch}", outfile_print,
+                    log_to_grok_exporter)
         print_newline()
 
     return manual_pass_count, manual_fail_count, manual_unknown_count
 
+
 suite_test_file_pattern = "^(?:suites|tests)/[^/]+[.]yaml$"
 suite_test_file_prog = re.compile(suite_test_file_pattern)
+
+
 def is_suite_test_file(check_string: str) -> bool:
     if suite_test_file_prog.match(check_string):
         return True
     return False
 
+
 def parse_args() -> Dict[str, StringList]:
-    parser = argparse.ArgumentParser(description="Summarize JSON-format Goss test results with "
-                                     "pretty colors.")
+    parser = argparse.ArgumentParser(
+        description="Summarize JSON-format Goss test results with "
+        "pretty colors.")
     parser.add_argument("sources", nargs="+", help="Sources for test results.")
     # In Python 3.6, the exit_on_error option to ArgumentParser does not yet exist, so a cruder
     # method is required to control how the script exits in the case of a usage error.
@@ -513,8 +566,9 @@ def parse_args() -> Dict[str, StringList]:
 
     input_sources = args.sources
     if len(input_sources) != len(set(input_sources)):
-        stderr_print(err_text("Duplicate sources are not permitted. "
-                              f"Invalid arguments: {' '.join(input_sources)}"))
+        stderr_print(
+            err_text("Duplicate sources are not permitted. "
+                     f"Invalid arguments: {' '.join(input_sources)}"))
         stderr_print(err_text("FAILED (usage)"))
         sys.exit(RC_USAGE)
 
@@ -522,7 +576,7 @@ def parse_args() -> Dict[str, StringList]:
     # For non-stdin file sources, make sure the file exists
 
     # Even though we allow only one stdin source, we make it a list just for simplicity
-    sources = { "stdin": [], "goss_file": [], "results_file": [], "url": [] }
+    sources = {"stdin": [], "goss_file": [], "results_file": [], "url": []}
     for source in input_sources:
         if is_url(source):
             sources["url"].append(source)
@@ -530,8 +584,9 @@ def parse_args() -> Dict[str, StringList]:
         elif source == "stdin" or source[:6] == "stdin:":
             # Only allow a maximum of one stdin source
             if sources["stdin"]:
-                stderr_print(err_text("Multiple stdin sources are not permitted. "
-                                      f"Invalid arguments: {' '.join(input_sources)}"))
+                stderr_print(
+                    err_text("Multiple stdin sources are not permitted. "
+                             f"Invalid arguments: {' '.join(input_sources)}"))
                 stderr_print(err_text("FAILED (usage)"))
                 sys.exit(RC_USAGE)
             sources["stdin"].append(source)
@@ -543,11 +598,13 @@ def parse_args() -> Dict[str, StringList]:
             source_path = source
             sources["results_file"].append(source_path)
         if not os.path.isfile(source_path):
-            stderr_print(err_text(f"File source does not exist: {source_path}"))
+            stderr_print(
+                err_text(f"File source does not exist: {source_path}"))
             stderr_print(err_text("FAILED (usage)"))
             sys.exit(RC_USAGE)
 
     return sources
+
 
 def _main(input_sources: Dict[str, StringList]) -> int:
     """
@@ -572,7 +629,10 @@ def _main(input_sources: Dict[str, StringList]) -> int:
         try:
             log_values(logging.debug, source=source)
             json_results = read_and_decode_json(source, mynode)
-            log_values(logging.info, source=source, node=mynode, json_results=json_results)
+            log_values(logging.info,
+                       source=source,
+                       node=mynode,
+                       json_results=json_results)
         except ScriptException as exc:
             error(exc)
             error(f"Skipping {source} due to error\n")
@@ -585,7 +645,8 @@ def _main(input_sources: Dict[str, StringList]) -> int:
             continue
         # Extract the results from the JSON
         try:
-            selected_results, failed_count, total_duration = extract_results_data(json_results)
+            selected_results, failed_count, total_duration = extract_results_data(
+                json_results)
         except ScriptException as exc:
             error(exc)
             error(f"Skipping {source} due to error\n")
@@ -595,8 +656,9 @@ def _main(input_sources: Dict[str, StringList]) -> int:
             # Add a newline before printing errors
             print_newline()
             multi_print(traceback.format_exc(), outfile_print, logging.error)
-            error(f"Skipping {source} due to error extracting test results from "
-                  f"JSON data: {fmt_exc(exc)}\n")
+            error(
+                f"Skipping {source} due to error extracting test results from "
+                f"JSON data: {fmt_exc(exc)}\n")
             unexpected_error = True
             continue
         all_results.append({
@@ -604,7 +666,8 @@ def _main(input_sources: Dict[str, StringList]) -> int:
             "selected_results": selected_results,
             "failed_count": failed_count,
             "total_duration": total_duration,
-            "node_name": mynode })
+            "node_name": mynode
+        })
 
     # Now handle goss files and url sources in parallel
     parallel_sources = goss_file_sources + url_sources
@@ -616,37 +679,44 @@ def _main(input_sources: Dict[str, StringList]) -> int:
         if max_workers == 0:
             exec_args = {}
         else:
-            exec_args = { "max_workers": max_workers }
+            exec_args = {"max_workers": max_workers}
         log_values(logging.debug, exec_args=exec_args)
         with concurrent.futures.ThreadPoolExecutor(**exec_args) as executor:
-            executor.map(json_results_collection.run_test_decode_json, parallel_sources)
+            executor.map(json_results_collection.run_test_decode_json,
+                         parallel_sources)
         json_results_map = json_results_collection.results_map
         for source in parallel_sources:
             try:
                 json_results = json_results_map[source]
             except KeyError:
-                error("Internal error. Unable to find results OR error message from "
-                      f"request to {source}")
+                error(
+                    "Internal error. Unable to find results OR error message from "
+                    f"request to {source}")
                 error(f"Skipping {source} due to error\n")
                 unexpected_error = True
                 continue
             if isinstance(json_results, str):
-                error(f"Error encountered running {source} tests: {json_results}")
+                error(
+                    f"Error encountered running {source} tests: {json_results}"
+                )
                 error(f"Skipping {source} due to error\n")
                 unexpected_error = True
                 continue
             # Extract the results from the JSON
             try:
-                selected_results, failed_count, total_duration = extract_results_data(json_results)
+                selected_results, failed_count, total_duration = extract_results_data(
+                    json_results)
             except ScriptException as exc:
                 error(exc)
                 error(f"Skipping {source} due to error\n")
                 unexpected_error = True
                 continue
             except Exception as exc:
-                multi_print(traceback.format_exc(), outfile_print, logging.error)
-                error(f"Skipping {source} due to error extracting test results from "
-                      f"JSON data: {fmt_exc(exc)}\n")
+                multi_print(traceback.format_exc(), outfile_print,
+                            logging.error)
+                error(
+                    f"Skipping {source} due to error extracting test results from "
+                    f"JSON data: {fmt_exc(exc)}\n")
                 unexpected_error = True
                 continue
             if source in url_sources:
@@ -658,7 +728,8 @@ def _main(input_sources: Dict[str, StringList]) -> int:
                 "selected_results": selected_results,
                 "failed_count": failed_count,
                 "total_duration": total_duration,
-                "node_name": node })
+                "node_name": node
+            })
 
     # Finally we handle stdin,
     if input_sources["stdin"]:
@@ -666,7 +737,10 @@ def _main(input_sources: Dict[str, StringList]) -> int:
         try:
             log_values(logging.debug, source=source)
             json_results = read_and_decode_json(source, mynode)
-            log_values(logging.info, source=source, node=mynode, json_results=json_results)
+            log_values(logging.info,
+                       source=source,
+                       node=mynode,
+                       json_results=json_results)
         except ScriptException as exc:
             error(exc)
             error(f"Skipping {source} due to error\n")
@@ -678,7 +752,8 @@ def _main(input_sources: Dict[str, StringList]) -> int:
         else:
             # Extract the results from the JSON
             try:
-                selected_results, failed_count, total_duration = extract_results_data(json_results)
+                selected_results, failed_count, total_duration = extract_results_data(
+                    json_results)
             except ScriptException as exc:
                 error(exc)
                 error(f"Skipping {source} due to error\n")
@@ -686,9 +761,11 @@ def _main(input_sources: Dict[str, StringList]) -> int:
             except Exception as exc:
                 # Add a newline before printing errors
                 print_newline()
-                multi_print(traceback.format_exc(), outfile_print, logging.error)
-                error(f"Skipping {source} due to error extracting test results from "
-                      f"JSON data: {fmt_exc(exc)}\n")
+                multi_print(traceback.format_exc(), outfile_print,
+                            logging.error)
+                error(
+                    f"Skipping {source} due to error extracting test results from "
+                    f"JSON data: {fmt_exc(exc)}\n")
                 unexpected_error = True
             else:
                 all_results.append({
@@ -696,13 +773,15 @@ def _main(input_sources: Dict[str, StringList]) -> int:
                     "selected_results": selected_results,
                     "failed_count": failed_count,
                     "total_duration": total_duration,
-                    "node_name": mynode })
+                    "node_name": mynode
+                })
 
     total_passed = 0
     total_failed = 0
     total_unknown = 0
     if all_results:
-        multi_print("\nChecking test results", outfile_print, logging.info, stdout_print)
+        multi_print("\nChecking test results", outfile_print, logging.info,
+                    stdout_print)
         stdout_print("Only errors will be printed to the screen")
         for results in all_results:
             log_values(logging.debug, results=results)
@@ -715,8 +794,9 @@ def _main(input_sources: Dict[str, StringList]) -> int:
     if total_unknown == 0:
         total_summary = f"GRAND TOTAL: {total_passed} passed, {total_failed} failed"
     else:
-        total_summary = (f"GRAND TOTAL: {total_passed} passed, {total_failed} failed, "
-                         f"{total_unknown} unknown results")
+        total_summary = (
+            f"GRAND TOTAL: {total_passed} passed, {total_failed} failed, "
+            f"{total_unknown} unknown results")
     multi_print(total_summary, outfile_print, log_to_grok_exporter)
     if total_passed == 0 and total_failed == 0 and total_unknown == 0:
         stderr_print(warn_text(total_summary))
@@ -740,7 +820,8 @@ def _main(input_sources: Dict[str, StringList]) -> int:
 def setup_logging() -> Tuple[str, str, str]:
     unique_string = time_pid_unique_string()
 
-    MY_LOG_DIR = log_dir(script_name=__file__, sub_directory_basename=unique_string)
+    MY_LOG_DIR = log_dir(script_name=__file__,
+                         sub_directory_basename=unique_string)
     try:
         # create the log directory for the grok-exporter logs; it is ok if it already exists
         os.makedirs(GROK_EXPORTER_LOG_DIR, exist_ok=True)
@@ -753,14 +834,17 @@ def setup_logging() -> Tuple[str, str, str]:
 
     MY_LOG_FILE = f"{MY_LOG_DIR}/log"
     try:
-        logging.basicConfig(filename=MY_LOG_FILE, level=goss_script_log_level())
+        logging.basicConfig(filename=MY_LOG_FILE,
+                            level=goss_script_log_level())
     except Exception as exc:
-        stderr_print(err_text(f"Error configuring script logging. {fmt_exc(exc)}"))
+        stderr_print(
+            err_text(f"Error configuring script logging. {fmt_exc(exc)}"))
         sys.exit(RC_ERROR)
 
     MY_OUTPUT_FILE = f"{MY_LOG_DIR}/out"
 
-    logging.debug("Called with %d argument(s): %s", len(sys.argv), ' '.join(sys.argv))
+    logging.debug("Called with %d argument(s): %s", len(sys.argv),
+                  ' '.join(sys.argv))
     stdout_print(f"Writing full output to {MY_OUTPUT_FILE}\n")
     log_values(logging.info, MY_OUTPUT_FILE=MY_OUTPUT_FILE)
     log_goss_env_variables(logging.debug)
@@ -768,6 +852,7 @@ def setup_logging() -> Tuple[str, str, str]:
     GROK_EXPORTER_LOG_FILE = f"{GROK_EXPORTER_LOG_DIR}/{unique_string}.log"
 
     return MY_LOG_FILE, MY_OUTPUT_FILE, GROK_EXPORTER_LOG_FILE
+
 
 def main() -> None:
     global GROK_EXPORTER_OUTFILE
@@ -784,50 +869,57 @@ def main() -> None:
     with open(MY_OUTPUT_FILE, "wt") as OUTFILE:
         outfile_print(f"Script debug log file: {MY_LOG_FILE}")
         with open(GROK_EXPORTER_LOG_FILE, "wt") as GROK_EXPORTER_OUTFILE:
-            outfile_print(f"Script grok-exporter log file: {GROK_EXPORTER_LOG_FILE}")
-            log_values(logging.info, GROK_EXPORTER_LOG_FILE=GROK_EXPORTER_LOG_FILE)
-            log_to_grok_exporter("Starting", data={ "sys.argv": sys.argv })
+            outfile_print(
+                f"Script grok-exporter log file: {GROK_EXPORTER_LOG_FILE}")
+            log_values(logging.info,
+                       GROK_EXPORTER_LOG_FILE=GROK_EXPORTER_LOG_FILE)
+            log_to_grok_exporter("Starting", data={"sys.argv": sys.argv})
             try:
                 if _main(input_sources) == 0:
                     stdout_print(ok_text("\nPASSED"))
                     outfile_print("\nPASSED")
-                    multi_print("PASSED; exiting with return code 0", logging.info,
-                                log_to_grok_exporter)
+                    multi_print("PASSED; exiting with return code 0",
+                                logging.info, log_to_grok_exporter)
                     sys.exit(0)
                 stderr_print(err_text("\nFAILED"))
                 outfile_print("\nFAILED")
-                multi_print(f"FAILED (failed tests); exiting with return code {RC_TESTFAIL}",
-                            logging.error, log_to_grok_exporter)
+                multi_print(
+                    f"FAILED (failed tests); exiting with return code {RC_TESTFAIL}",
+                    logging.error, log_to_grok_exporter)
                 sys.exit(RC_TESTFAIL)
             except ScriptException:
-                stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug "
-                             f"log: {MY_LOG_FILE}")
+                stdout_print(
+                    f"Full script output: {MY_OUTPUT_FILE}\nScript debug "
+                    f"log: {MY_LOG_FILE}")
                 stderr_print(err_text("\nFAILED"))
                 outfile_print("\nFAILED")
-                multi_print(f"FAILED; exiting with return code {RC_ERROR}", logging.error,
-                            log_to_grok_exporter)
+                multi_print(f"FAILED; exiting with return code {RC_ERROR}",
+                            logging.error, log_to_grok_exporter)
                 sys.exit(RC_ERROR)
             except Exception as exc:
                 # For any anticipated exceptions, they would have been caught at a lower level and
                 # turned into ScriptExceptions. So we should print more information about this
                 # exception.
-                stdout_print(f"Full script output: {MY_OUTPUT_FILE}\nScript debug "
-                             f"log: {MY_LOG_FILE}")
-                multi_print(traceback.format_exc(), logging.error, outfile_print,
-                            log_to_grok_exporter)
+                stdout_print(
+                    f"Full script output: {MY_OUTPUT_FILE}\nScript debug "
+                    f"log: {MY_LOG_FILE}")
+                multi_print(traceback.format_exc(), logging.error,
+                            outfile_print, log_to_grok_exporter)
                 msg = f"Unexpected error. {fmt_exc(exc)}"
                 error(msg)
                 log_to_grok_exporter(msg)
                 stderr_print(err_text("\nFAILED"))
                 outfile_print("\nFAILED")
-                multi_print(f"FAILED (unexpected error); exiting with return code {RC_ERROR}",
-                            logging.error, log_to_grok_exporter)
+                multi_print(
+                    f"FAILED (unexpected error); exiting with return code {RC_ERROR}",
+                    logging.error, log_to_grok_exporter)
                 sys.exit(RC_ERROR)
 
     OUTFILE = None
     GROK_EXPORTER_OUTFILE = None
     error("\nPROGRAMMING LOGIC ERROR: This line should never be reached")
     sys.exit(RC_ERROR)
+
 
 if __name__ == "__main__":
     main()

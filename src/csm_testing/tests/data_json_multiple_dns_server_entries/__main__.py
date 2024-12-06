@@ -21,13 +21,16 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+import logging
+import sys
 import csm_testing.lib.data_json_parser as dp
-import sys, logging
 
-logging.basicConfig(filename='/tmp/data_json_dns_server_test.log', level=logging.DEBUG)
+logging.basicConfig(filename='/tmp/data_json_dns_server_test.log',
+                    level=logging.DEBUG)
 logging.info("Starting up")
 
-def main() -> int: # pylint: disable=missing-function-docstring
+
+def main() -> int:  # pylint: disable=missing-function-docstring
     # Goss sends [.Args.datajson] as string with the brackets
     filename = sys.argv[1].strip('[').strip(']')
     logging.debug("Using file: %s", filename)
@@ -41,6 +44,7 @@ def main() -> int: # pylint: disable=missing-function-docstring
 
     print(count)
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

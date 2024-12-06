@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-import os
 import sys
 from argparse import ArgumentParser
 import json
@@ -31,8 +30,10 @@ import boto3
 from botocore.exceptions import ClientError
 from boto3.s3.transfer import TransferConfig
 
-def main(): # pylint: disable=missing-function-docstring
-    parser = ArgumentParser(description='check which function to execute and get parameters')
+
+def main():  # pylint: disable=missing-function-docstring
+    parser = ArgumentParser(
+        description='check which function to execute and get parameters')
     # possible functions to execute
     parser.add_argument('--create-bucket',
                         action='store_true',
@@ -75,29 +76,39 @@ def main(): # pylint: disable=missing-function-docstring
     args = parser.parse_args()
 
     if args.upload:
-        if(args.key_name is None or args.file_name is None or args.file_name is None):
-            print("Error: to get presigned url, must specify --bucket-name, --key-name, and --file-name")
-            exit()
+        if (args.key_name is None or args.file_name is None
+                or args.file_name is None):
+            print("Error: to get presigned url, must specify --bucket-name, "
+                  "--key-name, and --file-name")
+            sys.exit(1)
         get_url_and_upload(args.bucket_name, args.key_name, args.file_name)
     elif args.create_bucket:
         create_bucket(args.bucket_name)
     elif args.delete_bucket:
         delete_bucket(args.bucket_name)
     elif args.delete_file:
-        if(args.key_name is None):
+        if (args.key_name is None):
             print("Error: to delete a file, must specify --file-name")
-            exit()
+            sys.exit(1)
         delete_object(args.bucket_name, args.key_name)
     elif args.list:
         list_objects(args.bucket_name)
     else:
-        print("Must specify which funciton to call. Options are --create_bucket, --delete-bucket, --upload, --delete-file, --list")
+        print(
+            "Must specify which funciton to call. Options are --create_bucket, --delete-bucket, "
+            "--upload, --delete-file, --list")
 
 
 # get credentials
-j=json.loads(subprocess.check_output(['radosgw-admin', 'user', 'info', '--uid', 'STS']))
-keys=((j['keys'])[0])
-credentials = { 'endpoint_url': 'http://rgw-vip.nmn', 'access_key': keys['access_key'], 'secret_key': keys['secret_key'] }
+j = json.loads(
+    subprocess.check_output(['radosgw-admin', 'user', 'info', '--uid', 'STS']))
+keys = ((j['keys'])[0])
+credentials = {
+    'endpoint_url': 'http://rgw-vip.nmn',
+    'access_key': keys['access_key'],
+    'secret_key': keys['secret_key']
+}
+
 
 def create_bucket(bucket_name):
 
@@ -108,6 +119,7 @@ def create_bucket(bucket_name):
 
     bucket = s3.Bucket(bucket_name)
     bucket.create()
+
 
 def delete_bucket(bucket_name):
 
@@ -123,21 +135,26 @@ def delete_bucket(bucket_name):
 def get_url_and_upload(bucket_name, key_name, file_name):
 
     # One week
-    expires=604800
+    expires = 604800
 
     s3client = boto3.client(
-            's3',
-            aws_access_key_id=credentials['access_key'],
-            aws_secret_access_key=credentials['secret_key'],
-            endpoint_url=credentials['endpoint_url'],
-            region_name='',
-        )
+        's3',
+        aws_access_key_id=credentials['access_key'],
+        aws_secret_access_key=credentials['secret_key'],
+        endpoint_url=credentials['endpoint_url'],
+        region_name='',
+    )
 
     try:
-        s3client.put_object(Bucket=bucket_name, Key=key_name, ACL='public-read')
+        s3client.put_object(Bucket=bucket_name,
+                            Key=key_name,
+                            ACL='public-read')
         url = s3client.generate_presigned_url(
             'get_object',
-            Params={'Bucket': bucket_name, 'Key': key_name},
+            Params={
+                'Bucket': bucket_name,
+                'Key': key_name
+            },
             ExpiresIn=expires,
         )
     except s3client.exceptions.NoSuchBucket as err:
@@ -146,7 +163,8 @@ def get_url_and_upload(bucket_name, key_name, file_name):
         try:
             s3client.delete_object(Bucket=bucket_name, Key=key_name)
         except Exception as delete_err:
-            print("Unsuccessful upload. Unable to delete object: Error: %s" % delete_err)
+            print("Unsuccessful upload. Unable to delete object: Error: %s" %
+                  delete_err)
         sys.exit(str(err))
 
     try:
@@ -161,14 +179,16 @@ def get_url_and_upload(bucket_name, key_name, file_name):
             }
         }
         s3client.upload_file(*upload_args, **upload_kwargs)
-        print( url)
+        print(url)
 
     except ClientError as err:
         try:
             s3client.delete_object(Bucket=bucket_name, Key=key_name)
         except Exception as delete_err:
-            print("Unsuccessful upload. Unable to delete object: Error: %s" % delete_err)
+            print("Unsuccessful upload. Unable to delete object: Error: %s" %
+                  delete_err)
         sys.exit(str(err))
+
 
 def list_objects(bucket_name):
     s3 = boto3.client('s3',
@@ -183,6 +203,7 @@ def list_objects(bucket_name):
         for item in response['Contents']:
             print(item['Key'])
 
+
 def delete_object(bucket_name, key_name):
 
     s3 = boto3.client('s3',
@@ -190,8 +211,7 @@ def delete_object(bucket_name, key_name):
                       aws_access_key_id=credentials['access_key'],
                       aws_secret_access_key=credentials['secret_key'])
 
-    s3.delete_object(Bucket=bucket_name,
-                     Key=key_name)
+    s3.delete_object(Bucket=bucket_name, Key=key_name)
 
 
 if __name__ == '__main__':

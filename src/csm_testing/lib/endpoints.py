@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 Helper functions for Goss Python automated scripts
 
@@ -39,7 +38,6 @@ from csm_testing.lib.common import argparse_yaml_file_name,     \
                                    ScriptException,             \
                                    StringList
 
-
 # To help with function annotations
 EndpointTuple = Tuple[str, str, int]
 
@@ -52,16 +50,14 @@ EndpointTuple = Tuple[str, str, int]
 # Pattern for 65500-65529   = 655[0-2][0-9]
 # Pattern for 65530-65535   = 6553[0-5]
 port_patterns = [
-    "[1-9][0-9]{3}",
-    "[1-5][0-9]{4}",
-    "6[0-4][0-9]{3}",
-    "65[0-4][0-9]{2}",
-    "655[0-2][0-9]",
-    "6553[0-5]" ]
+    "[1-9][0-9]{3}", "[1-5][0-9]{4}", "6[0-4][0-9]{3}", "65[0-4][0-9]{2}",
+    "655[0-2][0-9]", "6553[0-5]"
+]
 port_pattern = "^(" + "|".join(port_patterns) + ")$"
 port_re_prog = re.compile(port_pattern)
 
 goss_endpoints_by_ncn_type = None
+
 
 def parse_config_file_line(line: str) -> Tuple[int, str, StringList]:
     """
@@ -77,7 +73,7 @@ def parse_config_file_line(line: str) -> Tuple[int, str, StringList]:
     if len(fields) < 3:
         raise ScriptException(f"Line must have at least three fields.")
 
-    port_string=fields[0]
+    port_string = fields[0]
     if not port_re_prog.match(port_string):
         raise ScriptException(f"Line has invalid port format.")
     port = int(port_string)
@@ -94,6 +90,7 @@ def parse_config_file_line(line: str) -> Tuple[int, str, StringList]:
         raise ScriptException(f"Line includes duplicate NCN types.")
     return port, suite, type_list
 
+
 def load_goss_endpoints() -> Dict[str, List[EndpointTuple]]:
     """
     Reads Goss server configuration file (goss-servers.json) and for each NCN type, generates a mapping from
@@ -105,7 +102,7 @@ def load_goss_endpoints() -> Dict[str, List[EndpointTuple]]:
         return goss_endpoints_by_ncn_type
     config_file = goss_servers_config(validate=True)
 
-    endpoints_by_type = { ntype: list() for ntype in NCN_TYPES }
+    endpoints_by_type = {ntype: list() for ntype in NCN_TYPES}
     with open(config_file, "rt") as f:
         for line in f.readlines():
             line = line.strip()
@@ -114,22 +111,30 @@ def load_goss_endpoints() -> Dict[str, List[EndpointTuple]]:
             try:
                 port, suite, type_list = parse_config_file_line(line)
             except ScriptException as e:
-                raise ScriptException(f"Configuration file ({config_file}) error: {e}. Invalid line: {line}")
+                raise ScriptException(
+                    f"Configuration file ({config_file}) error: {e}. Invalid line: {line}"
+                )
             # Endpoint name is the suite name, minus the .yaml extension
             endpoint_name = suite[:-5]
 
             for ntype in type_list:
                 for (s, e, p) in endpoints_by_type[ntype]:
                     if s == suite:
-                        raise ScriptException(f"Configuration file ({config_file}) error: Multiple lines for suite {s} on NCN type {ntype}. Invalid line: {line}")
+                        raise ScriptException(
+                            f"Configuration file ({config_file}) error: Multiple lines for suite {s} on NCN type {ntype}. Invalid line: {line}"
+                        )
                     elif p == port:
-                        raise ScriptException(f"Configuration file ({config_file}) error: Multiple lines for port {p} on NCN type {ntype}. Invalid line: {line}")
+                        raise ScriptException(
+                            f"Configuration file ({config_file}) error: Multiple lines for port {p} on NCN type {ntype}. Invalid line: {line}"
+                        )
 
                 # Add it to the list of endpoints for this NCN type
-                endpoints_by_type[ntype].append( (suite, endpoint_name, port) )
+                endpoints_by_type[ntype].append((suite, endpoint_name, port))
 
     if sum(len(eplist) for eplist in endpoints_by_type.values()) == 0:
-        raise ScriptException(f"Server configuration ({config_file}) error: No endpoints specified")
+        raise ScriptException(
+            f"Server configuration ({config_file}) error: No endpoints specified"
+        )
 
     goss_endpoints_by_ncn_type = endpoints_by_type
     return goss_endpoints_by_ncn_type

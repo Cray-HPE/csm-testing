@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 Usage: goss_suites_endpoints_ports
 
@@ -36,14 +35,17 @@ Exits 0 on success, non-0 otherwise.
 
 from csm_testing.lib.common     import  goss_suites_dir,             \
                                           my_ncn_type
-from csm_testing.lib.endpoints  import load_goss_endpoints
+from csm_testing.lib.endpoints import load_goss_endpoints
 
-def main() -> None: # pylint: disable=missing-function-docstring
+
+def main() -> None:  # pylint: disable=missing-function-docstring
     suite_dir = goss_suites_dir()
     node_type = my_ncn_type()
     goss_endpoints_by_ncn_type = load_goss_endpoints()
-    for (suite_name, endpoint_name, port) in goss_endpoints_by_ncn_type[node_type]:
+    for (suite_name, endpoint_name,
+         port) in goss_endpoints_by_ncn_type[node_type]:
         print(f"{suite_dir}/{suite_name} {endpoint_name} {port}")
+
 
 if __name__ == "__main__":
     main()

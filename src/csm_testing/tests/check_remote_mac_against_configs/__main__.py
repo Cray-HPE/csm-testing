@@ -23,7 +23,8 @@
 #
 # Script to check MAC address of remote NCNs against data.json and statics.conf
 # Invocation: check-remote-mac-against-configs.py /path/to/data.json /path/to/statics.conf
-# Check the count of passed tests against the number of NCNs in data.conf - and send either PASS or FAIL
+# Check the count of passed tests against the number of NCNs in data.conf - and
+# send either PASS or FAIL
 
 import subprocess, sys, logging
 import csm_testing.lib.data_json_parser as djp
@@ -33,18 +34,25 @@ passed = 0
 failed = 0
 
 # setup logging
-logging.basicConfig(filename='/tmp/' + sys.argv[0].split('/')[-1] + '.log',  level=logging.DEBUG)
+logging.basicConfig(filename='/tmp/' + sys.argv[0].split('/')[-1] + '.log',
+                    level=logging.DEBUG)
 logging.info("Starting up")
 
+
 def remoteCmd(host, command):
-    cmd = subprocess.Popen(['ssh', '-o StrictHostKeyChecking=no', host , command], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout,stderr = cmd.communicate()
+    cmd = subprocess.Popen(
+        ['ssh', '-o StrictHostKeyChecking=no', host, command],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
+    stdout, stderr = cmd.communicate()
     return stdout
+
 
 def get_arg_no_brackets(arg):
     return arg.strip('[').strip(']')
 
-def main() -> int: # pylint: disable=missing-function-docstring
+
+def main() -> int:  # pylint: disable=missing-function-docstring
     # quick check to ensure we received the locations of data.json and statics.conf
     if len(sys.argv) != 3:
         print("Wrong number of arguments provided")
@@ -53,7 +61,7 @@ def main() -> int: # pylint: disable=missing-function-docstring
     # This version of goss sends [.Arg.*] as string with [
     # Apparently fixed in 0.3.14
     data = djp.dataJson(get_arg_no_brackets(sys.argv[1]))
-    staticsFile = open(get_arg_no_brackets(sys.argv[2]),'r')
+    staticsFile = open(get_arg_no_brackets(sys.argv[2]), 'r')
     statics = staticsFile.read()
 
     # ensure remote MAC matches data.json (casminst-384) and statics.conf (casminst-380)
@@ -75,8 +83,12 @@ def main() -> int: # pylint: disable=missing-function-docstring
             # should find something like: dhcp-host=b8:59:9f:2b:2e:d2,10.252.0.7,ncn-s001,infinite
             # the ip is between the first commas
             try:
-                search = statics[statics.find('dhcp-host=' + data.ncnList[server]):statics.find('\n',statics.find('dhcp-host=' + data.ncnList[server]))]
-                ip, hname = search[search.find(','):search.rfind(',')].split(',')[-2:]
+                search = statics[
+                    statics.find('dhcp-host=' + data.ncnList[server]):statics.
+                    find('\n', statics.find('dhcp-host=' +
+                                            data.ncnList[server]))]
+                ip, hname = search[search.find(','):search.rfind(',')].split(
+                    ',')[-2:]
                 if mac == data.ncnList[hname]:
                     passed += 1
             except:
@@ -91,6 +103,7 @@ def main() -> int: # pylint: disable=missing-function-docstring
     else:
         print("FAIL")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

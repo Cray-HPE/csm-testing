@@ -21,8 +21,10 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-import sys, ipaddress, logging, subprocess
-
+import ipaddress
+import logging
+import subprocess
+import sys
 '''
 USAGE: ip-not-in-ip-pools GOSS.VARS.ALL-INTERFACES
 Re-write of the original script
@@ -35,12 +37,15 @@ Then check to make sure the IP(using subprocess) of this instance is not in the 
 '''
 
 # setup logging
-logging.basicConfig(filename='/tmp/' + sys.argv[0].split('/')[-1] + '.log',  level=logging.INFO)
+logging.basicConfig(filename='/tmp/' + sys.argv[0].split('/')[-1] + '.log',
+                    level=logging.INFO)
 logging.info("Starting up")
+
 
 def get_ip(interface):
     logging.debug("Getting ip address for %s", interface)
-    cmd = subprocess.Popen(['ip', 'addr', 'show', 'dev', interface],stdout=subprocess.PIPE )
+    cmd = subprocess.Popen(['ip', 'addr', 'show', 'dev', interface],
+                           stdout=subprocess.PIPE)
     stdout, stderr = cmd.communicate()
     logging.debug("stdout == %s, stderr == %s", stdout, stderr)
     if stdout != '':
@@ -51,15 +56,18 @@ def get_ip(interface):
         logging.info("IP address of %s = %s", interface, ip)
     return ip
 
+
 def is_ip_between(ip, start_ip, end_ip, file):
     # convert them for easy testing
-    logging.debug("Trying to convert ip %s start_ip %s end_ip %s", ip, start_ip, end_ip)
+    logging.debug("Trying to convert ip %s start_ip %s end_ip %s", ip,
+                  start_ip, end_ip)
     try:
         ips = ipaddress.ip_address(ip)
         start_ip = ipaddress.ip_address(start_ip)
         end_ip = ipaddress.ip_address(end_ip)
     except:
-        logging.critical("Could not convert %s or %s or %s to an IP address", ip, start_ip, end_ip)
+        logging.critical("Could not convert %s or %s or %s to an IP address",
+                         ip, start_ip, end_ip)
         print("Couldn't convert an ip to IPaddress. See the log for details")
         sys.exit(1)
 
@@ -76,8 +84,9 @@ def is_ip_between(ip, start_ip, end_ip, file):
     else:
         return "PASS"
 
+
 def get_start_last_from_dnsmask_d(fileName):
-    f = open('/etc/dnsmasq.d/'+fileName+'.conf')
+    f = open('/etc/dnsmasq.d/' + fileName + '.conf')
     data = f.read().split('\n')
     for line in data:
         if 'dhcp-range' in line:
@@ -85,13 +94,14 @@ def get_start_last_from_dnsmask_d(fileName):
             end = line.split(',')[2]
     return start, end
 
-def main() -> int: # pylint: disable=missing-function-docstring
-    if len(sys.argv) <2:
+
+def main() -> int:  # pylint: disable=missing-function-docstring
+    if len(sys.argv) < 2:
         print("Incorrect number of arguments")
         return 2
     logging.debug("Passed args: %s", sys.argv)
 
-    net_list = ['mtl','NMN', 'HMN', 'CAN']
+    net_list = ['mtl', 'NMN', 'HMN', 'CAN']
 
     ips = []
     ifaces_list = []
@@ -104,7 +114,7 @@ def main() -> int: # pylint: disable=missing-function-docstring
     # make a list of the args we got from goss - from 2:
     logging.debug("Running through args %s", sys.argv[1:])
     for li in sys.argv[1:]:
-        logging.info("Arguments from goss: %s",li)
+        logging.info("Arguments from goss: %s", li)
         ifaces_list.append(li.strip('[').strip(']'))
 
     for iface in ifaces_list:
@@ -118,11 +128,12 @@ def main() -> int: # pylint: disable=missing-function-docstring
             starts, ends = get_start_last_from_dnsmask_d(net)
 
             if starts != '':
-                logging.info("is_ip_between call: %s, %s, %s",thisIP, starts, ends)
+                logging.info("is_ip_between call: %s, %s, %s", thisIP, starts,
+                             ends)
                 if is_ip_between(thisIP, starts, ends, net) == 'PASS':
                     passed += 1
                 else:
-                    print("Test failed for "+net+".conf")
+                    print("Test failed for " + net + ".conf")
         logging.debug(ips)
 
     if passed == len(net_list * len(ips)):
@@ -131,6 +142,7 @@ def main() -> int: # pylint: disable=missing-function-docstring
     else:
         print("FAIL")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())
