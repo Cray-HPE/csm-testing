@@ -130,7 +130,7 @@ def validate_dependent_image_exists(dependent_image):
         return False
 
 
-def main():
+def main(): # pylint: disable=missing-function-docstring
     try:
         return_value = True
         logger.info("Beginning verification that IMS dependent images are available in the local docker registry")

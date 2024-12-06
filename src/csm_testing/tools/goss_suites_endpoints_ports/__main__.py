@@ -38,7 +38,7 @@ from csm_testing.lib.common     import  goss_suites_dir,             \
                                           my_ncn_type
 from csm_testing.lib.endpoints  import load_goss_endpoints
 
-def main() -> None:
+def main() -> None: # pylint: disable=missing-function-docstring
     suite_dir = goss_suites_dir()
     node_type = my_ncn_type()
     goss_endpoints_by_ncn_type = load_goss_endpoints()

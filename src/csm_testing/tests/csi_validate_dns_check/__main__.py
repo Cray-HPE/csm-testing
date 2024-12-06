@@ -24,7 +24,7 @@
 import sys, os
 import csm_testing.lib.data_json_parser as dp
 
-''' Simple test to validate dns. It mimics the CSI validate check `grep -Eo 'ncn-.*-mgmt'` 
+''' Simple test to validate dns. It mimics the CSI validate check `grep -Eo 'ncn-.*-mgmt'`
     against data.json global meta-data ntp-peers.
 Counts the number of times that the ntp-peer appears in dnsmasq.leases file
 matches that to the number of ntp_peers - they should be ==
@@ -32,7 +32,7 @@ matches that to the number of ntp_peers - they should be ==
 
 dnsmasq_file = '/var/lib/misc/dnsmasq.leases'
 
-def main() -> int:
+def main() -> int: # pylint: disable=missing-function-docstring
     PASSED = 0
 
     # Assume we got the right info from goss, but JIC

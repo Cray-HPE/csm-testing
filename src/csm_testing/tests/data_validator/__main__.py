@@ -80,7 +80,7 @@ def user_data(data):
     for blob in data:
       if blob != "Global":
         filtered_data.append(data[blob]['user-data'])
-  
+
   return filtered_data
 
 
@@ -297,7 +297,7 @@ def boot_params(data):
     return err
 
 
-def main() -> int:
+def main() -> int: # pylint: disable=missing-function-docstring
   """
   Returns 0 on success, non-0 on failure.
   """

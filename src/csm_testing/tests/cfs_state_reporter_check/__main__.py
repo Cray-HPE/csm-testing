@@ -62,7 +62,7 @@ def get_systemctl_data():
     logger.info(f"Running command: {' '.join(command_line)}")
     result = subprocess.run(command_line, stdout=subprocess.PIPE, check=True)
     logger.info(f"Command completed with return code {result.returncode}")
-    
+
     # Each line of output should be of the form FieldName=<value>
     # We will load this into a dictionary, and return that
     # This could be done in fewer lines of code, but clarity is preferable
@@ -171,7 +171,7 @@ def get_service_data_fields():
 
 def check_cfs_state_reporter_status():
     srv_exit_status, srv_load_state, srv_active_state, srv_substate, srv_result = get_service_data_fields()
-    
+
     errors=False
     if srv_exit_status != "0":
         logger.error(f"ExecMainStatus={srv_exit_status} | expected value=0")
@@ -179,7 +179,7 @@ def check_cfs_state_reporter_status():
     if srv_load_state != "loaded":
         logger.error(f"LoadState={srv_load_state} | expected value=loaded")
         errors=True
-        
+
     if srv_active_state != "inactive":
         logger.error(f"ActiveState={srv_active_state} | expected value=inactive")
         errors=True
@@ -195,7 +195,7 @@ def check_cfs_state_reporter_status():
     if errors:
         raise CfsTestException
 
-def main() -> int:
+def main() -> int: # pylint: disable=missing-function-docstring
     """
     Returns 0 on success, non-0 on failure.
     """

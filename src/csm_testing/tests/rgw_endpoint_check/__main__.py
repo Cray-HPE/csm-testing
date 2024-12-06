@@ -31,7 +31,7 @@ import boto3
 from botocore.exceptions import ClientError
 from boto3.s3.transfer import TransferConfig
 
-def main():
+def main(): # pylint: disable=missing-function-docstring
     parser = ArgumentParser(description='check which function to execute and get parameters')
     # possible functions to execute
     parser.add_argument('--create-bucket',

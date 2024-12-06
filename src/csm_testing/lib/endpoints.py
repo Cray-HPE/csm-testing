@@ -51,8 +51,8 @@ EndpointTuple = Tuple[str, str, int]
 # Pattern for 65000-65499   = 65[0-4][0-9]{2}
 # Pattern for 65500-65529   = 655[0-2][0-9]
 # Pattern for 65530-65535   = 6553[0-5]
-port_patterns = [ 
-    "[1-9][0-9]{3}", 
+port_patterns = [
+    "[1-9][0-9]{3}",
     "[1-5][0-9]{4}",
     "6[0-4][0-9]{3}",
     "65[0-4][0-9]{2}",
@@ -104,7 +104,7 @@ def load_goss_endpoints() -> Dict[str, List[EndpointTuple]]:
     if goss_endpoints_by_ncn_type != None:
         return goss_endpoints_by_ncn_type
     config_file = goss_servers_config(validate=True)
-    
+
     endpoints_by_type = { ntype: list() for ntype in NCN_TYPES }
     with open(config_file, "rt") as f:
         for line in f.readlines():

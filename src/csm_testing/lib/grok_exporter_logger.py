@@ -26,7 +26,7 @@
 Helper functions for Goss Python automated scripts
 
 These functions relate to generating log files to be consumed by
-grok-exporter. These log files 
+grok-exporter. These log files
 """
 
 from collections import OrderedDict

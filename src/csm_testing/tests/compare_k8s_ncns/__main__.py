@@ -31,7 +31,8 @@ same values for several other fields (enumerated below in KubernetesNodeInfoFiel
 import kubernetes
 import sys
 
-KubernetesNodeInfoFields = [ "container_runtime_version", "kube_proxy_version", "kubelet_version", "os_image" ]
+KubernetesNodeInfoFields = [ "container_runtime_version", "kube_proxy_version",
+                             "kubelet_version", "os_image" ]
 
 def print_err(msg: str) -> None:
     """
@@ -40,7 +41,7 @@ def print_err(msg: str) -> None:
     sys.stderr.write(f"ERROR: {msg}\n")
 
 
-def main() -> None:
+def main() -> None: # pylint: disable=missing-function-docstring
     print("Loading Kubernetes configuration")
     kubernetes.config.load_kube_config()
     print("Initializing Kubernetes client")
