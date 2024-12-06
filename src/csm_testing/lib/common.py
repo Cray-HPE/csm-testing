@@ -25,10 +25,7 @@
 Helper functions for Goss Python automated scripts
 """
 
-from typing import Callable, List, Tuple
-
 import argparse
-import colorama
 from datetime import datetime
 import json
 import logging
@@ -38,7 +35,9 @@ import re
 import socket
 import string
 import sys
-import traceback
+from typing import Callable, List, Tuple
+
+import colorama
 
 # To help with function annotations
 StringList = List[str]
@@ -126,13 +125,13 @@ def goss_script_max_threads() -> int:
         max_threads = int(max_threads_str)
     except ValueError:
         logging.warn(
-            f"Non-integer value specified for GOSS_SCRIPT_MAX_THREADS ({max_threads_str}). Default to {DEFAULT_GOSS_SCRIPT_MAX_THREADS}"
-        )
+            "Non-integer value specified for GOSS_SCRIPT_MAX_THREADS (%s). Default to %d",
+            max_threads_str, DEFAULT_GOSS_SCRIPT_MAX_THREADS)
         max_threads = DEFAULT_GOSS_SCRIPT_MAX_THREADS
     if max_threads < 0:
         logging.warn(
-            f"GOSS_SCRIPT_MAX_THREADS must be a nonnegative integer. Invalid value ({max_threads}). Defaulting to 0."
-        )
+            "GOSS_SCRIPT_MAX_THREADS must be a nonnegative integer. Invalid value (%d). "
+            "Defaulting to 0.", max_threads)
         max_threads = 0
     return max_threads
 
@@ -172,16 +171,16 @@ class ScriptUsageException(ScriptException):
     pass
 
 
-def err_text(s: str) -> str:
-    return f"{ERR_TEXT_CODE}{s}{RESET_TEXT_CODE}"
+def err_text(outstring: str) -> str:
+    return f"{ERR_TEXT_CODE}{outstring}{RESET_TEXT_CODE}"
 
 
-def warn_text(s: str) -> str:
-    return f"{WARN_TEXT_CODE}{s}{RESET_TEXT_CODE}"
+def warn_text(outstring: str) -> str:
+    return f"{WARN_TEXT_CODE}{outstring}{RESET_TEXT_CODE}"
 
 
-def ok_text(s: str) -> str:
-    return f"{OK_TEXT_CODE}{s}{RESET_TEXT_CODE}"
+def ok_text(outstring: str) -> str:
+    return f"{OK_TEXT_CODE}{outstring}{RESET_TEXT_CODE}"
 
 
 def is_pit_node() -> bool:
@@ -238,35 +237,35 @@ def log_dir(script_name: str, sub_directory_basename: str = None) -> str:
 
 
 def log_values(logmethod: Callable, **kwargs) -> None:
-    for k, v in kwargs.items():
+    for key, val in kwargs.items():
         # For dictionary values, format them nicely
-        if isinstance(v, dict):
+        if isinstance(val, dict):
             try:
-                logmethod(f"{k}=\n" + json.dumps(v, indent=2))
+                logmethod(f"{key}=\n" + json.dumps(val, indent=2))
                 continue
             except TypeError:
                 # This can happen if the dict contains stuff that cannot be serialized as JSON
                 pass
-        logmethod(f"{k}={v}")
+        logmethod(f"{key}={val}")
 
 
 def log_goss_env_variables(logmethod: Callable) -> None:
     log_values(logmethod=logmethod, **goss_env_variables())
 
 
-def stderr_print(s: str) -> None:
-    sys.stderr.write(f"{s}\n")
+def stderr_print(outstring: str) -> None:
+    sys.stderr.write(f"{outstring}\n")
     sys.stderr.flush()
 
 
-def stdout_print(s: str) -> None:
-    sys.stdout.write(f"{s}\n")
+def stdout_print(outstring: str) -> None:
+    sys.stdout.write(f"{outstring}\n")
     sys.stdout.flush()
 
 
-def multi_print(s: str, *methods) -> None:
-    for m in methods:
-        m(s)
+def multi_print(outstring: str, *methods) -> None:
+    for mth in methods:
+        mth(outstring)
 
 
 def get_hostname() -> str:
@@ -285,32 +284,32 @@ ncn_storage_re_prog = re.compile(ncn_storage_pattern)
 ncn_worker_re_prog = re.compile(ncn_worker_pattern)
 
 
-def is_ncn_name(n: str) -> bool:
-    if ncn_re_prog.match(n) or n == "pit":
+def is_ncn_name(nname: str) -> bool:
+    if ncn_re_prog.match(nname) or nname == "pit":
         return True
     return False
 
 
-def is_master_ncn_name(n: str) -> bool:
-    if ncn_master_re_prog.match(n):
+def is_master_ncn_name(nname: str) -> bool:
+    if ncn_master_re_prog.match(nname):
         return True
     return False
 
 
-def is_storage_ncn_name(n: str) -> bool:
-    if ncn_storage_re_prog.match(n):
+def is_storage_ncn_name(nname: str) -> bool:
+    if ncn_storage_re_prog.match(nname):
         return True
     return False
 
 
-def is_worker_ncn_name(n: str) -> bool:
-    if ncn_worker_re_prog.match(n):
+def is_worker_ncn_name(nname: str) -> bool:
+    if ncn_worker_re_prog.match(nname):
         return True
     return False
 
 
-def is_livecd_ncn_name(n: str) -> bool:
-    return (n == "pit")
+def is_livecd_ncn_name(nname: str) -> bool:
+    return nname == "pit"
 
 
 def get_ncn_type(ncn_name: str) -> str:
@@ -329,28 +328,29 @@ def my_ncn_type() -> str:
     return get_ncn_type(get_hostname())
 
 
-def argparse_nonempty_string(s: str) -> str:
-    if len(s) > 0:
-        return s
+def argparse_nonempty_string(astring: str) -> str:
+    if len(astring) > 0:
+        return astring
     raise argparse.ArgumentTypeError("Arguments may not be blank")
 
 
-def argparse_yaml_file_name(s: str) -> str:
+def argparse_yaml_file_name(fname: str) -> str:
     try:
-        argparse_nonempty_string(s)
+        argparse_nonempty_string(fname)
     except argparse.ArgumentTypeError:
         raise argparse.ArgumentTypeError("YAML file names may not be blank")
-    if s[-5:] == ".yaml":
-        return s
+    if fname[-5:] == ".yaml":
+        return fname
     raise argparse.ArgumentTypeError(
-        f"YAML file names are expected to have .yaml extension. Invalid: {s}")
+        f"YAML file names are expected to have .yaml extension. Invalid: {fname}"
+    )
 
 
-def argparse_valid_ncn_name(n: str) -> str:
-    if is_ncn_name(n):
-        return n
-    raise argparse.ArgumentTypeError(f"Invalid NCN name: {n}")
+def argparse_valid_ncn_name(nname: str) -> str:
+    if is_ncn_name(nname):
+        return nname
+    raise argparse.ArgumentTypeError(f"Invalid NCN name: {nname}")
 
 
-def fmt_exc(e: Exception) -> str:
-    return f"{type(e).__name__}: {e}"
+def fmt_exc(exc: Exception) -> str:
+    return f"{type(exc).__name__}: {exc}"
