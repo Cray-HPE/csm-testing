@@ -60,13 +60,6 @@ class ApiInterface_no_token(object):
         self.apiurl = os.getenv("IUF_API_URL", apiurl)
         self.resource = os.getenv("IUF_API_URL_RESOURCE", resource)
 
-    def activity_exists(self, activity):
-        try:
-            self.get_activity(activity)
-            return True
-        except:
-            return False
-
     def request(self, method, path, payload=None, timeout=None):
         method = method.upper()
         assert method in ['GET', 'HEAD', 'DELETE', 'POST', 'PUT',
@@ -159,16 +152,6 @@ class ApiInterface(object):
             api_response = self.request("GET", api_path)
             return api_response
         except:
-            raise
-
-    def abort_activity(self, activity, payload):
-        api_path = f"/activities/{activity}/history/abort"
-        try:
-            api_response = self.request("POST", api_path, payload, timeout=90)
-            return api_path
-        except requests.ReadTimeout as exc:
-            raise exc
-        except Exception as ex:
             raise
 
     def get_activities(self):
