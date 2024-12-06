@@ -64,9 +64,9 @@ def get_systemctl_data():
         "/usr/bin/systemctl", "--all", "--no-pager", "show",
         "cfs-state-reporter"
     ]
-    logger.info(f"Running command: {' '.join(command_line)}")
+    logger.info("Running command: %s", ' '.join(command_line))
     result = subprocess.run(command_line, stdout=subprocess.PIPE, check=True)
-    logger.info(f"Command completed with return code {result.returncode}")
+    logger.info("Command completed with return code %d", result.returncode)
 
     # Each line of output should be of the form FieldName=<value>
     # We will load this into a dictionary, and return that
@@ -118,12 +118,12 @@ def get_service_data_fields():
         def get_field_value(field_name):
             try:
                 field_value = service_data[field_name]
-                logger.info(f"{field_name} = {field_value}")
+                logger.info("%s = %s", field_name, field_value)
                 return field_value
             except KeyError:
                 logger.error(
-                    f"Expected field missing from systemctl output: {field_name}"
-                )
+                    "Expected field missing from systemctl output: %s",
+                    field_name)
                 return None
 
         errors = False
@@ -182,8 +182,8 @@ def get_service_data_fields():
         raise CfsTestException
     # If we reach here it means we have exceeded our allowed number of retries
     logger.error(
-        f"cfs-state-reporter is still running even after {attempts} attempts to run systemctl"
-    )
+        "cfs-state-reporter is still running even after %d attempts to run systemctl",
+        attempts)
     raise CfsTestException
 
 

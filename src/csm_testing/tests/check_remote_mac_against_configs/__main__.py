@@ -26,17 +26,10 @@
 # Check the count of passed tests against the number of NCNs in data.conf - and
 # send either PASS or FAIL
 
-import subprocess, sys, logging
+import logging
+import subprocess
+import sys
 import csm_testing.lib.data_json_parser as djp
-
-getMACcommand = "ip addr show dev bond0 | grep 'link/ether' | tr -s ' ' | cut -d ' ' -f 3"
-passed = 0
-failed = 0
-
-# setup logging
-logging.basicConfig(filename='/tmp/' + sys.argv[0].split('/')[-1] + '.log',
-                    level=logging.DEBUG)
-logging.info("Starting up")
 
 
 def remoteCmd(host, command):
@@ -44,7 +37,7 @@ def remoteCmd(host, command):
         ['ssh', '-o StrictHostKeyChecking=no', host, command],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
-    stdout, stderr = cmd.communicate()
+    stdout, _ = cmd.communicate()
     return stdout
 
 
@@ -53,6 +46,15 @@ def get_arg_no_brackets(arg):
 
 
 def main() -> int:  # pylint: disable=missing-function-docstring
+    getMACcommand = "ip addr show dev bond0 | grep 'link/ether' | tr -s ' ' | cut -d ' ' -f 3"
+    passed = 0
+    failed = 0
+
+    # setup logging
+    logging.basicConfig(filename='/tmp/' + sys.argv[0].split('/')[-1] + '.log',
+                        level=logging.DEBUG)
+    logging.info("Starting up")
+
     # quick check to ensure we received the locations of data.json and statics.conf
     if len(sys.argv) != 3:
         print("Wrong number of arguments provided")
@@ -100,9 +102,8 @@ def main() -> int:  # pylint: disable=missing-function-docstring
     if passed == len(data.ncnKeys) * 2:
         print("PASS")
         return 0
-    else:
-        print("FAIL")
-        return 1
+    print("FAIL")
+    return 1
 
 
 if __name__ == "__main__":
