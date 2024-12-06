@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 Helper functions for Goss Python automated scripts
 
@@ -37,11 +36,11 @@ from typing import Any, Dict, TextIO, Tuple
 
 from csm_testing.lib.common import fmt_exc, stderr_print, timestamp_string
 
-
 # Simplified type hints to use for JSON-able dicts.
 JSONDict = Dict[str, Any]
 
 GROK_EXPORTER_LOG_DIR = "/opt/cray/tests/install/logs/grok_exporter"
+
 
 def data_to_json(obj) -> str:
     """
@@ -62,8 +61,10 @@ def data_to_json(obj) -> str:
     # dicts and lists are the only containers supported by JSON, we just need to add some simple
     # code here to handle those.
     if isinstance(obj, dict):
-        items_json_list = [f"{data_to_json(key)}: {data_to_json(value)}"
-                           for key, value in obj.items()]
+        items_json_list = [
+            f"{data_to_json(key)}: {data_to_json(value)}"
+            for key, value in obj.items()
+        ]
         return "{%s}" % ", ".join(items_json_list)
     elif isinstance(obj, list):
         items_json_list = [data_to_json(item) for item in obj]
@@ -73,8 +74,14 @@ def data_to_json(obj) -> str:
     # exception, which is what we want.
     return json.dumps(obj)
 
+
 class LogEntry:
-    field_position = { "log_timestamp": 1, "Product": 2, "log_script": 3, "log_message": 4 }
+    field_position = {
+        "log_timestamp": 1,
+        "Product": 2,
+        "log_script": 3,
+        "log_message": 4
+    }
 
     @classmethod
     def field_order_key(cls, field_name: str) -> Tuple[int, str]:
@@ -87,11 +94,15 @@ class LogEntry:
         # For the fixed fields, the integer in the tuple will be set to the position for that field.
         # Otherwise, the integer will be set to a fixed higher value. Thus, for these fields, their
         # names will end up being how they are sorted.
-        return (cls.field_position.get(field_name, len(cls.field_position)+1), field_name)
+        return (cls.field_position.get(field_name,
+                                       len(cls.field_position) + 1),
+                field_name)
 
-
-    def __init__(self, message: str, script_name: str, product: str, data: JSONDict=None
-                 ) -> None:
+    def __init__(self,
+                 message: str,
+                 script_name: str,
+                 product: str,
+                 data: JSONDict = None) -> None:
         """
         The log entry data includes the data argument (if any), updated with the following fields:
         log_timestamp
@@ -106,20 +117,24 @@ class LogEntry:
             logdata = copy.deepcopy(data)
 
         # Add/update fields
-        updated_fields = { "log_timestamp": timestamp_string(),
-                            "Product": product,
-                            "log_script": script_name,
-                            "log_message": message }
+        updated_fields = {
+            "log_timestamp": timestamp_string(),
+            "Product": product,
+            "log_script": script_name,
+            "log_message": message
+        }
         for field_name, field_value in updated_fields.items():
             if field_name in logdata:
-                logging.warning(f"grok_exporter_logger.set_data_field: Field '{field_name}' "
-                                f"already set to '{logdata[field_name]}'; "
-                                f"overwriting it to '{field_value}'")
+                logging.warning(
+                    f"grok_exporter_logger.set_data_field: Field '{field_name}' "
+                    f"already set to '{logdata[field_name]}'; "
+                    f"overwriting it to '{field_value}'")
             logdata[field_name] = field_value
 
         # Generate ordered dict of the data
-        ordered_data = OrderedDict(sorted(logdata.items(),
-                                          key=lambda item: LogEntry.field_order_key(item[0])))
+        ordered_data = OrderedDict(
+            sorted(logdata.items(),
+                   key=lambda item: LogEntry.field_order_key(item[0])))
 
         # Generate the log string
         try:
@@ -130,7 +145,6 @@ class LogEntry:
             stderr_print(msg)
             self.json_string = msg
 
-
     def to_json_str(self) -> str:
         """
         Return the JSON string representation of this dict, with the field ordering specified above
@@ -138,8 +152,11 @@ class LogEntry:
         return self.json_string
 
 
-def grok_exporter_log(message: str, script_name: str, outfile: TextIO,
-                      data: JSONDict=None, product: str="CSM") -> None:
+def grok_exporter_log(message: str,
+                      script_name: str,
+                      outfile: TextIO,
+                      data: JSONDict = None,
+                      product: str = "CSM") -> None:
     """
     Add a line to the grok-exporter log file. Format is:
     <single-line JSON representation of data>
@@ -147,7 +164,10 @@ def grok_exporter_log(message: str, script_name: str, outfile: TextIO,
     # If the outfile we are given is None, just return
     if outfile is None:
         return
-    log_entry = LogEntry(message=message, script_name=script_name, product=product, data=data)
+    log_entry = LogEntry(message=message,
+                         script_name=script_name,
+                         product=product,
+                         data=data)
     log_string = log_entry.to_json_str()
     try:
         outfile.write(f"{log_string}\n")

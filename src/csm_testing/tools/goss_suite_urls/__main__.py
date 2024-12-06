@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 Usage: goss_suite_urls <suite name> <node> [<node>] ...
 
@@ -42,6 +41,7 @@ from csm_testing.lib.endpoints import load_goss_endpoints
 
 port_endpoint = {}
 
+
 def get_port_endpoint(node: str, suite: str) -> Tuple[int, str]:
     """
     Returns the port and endpoint URI for the specified suite on the specified node.
@@ -50,22 +50,32 @@ def get_port_endpoint(node: str, suite: str) -> Tuple[int, str]:
     if node_type in port_endpoint:
         return port_endpoint[node_type]
     goss_endpoints_by_ncn_type = load_goss_endpoints()
-    for (suite_name, endpoint_name, port) in goss_endpoints_by_ncn_type[node_type]:
+    for (suite_name, endpoint_name,
+         port) in goss_endpoints_by_ncn_type[node_type]:
         if suite_name == suite:
             port_endpoint[node_type] = port, endpoint_name
             return port, endpoint_name
-    raise ScriptException(f"No port/endpoint found for suite {suite} for NCN {node_type} nodes")
+    raise ScriptException(
+        f"No port/endpoint found for suite {suite} for NCN {node_type} nodes")
+
 
 def parse_args() -> Tuple[str, List[str]]:
     """
     Parses the command-line arguments.
     Returns the suite name, and a list of node names.
     """
-    parser = argparse.ArgumentParser(description="Print list of Goss endpoints.")
-    parser.add_argument("suite", type=argparse_yaml_file_name, help="Goss suite name.")
-    parser.add_argument("nodes", nargs="+", type=argparse_valid_ncn_name, help="Target nodes.")
+    parser = argparse.ArgumentParser(
+        description="Print list of Goss endpoints.")
+    parser.add_argument("suite",
+                        type=argparse_yaml_file_name,
+                        help="Goss suite name.")
+    parser.add_argument("nodes",
+                        nargs="+",
+                        type=argparse_valid_ncn_name,
+                        help="Target nodes.")
     args = parser.parse_args()
     return args.suite, args.nodes
+
 
 def get_suite_urls_nodelist(suite: str, *nodes: str) -> List[str]:
     """
@@ -78,10 +88,12 @@ def get_suite_urls_nodelist(suite: str, *nodes: str) -> List[str]:
         urls.append(f"http://{node}.hmn:{port}/{endpoint}")
     return urls
 
-def main() -> None: # pylint: disable=missing-function-docstring
+
+def main() -> None:  # pylint: disable=missing-function-docstring
     suite, nodes = parse_args()
     urls = get_suite_urls_nodelist(suite, *nodes)
     print(' '.join(urls))
+
 
 if __name__ == "__main__":
     main()

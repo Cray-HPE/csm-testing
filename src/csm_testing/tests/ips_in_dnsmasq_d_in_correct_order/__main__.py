@@ -23,8 +23,8 @@
 #
 import ipaddress
 import sys
-import logging, datetime
-
+import logging
+import datetime
 '''
 Simple script to ensure that the dhcp-range in the /etc/dnsmasq.d/{net}.conf files
   are in the correct order. This error was encountered on surtur and caused problems
@@ -40,33 +40,38 @@ Goss will search the output for the word FAIL
 
 '''
 
+
 def now():
     # convenience function because it'll be used for logging
     return str(datetime.datetime.now())
+
 
 # In case we want to make this script more user-friendly and add argparse or configparser
 # CRITICAL 50, ERROR 40, WARNING 30, INFO 20, DEBUG 10, NOTSET 0
 l_lvl = logging.INFO
 # Start the logger
-logging.basicConfig(filename='/tmp/' + sys.argv[0].split('/')[-1] + '.log',  level=l_lvl)
-logging.info(now()+" Starting up")
+logging.basicConfig(filename='/tmp/' + sys.argv[0].split('/')[-1] + '.log',
+                    level=l_lvl)
+logging.info(now() + " Starting up")
 
-def main() -> int: # pylint: disable=missing-function-docstring
+
+def main() -> int:  # pylint: disable=missing-function-docstring
     fileDir = "/etc/dnsmasq.d/"
-    fileNames = ['CAN', 'NMN', 'HMN', 'mtl' ]
-    contents =[]
+    fileNames = ['CAN', 'NMN', 'HMN', 'mtl']
+    contents = []
 
     # Iterate over the list of filenames and try to open the file
     for fileName in fileNames:
         # clear the start and end strings
-        logging.info(now()+" Checking %s.", fileDir+fileName)
+        logging.info(now() + " Checking %s.", fileDir + fileName)
         start = end = ''
         try:
-            f = open(fileDir+fileName+".conf", 'r')
+            f = open(fileDir + fileName + ".conf", 'r')
             #contents = f.read().split('\n')
         except:
-            logging.critical(now()+" Couldn't open %s.", fileDir+fileName+'.conf')
-            print("Unable to open file: "+fileName+".conf")
+            logging.critical(now() + " Couldn't open %s.",
+                             fileDir + fileName + '.conf')
+            print("Unable to open file: " + fileName + ".conf")
             return 1
 
         # if the contents of the file !NULL - read the file line-by-line
@@ -89,18 +94,24 @@ def main() -> int: # pylint: disable=missing-function-docstring
                 start_ip = ipaddress.ip_address(start)
                 end_ip = ipaddress.ip_address(end)
             except:
-                logging.critical(now()+" Could not convert either start = %s or end = %s to IP addresses.", start, end)
+                logging.critical(
+                    now() +
+                    " Could not convert either start = %s or end = %s to IP addresses.",
+                    start, end)
                 print("FAIL: Conversion of strings to IP addresses failed")
                 return 2
 
             if start_ip < end_ip:
                 print("PASS")
                 return 0
-            logging.error( now()+" The file %s failed. Start IP (%s) >= End IP (%s).", fileDir + fileName + ".conf", start, end)
+            logging.error(
+                now() + " The file %s failed. Start IP (%s) >= End IP (%s).",
+                fileDir + fileName + ".conf", start, end)
             print("FAIL for file:" + fileDir + fileName + ".conf")
             return 3
         print("FAIL - no starting IP address found")
         return 4
+
 
 if __name__ == "__main__":
     sys.exit(main())

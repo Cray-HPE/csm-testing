@@ -53,12 +53,17 @@ formatter = logging.Formatter(f"{myname}: %(levelname)-8s %(message)s")
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
+
 class CfsTestException(Exception):
     pass
 
+
 def get_systemctl_data():
     # Need to include --all so that empty properties are also listed
-    command_line = [ "/usr/bin/systemctl", "--all", "--no-pager", "show", "cfs-state-reporter" ]
+    command_line = [
+        "/usr/bin/systemctl", "--all", "--no-pager", "show",
+        "cfs-state-reporter"
+    ]
     logger.info(f"Running command: {' '.join(command_line)}")
     result = subprocess.run(command_line, stdout=subprocess.PIPE, check=True)
     logger.info(f"Command completed with return code {result.returncode}")
@@ -67,7 +72,7 @@ def get_systemctl_data():
     # We will load this into a dictionary, and return that
     # This could be done in fewer lines of code, but clarity is preferable
     output_lines = result.stdout.decode('utf-8').splitlines()
-    output_dict = dict()
+    output_dict = {}
     for line in output_lines:
         logger.debug(f"output line: {line}")
 
@@ -86,19 +91,22 @@ def get_systemctl_data():
         output_dict[field_name] = value_name
     return output_dict
 
+
 def get_service_data_fields():
-    # This function runs systemctl to obtain data on the cfs-state-reporter service. Provided that service
-    # has run and completed, this function returns the following fields from the systemctl output:
+    # This function runs systemctl to obtain data on the cfs-state-reporter service. Provided that
+    # service has run and completed, this function returns the following fields from the systemctl
+    # output:
     # ExecMainStatus
     # LoadState
     # ActiveState
     # SubState
     # Result
 
-    attempts=0
-    # We have this loop on the off chance that the systemctl command is run while the cfs-state-reporter
-    # service is still executing. In that case, because we wish to check the results of the service after
-    # it has finished executing, we attempt to retry the systemctl command a few times before giving up.
+    attempts = 0
+    # We have this loop on the off chance that the systemctl command is run while the
+    # cfs-state-reporter service is still executing. In that case, because we wish to check the
+    # results of the service after it has finished executing, we attempt to retry the systemctl
+    # command a few times before giving up.
     while attempts < 3:
         if attempts > 0:
             # If this is not the first attempt, sleep 2 seconds before trying
@@ -113,89 +121,102 @@ def get_service_data_fields():
                 logger.info(f"{field_name} = {field_value}")
                 return field_value
             except KeyError:
-                logger.error(f"Expected field missing from systemctl output: {field_name}")
+                logger.error(
+                    f"Expected field missing from systemctl output: {field_name}"
+                )
                 return None
 
         errors = False
         srv_start_time = get_field_value("ExecMainStartTimestamp")
-        if srv_start_time == None:
-            errors=True
+        if srv_start_time is None:
+            errors = True
 
         srv_exit_time = get_field_value("ExecMainExitTimestamp")
-        if srv_exit_time == None:
-            errors=True
+        if srv_exit_time is None:
+            errors = True
 
         srv_exit_status = get_field_value("ExecMainStatus")
-        if srv_exit_status == None:
-            errors=True
+        if srv_exit_status is None:
+            errors = True
 
         srv_load_state = get_field_value("LoadState")
-        if srv_load_state == None:
-            errors=True
+        if srv_load_state is None:
+            errors = True
 
         srv_active_state = get_field_value("ActiveState")
-        if srv_active_state == None:
-            errors=True
+        if srv_active_state is None:
+            errors = True
 
         srv_substate = get_field_value("SubState")
-        if srv_substate == None:
-            errors=True
+        if srv_substate is None:
+            errors = True
 
         srv_result = get_field_value("Result")
-        if srv_result == None:
-            errors=True
+        if srv_result is None:
+            errors = True
 
         # If any of our expected fields were missing, that is a problem
         if errors:
-            logger.error("One or more expected fields are missing from systemctl output")
+            logger.error(
+                "One or more expected fields are missing from systemctl output"
+            )
             raise CfsTestException
 
         if srv_exit_time:
-            # A non-empty exit time means that the service has run to completion, so we can return the fields to the function
-            # caller
+            # A non-empty exit time means that the service has run to completion, so we can return
+            # the fields to the function caller
             return srv_exit_status, srv_load_state, srv_active_state, srv_substate, srv_result
-        elif srv_start_time:
-            # A non-empty start time means that the service has started. Combined with the empty exit time, this indicates
-            # it is currently running. It usually takes less than 1 second to execute, so waiting for 2 seconds should be
-            # sufficient.
+        if srv_start_time:
+            # A non-empty start time means that the service has started. Combined with the empty
+            # exit time, this indicates it is currently running. It usually takes less than 1
+            # second to execute, so waiting for 2 seconds should be sufficient.
             logger.warn("cfs-state-reporter is currently running.")
-            attempts+=1
+            attempts += 1
             continue
 
-        # If we reach this point it means that both start time and exit times are empty. This is not good.
-        logger.error("According to systemctl, the cfs-state-reporter service has never started")
+        # If we reach this point it means that both start time and exit times are empty.
+        # This is not good.
+        logger.error(
+            "According to systemctl, the cfs-state-reporter service has never started"
+        )
         raise CfsTestException
     # If we reach here it means we have exceeded our allowed number of retries
-    logger.error(f"cfs-state-reporter is still running even after {attempts} attempts to run systemctl")
+    logger.error(
+        f"cfs-state-reporter is still running even after {attempts} attempts to run systemctl"
+    )
     raise CfsTestException
 
-def check_cfs_state_reporter_status():
-    srv_exit_status, srv_load_state, srv_active_state, srv_substate, srv_result = get_service_data_fields()
 
-    errors=False
+def check_cfs_state_reporter_status():
+    (srv_exit_status, srv_load_state, srv_active_state, srv_substate,
+     srv_result) = get_service_data_fields()
+
+    errors = False
     if srv_exit_status != "0":
-        logger.error(f"ExecMainStatus={srv_exit_status} | expected value=0")
-        errors=True
+        logger.error("ExecMainStatus=%s | expected value=0", srv_exit_status)
+        errors = True
     if srv_load_state != "loaded":
-        logger.error(f"LoadState={srv_load_state} | expected value=loaded")
-        errors=True
+        logger.error("LoadState=%s | expected value=loaded", srv_load_state)
+        errors = True
 
     if srv_active_state != "inactive":
-        logger.error(f"ActiveState={srv_active_state} | expected value=inactive")
-        errors=True
+        logger.error("ActiveState=%s | expected value=inactive",
+                     srv_active_state)
+        errors = True
     # We only check the SubState if the ActiveState is what we expect
     elif srv_substate != "dead":
-        logger.error(f"SubState={srv_substate} | expected value=dead")
-        errors=True
+        logger.error("SubState=%s | expected value=dead", srv_substate)
+        errors = True
 
     if srv_result != "success":
-        logger.error(f"Result={srv_result} | expected value=success")
-        errors=True
+        logger.error("Result=%s | expected value=success", srv_result)
+        errors = True
 
     if errors:
         raise CfsTestException
 
-def main() -> int: # pylint: disable=missing-function-docstring
+
+def main() -> int:  # pylint: disable=missing-function-docstring
     """
     Returns 0 on success, non-0 on failure.
     """
@@ -208,11 +229,14 @@ def main() -> int: # pylint: disable=missing-function-docstring
     except CfsTestException:
         pass
     except Exception as exc:
-        logger.error("Unexpected error validating cfs-state-reporter service", exc_info=exc)
+        logger.error("Unexpected error validating cfs-state-reporter service",
+                     exc_info=exc)
     print("")
     print(f"More details can be found in the test log file: {logFilePath}")
-    print("For additional information, try running: /usr/bin/systemctl --no-pager status cfs-state-reporter")
+    print("For additional information, try running: "
+          "/usr/bin/systemctl --no-pager status cfs-state-reporter")
     return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

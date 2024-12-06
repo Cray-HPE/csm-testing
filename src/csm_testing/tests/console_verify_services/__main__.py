@@ -47,23 +47,24 @@ logger.addHandler(file_handler)
 
 # set up logging to console
 console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(os.environ.get("CONSOLE_LOG_LEVEL", DEFAULT_LOG_LEVEL))
+console_handler.setLevel(os.environ.get("CONSOLE_LOG_LEVEL",
+                                        DEFAULT_LOG_LEVEL))
 formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 # Service names expected to be found
 EXPECTED_SERVICES = {
-    "cray-console-operator",
-    "cray-console-node",
-    "cray-console-data"
+    "cray-console-operator", "cray-console-node", "cray-console-data"
 }
 
 # filter out the postgres pods
 POSTGRES_FILTER = "postgres"
 
+
 class ConsoleException(Exception):
     pass
+
 
 def check_services_running():
     # Configs can be set in Configuration class directly or using helper utility
@@ -77,7 +78,8 @@ def check_services_running():
         for expected in EXPECTED_SERVICES:
             if expected in podName and not POSTGRES_FILTER in podName:
                 # record that we found a pod for the expected service
-                logger.debug(f"Checking {i.metadata.name} : {i.status.phase}")
+                logger.debug("Checking %s : %s", i.metadata.name,
+                             i.status.phase)
                 foundPods[expected] = i.metadata.name
 
                 # need to look at that state of each container - the i.status.phase lies...
@@ -88,14 +90,18 @@ def check_services_running():
                     #  gather what information we can.
                     if c.ready != True:
                         if c.state.terminated != None:
-                            logger.error(f"Pod: {i.metadata.name} Container Terminated: {c.name}, " +
-                                            f"Exit Code: {c.state.terminated.exit_code}, " +
-                                            f"Reason: {c.state.terminated.reason}, " +
-                                            f"Message: {c.state.terminated.message}")
+                            logger.error(
+                                "Pod: %s Container Terminated: %s, Exit Code: %d, "
+                                "Reason: %s, Message: %s", i.metadata.name,
+                                c.name, c.state.terminated.exit_code,
+                                c.state.terminated.reason,
+                                c.state.terminated.message)
                             ok = False
                         if c.state.waiting != None:
-                            logger.error(f"Pod: {i.metadata.name} Container: {c.name}, " +
-                                        f"{c.state.waiting.reason}: {c.state.waiting.message}")
+                            logger.error("Pod: %s Container: %s, %s: %s",
+                                         i.metadata.name, c.name,
+                                         c.state.waiting.reason,
+                                         c.state.waiting.message)
                             ok = False
 
                 if not ok:
@@ -103,15 +109,19 @@ def check_services_running():
 
     # check that all expected services have been found
     if not len(foundPods) == len(EXPECTED_SERVICES):
-        logger.error(f"The console pods in the services namespace did not match what was expected.")
-        logger.error(f"Expected services: {EXPECTED_SERVICES}")
-        logger.error(f"Found pods: {foundPods}")
+        logger.error(
+            "The console pods in the services namespace did not match what was expected."
+        )
+        logger.error("Expected services: %s", EXPECTED_SERVICES)
+        logger.error("Found pods: %s", foundPods)
         raise ConsoleException
 
-def main() -> int: # pylint: disable=missing-function-docstring
+
+def main() -> int:  # pylint: disable=missing-function-docstring
     try:
         return_value = True
-        logger.info("Beginning verification that all console services are running")
+        logger.info(
+            "Beginning verification that all console services are running")
 
         # Find that all services are present
         check_services_running()
@@ -121,7 +131,8 @@ def main() -> int: # pylint: disable=missing-function-docstring
     except ConsoleException:
         return 1
     except Exception as exc:
-        logger.error(f"Unexpected error verifying console services.", exc_info=exc)
+        logger.error("Unexpected error verifying console services.",
+                     exc_info=exc)
         return 1
 
 

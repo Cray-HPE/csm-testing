@@ -73,31 +73,38 @@ class APIRequest:
         headers = kwargs.pop('headers', {})
         headers.update(self._headers)
 
-        retry_strategy = Retry(
-            total=10,
-            backoff_factor=0.1,
-            status_forcelist=[429, 500, 502, 503, 504],
-            method_whitelist=["PATCH", "DELETE", "POST", "HEAD", "GET", "OPTIONS"]
-        )
+        retry_strategy = Retry(total=10,
+                               backoff_factor=0.1,
+                               status_forcelist=[429, 500, 502, 503, 504],
+                               method_whitelist=[
+                                   "PATCH", "DELETE", "POST", "HEAD", "GET",
+                                   "OPTIONS"
+                               ])
 
         adapter = HTTPAdapter(max_retries=retry_strategy)
         http = requests.Session()
         http.mount("https://", adapter)
         http.mount("http://", adapter)
 
-        response = http.request(method=method, url=url, headers=headers, **kwargs)
+        response = http.request(method=method,
+                                url=url,
+                                headers=headers,
+                                **kwargs)
 
         if 'data' in kwargs:
             log.debug("%s %s with headers: %s and data: %s", method, url,
-                      json.dumps(headers, indent=4), json.dumps(kwargs['data'], indent=4))
+                      json.dumps(headers, indent=4),
+                      json.dumps(kwargs['data'], indent=4))
         elif 'json' in kwargs:
             log.debug("%s %s with headers: %s and JSON: %s", method, url,
-                      json.dumps(headers, indent=4), json.dumps(kwargs['json'], indent=4))
+                      json.dumps(headers, indent=4),
+                      json.dumps(kwargs['json'], indent=4))
         else:
-            log.debug("%s %s with headers: %s", method, url, json.dumps(headers, indent=4))
+            log.debug("%s %s with headers: %s", method, url,
+                      json.dumps(headers, indent=4))
 
-        log.debug("Response to %s %s => %d %s %s", method, url, response.status_code,
-                  response.reason, response.text)
+        log.debug("Response to %s %s => %d %s %s", method, url,
+                  response.status_code, response.reason, response.text)
 
         return response
 
@@ -110,7 +117,8 @@ log.setLevel(logging.WARN)
 
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 log.addHandler(handler)
 
@@ -127,8 +135,11 @@ def token():
     token = base64.b64decode(secret['client-secret']).decode('utf-8')
 
     # create post data to keycloak istio ingress
-    token_data = {'grant_type': 'client_credentials', 'client_id': 'admin-client',
-                  'client_secret': token}
+    token_data = {
+        'grant_type': 'client_credentials',
+        'client_id': 'admin-client',
+        'client_secret': token
+    }
 
     # query keycloack
     token_url = '/keycloak/realms/shasta/protocol/openid-connect/token'
@@ -138,7 +149,8 @@ def token():
 
     return access_token
 
-def main(): # pylint: disable=missing-function-docstring
+
+def main():  # pylint: disable=missing-function-docstring
     error_found = False
 
     bearer_token = token()
@@ -167,7 +179,8 @@ def main(): # pylint: disable=missing-function-docstring
                     if ip in ip_set:
                         log.error('Error: found duplicate IP: %s', ip)
                         error_found = True
-                        nslookup_cmd = subprocess.Popen(('nslookup', ip), stdout=subprocess.PIPE,
+                        nslookup_cmd = subprocess.Popen(('nslookup', ip),
+                                                        stdout=subprocess.PIPE,
                                                         stderr=subprocess.PIPE)
                         output, _ = nslookup_cmd.communicate()
                         print(output.decode('ascii'))
@@ -181,24 +194,34 @@ def main(): # pylint: disable=missing-function-docstring
             continue
         if 'Role' not in hardware['ExtraProperties']:
             continue
-        if hardware['ExtraProperties']['Role'] in {'Application', 'Management'}:
-            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] + '.nmn')
-            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] + '.can')
-            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] + '.hmn')
-            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] + '-mgmt')
-            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] + '.cmn')
-            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] + '.chn')
+        if hardware['ExtraProperties']['Role'] in {
+                'Application', 'Management'
+        }:
+            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] +
+                                 '.nmn')
+            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] +
+                                 '.can')
+            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] +
+                                 '.hmn')
+            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] +
+                                 '-mgmt')
+            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] +
+                                 '.cmn')
+            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] +
+                                 '.chn')
 
     for hostname in hostname_list:
 
-        dig_cmd = subprocess.Popen(('dig', hostname, '+short'), stdout=subprocess.PIPE)
+        dig_cmd = subprocess.Popen(('dig', hostname, '+short'),
+                                   stdout=subprocess.PIPE)
         wc_cmd = subprocess.check_output(('wc', '-l'), stdin=dig_cmd.stdout)
         result = int(wc_cmd.decode('ascii').strip())
         if result > 1:
             error_found = True
             log.error('ERROR: %s has more than 1 DNS entry', hostname)
-            nslookup_cmd = subprocess.Popen(('nslookup', hostname), stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE)
+            nslookup_cmd = subprocess.Popen(('nslookup', hostname),
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE)
             output, errors = nslookup_cmd.communicate()
             print(f"{output.decode('ascii')}")
 
@@ -208,6 +231,7 @@ def main(): # pylint: disable=missing-function-docstring
     else:
         log.debug('No errors found.')
         sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

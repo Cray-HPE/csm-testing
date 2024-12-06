@@ -45,7 +45,8 @@ logger.addHandler(file_handler)
 
 # set up logging to console
 console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(os.environ.get("CONSOLE_LOG_LEVEL", DEFAULT_LOG_LEVEL))
+console_handler.setLevel(os.environ.get("CONSOLE_LOG_LEVEL",
+                                        DEFAULT_LOG_LEVEL))
 formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
@@ -55,8 +56,7 @@ DOCKER_REGISTRY = "docker://dtr.dev.cray.com"
 VALIDATE_PACKER_IMAGES = False
 
 EXPECTED_CONFIGMAPS = {
-    "ims-config",
-    "cray-configmap-ims-v2-image-create-kiwi-ng",
+    "ims-config", "cray-configmap-ims-v2-image-create-kiwi-ng",
     "cray-configmap-ims-v2-image-create-packer",
     "cray-configmap-ims-v2-image-customize"
 }
@@ -71,20 +71,25 @@ def ims_configmaps():
     try:
         logger.debug("Getting list of configmaps in the services namespace.")
         command_line = ['kubectl', 'get', 'cm', '-n', 'services', '-o', 'name']
-        result = subprocess.check_output(command_line, stderr=subprocess.STDOUT).decode("utf8")
+        result = subprocess.check_output(
+            command_line, stderr=subprocess.STDOUT).decode("utf8")
         logger.debug(result)
         for cm in result.splitlines():
             if "ims" in cm.lower():
                 # result is prefaced with "configmap/". We want to strip that off.
                 configmaps.add(cm[10:])
     except subprocess.CalledProcessError as err:
-        logger.error(f"Could not list IMS configmaps. Got exit code {err.returncode}. Msg: {err.output}")
+        logger.error(
+            "Could not list IMS configmaps. Got exit code %d. Msg: %s",
+            err.returncode, err.output)
         raise ImsException
 
     if not configmaps == EXPECTED_CONFIGMAPS:
-        logger.error(f"The IMS configmaps in the services namespace did not match what was expected.")
-        logger.error(f"Found Configmaps: {configmaps}")
-        logger.error(f"Expected Configmaps: {EXPECTED_CONFIGMAPS}")
+        logger.error(
+            "The IMS configmaps in the services namespace did not match what was expected."
+        )
+        logger.error("Found Configmaps: %s", configmaps)
+        logger.error("Expected Configmaps: %s", EXPECTED_CONFIGMAPS)
         raise ImsException
 
     for configmap in configmaps:
@@ -96,47 +101,65 @@ def ims_configmaps():
 def cm_dependent_images(cm):
     dependent_images = set()
     try:
-        logger.info(f"Validating {cm} configmap")
-        command_line = ['kubectl', 'get', 'cm', '-n', 'services', '-o', 'yaml', cm]
-        response = subprocess.check_output(command_line, stderr=subprocess.STDOUT).decode("utf8")
+        logger.info("Validating %s configmap", cm)
+        command_line = [
+            'kubectl', 'get', 'cm', '-n', 'services', '-o', 'yaml', cm
+        ]
+        response = subprocess.check_output(
+            command_line, stderr=subprocess.STDOUT).decode("utf8")
         logger.debug(response)
         configmap = yaml.safe_load(response)
         for resource_name in configmap["data"]:
             resource = yaml.safe_load(configmap["data"][resource_name])
             if resource["kind"] == "Job":
                 for container_group in ['initContainers', 'containers']:
-                    for container in resource["spec"]["template"]["spec"][container_group]:
+                    for container in resource["spec"]["template"]["spec"][
+                            container_group]:
                         dependent_images.add(container["image"])
     except subprocess.CalledProcessError as err:
-        logger.error(f"Could not retrieve IMS configmap {cm}. Got exit code {err.returncode}. Msg: {err.output}")
+        logger.error(
+            "Could not retrieve IMS configmap %s. Got exit code %d. Msg: %s",
+            cm, err.returncode, err.output)
         raise ImsException
 
     for dependent_image in dependent_images:
-        logger.info(f"  - Configmap references the image {dependent_image}")
+        logger.info("  - Configmap references the image %s", dependent_image)
         yield dependent_image
 
 
 def validate_dependent_image_exists(dependent_image):
     try:
-        logger.debug(f"Validating that the image {dependent_image} exists in the packages.local repo")
-        command_line = ["podman", "run", "--rm", SKOPEO_IMAGE, "inspect", '/'.join([DOCKER_REGISTRY, dependent_image])]
-        response = subprocess.check_output(command_line, stderr=subprocess.STDOUT).decode("utf8")
-        logger.info(f"    * Verified that the image {dependent_image} exists in the local docker registry.")
+        logger.debug(
+            "Validating that the image %s exists in the packages.local repo",
+            dependent_image)
+        command_line = [
+            "podman", "run", "--rm", SKOPEO_IMAGE, "inspect",
+            '/'.join([DOCKER_REGISTRY, dependent_image])
+        ]
+        response = subprocess.check_output(
+            command_line, stderr=subprocess.STDOUT).decode("utf8")
+        logger.info(
+            "    * Verified that the image %s exists in the local docker registry.",
+            dependent_image)
         logger.debug(response)
         return True
     except subprocess.CalledProcessError as err:
-        logger.error(f"Could not validate the image {dependent_image}. "
-                     f"Got exit code {err.returncode}. Msg: {err.output}")
+        logger.error(
+            "Could not validate the image %s. Got exit code %d. Msg: %s",
+            dependent_image, err.returncode, err.output)
         return False
 
 
-def main(): # pylint: disable=missing-function-docstring
+def main():  # pylint: disable=missing-function-docstring
     try:
         return_value = True
-        logger.info("Beginning verification that IMS dependent images are available in the local docker registry")
+        logger.info(
+            "Beginning verification that IMS dependent images are available "
+            "in the local docker registry")
         for cm in ims_configmaps():
             for dependent_image in cm_dependent_images(cm):
-                return_value = return_value and validate_dependent_image_exists(dependent_image)
+                return_value = return_value and validate_dependent_image_exists(
+                    dependent_image)
 
         if not return_value:
             logger.error("Validation of IMS dependent images failed")
@@ -147,7 +170,8 @@ def main(): # pylint: disable=missing-function-docstring
     except ImsException:
         return 1
     except Exception as exc:
-        logger.error(f"Unexpected error validating dependent IMS images.", exc_info=exc)
+        logger.error("Unexpected error validating dependent IMS images.",
+                     exc_info=exc)
         return 1
 
 
