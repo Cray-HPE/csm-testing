@@ -581,7 +581,7 @@ def parse_args() -> Dict[str, StringList]:
         if is_url(source):
             sources["url"].append(source)
             continue
-        elif source == "stdin" or source[:6] == "stdin:":
+        if source == "stdin" or source[:6] == "stdin:":
             # Only allow a maximum of one stdin source
             if sources["stdin"]:
                 stderr_print(
@@ -591,7 +591,7 @@ def parse_args() -> Dict[str, StringList]:
                 sys.exit(RC_USAGE)
             sources["stdin"].append(source)
             continue
-        elif is_suite_test_file(source):
+        if is_suite_test_file(source):
             source_path = f"{goss_base()}/{source}"
             sources["goss_file"].append(source_path)
         else:

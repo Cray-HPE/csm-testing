@@ -210,6 +210,7 @@ def check_k8s_node_info(k8s_node_info: K8sNodeInfo) -> bool:
             print_err(f"Not all Kubernetes NCNs have the same {field}")
             print(f"{node_info_values[field]}\n")
             passed = False
+    return passed
 
 
 def main() -> None:  # pylint: disable=missing-function-docstring
