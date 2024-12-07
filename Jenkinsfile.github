@@ -93,6 +93,8 @@ pipeline {
             }
             environment {
                 PY_BIN_PATH = getPythonBinaryPath(PY_VERSION)
+                // If pylint rates the code lower than this, the build will fail
+                MIN_PYLINT_RATING = 8.6
             }
             steps {
                 sh "make pylint"

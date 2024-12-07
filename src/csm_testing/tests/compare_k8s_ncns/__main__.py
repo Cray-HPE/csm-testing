@@ -27,13 +27,35 @@ all workers have the same kernel version, and all Kubernetes NCNs have the
 same values for several other fields (enumerated below in KubernetesNodeInfoFields)
 """
 
-import kubernetes
 import sys
+from typing import Any, Dict, List, NamedTuple, Tuple
+
+import kubernetes
 
 KubernetesNodeInfoFields = [
     "container_runtime_version", "kube_proxy_version", "kubelet_version",
     "os_image"
 ]
+
+# For type checking
+
+# map from kernel version to list of NCN names with that version
+NcnKernelVersionMapType = Dict[str, List[str]]
+
+# map from node info field name to:
+#     map from values for that field to list of NCN names with that value
+NcnNodeInfoValuesMap = Dict[str, Dict[Any, List[str]]]
+
+
+class K8sNodeInfo(NamedTuple):
+    """
+    Information about the Kubernetes nodes on the system
+    """
+    master_kernel_version: NcnKernelVersionMapType
+    worker_kernel_version: NcnKernelVersionMapType
+    node_info_values: NcnNodeInfoValuesMap
+    num_workers: int
+    num_masters: int
 
 
 def print_err(msg: str) -> None:
@@ -43,13 +65,18 @@ def print_err(msg: str) -> None:
     sys.stderr.write(f"ERROR: {msg}\n")
 
 
-def main() -> None:  # pylint: disable=missing-function-docstring
+def get_k8s_ncn_info() -> Tuple[K8sNodeInfo, bool]:
+    """
+    List all Kubernetes nodes and return information about them, as well as a boolean indicating
+    pass/fail, in case problems were found during the checking
+    """
+
     print("Loading Kubernetes configuration")
     kubernetes.config.load_kube_config()
     print("Initializing Kubernetes client")
-    v1 = kubernetes.client.CoreV1Api()
+    k8s_v1 = kubernetes.client.CoreV1Api()
     print("Listing Kubernetes nodes")
-    node_list = v1.list_node()
+    node_list = k8s_v1.list_node()
 
     passed = True
 
@@ -124,6 +151,24 @@ def main() -> None:  # pylint: disable=missing-function-docstring
                     f"Unable to find {field} field in node_info for {ncn_name}"
                 )
                 passed = False
+    return K8sNodeInfo(master_kernel_version=master_kernel_version,
+                       worker_kernel_version=worker_kernel_version,
+                       node_info_values=node_info_values,
+                       num_workers=num_workers,
+                       num_masters=num_masters), passed
+
+
+def check_k8s_node_info(k8s_node_info: K8sNodeInfo) -> bool:
+    """
+    Does a validation of the Kubernetes node information that was collected.
+    Returns a boolean, with True indicating no problems found, and False otherwise.
+    """
+    passed = True
+    num_masters = k8s_node_info.num_masters
+    num_workers = k8s_node_info.num_workers
+    worker_kernel_version = k8s_node_info.worker_kernel_version
+    master_kernel_version = k8s_node_info.master_kernel_version
+    node_info_values = k8s_node_info.node_info_values
 
     # The purpose of this test is not to make sure the number of NCNs found is correct. However,
     # because at least 2 masters and 2 workers are needed in order to do any value comparisons,
@@ -165,6 +210,12 @@ def main() -> None:  # pylint: disable=missing-function-docstring
             print_err(f"Not all Kubernetes NCNs have the same {field}")
             print(f"{node_info_values[field]}\n")
             passed = False
+
+
+def main() -> None:  # pylint: disable=missing-function-docstring
+    k8s_node_info, passed = get_k8s_ncn_info()
+    if not check_k8s_node_info(k8s_node_info):
+        passed = False
 
     if passed:
         print("PASSED")

@@ -22,15 +22,16 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 import base64
-import subprocess
 import json
-import sys
 import logging
+import subprocess
+import sys
+from urllib.parse import urljoin
+
+from kubernetes import client, config
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from urllib.parse import urljoin
-from kubernetes import client, config
 
 
 class APIRequest:
@@ -170,22 +171,24 @@ def main():  # pylint: disable=missing-function-docstring
     ip_set = set()
     for smd_entry in smd_ethernet_interfaces:
         # print (smd_entry)
-        if smd_entry['IPAddresses'] != '[]':
-            ip_addresses = smd_entry['IPAddresses']
-            for ips in ip_addresses:
-                ip = ips['IPAddress']
-                # print (ip)
-                if ip != '':
-                    if ip in ip_set:
-                        log.error('Error: found duplicate IP: %s', ip)
-                        error_found = True
-                        nslookup_cmd = subprocess.Popen(('nslookup', ip),
-                                                        stdout=subprocess.PIPE,
-                                                        stderr=subprocess.PIPE)
-                        output, _ = nslookup_cmd.communicate()
-                        print(output.decode('ascii'))
-                    else:
-                        ip_set.add(ip)
+        if smd_entry['IPAddresses'] == '[]':
+            continue
+        ip_addresses = smd_entry['IPAddresses']
+        for ips in ip_addresses:
+            ip = ips['IPAddress']
+            # print (ip)
+            if ip == '':
+                continue
+            if ip not in ip_set:
+                ip_set.add(ip)
+                continue
+            log.error('Error: found duplicate IP: %s', ip)
+            error_found = True
+            nslookup_cmd = subprocess.Popen(('nslookup', ip),
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE)
+            output, _ = nslookup_cmd.communicate()
+            print(output.decode('ascii'))
 
     hostname_list = []
 
@@ -197,18 +200,18 @@ def main():  # pylint: disable=missing-function-docstring
         if hardware['ExtraProperties']['Role'] in {
                 'Application', 'Management'
         }:
-            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] +
-                                 '.nmn')
-            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] +
-                                 '.can')
-            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] +
-                                 '.hmn')
-            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] +
-                                 '-mgmt')
-            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] +
-                                 '.cmn')
-            hostname_list.append(hardware['ExtraProperties']['Aliases'][0] +
-                                 '.chn')
+            hostname_list.append(
+                f"{hardware['ExtraProperties']['Aliases'][0]}.nmn")
+            hostname_list.append(
+                f"{hardware['ExtraProperties']['Aliases'][0]}.can")
+            hostname_list.append(
+                f"{hardware['ExtraProperties']['Aliases'][0]}.hmn")
+            hostname_list.append(
+                f"{hardware['ExtraProperties']['Aliases'][0]}-mgmt")
+            hostname_list.append(
+                f"{hardware['ExtraProperties']['Aliases'][0]}.cmn")
+            hostname_list.append(
+                f"{hardware['ExtraProperties']['Aliases'][0]}.chn")
 
     for hostname in hostname_list:
 
@@ -222,15 +225,14 @@ def main():  # pylint: disable=missing-function-docstring
             nslookup_cmd = subprocess.Popen(('nslookup', hostname),
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE)
-            output, errors = nslookup_cmd.communicate()
+            output, _ = nslookup_cmd.communicate()
             print(f"{output.decode('ascii')}")
 
     if error_found:
         log.error('ERRORS: see above output.')
         sys.exit(1)
-    else:
-        log.debug('No errors found.')
-        sys.exit(0)
+    log.debug('No errors found.')
+    sys.exit(0)
 
 
 if __name__ == "__main__":
