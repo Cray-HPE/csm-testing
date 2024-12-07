@@ -21,15 +21,11 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 Helper functions for Goss Python automated scripts
 """
 
-from typing import Callable, List, Tuple
-
 import argparse
-import colorama
 from datetime import datetime
 import json
 import logging
@@ -39,12 +35,14 @@ import re
 import socket
 import string
 import sys
-import traceback
+from typing import Callable, List, Tuple
+
+import colorama
 
 # To help with function annotations
 StringList = List[str]
 
-NCN_TYPES = [ "master", "storage", "worker", "livecd" ]
+NCN_TYPES = ["master", "storage", "worker", "livecd"]
 
 DEFAULT_LOG_LEVEL = "INFO"
 # For automated scripts with parallel execution, set the max number of parallel jobs.
@@ -55,6 +53,7 @@ DEFAULT_GOSS_SCRIPT_MAX_THREADS = 0
 DEFAULT_GOSS_INSTALL_BASE_DIR = "/opt/cray/tests/install"
 PIT_NODE_RELEASE_FILE = "/etc/pit-release"
 
+
 def goss_base_dirs(validate: bool = False) -> Tuple[str, str]:
     """
     Returns GOSS_INSTALL_BASE_DIR, GOSS_BASE
@@ -64,22 +63,30 @@ def goss_base_dirs(validate: bool = False) -> Tuple[str, str]:
         # GOSS_BASE is set
 
         if validate and not os.path.isdir(base_dir):
-            raise ScriptException(f"GOSS_BASE directory does not exist or is not a directory: {base_dir}")
+            raise ScriptException(
+                f"GOSS_BASE directory does not exist or is not a directory: {base_dir}"
+            )
 
         # Get the value of GOSS_INSTALL_BASE_DIR. In this case, if it is unset, it defaults to being the
         # parent directory of GOSS_BASE.
-        install_base_dir = os.environ.get("GOSS_INSTALL_BASE_DIR", os.path.realpath(f"{base_dir}/.."))
+        install_base_dir = os.environ.get("GOSS_INSTALL_BASE_DIR",
+                                          os.path.realpath(f"{base_dir}/.."))
 
         if validate and not os.path.isdir(install_base_dir):
-            raise ScriptException(f"GOSS_INSTALL_BASE_DIR directory does not exist or is not a directory: {install_base_dir}")
+            raise ScriptException(
+                f"GOSS_INSTALL_BASE_DIR directory does not exist or is not a directory: {install_base_dir}"
+            )
     except KeyError:
         # GOSS_BASE is not set
 
         # Get the value of GOSS_INSTALL_BASE_DIR, or its default value if it is also unset
-        install_base_dir = os.environ.get("GOSS_INSTALL_BASE_DIR", DEFAULT_GOSS_INSTALL_BASE_DIR)
+        install_base_dir = os.environ.get("GOSS_INSTALL_BASE_DIR",
+                                          DEFAULT_GOSS_INSTALL_BASE_DIR)
 
         if validate and not os.path.isdir(install_base_dir):
-            raise ScriptException(f"GOSS_INSTALL_BASE_DIR directory does not exist or is not a directory: {install_base_dir}")
+            raise ScriptException(
+                f"GOSS_INSTALL_BASE_DIR directory does not exist or is not a directory: {install_base_dir}"
+            )
 
         # GOSS_BASE will be the ncn or livecd subdirectory of GOSS_INSTALL_BASE_DIR, depending on our node type
         if is_pit_node():
@@ -88,73 +95,101 @@ def goss_base_dirs(validate: bool = False) -> Tuple[str, str]:
             base_dir = f"{install_base_dir}/ncn"
 
         if validate and not os.path.isdir(base_dir):
-            raise ScriptException(f"GOSS_BASE directory does not exist or is not a directory: {base_dir}")
+            raise ScriptException(
+                f"GOSS_BASE directory does not exist or is not a directory: {base_dir}"
+            )
 
     return install_base_dir, base_dir
+
 
 def goss_install_base_dir(*args, **kwargs) -> str:
     return goss_base_dirs(*args, **kwargs)[0]
 
+
 def goss_base(*args, **kwargs) -> str:
     return goss_base_dirs(*args, **kwargs)[1]
+
 
 def goss_script_log_level() -> int:
     # Make it uppercase, just so that people who accidentally set a lowercase
     # log level are not tripped up
-    requested_log_level = os.environ.get("GOSS_SCRIPT_LOG_LEVEL", DEFAULT_LOG_LEVEL).upper()
+    requested_log_level = os.environ.get("GOSS_SCRIPT_LOG_LEVEL",
+                                         DEFAULT_LOG_LEVEL).upper()
     return logging.getLevelName(requested_log_level)
 
+
 def goss_script_max_threads() -> int:
-    max_threads_str = os.environ.get("GOSS_SCRIPT_MAX_THREADS", DEFAULT_GOSS_SCRIPT_MAX_THREADS)
+    max_threads_str = os.environ.get("GOSS_SCRIPT_MAX_THREADS",
+                                     DEFAULT_GOSS_SCRIPT_MAX_THREADS)
     try:
         max_threads = int(max_threads_str)
     except ValueError:
-        logging.warn(f"Non-integer value specified for GOSS_SCRIPT_MAX_THREADS ({max_threads_str}). Default to {DEFAULT_GOSS_SCRIPT_MAX_THREADS}")
+        logging.warn(
+            "Non-integer value specified for GOSS_SCRIPT_MAX_THREADS (%s). Default to %d",
+            max_threads_str, DEFAULT_GOSS_SCRIPT_MAX_THREADS)
         max_threads = DEFAULT_GOSS_SCRIPT_MAX_THREADS
     if max_threads < 0:
-        logging.warn(f"GOSS_SCRIPT_MAX_THREADS must be a nonnegative integer. Invalid value ({max_threads}). Defaulting to 0.")
+        logging.warn(
+            "GOSS_SCRIPT_MAX_THREADS must be a nonnegative integer. Invalid value (%d). "
+            "Defaulting to 0.", max_threads)
         max_threads = 0
     return max_threads
 
+
 def goss_servers_config(validate: bool = False) -> str:
     gibd = goss_install_base_dir()
-    config_file = os.environ.get("GOSS_SERVERS_CONFIG", f"{gibd}/dat/goss-servers.cfg")
+    config_file = os.environ.get("GOSS_SERVERS_CONFIG",
+                                 f"{gibd}/dat/goss-servers.cfg")
     if validate and not os.path.isfile(config_file):
-        raise ScriptException(f"GOSS_SERVERS_CONFIG file does not exist or is not a file: {config_file}")
+        raise ScriptException(
+            f"GOSS_SERVERS_CONFIG file does not exist or is not a file: {config_file}"
+        )
     return config_file
+
 
 def goss_log_base_dir(validate: bool = False) -> str:
     gibd = goss_install_base_dir()
     log_dir = os.environ.get("GOSS_LOG_BASE_DIR", f"{gibd}/logs")
     if validate and not os.path.isdir(log_dir):
-        raise ScriptException(f"GOSS_LOG_BASE_DIR directory does not exist or is not a directory: {log_dir}")
+        raise ScriptException(
+            f"GOSS_LOG_BASE_DIR directory does not exist or is not a directory: {log_dir}"
+        )
     return log_dir
+
 
 ERR_TEXT_CODE = colorama.Fore.LIGHTRED_EX
 WARN_TEXT_CODE = colorama.Fore.LIGHTYELLOW_EX
 OK_TEXT_CODE = colorama.Fore.LIGHTGREEN_EX
 RESET_TEXT_CODE = colorama.Style.RESET_ALL
 
+
 class ScriptException(Exception):
     pass
+
 
 class ScriptUsageException(ScriptException):
     pass
 
-def err_text(s: str) ->str:
-    return f"{ERR_TEXT_CODE}{s}{RESET_TEXT_CODE}"
 
-def warn_text(s: str) -> str:
-    return f"{WARN_TEXT_CODE}{s}{RESET_TEXT_CODE}"
+def err_text(outstring: str) -> str:
+    return f"{ERR_TEXT_CODE}{outstring}{RESET_TEXT_CODE}"
 
-def ok_text(s: str) -> str:
-    return f"{OK_TEXT_CODE}{s}{RESET_TEXT_CODE}"
+
+def warn_text(outstring: str) -> str:
+    return f"{WARN_TEXT_CODE}{outstring}{RESET_TEXT_CODE}"
+
+
+def ok_text(outstring: str) -> str:
+    return f"{OK_TEXT_CODE}{outstring}{RESET_TEXT_CODE}"
+
 
 def is_pit_node() -> bool:
     return os.path.isfile(PIT_NODE_RELEASE_FILE)
 
+
 def goss_suites_dir() -> str:
     return f"{goss_base()}/suites"
+
 
 def goss_env_variables() -> dict:
     return {
@@ -166,8 +201,10 @@ def goss_env_variables() -> dict:
         "GOSS_SERVERS_CONFIG": goss_servers_config()
     }
 
+
 def timestamp_string() -> str:
     return datetime.now().strftime('%Y%m%d_%H%M%S.%f')
+
 
 def strip_path(filepath: str) -> str:
     """
@@ -176,13 +213,18 @@ def strip_path(filepath: str) -> str:
     """
     return filepath.split('/')[-1]
 
+
 def time_pid_unique_string() -> str:
     mypid = os.getpid()
     timestamp = timestamp_string()
-    randstring = ''.join(random.choices(string.ascii_lowercase + string.digits + string.ascii_uppercase, k=8))
+    randstring = ''.join(
+        random.choices(string.ascii_lowercase + string.digits +
+                       string.ascii_uppercase,
+                       k=8))
     return f"{timestamp}-{mypid}-{randstring}"
 
-def log_dir(script_name: str, sub_directory_basename: str=None) -> str:
+
+def log_dir(script_name: str, sub_directory_basename: str = None) -> str:
     # Strip off path and .py, if present, in script name
     script_name = strip_path(script_name)
     if script_name[-3:] == ".py":
@@ -193,37 +235,44 @@ def log_dir(script_name: str, sub_directory_basename: str=None) -> str:
     glbd = goss_log_base_dir()
     return f"{glbd}/{script_name}/{sub_directory_basename}"
 
+
 def log_values(logmethod: Callable, **kwargs) -> None:
-    for k, v in kwargs.items():
+    for key, val in kwargs.items():
         # For dictionary values, format them nicely
-        if isinstance(v, dict):
+        if isinstance(val, dict):
             try:
-                logmethod(f"{k}=\n" + json.dumps(v, indent=2))
+                logmethod(f"{key}=\n" + json.dumps(val, indent=2))
                 continue
             except TypeError:
                 # This can happen if the dict contains stuff that cannot be serialized as JSON
                 pass
-        logmethod(f"{k}={v}")
+        logmethod(f"{key}={val}")
+
 
 def log_goss_env_variables(logmethod: Callable) -> None:
     log_values(logmethod=logmethod, **goss_env_variables())
 
-def stderr_print(s: str) -> None:
-    sys.stderr.write(f"{s}\n")
+
+def stderr_print(outstring: str) -> None:
+    sys.stderr.write(f"{outstring}\n")
     sys.stderr.flush()
 
-def stdout_print(s: str) -> None:
-    sys.stdout.write(f"{s}\n")
+
+def stdout_print(outstring: str) -> None:
+    sys.stdout.write(f"{outstring}\n")
     sys.stdout.flush()
 
-def multi_print(s: str, *methods) -> None:
-    for m in methods:
-        m(s)
+
+def multi_print(outstring: str, *methods) -> None:
+    for mth in methods:
+        mth(outstring)
+
 
 def get_hostname() -> str:
     return socket.gethostname()
 
-ncn_num_pattern="([1-9][0-9][0-9]|0[1-9][0-9]|00[1-9])"
+
+ncn_num_pattern = "([1-9][0-9][0-9]|0[1-9][0-9]|00[1-9])"
 ncn_pattern = f"^ncn-[msw]{ncn_num_pattern}$"
 ncn_master_pattern = f"^ncn-m{ncn_num_pattern}$"
 ncn_storage_pattern = f"^ncn-s{ncn_num_pattern}$"
@@ -234,28 +283,34 @@ ncn_master_re_prog = re.compile(ncn_master_pattern)
 ncn_storage_re_prog = re.compile(ncn_storage_pattern)
 ncn_worker_re_prog = re.compile(ncn_worker_pattern)
 
-def is_ncn_name(n: str) -> bool:
-    if ncn_re_prog.match(n) or n == "pit":
+
+def is_ncn_name(nname: str) -> bool:
+    if ncn_re_prog.match(nname) or nname == "pit":
         return True
     return False
 
-def is_master_ncn_name(n: str) -> bool:
-    if ncn_master_re_prog.match(n):
+
+def is_master_ncn_name(nname: str) -> bool:
+    if ncn_master_re_prog.match(nname):
         return True
     return False
 
-def is_storage_ncn_name(n: str) -> bool:
-    if ncn_storage_re_prog.match(n):
+
+def is_storage_ncn_name(nname: str) -> bool:
+    if ncn_storage_re_prog.match(nname):
         return True
     return False
 
-def is_worker_ncn_name(n: str) -> bool:
-    if ncn_worker_re_prog.match(n):
+
+def is_worker_ncn_name(nname: str) -> bool:
+    if ncn_worker_re_prog.match(nname):
         return True
     return False
 
-def is_livecd_ncn_name(n: str) -> bool:
-    return (n == "pit")
+
+def is_livecd_ncn_name(nname: str) -> bool:
+    return nname == "pit"
+
 
 def get_ncn_type(ncn_name: str) -> str:
     if is_master_ncn_name(ncn_name):
@@ -268,27 +323,34 @@ def get_ncn_type(ncn_name: str) -> str:
         return "livecd"
     raise ScriptException(f"Unexpected NCN name format: {ncn_name}")
 
+
 def my_ncn_type() -> str:
     return get_ncn_type(get_hostname())
 
-def argparse_nonempty_string(s: str) -> str:
-    if len(s) > 0:
-        return s
+
+def argparse_nonempty_string(astring: str) -> str:
+    if len(astring) > 0:
+        return astring
     raise argparse.ArgumentTypeError("Arguments may not be blank")
 
-def argparse_yaml_file_name(s: str) -> str:
+
+def argparse_yaml_file_name(fname: str) -> str:
     try:
-        argparse_nonempty_string(s)
+        argparse_nonempty_string(fname)
     except argparse.ArgumentTypeError:
         raise argparse.ArgumentTypeError("YAML file names may not be blank")
-    if s[-5:] == ".yaml":
-        return s
-    raise argparse.ArgumentTypeError(f"YAML file names are expected to have .yaml extension. Invalid: {s}")
+    if fname[-5:] == ".yaml":
+        return fname
+    raise argparse.ArgumentTypeError(
+        f"YAML file names are expected to have .yaml extension. Invalid: {fname}"
+    )
 
-def argparse_valid_ncn_name(n: str) -> str:
-    if is_ncn_name(n):
-        return n
-    raise argparse.ArgumentTypeError(f"Invalid NCN name: {n}")
 
-def fmt_exc(e: Exception) -> str:
-    return f"{type(e).__name__}: {e}"
+def argparse_valid_ncn_name(nname: str) -> str:
+    if is_ncn_name(nname):
+        return nname
+    raise argparse.ArgumentTypeError(f"Invalid NCN name: {nname}")
+
+
+def fmt_exc(exc: Exception) -> str:
+    return f"{type(exc).__name__}: {exc}"

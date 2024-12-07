@@ -21,30 +21,33 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 dataJson is a convenience class to work with the data.json file
 
-data.json exists as key:value file where key can be either a mac address that is inconsistent depending on the environment
-Or ... everything else - which IS consistent Storage, Default, Global, etc. 
+data.json exists as key:value file where key can be either a mac address that is inconsistent
+depending on the environment
+Or ... everything else - which IS consistent Storage, Default, Global, etc.
 Convenience functions are included to easily dig out the most likely needed data
 
 Parameters:
-dataJson(/path/to/data.json) 
+dataJson(/path/to/data.json)
 
 Exposes:
     payload: A dictionary of the entire data.json file
     keys: A list of all of the keys
     ncnKeys: A list of only the ncn keys (the MAC address of each ncn)
     otherKeys: A list of the non-ncn keys
-    ncnList: A list of k:v dictionaries, where k==ncn name and v==the MAC address. Easier for me to read
+    ncnList: A list of k:v dictionaries, where k==ncn name and v==the MAC address. Easier for
+             me to read
 
 Functions:
     getGlobalMD(self):      Convenience function that returns just the Global meta-data
-    getNcnData(self, ncn):  Convenience function - reverse lookup by hostname and return all of values
-    getNcnDataM(self, ncn): Convenience function - reverse lookup by hostname and return just the meta-data
-    getNcnDataU(self, ncn): Convenience function - reverse lookup by hostname and return the user-data
-
+    getNcnData(self, ncn):  Convenience function - reverse lookup by hostname and return all of
+                            values
+    getNcnDataM(self, ncn): Convenience function - reverse lookup by hostname and return just the
+                            meta-data
+    getNcnDataU(self, ncn): Convenience function - reverse lookup by hostname and return the
+                            user-data
 """
 
 from __future__ import print_function
@@ -52,9 +55,13 @@ import json
 import re
 import sys
 
+
 class dataJson:
+
     def __init__(self, data_json_path='/mnt/configs/data.json'):
-        self.macRegex = re.compile('[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]')
+        self.macRegex = re.compile(
+            r'[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:'
+            r'[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]:[a-f,0-9][a-f,0-9]')
         #self.objFile = 'data.json'
         self.objFile = data_json_path
 
@@ -62,7 +69,8 @@ class dataJson:
             try:
                 self.payload = json.load(obj)
             except:
-                print("Unable to open " + self.objFile + ". Possibly malformed json?")
+                print("Unable to open " + self.objFile +
+                      ". Possibly malformed json?")
                 sys.exit()
 
         self.keys = self.payload.keys()
@@ -79,7 +87,8 @@ class dataJson:
         # Make a dictionary of all the ncns for easy checking
         self.ncnList = {}
         for ncnKey in self.ncnKeys:
-            self.ncnList[self.payload[ncnKey]['user-data']['hostname']] = ncnKey
+            self.ncnList[self.payload[ncnKey]['user-data']
+                         ['hostname']] = ncnKey
 
     def getGlobalMD(self):
         '''Convenience function that returns just the Global mete-data'''
@@ -97,13 +106,13 @@ class dataJson:
         '''Convenience function - reverse lookup by hostname and return the user-data'''
         return self.payload[self.ncnList[ncn]]['user-data']
 
+
 if __name__ == '__main__':
     # this is just for testing purposes
     dj = dataJson()
-    print (dj.keys)
-    for key in dj.ncnKeys:
-        print (key)
+    print(dj.keys)
+    for ncnkey in dj.ncnKeys:
+        print(ncnkey)
 
     print(dj.payload)
     print(dj.getNcnDataU('ncn-w001'))
-

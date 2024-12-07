@@ -21,11 +21,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-import ipaddress
-import sys
-import logging, datetime
-
-'''
+"""
 Simple script to ensure that the dhcp-range in the /etc/dnsmasq.d/{net}.conf files
   are in the correct order. This error was encountered on surtur and caused problems
 The location of the files is already known, as well as the file names. If that changes
@@ -37,50 +33,59 @@ Note: It's possible to get the filenames from GOSS variables, so if the names ch
 
 USAGE: pyTest-dhcp-reange-in-dnsmasq_d-in-correct-order.py
 Goss will search the output for the word FAIL
+"""
 
-'''
-
-def now():
-    # convenience function because it'll be used for logging
-    return str(datetime.datetime.now())
+import ipaddress
+import sys
+import logging
+import datetime
 
 # In case we want to make this script more user-friendly and add argparse or configparser
 # CRITICAL 50, ERROR 40, WARNING 30, INFO 20, DEBUG 10, NOTSET 0
-l_lvl = logging.INFO
-# Start the logger
-logging.basicConfig(filename='/tmp/' + sys.argv[0].split('/')[-1] + '.log',  level=l_lvl)
-logging.info(now()+" Starting up")
+L_LVL = logging.INFO
 
-def main() -> int:
+
+def now() -> str:
+    """Convenience function because it'll be used for logging"""
+    return str(datetime.datetime.now())
+
+
+def main() -> int:  # pylint: disable=missing-function-docstring
+    # Start the logger
+    logging.basicConfig(filename='/tmp/' + sys.argv[0].split('/')[-1] + '.log',
+                        level=L_LVL)
+    logging.info("%s Starting up", now())
+
     fileDir = "/etc/dnsmasq.d/"
-    fileNames = ['CAN', 'NMN', 'HMN', 'mtl' ]
-    contents =[] 
+    fileNames = ['CAN', 'NMN', 'HMN', 'mtl']
+    #contents = []
 
     # Iterate over the list of filenames and try to open the file
     for fileName in fileNames:
         # clear the start and end strings
-        logging.info(now()+" Checking %s.", fileDir+fileName)
+        logging.info("%s Checking %s%s.", now(), fileDir, fileName)
         start = end = ''
         try:
-            f = open(fileDir+fileName+".conf", 'r')
-            #contents = f.read().split('\n')
-        except:
-            logging.critical(now()+" Couldn't open %s.", fileDir+fileName+'.conf')
-            print("Unable to open file: "+fileName+".conf")
+            with open(fileDir + fileName + ".conf", 'r') as f:
+                #contents = f.read().split('\n')
+                file_lines = f.readlines()
+        except Exception:
+            logging.critical("%s Couldn't open %s%s.conf.", now(), fileDir,
+                             fileName)
+            print("Unable to open file: " + fileName + ".conf")
             return 1
 
-        # if the contents of the file !NULL - read the file line-by-line 
+        # if the contents of the file !NULL - read the file line-by-line
         # and check if the line contains 'dhcp-range'
         # it's a really good bet that the format of that line will not change
-        line = f.readline()
-        while line:
-            logging.debug(now() + " line from %s: %s", fileName, line.strip())
+
+        for line in file_lines:
+            logging.debug("%s line from %s: %s", now(), fileName, line.strip())
             # If the line continas 'dhcp-range' extract the start and end addresses
             if 'dhcp-range' in line:
                 start = line.split(',')[1]
                 end = line.split(',')[2]
                 logging.debug("Start IP = %s, End IP = %s.", start, end)
-            line = f.readline()
 
         # If we found the start IP, ensure that it is less than the end IP
         if start:
@@ -89,18 +94,23 @@ def main() -> int:
                 start_ip = ipaddress.ip_address(start)
                 end_ip = ipaddress.ip_address(end)
             except:
-                logging.critical(now()+" Could not convert either start = %s or end = %s to IP addresses.", start, end)
+                logging.critical(
+                    "%s Could not convert either start = %s or end = %s to IP addresses.",
+                    now(), start, end)
                 print("FAIL: Conversion of strings to IP addresses failed")
                 return 2
 
             if start_ip < end_ip:
                 print("PASS")
                 return 0
-            logging.error( now()+" The file %s failed. Start IP (%s) >= End IP (%s).", fileDir + fileName + ".conf", start, end)
+            logging.error(
+                "%s The file %s%s.conf failed. Start IP (%s) >= End IP (%s).",
+                now(), fileDir, fileName, start, end)
             print("FAIL for file:" + fileDir + fileName + ".conf")
             return 3
         print("FAIL - no starting IP address found")
         return 4
+
 
 if __name__ == "__main__":
     sys.exit(main())

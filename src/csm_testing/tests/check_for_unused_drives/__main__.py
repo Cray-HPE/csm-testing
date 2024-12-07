@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 Usage: check_for_unused_drives.sh <number of storage nodes>
 
@@ -30,7 +29,7 @@ Validates that the system has:
 * Exactly 12 OSDs per storage node, if Gigabyte hardware
 * At least 1 OSD per storage node, if Intel hardware
 * Or that (#_osds / #_storage_nodes) has no remainder
- 
+
 The test fails if the above validation fails.
 If the system has a different hardware type or the test is unable
 to determine it, the test fails.
@@ -44,7 +43,7 @@ import argparse
 import json
 import logging
 # The rados package is not available when we run pylint
-import rados # pylint: disable=import-error
+import rados  # pylint: disable=import-error
 import sys
 
 CEPH_CONFIG_FILE = "/etc/ceph/ceph.conf"
@@ -52,7 +51,8 @@ CEPH_CONFIG_FILE = "/etc/ceph/ceph.conf"
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
 
-formatter = logging.Formatter("%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s", "%Y-%m-%d %H:%M:%S")
+formatter = logging.Formatter(
+    "%(asctime)s.%(msecs)03d %(levelname)-8s %(message)s", "%Y-%m-%d %H:%M:%S")
 
 # Log debug and info messages to stdout, warnings and above to stderr
 
@@ -77,38 +77,60 @@ hw_type_map = {
     "GIGA-BYTE TECHNOLOGY CO., LTD": "gigabyte",
     "Hewlett Packard Enterprise": "hpe",
     "Intel Corporation": "intel",
-    "vshasta": "vshasta" }
+    "vshasta": "vshasta"
+}
 
 min_osds_per_storage_node = {
     "gigabyte": 12,
     "hpe": 8,
     "intel": 1,
-    "vshasta": 2 }
+    "vshasta": 2
+}
 
 max_osds_per_storage_node = {
     "gigabyte": 12,
     "hpe": 8,
     "intel": 0,
-    "vshasta": 0 }
+    "vshasta": 0
+}
+
 
 def num_storage_nodes(string):
     num = int(string)
     if num >= 3:
         return num
-    raise argparse.ArgumentTypeError("System should have at least 3 storage nodes. Invalid number of storage nodes: {}".format(num))
+    raise argparse.ArgumentTypeError(
+        "System should have at least 3 storage nodes. Invalid number of storage nodes: {}"
+        .format(num))
+
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Validate OSD count in Ceph cluster based on hardware type")
-    parser.add_argument("num_storage_nodes", metavar="number_of_storage_nodes", type=num_storage_nodes, help="Number of storage NCNs in the system")
-    parser.add_argument("hw_type", metavar="hardware_manufacturer", choices=hw_type_map, help="Manufacturer name (as shown in output of 'ipmitool mc info')")
+    parser = argparse.ArgumentParser(
+        description="Validate OSD count in Ceph cluster based on hardware type"
+    )
+    parser.add_argument("num_storage_nodes",
+                        metavar="number_of_storage_nodes",
+                        type=num_storage_nodes,
+                        help="Number of storage NCNs in the system")
+    parser.add_argument(
+        "hw_type",
+        metavar="hardware_manufacturer",
+        choices=hw_type_map,
+        help="Manufacturer name (as shown in output of 'ipmitool mc info')")
     logger.debug("Parsing command line arguments: {}".format(sys.argv))
     args = parser.parse_args()
 
     hw_type = hw_type_map[args.hw_type]
-    min_expected_osds = min_osds_per_storage_node[hw_type] * args.num_storage_nodes
-    max_expected_osds = max_osds_per_storage_node[hw_type] * args.num_storage_nodes
-    logger.info("Based on hardware type ({}) and number of storage nodes ({}): min_expected_osds = {}, max_expected_osds = {}".format(hw_type, args.num_storage_nodes, min_expected_osds, max_expected_osds))
+    min_expected_osds = min_osds_per_storage_node[
+        hw_type] * args.num_storage_nodes
+    max_expected_osds = max_osds_per_storage_node[
+        hw_type] * args.num_storage_nodes
+    logger.info(
+        "Based on hardware type (%s) and number of storage nodes (%d): min_expected_osds = %d, "
+        "max_expected_osds = %d", hw_type, args.num_storage_nodes,
+        min_expected_osds, max_expected_osds)
     return min_expected_osds, max_expected_osds, args.num_storage_nodes
+
 
 def get_num_osds():
     logger.debug("Loading Ceph")
@@ -117,12 +139,13 @@ def get_num_osds():
     # connect to cluster
     ceph.connect()
     logger.info("Running ceph osd stat command")
-    cmd_rc, cmd_out_bytes, cmd_opt_str = ceph.mon_command('{"prefix": "osd stat", "format": "json-pretty"}', b'')
+    cmd_rc, cmd_out_bytes, cmd_opt_str = ceph.mon_command(
+        '{"prefix": "osd stat", "format": "json-pretty"}', b'')
     #disconnect from cluster
     ceph.shutdown()
-    logger.info("Command return code = {}".format(cmd_rc))
+    logger.info("Command return code = %d", cmd_rc)
     if cmd_opt_str:
-        logger.info("Optional output string: {}".format(cmd_opt_str))
+        logger.info("Optional output string: %s", cmd_opt_str)
     if cmd_rc != 0:
         logger.error("ceph osd stat call failed")
         sys.exit(2)
@@ -132,9 +155,11 @@ def get_num_osds():
     cmd_response = json.loads(cmd_out_bytes)
     logger.debug("Extracting number of OSDs from object")
     num_osds = cmd_response["num_osds"]
-    logger.info("num_osds = {}".format(num_osds))
+    logger.info("num_osds = %d", num_osds)
     if not isinstance(num_osds, int):
-        logger.error("num_osds field expected to be an integer, but it is type {}".format(type(num_osds).__name__))
+        logger.error(
+            "num_osds field expected to be an integer, but it is type %s",
+            type(num_osds).__name__)
         sys.exit(3)
     elif num_osds < 0:
         logger.error("num_osds should not be negative")
@@ -144,19 +169,27 @@ def get_num_osds():
         sys.exit(5)
     return num_osds
 
-def main():
+
+def main():  # pylint: disable=missing-function-docstring
     min_expected_osds, max_expected_osds, n_storage_nodes = parse_args()
     num_osds = get_num_osds()
     if num_osds < min_expected_osds:
-        if num_osds%n_storage_nodes != 0:
-            logger.error("Fewer OSDs than expected and osds are not spread evenly across storage nodes.")
+        if num_osds % n_storage_nodes != 0:
+            logger.error(
+                "Fewer OSDs than expected and osds are not spread evenly across storage nodes."
+            )
             sys.exit(6)
     elif max_expected_osds > 0 and num_osds > max_expected_osds:
-        if num_osds%n_storage_nodes != 0:
-            logger.error("More OSDs than expected and osds are not spread evenly across storage nodes.")
+        if num_osds % n_storage_nodes != 0:
+            logger.error(
+                "More OSDs than expected and osds are not spread evenly across storage nodes."
+            )
             sys.exit(9)
-    logger.info("SUCCESS -- number of OSDs found matches expectations based on hardware type or are spread evely across storage nodes.")
+    logger.info(
+        "SUCCESS -- number of OSDs found matches expectations based on hardware type or are "
+        "spread evely across storage nodes.")
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
