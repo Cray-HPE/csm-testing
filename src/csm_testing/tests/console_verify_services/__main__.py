@@ -108,7 +108,7 @@ def check_services_running():
                     raise ConsoleException
 
     # check that all expected services have been found
-    if not len(foundPods) == len(EXPECTED_SERVICES):
+    if len(foundPods) != len(EXPECTED_SERVICES):
         logger.error(
             "The console pods in the services namespace did not match what was expected."
         )
@@ -119,7 +119,6 @@ def check_services_running():
 
 def main() -> int:  # pylint: disable=missing-function-docstring
     try:
-        return_value = True
         logger.info(
             "Beginning verification that all console services are running")
 

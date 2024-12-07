@@ -65,10 +65,10 @@ def data_to_json(obj) -> str:
             f"{data_to_json(key)}: {data_to_json(value)}"
             for key, value in obj.items()
         ]
-        return "{%s}" % ", ".join(items_json_list)
-    elif isinstance(obj, list):
+        return f'{{{", ".join(items_json_list)}}}'
+    if isinstance(obj, list):
         items_json_list = [data_to_json(item) for item in obj]
-        return "[%s]" % ", ".join(items_json_list)
+        return f'[{", ".join(items_json_list)}]'
     # Otherwise, just call regular json.dumps on it, since this should mean it is a primitive
     # type like int, float, str, or bool. If it is not, then the json module will raise an
     # exception, which is what we want.
@@ -111,7 +111,7 @@ class LogEntry:
         Product (from the product argument)
         """
         if data is None:
-            logdata = dict()
+            logdata = {}
         else:
             # Make a copy since we will be editing it in place
             logdata = copy.deepcopy(data)
@@ -126,9 +126,9 @@ class LogEntry:
         for field_name, field_value in updated_fields.items():
             if field_name in logdata:
                 logging.warning(
-                    f"grok_exporter_logger.set_data_field: Field '{field_name}' "
-                    f"already set to '{logdata[field_name]}'; "
-                    f"overwriting it to '{field_value}'")
+                    "grok_exporter_logger.set_data_field: Field '%s' already set to "
+                    "'%s'; overwriting it to '%s'", field_name,
+                    logdata[field_name], field_value)
             logdata[field_name] = field_value
 
         # Generate ordered dict of the data

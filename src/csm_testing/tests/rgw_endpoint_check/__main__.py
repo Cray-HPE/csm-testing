@@ -87,7 +87,7 @@ def main():  # pylint: disable=missing-function-docstring
     elif args.delete_bucket:
         delete_bucket(args.bucket_name)
     elif args.delete_file:
-        if (args.key_name is None):
+        if args.key_name is None:
             print("Error: to delete a file, must specify --file-name")
             sys.exit(1)
         delete_object(args.bucket_name, args.key_name)
