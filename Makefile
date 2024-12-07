@@ -52,6 +52,7 @@ BUILD_DIR ?= $(PWD)/dist/rpmbuild
 SOURCE_PATH := ${BUILD_DIR}/SOURCES/${SOURCE_NAME}.tar.bz2
 PYLINT_VENV_DIR := pylint-venv
 PYLINT_VENV_PYBIN := $(PYLINT_VENV_DIR)/bin/python3
+MIN_PYLINT_RATING ?= 8.6
 
 rpm: rpm_package_source rpm_build_source rpm_build
 
@@ -71,7 +72,7 @@ pylint:
 	$(PYLINT_VENV_PYBIN) -m pip install --disable-pip-version-check --no-cache -r pylint-requirements.txt pylint csm_testing*.whl
 	$(PYLINT_VENV_PYBIN) -m pip list --format freeze
 	$(PYLINT_VENV_PYBIN) -m pylint --errors-only csm_testing
-	$(PYLINT_VENV_PYBIN) -m pylint --fail-under 9 csm_testing || true
+	$(PYLINT_VENV_PYBIN) -m pylint --fail-under $(MIN_PYLINT_RATING) csm_testing
 
 prepare:
 	@echo $(NAME)

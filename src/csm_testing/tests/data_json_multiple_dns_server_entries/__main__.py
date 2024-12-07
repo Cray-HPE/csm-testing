@@ -21,21 +21,25 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+"""
+Parses data.json and prints the number of dns-server entries found in the global meta-data
+"""
+
 import logging
 import sys
 import csm_testing.lib.data_json_parser as dp
 
-logging.basicConfig(filename='/tmp/data_json_dns_server_test.log',
-                    level=logging.DEBUG)
-logging.info("Starting up")
-
 
 def main() -> int:  # pylint: disable=missing-function-docstring
+    logging.basicConfig(filename='/tmp/data_json_dns_server_test.log',
+                        level=logging.DEBUG)
+    logging.info("Starting up")
+
     # Goss sends [.Args.datajson] as string with the brackets
     filename = sys.argv[1].strip('[').strip(']')
     logging.debug("Using file: %s", filename)
-    dj = dp.dataJson(filename)
-    glbal = dj.payload['Global']['meta-data']
+    data_json = dp.dataJson(filename)
+    glbal = data_json.payload['Global']['meta-data']
 
     count = 0
     for k in glbal:
