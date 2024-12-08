@@ -21,20 +21,22 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-import os
-import sys
-import csm_testing.lib.data_json_parser as dp
-''' Simple test to validate dns. It mimics the CSI validate check `grep -Eo 'ncn-.*-mgmt'`
+""" 
+Simple test to validate dns. It mimics the CSI validate check `grep -Eo 'ncn-.*-mgmt'`
     against data.json global meta-data ntp-peers.
 Counts the number of times that the ntp-peer appears in dnsmasq.leases file
 matches that to the number of ntp_peers - they should be ==
-'''
+"""
 
-dnsmasq_file = '/var/lib/misc/dnsmasq.leases'
+import os
+import sys
+import csm_testing.lib.data_json_parser as dp
+
+DNSMASQ_FILE = '/var/lib/misc/dnsmasq.leases'
 
 
 def main() -> int:  # pylint: disable=missing-function-docstring
-    PASSED = 0
+    passed = 0
 
     # Assume we got the right info from goss, but JIC
     if len(sys.argv) == 2:
@@ -43,12 +45,12 @@ def main() -> int:  # pylint: disable=missing-function-docstring
         data_json = "/var/www/ephemeral/configs/data.json"
 
     # load the info from dnsmasq.leases
-    if os.path.isfile(dnsmasq_file):
-        f = open(dnsmasq_file, 'r')
-        dns_contents = f.read()
+    if os.path.isfile(DNSMASQ_FILE):
+        with open(DNSMASQ_FILE, 'r') as file:
+            dns_contents = file.read()
 
-    dj = dp.dataJson(data_json)
-    peers = dj.getGlobalMD()["ntp_peers"].split()
+    djson = dp.dataJson(data_json)
+    peers = djson.getGlobalMD()["ntp_peers"].split()
 
     # If this machine(ncn-m001) is in data.json global meta-data ntp-peers, remove it
     if 'ncn-m001' in peers:
@@ -56,14 +58,13 @@ def main() -> int:  # pylint: disable=missing-function-docstring
 
     for peer in peers:
         if peer + '-mgmt' in dns_contents:
-            PASSED += 1
+            passed += 1
 
-    if PASSED == len(peers):
+    if passed == len(peers):
         print("PASS")
         return 0
-    else:
-        print("FAIL")
-        return 1
+    print("FAIL")
+    return 1
 
 
 if __name__ == "__main__":

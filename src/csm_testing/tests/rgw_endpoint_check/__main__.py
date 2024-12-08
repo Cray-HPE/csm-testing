@@ -21,9 +21,10 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-import sys
 from argparse import ArgumentParser
+from functools import lru_cache
 import json
+import sys
 import subprocess
 
 import boto3
@@ -99,36 +100,41 @@ def main():  # pylint: disable=missing-function-docstring
             "--upload, --delete-file, --list")
 
 
-# get credentials
-j = json.loads(
-    subprocess.check_output(['radosgw-admin', 'user', 'info', '--uid', 'STS']))
-keys = ((j['keys'])[0])
-credentials = {
-    'endpoint_url': 'http://rgw-vip.nmn',
-    'access_key': keys['access_key'],
-    'secret_key': keys['secret_key']
-}
+@lru_cache
+def get_credentials() -> dict:
+    """get credentials"""
+    jdata = json.loads(
+        subprocess.check_output(
+            ['radosgw-admin', 'user', 'info', '--uid', 'STS']))
+    keys = ((jdata['keys'])[0])
+    return {
+        'endpoint_url': 'http://rgw-vip.nmn',
+        'access_key': keys['access_key'],
+        'secret_key': keys['secret_key']
+    }
 
 
 def create_bucket(bucket_name):
+    credentials = get_credentials()
+    s3_resource = boto3.resource(
+        's3',
+        endpoint_url=credentials['endpoint_url'],
+        aws_access_key_id=credentials['access_key'],
+        aws_secret_access_key=credentials['secret_key'])
 
-    s3 = boto3.resource('s3',
-                        endpoint_url=credentials['endpoint_url'],
-                        aws_access_key_id=credentials['access_key'],
-                        aws_secret_access_key=credentials['secret_key'])
-
-    bucket = s3.Bucket(bucket_name)
+    bucket = s3_resource.Bucket(bucket_name)
     bucket.create()
 
 
 def delete_bucket(bucket_name):
+    credentials = get_credentials()
+    s3_resource = boto3.resource(
+        's3',
+        endpoint_url=credentials['endpoint_url'],
+        aws_access_key_id=credentials['access_key'],
+        aws_secret_access_key=credentials['secret_key'])
 
-    s3 = boto3.resource('s3',
-                        endpoint_url=credentials['endpoint_url'],
-                        aws_access_key_id=credentials['access_key'],
-                        aws_secret_access_key=credentials['secret_key'])
-
-    bucket = s3.Bucket(bucket_name)
+    bucket = s3_resource.Bucket(bucket_name)
     bucket.delete()
 
 
@@ -136,8 +142,8 @@ def get_url_and_upload(bucket_name, key_name, file_name):
 
     # One week
     expires = 604800
-
-    s3client = boto3.client(
+    credentials = get_credentials()
+    s3_client = boto3.client(
         's3',
         aws_access_key_id=credentials['access_key'],
         aws_secret_access_key=credentials['secret_key'],
@@ -146,10 +152,10 @@ def get_url_and_upload(bucket_name, key_name, file_name):
     )
 
     try:
-        s3client.put_object(Bucket=bucket_name,
-                            Key=key_name,
-                            ACL='public-read')
-        url = s3client.generate_presigned_url(
+        s3_client.put_object(Bucket=bucket_name,
+                             Key=key_name,
+                             ACL='public-read')
+        url = s3_client.generate_presigned_url(
             'get_object',
             Params={
                 'Bucket': bucket_name,
@@ -157,14 +163,15 @@ def get_url_and_upload(bucket_name, key_name, file_name):
             },
             ExpiresIn=expires,
         )
-    except s3client.exceptions.NoSuchBucket as err:
+    except s3_client.exceptions.NoSuchBucket as err:
         sys.exit(str(err))
     except ClientError as err:
         try:
-            s3client.delete_object(Bucket=bucket_name, Key=key_name)
+            s3_client.delete_object(Bucket=bucket_name, Key=key_name)
         except Exception as delete_err:
-            print("Unsuccessful upload. Unable to delete object: Error: %s" %
-                  delete_err)
+            print(
+                f"Unsuccessful upload. Unable to delete object: Error: {delete_err}"
+            )
         sys.exit(str(err))
 
     try:
@@ -178,12 +185,12 @@ def get_url_and_upload(bucket_name, key_name, file_name):
                 }
             }
         }
-        s3client.upload_file(*upload_args, **upload_kwargs)
+        s3_client.upload_file(*upload_args, **upload_kwargs)
         print(url)
 
     except ClientError as err:
         try:
-            s3client.delete_object(Bucket=bucket_name, Key=key_name)
+            s3_client.delete_object(Bucket=bucket_name, Key=key_name)
         except Exception as delete_err:
             print("Unsuccessful upload. Unable to delete object: Error: %s" %
                   delete_err)
@@ -191,12 +198,13 @@ def get_url_and_upload(bucket_name, key_name, file_name):
 
 
 def list_objects(bucket_name):
-    s3 = boto3.client('s3',
-                      endpoint_url=credentials['endpoint_url'],
-                      aws_access_key_id=credentials['access_key'],
-                      aws_secret_access_key=credentials['secret_key'])
+    credentials = get_credentials()
+    s3_client = boto3.client('s3',
+                             endpoint_url=credentials['endpoint_url'],
+                             aws_access_key_id=credentials['access_key'],
+                             aws_secret_access_key=credentials['secret_key'])
 
-    response = s3.list_objects_v2(Bucket=bucket_name)
+    response = s3_client.list_objects_v2(Bucket=bucket_name)
     if 'Contents' not in response:
         print('No objects in bucket')
     else:
@@ -205,13 +213,13 @@ def list_objects(bucket_name):
 
 
 def delete_object(bucket_name, key_name):
+    credentials = get_credentials()
+    s3_client = boto3.client('s3',
+                             endpoint_url=credentials['endpoint_url'],
+                             aws_access_key_id=credentials['access_key'],
+                             aws_secret_access_key=credentials['secret_key'])
 
-    s3 = boto3.client('s3',
-                      endpoint_url=credentials['endpoint_url'],
-                      aws_access_key_id=credentials['access_key'],
-                      aws_secret_access_key=credentials['secret_key'])
-
-    s3.delete_object(Bucket=bucket_name, Key=key_name)
+    s3_client.delete_object(Bucket=bucket_name, Key=key_name)
 
 
 if __name__ == '__main__':

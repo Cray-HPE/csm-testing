@@ -28,10 +28,7 @@ console logs are up and ready in the k8s cluster.
 
 import os
 import logging
-import subprocess
 import sys
-
-import yaml
 
 from kubernetes import client, config
 
@@ -70,50 +67,50 @@ def check_services_running():
     # Configs can be set in Configuration class directly or using helper utility
     config.load_kube_config()
 
-    foundPods = dict()
-    v1 = client.CoreV1Api()
-    ret = v1.list_pod_for_all_namespaces(watch=False)
-    for i in ret.items:
-        podName = i.metadata.name.lower()
+    found_pods = dict()
+    k8s_v1 = client.CoreV1Api()
+    ret = k8s_v1.list_pod_for_all_namespaces(watch=False)
+    for item in ret.items:
+        pod_name = item.metadata.name.lower()
         for expected in EXPECTED_SERVICES:
-            if expected in podName and not POSTGRES_FILTER in podName:
+            if expected in pod_name and not POSTGRES_FILTER in pod_name:
                 # record that we found a pod for the expected service
-                logger.debug("Checking %s : %s", i.metadata.name,
-                             i.status.phase)
-                foundPods[expected] = i.metadata.name
+                logger.debug("Checking %s : %s", item.metadata.name,
+                             item.status.phase)
+                found_pods[expected] = item.metadata.name
 
-                # need to look at that state of each container - the i.status.phase lies...
-                ok = True
-                for c in i.status.container_statuses:
+                # need to look at that state of each container - the item.status.phase lies...
+                okay = True
+                for ctr in item.status.container_statuses:
                     # Note: when a container is in back-off state, it may either be in
                     #  'waiting' or 'terminated' state - consider either an error and
                     #  gather what information we can.
-                    if c.ready != True:
-                        if c.state.terminated != None:
+                    if ctr.ready != True:
+                        if ctr.state.terminated is not None:
                             logger.error(
                                 "Pod: %s Container Terminated: %s, Exit Code: %d, "
-                                "Reason: %s, Message: %s", i.metadata.name,
-                                c.name, c.state.terminated.exit_code,
-                                c.state.terminated.reason,
-                                c.state.terminated.message)
-                            ok = False
-                        if c.state.waiting != None:
+                                "Reason: %s, Message: %s", item.metadata.name,
+                                ctr.name, ctr.state.terminated.exit_code,
+                                ctr.state.terminated.reason,
+                                ctr.state.terminated.message)
+                            okay = False
+                        if ctr.state.waiting is not None:
                             logger.error("Pod: %s Container: %s, %s: %s",
-                                         i.metadata.name, c.name,
-                                         c.state.waiting.reason,
-                                         c.state.waiting.message)
-                            ok = False
+                                         item.metadata.name, ctr.name,
+                                         ctr.state.waiting.reason,
+                                         ctr.state.waiting.message)
+                            okay = False
 
-                if not ok:
+                if not okay:
                     raise ConsoleException
 
     # check that all expected services have been found
-    if len(foundPods) != len(EXPECTED_SERVICES):
+    if len(found_pods) != len(EXPECTED_SERVICES):
         logger.error(
             "The console pods in the services namespace did not match what was expected."
         )
         logger.error("Expected services: %s", EXPECTED_SERVICES)
-        logger.error("Found pods: %s", foundPods)
+        logger.error("Found pods: %s", found_pods)
         raise ConsoleException
 
 

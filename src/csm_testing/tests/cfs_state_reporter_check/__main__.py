@@ -40,8 +40,8 @@ if myname[-3:] == ".py":
     myname = myname[:-3]
 
 # set up logging to file
-logFileDir = "/opt/cray/tests"
-logFilePath = f"{logFileDir}/{myname}.log"
+LOG_FILE_DIR = "/opt/cray/tests"
+logFilePath = f"{LOG_FILE_DIR}/{myname}.log"
 file_handler = logging.FileHandler(filename=logFilePath)
 file_handler.setLevel(os.environ.get("FILE_LOG_LEVEL", logging.DEBUG))
 logger.addHandler(file_handler)
@@ -55,7 +55,7 @@ logger.addHandler(console_handler)
 
 
 class CfsTestException(Exception):
-    pass
+    """Custom exception for this test"""
 
 
 def get_systemctl_data():
@@ -74,7 +74,7 @@ def get_systemctl_data():
     output_lines = result.stdout.decode('utf-8').splitlines()
     output_dict = {}
     for line in output_lines:
-        logger.debug(f"output line: {line}")
+        logger.debug("output line: %s", line)
 
         # Split the line by = characters into a list of strings
         split_line = line.split("=")
@@ -170,7 +170,7 @@ def get_service_data_fields():
             # A non-empty start time means that the service has started. Combined with the empty
             # exit time, this indicates it is currently running. It usually takes less than 1
             # second to execute, so waiting for 2 seconds should be sufficient.
-            logger.warn("cfs-state-reporter is currently running.")
+            logger.warning("cfs-state-reporter is currently running.")
             attempts += 1
             continue
 
