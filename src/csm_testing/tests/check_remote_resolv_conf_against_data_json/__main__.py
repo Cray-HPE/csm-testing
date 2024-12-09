@@ -21,30 +21,24 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-# Script to check remote resolv.conf namserver value == dns-server value in data.json
-# Invocation: check-remote-resolv_conf-against-data_json.py /path/to/data.json
-# Check the count of passed tests against the number of NCNs in data.conf - and send
-# either PASS or FAIL
+"""
+Script to check remote resolv.conf namserver value == dns-server value in data.json
+Invocation: check-remote-resolv_conf-against-data_json /path/to/data.json
+Check the count of passed tests against the number of NCNs in data.conf - and send
+either PASS or FAIL
+"""
 
-import subprocess, sys
+import subprocess
+import sys
 import csm_testing.lib.data_json_parser as djp
-
-remoteCommand = "grep nameserver /etc/resolv.conf"
-passed = 0
-failed = 0
-
-
-def remoteCmd(host, command):
-    cmd = subprocess.Popen(
-        ['ssh', '-o StrictHostKeyChecking=no', host, command],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT)
-
-    stdout, stderr = cmd.communicate()
-    return stdout
+from csm_testing.lib.run_remote_command import run_remote_command
 
 
 def main() -> int:  # pylint: disable=missing-function-docstring
+    remote_command = "grep nameserver /etc/resolv.conf"
+    passed = 0
+    failed = 0
+
     # quick check to ensure we received the locations of data.json and statics.conf
     if len(sys.argv) != 2:
         print("Wrong number of arguments provided")
@@ -56,7 +50,8 @@ def main() -> int:  # pylint: disable=missing-function-docstring
     # ensure remote MAC matches data.json (casminst-384) and statics.conf (casminst-380)
     for server in data.ncnList:
         # get the MAC from the NCN
-        results = remoteCmd(server, remoteCommand).decode().strip().split()
+        results = run_remote_command(server,
+                                     remote_command).decode().strip().split()
 
         if len(results) < 1:
             # result set empty
@@ -71,9 +66,8 @@ def main() -> int:  # pylint: disable=missing-function-docstring
     if passed == len(data.ncnList):
         print("PASS")
         return 0
-    else:
-        print("FAIL")
-        return 1
+    print("FAIL")
+    return 1
 
 
 if __name__ == "__main__":

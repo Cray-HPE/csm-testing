@@ -21,32 +21,26 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-# Script to check MAC address of remote NCNs against data.json and statics.conf
-# Invocation: check-remote-mac-against-configs.py /path/to/data.json /path/to/statics.conf
-# Check the count of passed tests against the number of NCNs in data.conf - and
-# send either PASS or FAIL
+"""
+Script to check MAC address of remote NCNs against data.json and statics.conf
+Invocation: check-remote-mac-against-configs /path/to/data.json /path/to/statics.conf
+Check the count of passed tests against the number of NCNs in data.conf - and
+send either PASS or FAIL
+"""
 
 import logging
 import subprocess
 import sys
 import csm_testing.lib.data_json_parser as djp
+from csm_testing.lib.run_remote_command import run_remote_command
 
 
-def remoteCmd(host, command):
-    cmd = subprocess.Popen(
-        ['ssh', '-o StrictHostKeyChecking=no', host, command],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT)
-    stdout, _ = cmd.communicate()
-    return stdout
-
-
-def get_arg_no_brackets(arg):
+def get_arg_no_brackets(arg: str) -> str:
     return arg.strip('[').strip(']')
 
 
 def main() -> int:  # pylint: disable=missing-function-docstring
-    getMACcommand = "ip addr show dev bond0 | grep 'link/ether' | tr -s ' ' | cut -d ' ' -f 3"
+    get_mac_command = "ip addr show dev bond0 | grep 'link/ether' | tr -s ' ' | cut -d ' ' -f 3"
     passed = 0
     failed = 0
 
@@ -63,13 +57,13 @@ def main() -> int:  # pylint: disable=missing-function-docstring
     # This version of goss sends [.Arg.*] as string with [
     # Apparently fixed in 0.3.14
     data = djp.dataJson(get_arg_no_brackets(sys.argv[1]))
-    staticsFile = open(get_arg_no_brackets(sys.argv[2]), 'r')
-    statics = staticsFile.read()
+    with open(get_arg_no_brackets(sys.argv[2]), 'r') as statics_file:
+        statics = statics_file.read()
 
     # ensure remote MAC matches data.json (casminst-384) and statics.conf (casminst-380)
     for server in data.ncnList:
         # get the MAC from the NCN
-        mac = remoteCmd(server, getMACcommand).decode().strip()
+        mac = run_remote_command(server, get_mac_command).decode().strip()
 
         # ensure that the MAC address is somewhere in data.json
         if mac in data.ncnKeys:
@@ -89,7 +83,7 @@ def main() -> int:  # pylint: disable=missing-function-docstring
                     statics.find('dhcp-host=' + data.ncnList[server]):statics.
                     find('\n', statics.find('dhcp-host=' +
                                             data.ncnList[server]))]
-                ip, hname = search[search.find(','):search.rfind(',')].split(
+                _, hname = search[search.find(','):search.rfind(',')].split(
                     ',')[-2:]
                 if mac == data.ncnList[hname]:
                     passed += 1

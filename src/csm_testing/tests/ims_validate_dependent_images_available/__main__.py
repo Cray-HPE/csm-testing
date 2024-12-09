@@ -74,15 +74,15 @@ def ims_configmaps():
         result = subprocess.check_output(
             command_line, stderr=subprocess.STDOUT).decode("utf8")
         logger.debug(result)
-        for cm in result.splitlines():
-            if "ims" in cm.lower():
+        for cmap in result.splitlines():
+            if "ims" in cmap.lower():
                 # result is prefaced with "configmap/". We want to strip that off.
-                configmaps.add(cm[10:])
+                configmaps.add(cmap[10:])
     except subprocess.CalledProcessError as err:
         logger.error(
             "Could not list IMS configmaps. Got exit code %d. Msg: %s",
             err.returncode, err.output)
-        raise ImsException
+        raise ImsException from err
 
     if not configmaps == EXPECTED_CONFIGMAPS:
         logger.error(
@@ -92,18 +92,18 @@ def ims_configmaps():
         logger.error("Expected Configmaps: %s", EXPECTED_CONFIGMAPS)
         raise ImsException
 
-    for configmap in configmaps:
-        if configmap.lower().startswith("cray-configmap-ims"):
-            if VALIDATE_PACKER_IMAGES or "packer" not in configmap.lower():
-                yield configmap
+    for cmap in configmaps:
+        if cmap.lower().startswith("cray-configmap-ims"):
+            if VALIDATE_PACKER_IMAGES or "packer" not in cmap.lower():
+                yield cmap
 
 
-def cm_dependent_images(cm):
+def cm_dependent_images(cmap):
     dependent_images = set()
     try:
-        logger.info("Validating %s configmap", cm)
+        logger.info("Validating %s configmap", cmap)
         command_line = [
-            'kubectl', 'get', 'cm', '-n', 'services', '-o', 'yaml', cm
+            'kubectl', 'get', 'cm', '-n', 'services', '-o', 'yaml', cmap
         ]
         response = subprocess.check_output(
             command_line, stderr=subprocess.STDOUT).decode("utf8")
@@ -119,7 +119,7 @@ def cm_dependent_images(cm):
     except subprocess.CalledProcessError as err:
         logger.error(
             "Could not retrieve IMS configmap %s. Got exit code %d. Msg: %s",
-            cm, err.returncode, err.output)
+            cmap, err.returncode, err.output)
         raise ImsException
 
     for dependent_image in dependent_images:
@@ -156,8 +156,8 @@ def main():  # pylint: disable=missing-function-docstring
         logger.info(
             "Beginning verification that IMS dependent images are available "
             "in the local docker registry")
-        for cm in ims_configmaps():
-            for dependent_image in cm_dependent_images(cm):
+        for cmap in ims_configmaps():
+            for dependent_image in cm_dependent_images(cmap):
                 return_value = return_value and validate_dependent_image_exists(
                     dependent_image)
 

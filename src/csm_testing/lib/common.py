@@ -67,16 +67,16 @@ def goss_base_dirs(validate: bool = False) -> Tuple[str, str]:
                 f"GOSS_BASE directory does not exist or is not a directory: {base_dir}"
             )
 
-        # Get the value of GOSS_INSTALL_BASE_DIR. In this case, if it is unset, it defaults to being the
-        # parent directory of GOSS_BASE.
+        # Get the value of GOSS_INSTALL_BASE_DIR. In this case, if it is unset, it defaults to
+        # being the parent directory of GOSS_BASE.
         install_base_dir = os.environ.get("GOSS_INSTALL_BASE_DIR",
                                           os.path.realpath(f"{base_dir}/.."))
 
         if validate and not os.path.isdir(install_base_dir):
             raise ScriptException(
-                f"GOSS_INSTALL_BASE_DIR directory does not exist or is not a directory: {install_base_dir}"
-            )
-    except KeyError:
+                "GOSS_INSTALL_BASE_DIR directory does not exist or is not a "
+                f"directory: {install_base_dir}")
+    except KeyError as exc:
         # GOSS_BASE is not set
 
         # Get the value of GOSS_INSTALL_BASE_DIR, or its default value if it is also unset
@@ -85,10 +85,11 @@ def goss_base_dirs(validate: bool = False) -> Tuple[str, str]:
 
         if validate and not os.path.isdir(install_base_dir):
             raise ScriptException(
-                f"GOSS_INSTALL_BASE_DIR directory does not exist or is not a directory: {install_base_dir}"
-            )
+                "GOSS_INSTALL_BASE_DIR directory does not exist or is not a "
+                f"directory: {install_base_dir}") from exc
 
-        # GOSS_BASE will be the ncn or livecd subdirectory of GOSS_INSTALL_BASE_DIR, depending on our node type
+        # GOSS_BASE will be the ncn or livecd subdirectory of GOSS_INSTALL_BASE_DIR, depending on
+        # our node type
         if is_pit_node():
             base_dir = f"{install_base_dir}/livecd"
         else:
@@ -97,7 +98,7 @@ def goss_base_dirs(validate: bool = False) -> Tuple[str, str]:
         if validate and not os.path.isdir(base_dir):
             raise ScriptException(
                 f"GOSS_BASE directory does not exist or is not a directory: {base_dir}"
-            )
+            ) from exc
 
     return install_base_dir, base_dir
 
@@ -124,12 +125,12 @@ def goss_script_max_threads() -> int:
     try:
         max_threads = int(max_threads_str)
     except ValueError:
-        logging.warn(
+        logging.warning(
             "Non-integer value specified for GOSS_SCRIPT_MAX_THREADS (%s). Default to %d",
             max_threads_str, DEFAULT_GOSS_SCRIPT_MAX_THREADS)
         max_threads = DEFAULT_GOSS_SCRIPT_MAX_THREADS
     if max_threads < 0:
-        logging.warn(
+        logging.warning(
             "GOSS_SCRIPT_MAX_THREADS must be a nonnegative integer. Invalid value (%d). "
             "Defaulting to 0.", max_threads)
         max_threads = 0
@@ -149,12 +150,12 @@ def goss_servers_config(validate: bool = False) -> str:
 
 def goss_log_base_dir(validate: bool = False) -> str:
     gibd = goss_install_base_dir()
-    log_dir = os.environ.get("GOSS_LOG_BASE_DIR", f"{gibd}/logs")
-    if validate and not os.path.isdir(log_dir):
+    logdir = os.environ.get("GOSS_LOG_BASE_DIR", f"{gibd}/logs")
+    if validate and not os.path.isdir(logdir):
         raise ScriptException(
-            f"GOSS_LOG_BASE_DIR directory does not exist or is not a directory: {log_dir}"
+            f"GOSS_LOG_BASE_DIR directory does not exist or is not a directory: {logdir}"
         )
-    return log_dir
+    return logdir
 
 
 ERR_TEXT_CODE = colorama.Fore.LIGHTRED_EX
@@ -315,11 +316,11 @@ def is_livecd_ncn_name(nname: str) -> bool:
 def get_ncn_type(ncn_name: str) -> str:
     if is_master_ncn_name(ncn_name):
         return "master"
-    elif is_storage_ncn_name(ncn_name):
+    if is_storage_ncn_name(ncn_name):
         return "storage"
-    elif is_worker_ncn_name(ncn_name):
+    if is_worker_ncn_name(ncn_name):
         return "worker"
-    elif is_livecd_ncn_name(ncn_name):
+    if is_livecd_ncn_name(ncn_name):
         return "livecd"
     raise ScriptException(f"Unexpected NCN name format: {ncn_name}")
 
@@ -337,8 +338,9 @@ def argparse_nonempty_string(astring: str) -> str:
 def argparse_yaml_file_name(fname: str) -> str:
     try:
         argparse_nonempty_string(fname)
-    except argparse.ArgumentTypeError:
-        raise argparse.ArgumentTypeError("YAML file names may not be blank")
+    except argparse.ArgumentTypeError as exc:
+        raise argparse.ArgumentTypeError(
+            "YAML file names may not be blank") from exc
     if fname[-5:] == ".yaml":
         return fname
     raise argparse.ArgumentTypeError(

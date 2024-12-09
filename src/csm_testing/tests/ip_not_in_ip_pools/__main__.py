@@ -47,25 +47,25 @@ logging.info("Starting up")
 
 def get_ip(interface):
     logging.debug("Getting ip address for %s", interface)
-    cmd = subprocess.Popen(['ip', 'addr', 'show', 'dev', interface],
-                           stdout=subprocess.PIPE)
-    stdout, stderr = cmd.communicate()
+    with subprocess.Popen(['ip', 'addr', 'show', 'dev', interface],
+                          stdout=subprocess.PIPE) as cmd:
+        stdout, stderr = cmd.communicate()
     logging.debug("stdout == %s, stderr == %s", stdout, stderr)
     if stdout != '':
         ip_line = stdout.decode().split('\n')[2].strip()
         # couldn't cause this to happen in one line
-        ip = ip_line[ip_line.find(' ') + 1:]
-        ip = ip[:ip.find(' ')]
-        logging.info("IP address of %s = %s", interface, ip)
-    return ip
+        ipa = ip_line[ip_line.find(' ') + 1:]
+        ipa = ipa[:ipa.find(' ')]
+        logging.info("IP address of %s = %s", interface, ipa)
+    return ipa
 
 
-def is_ip_between(ip, start_ip, end_ip):
+def is_ip_between(ip, start_ip, end_ip) -> str:
     # convert them for easy testing
     logging.debug("Trying to convert ip %s start_ip %s end_ip %s", ip,
                   start_ip, end_ip)
     try:
-        ips = ipaddress.ip_address(ip)
+        ipa = ipaddress.ip_address(ip)
         start_ip = ipaddress.ip_address(start_ip)
         end_ip = ipaddress.ip_address(end_ip)
     except:
@@ -78,18 +78,18 @@ def is_ip_between(ip, start_ip, end_ip):
     if start_ip > end_ip:
         start_ip, end_ip = end_ip, start_ip
 
-    if start_ip <= ips <= end_ip:
+    if start_ip <= ipa <= end_ip:
         print("Failed: This IP is in the pool range.")
-        msg = f"This IP = {ips} Pool start IP = {start_ip} Pool end IP = {end_ip}"
+        msg = f"This IP = {ipa} Pool start IP = {start_ip} Pool end IP = {end_ip}"
         print(msg)
         logging.error(msg)
         return "FAIL"
     return "PASS"
 
 
-def get_start_last_from_dnsmask_d(fileName):
-    f = open('/etc/dnsmasq.d/' + fileName + '.conf')
-    data = f.read().split('\n')
+def get_start_last_from_dnsmask_d(file_name):
+    with open(f'/etc/dnsmasq.d/{file_name}.conf') as file:
+        data = file.read().split('\n')
     for line in data:
         if 'dhcp-range' in line:
             start = line.split(',')[1]
@@ -109,19 +109,19 @@ def main() -> int:  # pylint: disable=missing-function-docstring
     ifaces_list = []
 
     # workaround becasue v0.3.13 sends [.Arg.*] with the brackets
-    #fileName = sys.argv[2].strip('[').strip(']')
+    #file_name = sys.argv[2].strip('[').strip(']')
     passed = 0
 
     # make a list of the args we got from goss - from 2:
     logging.debug("Running through args %s", sys.argv[1:])
-    for li in sys.argv[1:]:
-        logging.info("Arguments from goss: %s", li)
-        ifaces_list.append(li.strip('[').strip(']'))
+    for arg in sys.argv[1:]:
+        logging.info("Arguments from goss: %s", arg)
+        ifaces_list.append(arg.strip('[').strip(']'))
 
     for iface in ifaces_list:
         logging.debug("Getting IP address for %s", iface)
-        thisIP = get_ip(iface).split('/')[0]
-        ips.append(thisIP)
+        this_ip = get_ip(iface).split('/')[0]
+        ips.append(this_ip)
 
         # iterate through the list looking for start end
         for net in net_list:
@@ -129,12 +129,12 @@ def main() -> int:  # pylint: disable=missing-function-docstring
             starts, ends = get_start_last_from_dnsmask_d(net)
 
             if starts != '':
-                logging.info("is_ip_between call: %s, %s, %s", thisIP, starts,
+                logging.info("is_ip_between call: %s, %s, %s", this_ip, starts,
                              ends)
-                if is_ip_between(thisIP, starts, ends) == 'PASS':
+                if is_ip_between(this_ip, starts, ends) == 'PASS':
                     passed += 1
                 else:
-                    print("Test failed for " + net + ".conf")
+                    print(f"Test failed for {net}.conf")
         logging.debug(ips)
 
     if passed == len(net_list * len(ips)):
