@@ -127,19 +127,19 @@ log.addHandler(handler)
 def token():
     # setup kubernetes client
     config.load_kube_config()
-    v1 = client.CoreV1Api()
+    k8s_v1 = client.CoreV1Api()
 
     # get kubernetes admin secret
-    secret = v1.read_namespaced_secret("admin-client-auth", "default").data
+    secret = k8s_v1.read_namespaced_secret("admin-client-auth", "default").data
 
     # decode the base64 secret
-    token = base64.b64decode(secret['client-secret']).decode('utf-8')
+    decoded_token = base64.b64decode(secret['client-secret']).decode('utf-8')
 
     # create post data to keycloak istio ingress
     token_data = {
         'grant_type': 'client_credentials',
         'client_id': 'admin-client',
-        'client_secret': token
+        'client_secret': decoded_token
     }
 
     # query keycloack
@@ -175,16 +175,16 @@ def main():  # pylint: disable=missing-function-docstring
             continue
         ip_addresses = smd_entry['IPAddresses']
         for ips in ip_addresses:
-            ip = ips['IPAddress']
-            # print (ip)
-            if ip == '':
+            ipa = ips['IPAddress']
+            # print (ipa)
+            if ipa == '':
                 continue
-            if ip not in ip_set:
-                ip_set.add(ip)
+            if ipa not in ip_set:
+                ip_set.add(ipa)
                 continue
-            log.error('Error: found duplicate IP: %s', ip)
+            log.error('Error: found duplicate IP: %s', ipa)
             error_found = True
-            nslookup_cmd = subprocess.Popen(('nslookup', ip),
+            nslookup_cmd = subprocess.Popen(('nslookup', ipa),
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE)
             output, _ = nslookup_cmd.communicate()

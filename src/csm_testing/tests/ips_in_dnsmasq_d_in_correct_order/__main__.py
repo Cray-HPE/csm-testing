@@ -56,23 +56,23 @@ def main() -> int:  # pylint: disable=missing-function-docstring
                         level=L_LVL)
     logging.info("%s Starting up", now())
 
-    fileDir = "/etc/dnsmasq.d/"
-    fileNames = ['CAN', 'NMN', 'HMN', 'mtl']
+    file_dir = "/etc/dnsmasq.d/"
+    file_names = ['CAN', 'NMN', 'HMN', 'mtl']
     #contents = []
 
     # Iterate over the list of filenames and try to open the file
-    for fileName in fileNames:
+    for file_name in file_names:
         # clear the start and end strings
-        logging.info("%s Checking %s%s.", now(), fileDir, fileName)
+        logging.info("%s Checking %s%s.", now(), file_dir, file_name)
         start = end = ''
         try:
-            with open(fileDir + fileName + ".conf", 'r') as f:
+            with open(file_dir + file_name + ".conf", 'r') as file:
                 #contents = f.read().split('\n')
-                file_lines = f.readlines()
+                file_lines = file.readlines()
         except Exception:
-            logging.critical("%s Couldn't open %s%s.conf.", now(), fileDir,
-                             fileName)
-            print("Unable to open file: " + fileName + ".conf")
+            logging.critical("%s Couldn't open %s%s.conf.", now(), file_dir,
+                             file_name)
+            print("Unable to open file: " + file_name + ".conf")
             return 1
 
         # if the contents of the file !NULL - read the file line-by-line
@@ -80,7 +80,8 @@ def main() -> int:  # pylint: disable=missing-function-docstring
         # it's a really good bet that the format of that line will not change
 
         for line in file_lines:
-            logging.debug("%s line from %s: %s", now(), fileName, line.strip())
+            logging.debug("%s line from %s: %s", now(), file_name,
+                          line.strip())
             # If the line continas 'dhcp-range' extract the start and end addresses
             if 'dhcp-range' in line:
                 start = line.split(',')[1]
@@ -105,8 +106,8 @@ def main() -> int:  # pylint: disable=missing-function-docstring
                 return 0
             logging.error(
                 "%s The file %s%s.conf failed. Start IP (%s) >= End IP (%s).",
-                now(), fileDir, fileName, start, end)
-            print("FAIL for file:" + fileDir + fileName + ".conf")
+                now(), file_dir, file_name, start, end)
+            print("FAIL for file:" + file_dir + file_name + ".conf")
             return 3
         print("FAIL - no starting IP address found")
         return 4

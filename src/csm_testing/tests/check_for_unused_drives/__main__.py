@@ -42,9 +42,10 @@ in the Goss summarized output where the test failed.
 import argparse
 import json
 import logging
+import sys
+
 # The rados package is not available when we run pylint
 import rados  # pylint: disable=import-error
-import sys
 
 CEPH_CONFIG_FILE = "/etc/ceph/ceph.conf"
 
@@ -100,8 +101,8 @@ def num_storage_nodes(string):
     if num >= 3:
         return num
     raise argparse.ArgumentTypeError(
-        "System should have at least 3 storage nodes. Invalid number of storage nodes: {}"
-        .format(num))
+        f"System should have at least 3 storage nodes. Invalid number of storage nodes: {num}"
+    )
 
 
 def parse_args():
@@ -117,7 +118,7 @@ def parse_args():
         metavar="hardware_manufacturer",
         choices=hw_type_map,
         help="Manufacturer name (as shown in output of 'ipmitool mc info')")
-    logger.debug("Parsing command line arguments: {}".format(sys.argv))
+    logger.debug("Parsing command line arguments: %s", sys.argv)
     args = parser.parse_args()
 
     hw_type = hw_type_map[args.hw_type]
@@ -179,7 +180,7 @@ def main():  # pylint: disable=missing-function-docstring
                 "Fewer OSDs than expected and osds are not spread evenly across storage nodes."
             )
             sys.exit(6)
-    elif max_expected_osds > 0 and num_osds > max_expected_osds:
+    elif num_osds > max_expected_osds > 0:
         if num_osds % n_storage_nodes != 0:
             logger.error(
                 "More OSDs than expected and osds are not spread evenly across storage nodes."

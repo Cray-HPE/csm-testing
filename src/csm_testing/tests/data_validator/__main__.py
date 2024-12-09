@@ -60,8 +60,8 @@ def get_data():
             command = [
                 "cray", "bss", "bootparameters", "list", "--format", "json"
             ]
-            bss_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
-            return json.loads(bss_proc.stdout.read())
+            with subprocess.Popen(command, stdout=subprocess.PIPE) as bss_proc:
+                return json.loads(bss_proc.stdout.read())
         except Exception as e:
             print_err(str(e))
             sys.exit(1)
@@ -144,7 +144,7 @@ def are_valid_ip_masks(data, desired_keys):
         return err
 
 
-def check_hostname_syntax(hostname):
+def check_hostname_syntax(hostname: str) -> bool:
     """Checks that a given hostname syntax is valid."""
 
     if len(hostname) > 253:
@@ -281,7 +281,6 @@ def boot_params(data):
 
 def main() -> int:
     """Returns 0 on success, non-0 on failure."""
-    err = 0
     data = get_data()
 
     if len(data) != 0:
