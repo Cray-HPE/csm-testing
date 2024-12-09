@@ -28,7 +28,6 @@ Check the count of passed tests against the number of NCNs in data.conf - and se
 either PASS or FAIL
 """
 
-import subprocess
 import sys
 import csm_testing.lib.data_json_parser as djp
 from csm_testing.lib.run_remote_command import run_remote_command
@@ -37,18 +36,17 @@ from csm_testing.lib.run_remote_command import run_remote_command
 def main() -> int:  # pylint: disable=missing-function-docstring
     remote_command = "grep nameserver /etc/resolv.conf"
     passed = 0
-    failed = 0
 
     # quick check to ensure we received the locations of data.json and statics.conf
     if len(sys.argv) != 2:
         print("Wrong number of arguments provided")
         return 2
 
-    data = djp.dataJson(sys.argv[1])
-    dns_server = data.getGlobalMD()['dns-server']
+    data = djp.DataJson(sys.argv[1])
+    dns_server = data.get_global_md()['dns-server']
 
     # ensure remote MAC matches data.json (casminst-384) and statics.conf (casminst-380)
-    for server in data.ncnList:
+    for server in data.ncn_list:
         # get the MAC from the NCN
         results = run_remote_command(server,
                                      remote_command).decode().strip().split()
@@ -63,7 +61,7 @@ def main() -> int:  # pylint: disable=missing-function-docstring
             if dns_server in result:
                 passed += 1
 
-    if passed == len(data.ncnList):
+    if passed == len(data.ncn_list):
         print("PASS")
         return 0
     print("FAIL")

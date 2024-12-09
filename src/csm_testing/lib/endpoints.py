@@ -112,21 +112,23 @@ def load_goss_endpoints() -> Dict[str, List[EndpointTuple]]:
                 port, suite, type_list = parse_config_file_line(line)
             except ScriptException as exc:
                 raise ScriptException(
-                    f"Configuration file ({config_file}) error: {e}. Invalid line: {line}"
+                    f"Configuration file ({config_file}) error: {exc}. Invalid line: {line}"
                 ) from exc
             # Endpoint name is the suite name, minus the .yaml extension
             endpoint_name = suite[:-5]
 
             for ntype in type_list:
-                for (s, e, p) in endpoints_by_type[ntype]:
-                    if s == suite:
+                for (_suite, _, _port) in endpoints_by_type[ntype]:
+                    if _suite == suite:
                         raise ScriptException(
                             f"Configuration file ({config_file}) error: Multiple lines for suite "
-                            f"{s} on NCN type {ntype}. Invalid line: {line}")
-                    if p == port:
+                            f"{_suite} on NCN type {ntype}. Invalid line: {line}"
+                        )
+                    if _port == port:
                         raise ScriptException(
                             f"Configuration file ({config_file}) error: Multiple lines for port "
-                            f"{p} on NCN type {ntype}. Invalid line: {line}")
+                            f"{_port} on NCN type {ntype}. Invalid line: {line}"
+                        )
 
                 # Add it to the list of endpoints for this NCN type
                 endpoints_by_type[ntype].append((suite, endpoint_name, port))

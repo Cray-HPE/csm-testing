@@ -21,7 +21,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-""" 
+"""
 Simple test to validate dns. It mimics the CSI validate check `grep -Eo 'ncn-.*-mgmt'`
     against data.json global meta-data ntp-peers.
 Counts the number of times that the ntp-peer appears in dnsmasq.leases file
@@ -49,8 +49,8 @@ def main() -> int:  # pylint: disable=missing-function-docstring
         with open(DNSMASQ_FILE, 'r') as file:
             dns_contents = file.read()
 
-    djson = dp.dataJson(data_json)
-    peers = djson.getGlobalMD()["ntp_peers"].split()
+    djson = dp.DataJson(data_json)
+    peers = djson.get_global_md()["ntp_peers"].split()
 
     # If this machine(ncn-m001) is in data.json global meta-data ntp-peers, remove it
     if 'ncn-m001' in peers:
