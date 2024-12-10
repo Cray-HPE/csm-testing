@@ -120,7 +120,7 @@ def cm_dependent_images(cmap):
         logger.error(
             "Could not retrieve IMS configmap %s. Got exit code %d. Msg: %s",
             cmap, err.returncode, err.output)
-        raise ImsException
+        raise ImsException() from err
 
     for dependent_image in dependent_images:
         logger.info("  - Configmap references the image %s", dependent_image)

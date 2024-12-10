@@ -52,7 +52,7 @@ BUILD_DIR ?= $(PWD)/dist/rpmbuild
 SOURCE_PATH := ${BUILD_DIR}/SOURCES/${SOURCE_NAME}.tar.bz2
 PYLINT_VENV_DIR := pylint-venv
 PYLINT_VENV_PYBIN := $(PYLINT_VENV_DIR)/bin/python3
-MIN_PYLINT_RATING ?= 9.2
+MIN_PYLINT_RATING ?= 9.3
 
 rpm: rpm_package_source rpm_build_source rpm_build
 

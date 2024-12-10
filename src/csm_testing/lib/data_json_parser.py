@@ -111,8 +111,8 @@ if __name__ == '__main__':
     # this is just for testing purposes
     dj = DataJson()
     print(dj.keys)
-    for ncn_key in dj.ncn_keys:
-        print(ncn_key)
+    for nkey in dj.ncn_keys:
+        print(nkey)
 
     print(dj.payload)
     print(dj.get_ncn_data_u('ncn-w001'))

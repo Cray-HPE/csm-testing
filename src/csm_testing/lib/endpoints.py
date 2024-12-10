@@ -53,10 +53,10 @@ port_patterns = [
     "[1-9][0-9]{3}", "[1-5][0-9]{4}", "6[0-4][0-9]{3}", "65[0-4][0-9]{2}",
     "655[0-2][0-9]", "6553[0-5]"
 ]
-port_pattern = "^(" + "|".join(port_patterns) + ")$"
-port_re_prog = re.compile(port_pattern)
+PORT_PATTERN = "^(" + "|".join(port_patterns) + ")$"
+port_re_prog = re.compile(PORT_PATTERN)
 
-goss_endpoints_by_ncn_type = None
+goss_endpoints_by_ncn_type = None  # pylint: disable=invalid-name
 
 
 def parse_config_file_line(line: str) -> Tuple[int, str, StringList]:
@@ -97,7 +97,7 @@ def load_goss_endpoints() -> Dict[str, List[EndpointTuple]]:
     mapping from port number to endpoint name + suite name.
     These mappings are returned.
     """
-    global goss_endpoints_by_ncn_type
+    global goss_endpoints_by_ncn_type  # pylint: disable=invalid-name
     if goss_endpoints_by_ncn_type is not None:
         return goss_endpoints_by_ncn_type
     config_file = goss_servers_config(validate=True)
