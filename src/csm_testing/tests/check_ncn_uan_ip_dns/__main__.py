@@ -184,10 +184,10 @@ def main():  # pylint: disable=missing-function-docstring
                 continue
             log.error('Error: found duplicate IP: %s', ipa)
             error_found = True
-            nslookup_cmd = subprocess.Popen(('nslookup', ipa),
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
-            output, _ = nslookup_cmd.communicate()
+            with subprocess.Popen(('nslookup', ipa),
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE) as nslookup_cmd:
+                output, _ = nslookup_cmd.communicate()
             print(output.decode('ascii'))
 
     hostname_list = []
@@ -215,17 +215,18 @@ def main():  # pylint: disable=missing-function-docstring
 
     for hostname in hostname_list:
 
-        dig_cmd = subprocess.Popen(('dig', hostname, '+short'),
-                                   stdout=subprocess.PIPE)
-        wc_cmd = subprocess.check_output(('wc', '-l'), stdin=dig_cmd.stdout)
+        with subprocess.Popen(('dig', hostname, '+short'),
+                              stdout=subprocess.PIPE) as dig_cmd:
+            wc_cmd = subprocess.check_output(('wc', '-l'),
+                                             stdin=dig_cmd.stdout)
         result = int(wc_cmd.decode('ascii').strip())
         if result > 1:
             error_found = True
             log.error('ERROR: %s has more than 1 DNS entry', hostname)
-            nslookup_cmd = subprocess.Popen(('nslookup', hostname),
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
-            output, _ = nslookup_cmd.communicate()
+            with subprocess.Popen(('nslookup', hostname),
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE) as nslookup_cmd:
+                output, _ = nslookup_cmd.communicate()
             print(f"{output.decode('ascii')}")
 
     if error_found:

@@ -29,7 +29,6 @@ send either PASS or FAIL
 """
 
 import logging
-import subprocess
 import sys
 import csm_testing.lib.data_json_parser as djp
 from csm_testing.lib.run_remote_command import run_remote_command
@@ -56,19 +55,19 @@ def main() -> int:  # pylint: disable=missing-function-docstring
 
     # This version of goss sends [.Arg.*] as string with [
     # Apparently fixed in 0.3.14
-    data = djp.dataJson(get_arg_no_brackets(sys.argv[1]))
+    data = djp.DataJson(get_arg_no_brackets(sys.argv[1]))
     with open(get_arg_no_brackets(sys.argv[2]), 'r') as statics_file:
         statics = statics_file.read()
 
     # ensure remote MAC matches data.json (casminst-384) and statics.conf (casminst-380)
-    for server in data.ncnList:
+    for server in data.ncn_list:
         # get the MAC from the NCN
         mac = run_remote_command(server, get_mac_command).decode().strip()
 
         # ensure that the MAC address is somewhere in data.json
-        if mac in data.ncnKeys:
+        if mac in data.ncn_keys:
             # ensure that the hostname's MAC in data.json matches reality
-            if data.ncnList[server] == mac:
+            if data.ncn_list[server] == mac:
                 passed += 1
         else:
             failed += 1
@@ -79,13 +78,13 @@ def main() -> int:  # pylint: disable=missing-function-docstring
             # should find something like: dhcp-host=b8:59:9f:2b:2e:d2,10.252.0.7,ncn-s001,infinite
             # the ip is between the first commas
             try:
-                search = statics[
-                    statics.find('dhcp-host=' + data.ncnList[server]):statics.
-                    find('\n', statics.find('dhcp-host=' +
-                                            data.ncnList[server]))]
+                search = statics[statics.find(
+                    'dhcp-host=' + data.ncn_list[server]):statics.find(
+                        '\n', statics.find('dhcp-host=' +
+                                           data.ncn_list[server]))]
                 _, hname = search[search.find(','):search.rfind(',')].split(
                     ',')[-2:]
-                if mac == data.ncnList[hname]:
+                if mac == data.ncn_list[hname]:
                     passed += 1
             except:
                 print("Error in statics.conf")
@@ -93,7 +92,7 @@ def main() -> int:  # pylint: disable=missing-function-docstring
         else:
             failed += 1
     # There are two tests per ncn, so the number of tests passed should == number of keys * 2
-    if passed == len(data.ncnKeys) * 2:
+    if passed == len(data.ncn_keys) * 2:
         print("PASS")
         return 0
     print("FAIL")
