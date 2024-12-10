@@ -21,13 +21,13 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-import re
-import subprocess
-import sys
 import ipaddress
-import socket
 import json
 import os
+import re
+import socket
+import subprocess
+import sys
 
 
 def print_err(*a):
@@ -49,8 +49,8 @@ def get_data():
                 return json.load(file)
             with open("data.json", 'r') as file:
                 return json.load(file)
-        except Exception as e:
-            print_err(str(e))
+        except Exception as exc:
+            print_err(str(exc))
             sys.exit(1)
     else:
         try:
@@ -62,8 +62,8 @@ def get_data():
             ]
             with subprocess.Popen(command, stdout=subprocess.PIPE) as bss_proc:
                 return json.loads(bss_proc.stdout.read())
-        except Exception as e:
-            print_err(str(e))
+        except Exception as exc:
+            print_err(str(exc))
             sys.exit(1)
 
 

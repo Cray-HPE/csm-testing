@@ -38,7 +38,7 @@ def main() -> int:  # pylint: disable=missing-function-docstring
     # Goss sends [.Args.datajson] as string with the brackets
     filename = sys.argv[1].strip('[').strip(']')
     logging.debug("Using file: %s", filename)
-    data_json = dp.dataJson(filename)
+    data_json = dp.DataJson(filename)
     glbal = data_json.payload['Global']['meta-data']
 
     count = 0

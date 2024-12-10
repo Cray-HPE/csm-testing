@@ -60,17 +60,17 @@ def get_ip(interface):
     return ipa
 
 
-def is_ip_between(ip, start_ip, end_ip) -> str:
+def is_ip_between(ipval, start_ip, end_ip) -> str:
     # convert them for easy testing
-    logging.debug("Trying to convert ip %s start_ip %s end_ip %s", ip,
+    logging.debug("Trying to convert ip %s start_ip %s end_ip %s", ipval,
                   start_ip, end_ip)
     try:
-        ipa = ipaddress.ip_address(ip)
+        ipa = ipaddress.ip_address(ipval)
         start_ip = ipaddress.ip_address(start_ip)
         end_ip = ipaddress.ip_address(end_ip)
     except:
         logging.critical("Could not convert %s or %s or %s to an IP address",
-                         ip, start_ip, end_ip)
+                         ipval, start_ip, end_ip)
         print("Couldn't convert an ip to IPaddress. See the log for details")
         sys.exit(1)
 
