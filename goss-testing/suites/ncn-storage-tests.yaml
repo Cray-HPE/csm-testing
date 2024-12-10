@@ -24,6 +24,7 @@
 
 #
 # This suite is run during CSM installs before CSM services have been deployed
+# Note: This suite is only executed from the PIT node.
 #
 
 # Use hostname from variable file, if set.
