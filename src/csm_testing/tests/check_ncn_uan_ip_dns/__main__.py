@@ -21,6 +21,11 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+"""
+Checks for duplicate IP addresses in the SMD EthernetInterface table and verifies that NCN/UAN
+management network DNS entries resolve to only 1 IP address.
+"""
+
 import base64
 import json
 import logging
@@ -36,7 +41,6 @@ from urllib3.util.retry import Retry
 
 class APIRequest:
     """
-
     Example use:
         api_request = APIRequest('http://api.com')
         response = api_request('GET', '/get/stuff')
@@ -65,7 +69,9 @@ class APIRequest:
             self._headers = {}
 
     def __call__(self, method, route, **kwargs):
-
+        """
+        Make the specified API request
+        """
         if route.startswith('/'):
             route = route[1:]
 
@@ -109,6 +115,18 @@ class APIRequest:
 
         return response
 
+    def get(self, route, **kwargs):
+        """
+        Wrapper to __call__ for get requests
+        """
+        return self("GET", route, **kwargs)
+
+    def post(self, route, **kwargs):
+        """
+        Wrapper to __call__ for post requests
+        """
+        return self("POST", route, **kwargs)
+
 
 # globals
 gw_api = APIRequest('https://api-gw-service-nmn.local')
@@ -125,6 +143,9 @@ log.addHandler(handler)
 
 
 def token():
+    """
+    Obtain API access token
+    """
     # setup kubernetes client
     config.load_kube_config()
     k8s_v1 = client.CoreV1Api()
@@ -144,29 +165,25 @@ def token():
 
     # query keycloack
     token_url = '/keycloak/realms/shasta/protocol/openid-connect/token'
-    token_resp = gw_api('POST', token_url, data=token_data)
+    token_resp = gw_api.post(token_url, data=token_data)
     access_token = token_resp.json()['access_token']
     # print (f'access_token')
 
     return access_token
 
 
-def main():  # pylint: disable=missing-function-docstring
+def check_ip_set(headers) -> bool:
+    """
+    Parse SMD entries check for duplicate IPs.
+    Return True if any duplicates found.
+    Return Falee otherwise.
+    """
     error_found = False
-
-    bearer_token = token()
-    # request header passing token
-    headers = {'Authorization': 'Bearer ' + bearer_token}
 
     # query SMD EthernetInterfaces
     smd_url = '/apis/smd/hsm/v2/Inventory/EthernetInterfaces'
-    smd_resp = gw_api('GET', smd_url, headers=headers)
+    smd_resp = gw_api.get(smd_url, headers=headers)
     smd_ethernet_interfaces = smd_resp.json()
-
-    # query SLS hardware
-    sls_url = '/apis/sls/v1/hardware'
-    sls_resp = gw_api('GET', sls_url, headers=headers)
-    sls_hardware = sls_resp.json()
 
     ip_set = set()
     for smd_entry in smd_ethernet_interfaces:
@@ -189,7 +206,23 @@ def main():  # pylint: disable=missing-function-docstring
                                   stderr=subprocess.PIPE) as nslookup_cmd:
                 output, _ = nslookup_cmd.communicate()
             print(output.decode('ascii'))
+    return error_found
 
+
+def get_sls_hardware(headers):
+    """
+    Query and return SLS hardware
+    """
+    # query SLS hardware
+    sls_url = '/apis/sls/v1/hardware'
+    sls_resp = gw_api.get(sls_url, headers=headers)
+    return sls_resp.json()
+
+
+def generate_hostname_list(sls_hardware):
+    """
+    Generate hostname list based on SLS hardware
+    """
     hostname_list = []
 
     for hardware in sls_hardware:
@@ -212,6 +245,18 @@ def main():  # pylint: disable=missing-function-docstring
                 f"{hardware['ExtraProperties']['Aliases'][0]}.cmn")
             hostname_list.append(
                 f"{hardware['ExtraProperties']['Aliases'][0]}.chn")
+    return hostname_list
+
+
+def main():  # pylint: disable=missing-function-docstring
+    # request header passing token
+    headers = {'Authorization': 'Bearer ' + token()}
+
+    sls_hardware = get_sls_hardware(headers)
+
+    error_found = check_ip_set(headers)
+
+    hostname_list = generate_hostname_list(sls_hardware)
 
     for hostname in hostname_list:
 

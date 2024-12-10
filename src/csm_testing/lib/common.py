@@ -273,11 +273,11 @@ def get_hostname() -> str:
     return socket.gethostname()
 
 
-ncn_num_pattern = "([1-9][0-9][0-9]|0[1-9][0-9]|00[1-9])"
-ncn_pattern = f"^ncn-[msw]{ncn_num_pattern}$"
-ncn_master_pattern = f"^ncn-m{ncn_num_pattern}$"
-ncn_storage_pattern = f"^ncn-s{ncn_num_pattern}$"
-ncn_worker_pattern = f"^ncn-w{ncn_num_pattern}$"
+NCN_NUM_PATTERN = "([1-9][0-9][0-9]|0[1-9][0-9]|00[1-9])"
+ncn_pattern = f"^ncn-[msw]{NCN_NUM_PATTERN}$"
+ncn_master_pattern = f"^ncn-m{NCN_NUM_PATTERN}$"
+ncn_storage_pattern = f"^ncn-s{NCN_NUM_PATTERN}$"
+ncn_worker_pattern = f"^ncn-w{NCN_NUM_PATTERN}$"
 
 ncn_re_prog = re.compile(ncn_pattern)
 ncn_master_re_prog = re.compile(ncn_master_pattern)
