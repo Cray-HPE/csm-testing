@@ -31,11 +31,19 @@ from csm_testing.lib.iuf_common import load_yaml, validate_instance
 
 SCHEMA_FILE = "/opt/cray/tests/install/ncn/scripts/iuf_schemas/bootprep-schema.yaml"
 
+
 class BootPrepValidationError(Exception):
     """Custom exception for BootPrep validation errors."""
-    pass
+
 
 def main():
+    """
+    The main entry point of the program.
+    Args:
+        None
+    Return:
+        None
+    """
     if len(sys.argv) != 2:
         print("Usage: validate_bootprep.py <bootprep_file>")
         sys.exit(1)
@@ -63,11 +71,14 @@ def main():
     # Validate the bootprep file against the schema
     try:
         validate_instance(bootprep_instance, schema)
-        print(f"INFO: SUCCESS: Bootprep file '{bootprep_file}' is valid against the schema.")
+        print(
+            f"INFO: SUCCESS: Bootprep file '{bootprep_file}' is valid against the schema."
+        )
         print("INFO: SUCCESS: Passed")
     except BootPrepValidationError as err:
         print(f"{err}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

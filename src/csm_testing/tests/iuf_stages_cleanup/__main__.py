@@ -29,34 +29,46 @@ import os
 import sys
 from requests import Session
 import requests
-from requests.auth import HTTPBasicAuth
-from csm_testing.lib.iuf_constants import NAMESPACE ,PRODUCT_NAME,PRODUCT_VERSION,NEXUS_URL
-from csm_testing.lib.iuf_common import get_nexus_credentials, get_ca_certificates, run_command
+from csm_testing.lib.iuf_constants import (
+    PRODUCT_NAME,
+    PRODUCT_VERSION,
+    NEXUS_URL,
+)
+from csm_testing.lib.iuf_common import (
+    get_nexus_credentials,
+    vcs_auth,
+    run_command,
+)
 
-DELETION_FILE_PATH="/etc/cray/upgrade/csm/iuf/deletion"
+DELETION_FILE_PATH = "/etc/cray/upgrade/csm/iuf/deletion"
 IMAGE = "registry.local/artifactory.algol60.net/csm-docker/stable/product-deletion-utility:1.0.1"
 
+
 def cleanup_deliver_product():
+    """Cleans up the data uploaded, repository created while running deliver-product stage
+    using dummy-product"""
+
     repo_name = "dummy-repo"
-    username,password = get_nexus_credentials()
-    """Delete repository from Nexus."""
+    username, password = get_nexus_credentials()
+
     print(f"INFO: Deleting repository '{repo_name}' in Nexus...")
     delete_url = f"{NEXUS_URL}/service/rest/v1/repositories/{repo_name}"
 
     response = requests.delete(delete_url, auth=(username, password))
-
     if response.status_code == 204:
         print("INFO: Repository deleted successfully.")
     else:
-        print(f"ERROR: Failed to delete repository: {response.status_code} - {response.text}")
+        print(
+            f"ERROR: Failed to delete repository: {response.status_code} - {response.text}"
+        )
         sys.exit(1)
 
     if not os.path.exists(DELETION_FILE_PATH):
-        with open(DELETION_FILE_PATH,"w"):
+        with open(DELETION_FILE_PATH, "w", encoding="utf-8"):
             pass
     else:
         pass
-    
+
     pod_command = f"""
         podman run --rm \
         --mount type=bind,src=/etc/kubernetes/admin.conf,target=/root/.kube/config,ro=true \
@@ -67,13 +79,19 @@ def cleanup_deliver_product():
     print(f"INFO: Running podman command: {pod_command}")
     run_command(pod_command)
 
-    remove_dummy_entry = "kubectl patch configmap cray-product-catalog -n services --type merge -p '{\"data\":{\"dummy\":null}}'"
+    remove_dummy_entry = (
+        "kubectl patch configmap cray-product-catalog -n services --type merge -p "
+        '\'{"data":{"dummy":null}}\''
+    )
+
     print("INFO: Removing dummy entry from cray-product-catalog ConfigMap...")
     run_command(remove_dummy_entry)
 
     # Delete the cray-product-catalog-dummy ConfigMap
     delete_dummy_cm = "kubectl delete configmap cray-product-catalog-dummy -n services"
-    print("INFO: Deleting cray-product-catalog-dummy ConfigMap in services namespace...")
+    print(
+        "INFO: Deleting cray-product-catalog-dummy ConfigMap in services namespace..."
+    )
     run_command(delete_dummy_cm)
 
     if os.path.exists(DELETION_FILE_PATH):
@@ -84,33 +102,24 @@ def cleanup_deliver_product():
 
     print("INFO: Cleanup complete for DELIVER-PRODUCT stage!")
 
-def cleanup_vcs_branch():
-    # getting vcs creds
-    vcs_user, _ = run_command("kubectl get secret -n services vcs-user-credentials --template={{.data.vcs_username}} | base64 --decode")
-    vcs_password, _ = run_command("kubectl get secret -n services vcs-user-credentials --template={{.data.vcs_password}} | base64 --decode")
 
-    configmap_name = 'cray-configmap-ca-public-key'
-    gitea_base_url="https://api-gw-service-nmn.local/vcs"
-    gitea_url = f'{gitea_base_url.rstrip("/")}/api/v1'
-    org ="cray"
-    repo_name = "dummy-config-management"
+def cleanup_vcs_repo():
+    """Deleting the branch created while running update-vcs-config for dummy-product"""
 
     session = Session()
-    ca_cert_path = get_ca_certificates(NAMESPACE, configmap_name)
-    auth = HTTPBasicAuth(vcs_user, vcs_password)
-    dummy_repo_url = '{}/repos/{}/{}'.format(gitea_url, org, repo_name)
+    dummy_repo_url, auth, ca_cert_path = vcs_auth()
 
     print(f"INFO: Attempting to delete Gitea repository: {dummy_repo_url}")
-    resp = session.delete(dummy_repo_url,verify=ca_cert_path, auth=auth)
-    
+    resp = session.delete(dummy_repo_url, verify=ca_cert_path, auth=auth)
+
     if resp.status_code == 204:
-        print(f"INFO: Repository '{repo_name}' deleted successfully.")
+        print(f"INFO: Repository '{dummy_repo_url}' deleted successfully.")
     elif resp.status_code == 404:
-        print(f"WARNING: Repository '{repo_name}' not found.")
+        print(f"WARNING: Repository '{dummy_repo_url}' not found.")
     else:
         print(f"ERROR: Failed to delete repository: {resp.status_code}, {resp.text}")
         sys.exit(1)
-    
+
     if os.path.exists(ca_cert_path):
         print(f"INFO: Removing certificate file: {ca_cert_path}")
         os.remove(ca_cert_path)
@@ -118,22 +127,33 @@ def cleanup_vcs_branch():
         print(f"INFO: Certificate file {ca_cert_path} not found, skipping deletion.")
     print("INFO: Cleanup complete for UPDATE-VCS-CONFIG stage!")
 
+
 def cleanup_cfs_configurations():
-    cfs_delete_command = "cray cfs configurations delete config-minimal-management-dummy-1.0.0"
+    """Cleanup the configurations created by IUf for dummy-product"""
+    cfs_delete_command = (
+        "cray cfs configurations delete config-minimal-management-dummy-1.0.0"
+    )
     run_command(cfs_delete_command)
     print("INFO: Cleanup complete for UPDATE-CFS-CONFIG stage!")
 
+
 def cleanup_prepared_images():
-    print("INFO: The ims images and s3 artifacts already deleted by product-deletion-utility")
+    """Cleanup the images created by IUf for dummy-product"""
+    print(
+        "INFO: The ims images and s3 artifacts already deleted by product-deletion-utility"
+    )
     print("INFO: Cleanup complete for PREPARE-IMAGES stage!")
 
+
 def main():
+    """Calls stage by stage cleanup functions for IUF"""
     print("---------------STARTING CLEANUP FOR STAGE OPERATIONS--------------")
     cleanup_deliver_product()
-    cleanup_vcs_branch()
+    cleanup_vcs_repo()
     cleanup_cfs_configurations()
     cleanup_prepared_images()
     print("--------------- CLEANUP FOR STAGE OPERATIONS COMPLETED --------------")
+
 
 if __name__ == "__main__":
     main()

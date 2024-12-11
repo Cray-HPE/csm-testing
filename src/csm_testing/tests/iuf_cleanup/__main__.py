@@ -31,82 +31,191 @@ import sys
 from pathlib import Path
 from csm_testing.lib.iuf_constants import MEDIA_DIR
 
-LOG_DIR= "/etc/cray/upgrade/csm/iuf"
+LOG_DIR = "/etc/cray/upgrade/csm/iuf"
+
 
 def get_workflows(activity_name):
-    command = f"kubectl get workflow -n argo -o custom-columns=NAME:.metadata.name|grep {activity_name}"
-    workflows=[]
+    """
+    Function to get the list of workflows for the activity.
+    Args:
+        activity_name(str): The activity name whose workflows list needs to be generated
+    Returns:
+        configmaps(List[str]): List of workflows for the activity
+    """
+    command = f"kubectl get workflow -n argo -o \
+custom-columns=NAME:.metadata.name|grep {activity_name}"
+    workflows = []
     try:
-        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        result = subprocess.run(
+            command,
+            shell=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
         if not result.returncode:
-            workflows=result.stdout.splitlines()
-    except subprocess.CalledProcessError as e:
-        return e.returncode
+            workflows = result.stdout.splitlines()
+    except subprocess.CalledProcessError as err:
+        return err.returncode
     return workflows
 
+
 def get_configmaps(activity_name):
-    command = f"kubectl get configmap -n argo -o custom-columns=NAME:.metadata.name|grep {activity_name}"
-    configmaps=[]
+    """
+    Function to get the list of configmaps for the activity.
+    Args:
+        activity_name(str): The activity name whose configmaps list needs to be generated
+    Returns:
+        configmaps(List[str]): List of configmaps for the activity
+    """
+    command = f"kubectl get configmap -n argo -o \
+custom-columns=NAME:.metadata.name|grep {activity_name}"
+    configmaps = []
     try:
-        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        result = subprocess.run(
+            command,
+            shell=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
         if not result.returncode:
-            configmaps=result.stdout.splitlines()
-    except subprocess.CalledProcessError as e:
-        return e.returncode
+            configmaps = result.stdout.splitlines()
+    except subprocess.CalledProcessError as err:
+        return err.returncode
     return configmaps
 
-def cleanup(activity_name = "test-activity"):
+
+def cleanup(activity_name="test-activity"):
+    """
+    Function to remove the log files, media directories, workflows and configmaps for the activity.
+    Args:
+        activity_name(str, optional): The activity name whose logs, media dir(s),
+                                      workflows and configmaps need to be deleted.
+                                      Defaults to "test-activity".
+    Returns:
+        None
+
+    """
     command_delete_logs = f"rm -r {LOG_DIR}/{activity_name}"
     command_delete_media_dir = f"rm -r {MEDIA_DIR}"
     try:
+        # Deleting log files for the activity
         logs_path = Path(f"{LOG_DIR}/{activity_name}")
         if logs_path.is_dir():
-            print(f"INFO: {logs_path} exists. Deleting log directory for activity: {activity_name}")
-            result = subprocess.run(command_delete_logs, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            print(
+                f"INFO: {logs_path} exists. Deleting log directory for activity: {activity_name}"
+            )
+            result = subprocess.run(
+                command_delete_logs,
+                shell=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
         else:
             print(f"WARNING: {logs_path} does not exist.")
 
-        media_path = Path(MEDIA_DIR)         
+        # Deleting media dir for the activity
+        media_path = Path(MEDIA_DIR)
         if media_path.is_dir():
-            print(f"INFO: {media_path} exists. Deleting media directory for activity: {activity_name}")
-            result = subprocess.run(command_delete_media_dir, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            print(
+                f"INFO: {media_path} exists. Deleting media directory for activity: {activity_name}"
+            )
+            result = subprocess.run(
+                command_delete_media_dir,
+                shell=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
         else:
-            print(f"WARNING: {media_path} does not exist." )
+            print(f"WARNING: {media_path} does not exist.")
 
-        # Deleting workflows for the activity 
+        # Deleting workflows for the activity
         workflows = get_workflows(activity_name)
-        if isinstance(workflows, list) and all(isinstance(wf, str) for wf in workflows) :
+        if isinstance(workflows, list) and all(isinstance(wf, str) for wf in workflows):
             print(f"INFO: Workflows found for {activity_name} :{workflows}")
             for workflow in workflows:
                 command_delete_workflow = f"kubectl delete workflow {workflow} -n argo"
-                try : 
-                    result = subprocess.run(command_delete_workflow, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                try:
+                    result = subprocess.run(
+                        command_delete_workflow,
+                        shell=True,
+                        check=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        universal_newlines=True,
+                    )
                     print("INFO: Command output:", result.stdout)
-                except Exception as e :
-                    print(f"ERROR: Unable to delete workflow {workflow} , {e}")
+                # Handles the case when the command fails (non-zero exit code)
+                except subprocess.CalledProcessError as err:
+                    print(f"ERROR: Command failed with an error: {err}")
+                # Handles the case when the 'kubectl' command is not found
+                except FileNotFoundError:
+                    print("ERROR: The kubectl command is not found.")
+                # Handles permission errors:
+                except PermissionError:
+                    print("ERROR: Permissions denied when trying to execute kubectl")
+                # Handles all other errors
+                except Exception as err:
+                    print(f"ERROR: Unable to delete workflow {workflow} , {err}")
         else:
             print(f"WARNING: Workflows not found for {activity_name}")
             sys.exit(1)
 
-        # Deleting configmaps for the activity 
+        # Deleting configmaps for the activity
         configmaps = get_configmaps(activity_name)
-        if isinstance(configmaps, list) and all(isinstance(cm, str) for cm in configmaps) :
+        if isinstance(configmaps, list) and all(
+            isinstance(cm, str) for cm in configmaps
+        ):
             print(f"INFO: configmaps found for {activity_name} :{configmaps}")
             for configmap in configmaps:
-                command_delete_configmap = f"kubectl delete configmap {configmap} -n argo"
-                try : 
-                    result = subprocess.run(command_delete_configmap, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                command_delete_configmap = (
+                    f"kubectl delete configmap {configmap} -n argo"
+                )
+                try:
+                    result = subprocess.run(
+                        command_delete_configmap,
+                        shell=True,
+                        check=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        universal_newlines=True,
+                    )
                     print("INFO: Command output:", result.stdout)
-                except Exception as e :
-                    print(f"ERROR: Unable to delete configmap {configmap} , {e}")
+                # Handles the case when the command fails (non-zero exit code)
+                except subprocess.CalledProcessError as err:
+                    print(f"ERROR: Command failed with an error: {err}")
+                # Handles the case when the 'kubectl' command is not found
+                except FileNotFoundError:
+                    print("ERROR: The kubectl command is not found.")
+                # Handles permission errors:
+                except PermissionError:
+                    print("ERROR: Permissions denied when trying to execute kubectl")
+                # Handles all other errors
+                except Exception as err:
+                    print(f"ERROR: Unable to delete configmap {configmap} , {err}")
         else:
             print(f"WARNING: Workflows not found for {activity_name}")
-            sys.exit(1) 
-    except subprocess.CalledProcessError as e:
-        print(f"ERROR: {e}")
+            sys.exit(1)
+    except subprocess.CalledProcessError as err:
+        print(f"ERROR: {err}")
         sys.exit(1)
 
+
 def main():
+    """
+    The main entry point of the program.
+    Args:
+        None
+    Returns:
+        None
+    """
     print()
     print("INFO: Running cleanup..")
     if len(sys.argv) > 2:
@@ -117,6 +226,7 @@ def main():
         cleanup(activity_name)
     else:
         cleanup()
+
 
 if __name__ == "__main__":
     main()

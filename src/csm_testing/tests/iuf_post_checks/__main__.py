@@ -22,7 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 """
-This script performs post-checks for IUF run by checking if 
+This script performs post-checks for IUF run by checking if
     1. log directory was created
     2. activity specific configmap was created
     3. state directory was created and relevant files are present inside or not.
@@ -33,49 +33,82 @@ import subprocess
 import sys
 from csm_testing.lib.iuf_constants import MEDIA_DIR
 
+
 def check_logs(activity):
+    """
+    Function to check the logs for the activity and print the info.
+    Args:
+        activity(str): Activity name
+    Returns:
+        None
+    """
     # Define the log directory path
-    LOG_DIR = f"/etc/cray/upgrade/csm/iuf/{activity}/log"
-    
+    log_dir = f"/etc/cray/upgrade/csm/iuf/{activity}/log"
+
     # Check if the log directory exists
-    if os.path.exists(LOG_DIR):
+    if os.path.exists(log_dir):
         print(f"TEST CASE: Log directory exists for activity: {activity}")
     else:
         print(f"ERROR: Log directory does NOT exist for activity: {activity}")
         sys.exit(1)
-    
+
+
 def check_configmap(activity):
+    """
+    Function to check the configmap for the activity and print the info.
+    Args:
+        activity(str): Activity name
+    Returns:
+        None
+    """
     configmap_name = activity
     namespace = "argo"
-    
+
     try:
         # Use kubectl command to check if the configmap exists in the Argo namespace
-        result = subprocess.run(
+        subprocess.run(
             ["kubectl", "get", "configmap", configmap_name, "-n", namespace],
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            universal_newlines=True
+            universal_newlines=True,
         )
-        print(f"TEST CASE: ConfigMap '{configmap_name}' exists in the '{namespace}' namespace.")
-        
-    except subprocess.CalledProcessError as e:
-        print(f"ERROR: ConfigMap '{configmap_name}' does NOT exist in the '{namespace}' namespace.\nError: {e}")
+        print(
+            f"TEST CASE: ConfigMap '{configmap_name}' exists in the '{namespace}' namespace."
+        )
+
+    except subprocess.CalledProcessError as err:
+        print(
+            f"ERROR: ConfigMap '{configmap_name}' does NOT exist in the '{namespace}' namespace.\n\
+Error: {err}"
+        )
         sys.exit(1)
 
+
 def check_state(activity):
-    STATE_DIR=f"/etc/cray/upgrade/csm/iuf/{activity}/state"
+    """
+    Function to check the contents of the state directory.
+    Args:
+        activity(str): Activity name
+    Returns:
+        None
+    """
+    state_dir = f"/etc/cray/upgrade/csm/iuf/{activity}/state"
 
     print("INFO: Checking for state folder contents")
-    if os.path.exists(STATE_DIR):
+    if os.path.exists(state_dir):
         print(f"TEST CASE: State directory exists for activity: {activity}")
-        if os.path.exists(f"{STATE_DIR}/activity_dict.yaml"):
-            print(f"TEST CASE: activity_dict.yaml present for {activity} in state folder")
+        if os.path.exists(f"{state_dir}/activity_dict.yaml"):
+            print(
+                f"TEST CASE: activity_dict.yaml present for {activity} in state folder"
+            )
         else:
-            print(f"ERROR: activity_dict.yaml not present for {activity} in state folder")
+            print(
+                f"ERROR: activity_dict.yaml not present for {activity} in state folder"
+            )
             sys.exit(1)
-        
-        if os.path.exists(f"{STATE_DIR}/stage_hist.yaml"):
+
+        if os.path.exists(f"{state_dir}/stage_hist.yaml"):
             print(f"TEST CASE: stage_hist.yaml present for {activity} in state folder")
         else:
             print(f"ERROR: stage_hist.yaml not present for {activity} in state folder")
@@ -91,7 +124,15 @@ def check_state(activity):
         print(f"ERROR: session_vars not present for {activity} ")
         sys.exit(1)
 
+
 def main():
+    """
+    The main entry point of the program.
+    Args:
+        None
+    Returns:
+        None
+    """
     print()
     print("INFO: Running IUF post-checks...")
     if len(sys.argv) > 2:
@@ -103,6 +144,7 @@ def main():
     check_configmap(activity_name)
     print("------------------------ END OF POST-CHECKS ------------------------")
     print()
+
 
 if __name__ == "__main__":
     main()

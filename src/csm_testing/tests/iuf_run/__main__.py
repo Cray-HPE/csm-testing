@@ -22,7 +22,8 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 """
-This script sets up the media directory and executes process-media stage in IUF for creating an activity.
+This script sets up the media directory and executes process-media stage in IUF
+for creating an activity.
 """
 
 import subprocess
@@ -30,36 +31,57 @@ import sys
 from csm_testing.lib.iuf_constants import MEDIA_DIR
 from csm_testing.lib.iuf_common import media_dir_setup
 
+
 def run(*args):
-    tar_dir=args[0]
-    ACTIVITY_NAME=args[1]
-    if len(args)== 3:
-        LOG_DIR=args[2]
-        command = f"iuf -a {ACTIVITY_NAME} -m {MEDIA_DIR} --log-dir {LOG_DIR} run -rv {MEDIA_DIR}/product_vars.yaml -r process-media"
+    """Runs process media using dummy product
+
+    Args: tar_dir is from where media_dir content will be copied,
+          activity_name for the IUF run
+    """
+    tar_dir = args[0]
+    activity_name = args[1]
+    if len(args) == 3:
+        log_dir = args[2]
+        command = (
+            f"iuf -a {activity_name} -m {MEDIA_DIR} --log-dir {log_dir} run "
+            f"-rv {MEDIA_DIR}/product_vars.yaml -r process-media"
+        )
     else:
-        command = f"iuf -a {ACTIVITY_NAME} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml -r process-media"
-    
+        command = (
+            f"iuf -a {activity_name} -m {MEDIA_DIR} run "
+            f"-rv {MEDIA_DIR}/product_vars.yaml -r process-media"
+        )
     media_dir_setup(tar_dir)
     try:
-        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        result = subprocess.run(
+            command,
+            shell=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        )
         print("INFO: Command output:", result.stdout)
         print("INFO: IUF run completed")
-    except subprocess.CalledProcessError as e:
-        print(f"ERROR: {e}")
+    except subprocess.CalledProcessError as err:
+        print(f"ERROR: {err}")
         sys.exit(1)
 
+
 def main():
+    """entry point"""
     if len(sys.argv) < 3 or len(sys.argv) > 4:
-        print("Usage: script.py <tar_dir> <ACTIVITY_NAME>")
+        print("Usage: script.py <tar_dir> <activity_name>")
         sys.exit(1)
     else:
         tar_dir = sys.argv[1]
-        ACTIVITY_NAME = sys.argv[2]
-        if len(sys.argv) ==3:
-            run(tar_dir, ACTIVITY_NAME)
+        activity_name = sys.argv[2]
+        if len(sys.argv) == 3:
+            run(tar_dir, activity_name)
         else:
-            LOG_DIR = sys.argv[3]
-            run(tar_dir, ACTIVITY_NAME,LOG_DIR)
+            log_dir = sys.argv[3]
+            run(tar_dir, activity_name, log_dir)
+
 
 if __name__ == "__main__":
     main()
