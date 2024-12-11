@@ -50,10 +50,8 @@ class Auth:  # pylint: disable=missing-class-docstring
             password = base64.b64decode(sec.get("client-secret").strip()).decode(
                 "utf-8"
             )
-        except: # pylint: disable=raise-missing-from
-            raise AuthException(
-                "Unable to load secrets from Kubernetes"
-            )
+        except:  # pylint: disable=raise-missing-from
+            raise AuthException("Unable to load secrets from Kubernetes")
 
         return username, password
 
@@ -70,7 +68,7 @@ class Auth:  # pylint: disable=missing-class-docstring
             )
 
             token = keycloak_openid.token(grant_type="client_credentials")
-        except: # pylint: disable=raise-missing-from
+        except:  # pylint: disable=raise-missing-from
             raise AuthException("Unable to obtain token from Keycloak")
 
         return token["access_token"]
@@ -93,10 +91,9 @@ class ApiInterface:  # pylint: disable=missing-class-docstring
         self.auth = Auth()
         self.apiurl = os.getenv("IUF_API_URL", apiurl)
         self.resource = os.getenv("IUF_API_URL_RESOURCE", resource)
-        self.token = self.auth.token
 
     def request(
-        self, method, path, payload=None, timeout=None, token=None
+        self, method, path, payload=None, timeout=None
     ):  # pylint: disable=missing-function-docstring, too-many-arguments
         method = method.upper()
         assert method in ["GET", "HEAD", "DELETE", "POST", "PUT", "PATCH", "OPTIONS"]
@@ -112,15 +109,18 @@ class ApiInterface:  # pylint: disable=missing-class-docstring
                 raise
 
         method_func = method.lower()
-
-        if payload:
-            result = getattr(requests, method_func)(
-                url, headers=headers, json=payload, verify=False, timeout=timeout
-            )
-        else:
-            result = getattr(requests, method_func)(
-                url, headers=headers, verify=False, timeout=timeout
-            )
+        try:
+            if payload:
+                result = getattr(requests, method_func)(
+                    url, headers=headers, json=payload, verify=False, timeout=timeout
+                )
+            else:
+                result = getattr(requests, method_func)(
+                    url, headers=headers, verify=False, timeout=timeout
+                )
+        except Exception as err:
+            print(err)
+            raise
 
         # throw an exception for bad status codes
         result.raise_for_status()
@@ -134,6 +134,15 @@ class ApiInterface:  # pylint: disable=missing-class-docstring
         except HTTPError as err:
             print(err)
             return False
+
+    def get_stages(self):  # pylint: disable=missing-function-docstring
+        api_path = "/stages"
+        try:
+            api_response = self.request("GET", api_path)
+            return api_response
+        except Exception as err:
+            print(err)
+            raise
 
     def get_activity(self, activity):  # pylint: disable=missing-function-docstring
         api_path = f"/activities/{activity}"
