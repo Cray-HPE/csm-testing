@@ -41,7 +41,7 @@ class Auth:  # pylint: disable=missing-class-docstring
     def __init__(self):  # pylint: disable=missing-function-docstring
         self._token = None
 
-    def get_secrets(self):  # pylint: disable=missing-function-docstring
+    def get_secrets(self):  # pylint: disable=missing-function-docstring,R0201
         try:
             config.load_kube_config()
             v1 = client.CoreV1Api()  # pylint: disable=invalid-name
@@ -50,16 +50,16 @@ class Auth:  # pylint: disable=missing-class-docstring
             password = base64.b64decode(sec.get("client-secret").strip()).decode(
                 "utf-8"
             )
-        except:
+        except: # pylint: disable=raise-missing-from
             raise AuthException(
                 "Unable to load secrets from Kubernetes"
-            )  # pylint: disable=raise-missing-from
+            )
 
         return username, password
 
     def get_token(
         self, username, password
-    ):  # pylint: disable=missing-function-docstring
+    ):  # pylint: disable=missing-function-docstring,R0201
         try:
             keycloak_openid = KeycloakOpenID(
                 server_url="https://api-gw-service-nmn.local/keycloak/",
@@ -70,7 +70,7 @@ class Auth:  # pylint: disable=missing-class-docstring
             )
 
             token = keycloak_openid.token(grant_type="client_credentials")
-        except:
+        except: # pylint: disable=raise-missing-from
             raise AuthException("Unable to obtain token from Keycloak")
 
         return token["access_token"]
@@ -97,7 +97,7 @@ class ApiInterface:  # pylint: disable=missing-class-docstring
 
     def request(
         self, method, path, payload=None, timeout=None, token=None
-    ):  # pylint: disable=missing-function-docstring
+    ):  # pylint: disable=missing-function-docstring, too-many-arguments
         method = method.upper()
         assert method in ["GET", "HEAD", "DELETE", "POST", "PUT", "PATCH", "OPTIONS"]
 
