@@ -29,8 +29,8 @@ import os
 import base64
 from urllib.error import HTTPError
 import requests
-from kubernetes import client, config  # pylint: disable=import-error
-from keycloak import KeycloakOpenID  # pylint: disable=import-error
+from kubernetes import client, config
+from keycloak import KeycloakOpenID
 
 
 class AuthException(Exception):
@@ -41,7 +41,7 @@ class Auth:  # pylint: disable=missing-class-docstring
     def __init__(self):  # pylint: disable=missing-function-docstring
         self._token = None
 
-    def get_secrets(self):  # pylint: disable=missing-function-docstring,R0201
+    def get_secrets(self):  # pylint: disable=missing-function-docstring
         try:
             config.load_kube_config()
             v1 = client.CoreV1Api()  # pylint: disable=invalid-name
@@ -57,7 +57,7 @@ class Auth:  # pylint: disable=missing-class-docstring
 
     def get_token(
         self, username, password
-    ):  # pylint: disable=missing-function-docstring,R0201
+    ):  # pylint: disable=missing-function-docstring
         try:
             keycloak_openid = KeycloakOpenID(
                 server_url="https://api-gw-service-nmn.local/keycloak/",

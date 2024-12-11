@@ -29,8 +29,8 @@ import json
 import subprocess
 import sys
 import time
-from kubernetes import client, config  # pylint: disable=import-error
-from kubernetes.client.rest import ApiException  # pylint: disable=import-error
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
 import yaml
 
 

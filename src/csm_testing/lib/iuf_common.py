@@ -29,10 +29,10 @@ import shutil
 import sys
 import subprocess
 import base64
-from jsonschema import validate, ValidationError, SchemaError # pylint: disable=import-error
+from jsonschema import validate, ValidationError, SchemaError
 from requests.auth import HTTPBasicAuth
 import yaml
-from kubernetes import client, config # pylint: disable=import-error
+from kubernetes import client, config
 from csm_testing.lib.iuf_constants import MEDIA_DIR, NAMESPACE
 
 FOLDER_NAME = "dummy-1.0.0"

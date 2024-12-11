@@ -156,7 +156,7 @@ def cleanup(activity_name="test-activity"):
                 except subprocess.CalledProcessError as err:
                     print(f"ERROR: Command failed with an error: {err}")
                 # Handles all other errors
-                except Exception as err:    # pylint: disable=W0703
+                except Exception as err:
                     print(f"ERROR: Unable to delete workflow {workflow} , {err}")
         else:
             print(f"WARNING: Workflows not found for {activity_name}")
@@ -186,7 +186,7 @@ def cleanup(activity_name="test-activity"):
                 except subprocess.CalledProcessError as err:
                     print(f"ERROR: Command failed with an error: {err}")
                 # Handles all other errors
-                except Exception as err:    # pylint: disable=W0703
+                except Exception as err:
                     print(f"ERROR: Unable to delete configmap {configmap} , {err}")
         else:
             print(f"WARNING: Workflows not found for {activity_name}")

@@ -30,7 +30,7 @@ import sys
 import json
 import yaml
 import requests
-from cray_product_catalog.query import ProductCatalog # pylint: disable=import-error
+from cray_product_catalog.query import ProductCatalog
 from csm_testing.lib.iuf_common import (
     get_nexus_credentials,
     run_command,

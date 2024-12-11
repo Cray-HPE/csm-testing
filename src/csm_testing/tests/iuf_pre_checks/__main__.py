@@ -328,7 +328,7 @@ def check_cfs():
             sys.exit(1)
     except subprocess.CalledProcessError:
         print("INFO: All cray-cfs-api* pods are running")
-    except Exception:    # pylint: disable=W0703
+    except Exception:
         sys.exit(1)
 
     command = (
@@ -354,7 +354,7 @@ def check_cfs():
             sys.exit(1)
     except subprocess.CalledProcessError:
         print("INFO: All cfs-ara-postgres* pods are running")
-    except Exception:    # pylint: disable=W0703
+    except Exception:
         sys.exit(1)
 
 
