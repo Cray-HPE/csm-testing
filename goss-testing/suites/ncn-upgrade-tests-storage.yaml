@@ -28,4 +28,4 @@ gossfile:
   ../tests/goss-ceph-storage-config-files.yaml: {}
   ../tests/goss-check-clock-skew.yaml: {}
   ../tests/goss-rgw-health.yaml: {}
-  ../tests/goss-unused-drives-on-storage-nods.yaml: {}
+  ../tests/goss-unused-drives-on-storage-nodes.yaml: {}
