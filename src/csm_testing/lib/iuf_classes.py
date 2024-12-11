@@ -38,7 +38,7 @@ class AuthException(Exception):
 
 
 class Auth:  # pylint: disable=missing-class-docstring
-    def __init__(self):  # pylint: disable=missing-function-docstring
+    def __init__(self):
         self._token = None
 
     def get_secrets(self):  # pylint: disable=missing-function-docstring
