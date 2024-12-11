@@ -87,7 +87,7 @@ custom-columns=NAME:.metadata.name|grep {activity_name}"
         return err.returncode
     return configmaps
 
-
+# pylint: disable=too-many-branches
 def cleanup(activity_name="test-activity"):
     """
     Function to remove the log files, media directories, workflows and configmaps for the activity.
@@ -155,14 +155,8 @@ def cleanup(activity_name="test-activity"):
                 # Handles the case when the command fails (non-zero exit code)
                 except subprocess.CalledProcessError as err:
                     print(f"ERROR: Command failed with an error: {err}")
-                # Handles the case when the 'kubectl' command is not found
-                except FileNotFoundError:
-                    print("ERROR: The kubectl command is not found.")
-                # Handles permission errors:
-                except PermissionError:
-                    print("ERROR: Permissions denied when trying to execute kubectl")
                 # Handles all other errors
-                except Exception as err:
+                except Exception as err:    # pylint: disable=W0703
                     print(f"ERROR: Unable to delete workflow {workflow} , {err}")
         else:
             print(f"WARNING: Workflows not found for {activity_name}")
@@ -191,14 +185,8 @@ def cleanup(activity_name="test-activity"):
                 # Handles the case when the command fails (non-zero exit code)
                 except subprocess.CalledProcessError as err:
                     print(f"ERROR: Command failed with an error: {err}")
-                # Handles the case when the 'kubectl' command is not found
-                except FileNotFoundError:
-                    print("ERROR: The kubectl command is not found.")
-                # Handles permission errors:
-                except PermissionError:
-                    print("ERROR: Permissions denied when trying to execute kubectl")
                 # Handles all other errors
-                except Exception as err:
+                except Exception as err:    # pylint: disable=W0703
                     print(f"ERROR: Unable to delete configmap {configmap} , {err}")
         else:
             print(f"WARNING: Workflows not found for {activity_name}")

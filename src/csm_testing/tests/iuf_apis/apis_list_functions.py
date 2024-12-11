@@ -24,59 +24,50 @@
 This script calls the list apis and is being imported by __main__.py for iuf_apis
 """
 
-import sys
 from urllib.error import HTTPError
-from .apis_activity_functions import COUNT, TOTAL_COUNT
+from csm_testing.lib.iuf_classes import ApiInterface
+from csm_testing.tests.iuf_apis.apis_activity_functions import (
+    COUNT,
+    print_no_of_test_passed,
+)
 
-def no_auth_list_stages(apis): # pylint: disable=missing-function-docstring
-    global COUNT # pylint: disable=global-statement
+
+def no_auth_list_stages():  # pylint: disable=missing-function-docstring
+    global COUNT  # pylint: disable=global-statement
     print("TEST CASE: w/o security API call: Try Api Call without token")
-    stages = None
+    apis = ApiInterface()
+    api_path = "/stages"
     try:
-        stages = apis.get_stages()
+        api_response = apis.request("GET", api_path, token=None)
+        if api_response is not None:
+            msg = "ERROR: Api Working without token"
+            print_no_of_test_passed(msg)
     except HTTPError as err:
         print(f"INFO: {err}")
         COUNT += 1
 
-    if stages is not None:
-        print("ERROR: Api Working without token")
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
 
-
-def list_stages(apis): # pylint: disable=missing-function-docstring
-    global COUNT # pylint: disable=global-statement
+def list_stages(apis):  # pylint: disable=missing-function-docstring
+    global COUNT  # pylint: disable=global-statement
     print("TEST CASE: List Stages")
     try:
         stage_result = apis.get_stages()
         print(stage_result)
         stages = stage_result.json()
     except HTTPError as ex:
-        print(f"ERROR: {ex}")
-        print("~" * 50)
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
+        print_no_of_test_passed(ex)
 
     if stages is not None:
         stage_list = [stage["name"] for stage in stages["stages"]]
         print("\n".join(stage_list))
         COUNT += 1
     else:
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
+        msg = ""
+        print_no_of_test_passed(msg)
 
 
-def list_activities(apis): # pylint: disable=missing-function-docstring
-    global COUNT # pylint: disable=global-statement
+def list_activities(apis):  # pylint: disable=missing-function-docstring
+    global COUNT  # pylint: disable=global-statement
     print("TEST CASE: List Activities")
     try:
         activities_result = apis.get_activities()
@@ -84,13 +75,7 @@ def list_activities(apis): # pylint: disable=missing-function-docstring
         COUNT += 1
         activities = activities_result.json()
     except HTTPError as ex:
-        print(f"ERROR: {ex}")
-        print("~" * 50)
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
+        print_no_of_test_passed(ex)
 
     if activities is not None:
         act_list = sorted([act["name"] for act in activities])

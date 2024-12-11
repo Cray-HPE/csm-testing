@@ -32,8 +32,25 @@ COUNT = 0
 TOTAL_COUNT = 15
 
 
-def activity_create(apis, activity): # pylint: disable=missing-function-docstring
-    global COUNT # pylint: disable=global-statement
+def print_no_of_test_passed(ex):
+    """
+    Function to print the number of test cases passed
+    Args:
+        ex(str): the messages to be printed
+    Returns:
+        None
+    """
+    print(f"ERROR: {ex}")
+    print("~" * 50)
+    print(
+        f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
+    )
+    print("~" * 50)
+    sys.exit(1)
+
+
+def activity_create(apis, activity):  # pylint: disable=missing-function-docstring
+    global COUNT  # pylint: disable=global-statement
     print("TEST CASE: Create Activity")
     print(f"INFO: Attempting to create activity {activity}")
     payload = {"input_parameters": {}, "name": activity}
@@ -45,30 +62,21 @@ def activity_create(apis, activity): # pylint: disable=missing-function-docstrin
             COUNT += 1
         except HTTPError as ex:
             print(f"ERROR: Unable to create activity: {activity}")
-            print(f"ERROR: {ex}")
-            print("~" * 50)
-            print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-            )
-            print("~" * 50)
-            sys.exit(1)
+            print_no_of_test_passed(ex)
     else:
         print("WARNING: Skipping the test case: Create Activity")
         print(f"INFO: Activity {activity} already exists")
 
 
-def activity_run(apis, activity, media_dir): # pylint: disable=missing-function-docstring
-    global COUNT # pylint: disable=global-statement
+def activity_run(
+    apis, activity, media_dir
+):  # pylint: disable=missing-function-docstring
+    global COUNT  # pylint: disable=global-statement
     print("TEST CASE: Run Activity")
     print(f"INFO: Attempting to run activity {activity}")
     if not apis.activity_exists(activity):
-        print(f"ERROR: Activity {activity} does not exist.")
-        print("~" * 50)
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
+        msg = f"ERROR: Activity {activity} does not exist."
+        print_no_of_test_passed(msg)
     payload = {
         "input_parameters": {
             media_dir: media_dir,
@@ -105,27 +113,16 @@ def activity_run(apis, activity, media_dir): # pylint: disable=missing-function-
 
     except HTTPError as ex:
         print(f"ERROR: Unable to run activity {activity}")
-        print(f"ERROR: {ex}")
-        print("~" * 50)
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
+        print_no_of_test_passed(ex)
 
 
-def activity_abort(apis, activity): # pylint: disable=missing-function-docstring
-    global COUNT # pylint: disable=global-statement
+def activity_abort(apis, activity):  # pylint: disable=missing-function-docstring
+    global COUNT  # pylint: disable=global-statement
     print("TEST CASE: Abort Activity")
     print(f"INFO: Attempting to abort activity {activity}")
     if not apis.activity_exists(activity):
-        print(f"ERROR: Activity {activity} does not exist.")
-        print("~" * 50)
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
+        msg = f"ERROR: Activity {activity} does not exist."
+        print_no_of_test_passed(msg)
     payload = {
         "input_parameters": {},
         "name": activity,
@@ -138,36 +135,20 @@ def activity_abort(apis, activity): # pylint: disable=missing-function-docstring
         COUNT += 1
     except requests.ReadTimeout:
         print("ERROR: Timed out sending an abort request.")
-        print(f"ERROR: Ensure the argo workflow for {activity} is not running.")
-        print("~" * 50)
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
+        msg = f"ERROR: Ensure the argo workflow for {activity} is not running."
+        print_no_of_test_passed(msg)
     except HTTPError as ex:
         print(f"ERROR: Unable to abort activity: {activity}")
-        print(f"ERROR: {ex}")
-        print("~" * 50)
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
+        print_no_of_test_passed(ex)
 
 
-def activity_resume(apis, activity): # pylint: disable=missing-function-docstring
-    global COUNT # pylint: disable=global-statement
+def activity_resume(apis, activity):  # pylint: disable=missing-function-docstring
+    global COUNT  # pylint: disable=global-statement
     print("TEST CASE: Resume Activity")
     print(f"INFO: Attempting to resume activity {activity}")
     if not apis.activity_exists(activity):
-        print(f"ERROR: Activity {activity} does not exist.")
-        print("~" * 50)
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
+        msg = f"ERROR: Activity {activity} does not exist."
+        print_no_of_test_passed(msg)
     payload = {
         "input_parameters": {},
         "comment": "Restart activity ",
@@ -182,28 +163,16 @@ def activity_resume(apis, activity): # pylint: disable=missing-function-docstrin
         COUNT += 1
     except HTTPError as ex:
         print(f"ERROR: Unable to resume activity {activity}")
-        print(f"ERROR: {ex}")
-        print("~" * 50)
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
+        print_no_of_test_passed(ex)
 
 
-def activity_restart(apis, activity): # pylint: disable=missing-function-docstring
-    global COUNT # pylint: disable=global-statement
+def activity_restart(apis, activity):  # pylint: disable=missing-function-docstring
+    global COUNT  # pylint: disable=global-statement
     print("TEST CASE: Restart Activity")
     print(f"INFO: Attempting to restart activity {activity}")
     if not apis.activity_exists(activity):
-        print(f"ERROR: Activity {activity} does not exist.")
-        print("~" * 50)
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
-
+        msg = f"ERROR: Activity {activity} does not exist."
+        print_no_of_test_passed(msg)
     payload = {
         "input_parameters": {},
         "comment": "Restart activity ",
@@ -218,10 +187,4 @@ def activity_restart(apis, activity): # pylint: disable=missing-function-docstri
         COUNT += 1
     except HTTPError as ex:
         print(f"ERROR: Unable to restart activity: {activity}")
-        print(f"ERROR: {ex}")
-        print("~" * 50)
-        print(
-            f"INFO: TOTAL test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-        )
-        print("~" * 50)
-        sys.exit(1)
+        print_no_of_test_passed(ex)

@@ -138,7 +138,8 @@ def check_nls_image(minimum_version):
         None
     """
     cray_nls_version, returncode = run_command(
-        "kubectl get deployment cray-nls -n argo -o=jsonpath='{.spec.template.spec.containers[*].image}'"
+        "kubectl get deployment cray-nls -n argo \
+-o=jsonpath='{.spec.template.spec.containers[*].image}'"
     )
     cray_nls_version = cray_nls_version.split(":")[1]
     if returncode != 0:
@@ -182,7 +183,8 @@ def check_nls_workflow_server():
         None
     """
     nls_workflow_server, returncode = run_command(
-        "kubectl get deployment cray-nls-argo-workflows-server -n argo -o=jsonpath='{.status.availableReplicas}'"
+        "kubectl get deployment cray-nls-argo-workflows-server \
+-n argo -o=jsonpath='{.status.availableReplicas}'"
     )
 
     if returncode == 0 and int(nls_workflow_server) == 3:
@@ -206,7 +208,8 @@ def check_nls_workflow_controller():
         None
     """
     nls_controller_pods, returncode = run_command(
-        "kubectl get deployment cray-nls-argo-workflows-workflow-controller -n argo -o=jsonpath='{.status.availableReplicas}'"
+        "kubectl get deployment cray-nls-argo-workflows-workflow-controller \
+-n argo -o=jsonpath='{.status.availableReplicas}'"
     )
 
     if returncode == 0 and int(nls_controller_pods) == 2:
@@ -232,7 +235,8 @@ def check_nls_postgres():
         None
     """
     nls_postgres, returncode = run_command(
-        "kubectl get statefulset cray-nls-postgres -n argo -o=jsonpath='{.status.availableReplicas}'"
+        "kubectl get statefulset cray-nls-postgres \
+-n argo -o=jsonpath='{.status.availableReplicas}'"
     )
 
     if returncode == 0 and int(nls_postgres) == 3:
@@ -324,7 +328,7 @@ def check_cfs():
             sys.exit(1)
     except subprocess.CalledProcessError:
         print("INFO: All cray-cfs-api* pods are running")
-    except Exception:
+    except Exception:    # pylint: disable=W0703
         sys.exit(1)
 
     command = (
@@ -350,7 +354,7 @@ def check_cfs():
             sys.exit(1)
     except subprocess.CalledProcessError:
         print("INFO: All cfs-ara-postgres* pods are running")
-    except Exception:
+    except Exception:    # pylint: disable=W0703
         sys.exit(1)
 
 
@@ -491,7 +495,10 @@ def main():
     print("INFO: Running IUF pre-checks")
     if len(sys.argv) != 7:
         print(
-            "Usage: script.py <K8S_MINIMUM_VERSION> <IUF_CLI_MINIMUM_VERSION> <CLUSTER_NAME> <CRAY_NLS_IMAGE_MINIMUM_VERSION> <IUF_CHART_MINIMUM_VERSION> <CRAY_NLS_CHART_MINIMUM_VERSION>"
+            "Usage: script.py \
+<K8S_MINIMUM_VERSION> <IUF_CLI_MINIMUM_VERSION> <CLUSTER_NAME> \
+<CRAY_NLS_IMAGE_MINIMUM_VERSION> <IUF_CHART_MINIMUM_VERSION> \
+<CRAY_NLS_CHART_MINIMUM_VERSION>"
         )
         sys.exit(1)
 

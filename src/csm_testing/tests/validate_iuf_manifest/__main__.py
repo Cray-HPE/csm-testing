@@ -30,13 +30,13 @@ import os
 from csm_testing.lib.iuf_common import load_yaml, validate_instance
 
 # Constants
-SCHEMA_FILE = "/opt/cray/tests/install/ncn/scripts/iuf_schemas/iuf-manifest-schema.yaml"  # Path to your product manifest schema file
+# Path to your product manifest schema file
+SCHEMA_FILE = "/opt/cray/tests/install/ncn/scripts/iuf_schemas/iuf-manifest-schema.yaml"
 
 
 # Custom exception for IUF Product Manifest validation errors
 class ProductManifestValidationError(Exception):
     """Custom exception for product manifest validation errors."""
-
 
 def main():
     """
@@ -78,7 +78,8 @@ def main():
     try:
         validate_instance(manifest_instance, schema)
         print(
-            f"INFO: SUCCESS: IUF product manifest file '{manifest_file}' is valid against the schema."
+            f"INFO: SUCCESS: IUF product manifest file \
+'{manifest_file}' is valid against the schema."
         )
         print("INFO: SUCCESS: Passed")
     except ProductManifestValidationError as err:

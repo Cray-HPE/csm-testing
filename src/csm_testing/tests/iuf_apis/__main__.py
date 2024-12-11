@@ -30,39 +30,40 @@ import urllib3
 from csm_testing.lib.iuf_constants import MEDIA_DIR
 from csm_testing.lib.iuf_common import media_dir_setup
 
-from csm_testing.lib.iuf_classes import ApiInterface_no_token
 from csm_testing.lib.iuf_classes import ApiInterface
-from .apis_list_functions import no_auth_list_stages, list_activities, list_stages
-from .apis_activity_functions import (
+from csm_testing.tests.iuf_apis.apis_list_functions import (
+    no_auth_list_stages,
+    list_activities,
+    list_stages,
+)
+from csm_testing.tests.iuf_apis.apis_activity_functions import (
     activity_create,
     activity_restart,
     activity_resume,
     activity_run,
     activity_abort,
 )
-from .apis_session_function import (
+from csm_testing.tests.iuf_apis.apis_session_function import (
     get_activity_session,
     get_history,
     get_history_time,
     get_sessions,
     get_workflows,
 )
-from .apis_activity_functions import count, total_count
+from csm_testing.tests.iuf_apis.apis_activity_functions import COUNT, TOTAL_COUNT
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-def main(): # pylint: disable=missing-function-docstring
+
+def main():  # pylint: disable=missing-function-docstring
     tar_dir = "/opt/cray/tests/install/ncn/scripts/iuf_run_setup"
     media_dir_setup(tar_dir)
     activity = sys.argv[1]
     print(f"INFO: This is the activity: {activity}")
 
-    apis_no_token = ApiInterface_no_token()
-
-    no_auth_list_stages(apis_no_token)
-    print("*" * 50)
-
     apis = ApiInterface()
+    no_auth_list_stages()
+    print("*" * 50)
 
     list_stages(apis)
     print("*" * 50)
@@ -109,7 +110,7 @@ def main(): # pylint: disable=missing-function-docstring
 
     print("~" * 50)
     print(
-        f"INFO: Total test cases passed: {count} test cases skipped: {total_count - count}"
+        f"INFO: Total test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
     )
     print("~" * 50)
 

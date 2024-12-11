@@ -20,6 +20,9 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+"""
+constants being used by iuf scripts
+"""
 
 MEDIA_DIR = "/etc/cray/upgrade/csm/automation-tests"
 NAMESPACE = "services"
