@@ -44,6 +44,8 @@ import json
 import logging
 import sys
 
+from typing import Tuple
+
 # The rados package is not available when we run pylint
 import rados  # pylint: disable=import-error
 
@@ -96,7 +98,12 @@ max_osds_per_storage_node = {
 }
 
 
-def num_storage_nodes(string):
+def num_storage_nodes(string) -> int:
+    """
+    Parses the specified string as an integer.
+    Raises an exception if it is < 3.
+    Otherwise, returns the integer.
+    """
     num = int(string)
     if num >= 3:
         return num
@@ -105,7 +112,11 @@ def num_storage_nodes(string):
     )
 
 
-def parse_args():
+def parse_args() -> Tuple[int, int, int]:
+    """
+    Parse the command-line arguments. Return
+    min_expected_osds, max_expected_osds, num_storage_nodes
+    """
     parser = argparse.ArgumentParser(
         description="Validate OSD count in Ceph cluster based on hardware type"
     )
@@ -133,7 +144,11 @@ def parse_args():
     return min_expected_osds, max_expected_osds, args.num_storage_nodes
 
 
-def get_num_osds():
+def get_num_osds() -> int:
+    """
+    Return the number of Ceph OSDs.
+    Exit in error if there are problems.
+    """
     logger.debug("Loading Ceph")
     ceph = rados.Rados(conffile=CEPH_CONFIG_FILE)
     logger.debug("Connecting to Ceph")

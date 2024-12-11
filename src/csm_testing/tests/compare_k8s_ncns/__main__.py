@@ -119,18 +119,24 @@ def classify_ncn(ncn_name: str, num_workers: int,
     return num_workers, num_masters, worker_ncn
 
 
-def get_k8s_ncn_info() -> Tuple[K8sNodeInfo, bool]:
+def get_k8s_node_list():
     """
-    List all Kubernetes nodes and return information about them, as well as a boolean indicating
-    pass/fail, in case problems were found during the checking
+    Gets and returns the list of Kubernetes nodes from the Kubernetes API.
     """
-
     print("Loading Kubernetes configuration")
     kubernetes.config.load_kube_config()
     print("Initializing Kubernetes client")
     k8s_v1 = kubernetes.client.CoreV1Api()
     print("Listing Kubernetes nodes")
-    node_list = k8s_v1.list_node()
+    return k8s_v1.list_node()
+
+
+def get_k8s_ncn_info() -> Tuple[K8sNodeInfo, bool]:
+    """
+    List all Kubernetes nodes and return information about them, as well as a boolean indicating
+    pass/fail, in case problems were found during the checking
+    """
+    node_list = get_k8s_node_list()
 
     passed = True
 
@@ -160,9 +166,8 @@ def get_k8s_ncn_info() -> Tuple[K8sNodeInfo, bool]:
             continue
 
         try:
-            ncn_kver = node_info.kernel_version
             update_kernel_data(
-                ncn_name, ncn_kver,
+                ncn_name, node_info.kernel_version,
                 worker_kver_map if worker_ncn else master_kver_map)
         except AttributeError:
             print_err(

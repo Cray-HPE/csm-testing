@@ -68,13 +68,9 @@ import json
 import logging
 import os
 import re
-import subprocess
 import sys
-import threading
 import traceback
-from typing import Callable, Dict, List, Tuple
-
-import requests
+from typing import Dict, List, Tuple
 
 from csm_testing.lib.common import   err_text,                    \
                                      fmt_exc,                     \
@@ -98,6 +94,11 @@ from csm_testing.lib.common import   err_text,                    \
 from csm_testing.lib.grok_exporter_logger import grok_exporter_log,      \
                                                  GROK_EXPORTER_LOG_DIR,  \
                                                  JSONDict
+
+from .duration_seconds import DurationSeconds
+from .json_results_collection import JsonResultsCollection
+from .print_goss_json_results import is_url
+from .results_entry import ResultsEntry
 
 RC_TESTFAIL = 1
 RC_USAGE = 2
@@ -147,14 +148,6 @@ def warning(outstring: str) -> None:
     stderr_print(warn_text(f"WARNING: {outstring}"))
     logging.warning(outstring)
     outfile_print(f"WARNING: {outstring}")
-
-
-def is_url(would_be_url: str) -> bool:
-    """
-    Very basic check to see if string appears to be a URL
-    """
-    return would_be_url.find("http://") == 0 or would_be_url.find(
-        "https://") == 0
 
 
 def get_node_from_url(url: str) -> str:
@@ -212,225 +205,6 @@ def read_and_decode_json(input_file: str, node: str) -> dict:
         multi_print(traceback.format_exc(), outfile_print, logging.error)
         raise ScriptException(
             f"Error decoding JSON from {input_file}. {fmt_exc(exc)}") from exc
-
-
-class JsonResultsCollection:
-
-    def __init__(self):
-        self.lock = threading.Lock()
-        self.results_map = {}
-
-    # This just makes sure that log_values makes a single call to
-    # the logging method, guaranteeing that the entry will all go in together. That way it won't be
-    # interleaved with entries from other threads.
-    @staticmethod
-    def log_values(log_method: Callable, **kwargs) -> None:
-        log_values(log_method, values=kwargs)
-
-    # result will either be a string or the decoded JSON results
-    def send_result(self, source: str, result) -> None:
-        """
-        Takes the lock and then sets the json_results_map[source] entry to be result
-        """
-        with self.lock:
-            self.results_map[source] = result
-
-    # input_url suffices as a unique name for this function in a multi-threading context, as we do
-    # not permit duplicate URLs. It is important to include this in all logging calls made in this
-    # function, in order to identify which thread was making the call.
-    def get_json_from_input_url(self, input_url: str) -> None:
-        logging.info("Making GET request to %s", input_url)
-        try:
-            resp = requests.get(input_url)
-        except Exception as exc:
-            logging.error("Unexpected error attempting GET request to %s: %s",
-                          input_url, traceback.format_exc())
-            self.send_result(
-                input_url, "Unexpected error attempting GET request to "
-                f"{input_url}: {fmt_exc(exc)}")
-            return
-
-        JsonResultsCollection.log_values(logging.debug,
-                                         input_url=input_url,
-                                         status_code=resp.status_code,
-                                         reason=resp.reason,
-                                         headers=resp.headers,
-                                         ok=resp.ok)
-        # Expected responses are 200 (meaning no tests failed) or 503 (which can mean either that
-        # there were test failures OR that there was another Goss issue, like syntax errors in the
-        # test files).
-        if resp.status_code not in {200, 503}:
-            err_msg = (
-                f"Status code {resp.status_code} received from Goss URL "
-                f"{input_url}: {resp.text}")
-            logging.error(err_msg)
-            self.send_result(input_url, err_msg)
-            return
-
-        logging.info("Decoding JSON response body from %s", input_url)
-        try:
-            json_results = resp.json()
-        except Exception as exc:
-            logging.error(
-                "Unexpected error decoding JSON response from %s: %s",
-                input_url, traceback.format_exc())
-            JsonResultsCollection.log_values(logging.debug,
-                                             input_url=input_url,
-                                             text=resp.text)
-            self.send_result(
-                input_url, "Unexpected error decoding JSON response from "
-                f"{input_url}: {fmt_exc(exc)}")
-            return
-
-        JsonResultsCollection.log_values(logging.debug,
-                                         input_url=input_url,
-                                         json_results=json_results)
-        logging.info("Successfully decoded JSON response from %s", input_url)
-        self.send_result(input_url, json_results)
-        return
-
-    def run_goss_decode_json(self, suite_or_test: str) -> None:
-        cmd_list = [
-            "/usr/bin/goss", "-g", suite_or_test, "v", "--format", "json"
-        ]
-        logging.debug("Running: %s", cmd_list)
-        cmd_result = subprocess.run(cmd_list,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    check=False)
-        cmd_out = cmd_result.stdout
-        cmd_err = cmd_result.stderr
-        # The goss command will return non-0 both in the case of test failures and in the case of
-        # other errors (such as syntax errors in the test files). From what I can tell, it will
-        # return 1 in either case.
-        # If the output of the command has valid JSON results data, then we're happy.
-
-        # If the stderr is not empty, we log these values as warnings. Otherwise we log them as
-        # debug.
-        if len(cmd_err) != 0:
-            JsonResultsCollection.log_values(logging.warning,
-                                             cmd_list=cmd_list,
-                                             returncode=cmd_result.returncode,
-                                             stderr=cmd_err)
-        else:
-            JsonResultsCollection.log_values(logging.debug,
-                                             cmd_list=cmd_list,
-                                             returncode=cmd_result.returncode,
-                                             stderr=cmd_err)
-        logging.info("Command completed: %s", cmd_list)
-        try:
-            json_results = json.loads(cmd_out)
-        except Exception as exc:
-            # This is most likely going to happen if the goss command failed
-            JsonResultsCollection.log_values(logging.error,
-                                             cmd_list=cmd_list,
-                                             returncode=cmd_result.returncode,
-                                             stdout=cmd_out,
-                                             stderr=cmd_err)
-            logging.error("Unexpected error decoding JSON output from %s: %s",
-                          cmd_list, traceback.format_exc())
-            self.send_result(
-                suite_or_test, "Unexpected error decoding JSON output from "
-                f"{cmd_list}: {fmt_exc(exc)}")
-            return
-        JsonResultsCollection.log_values(logging.debug,
-                                         cmd_list=cmd_list,
-                                         returncode=cmd_result.returncode,
-                                         stdout=cmd_out,
-                                         stderr=cmd_err)
-        logging.info("Successfully decoded JSON output from %s", cmd_list)
-        self.send_result(suite_or_test, json_results)
-        return
-
-    def run_test_decode_json(self, source: str) -> None:
-        if is_url(source):
-            self.get_json_from_input_url(input_url=source)
-        else:
-            self.run_goss_decode_json(suite_or_test=source)
-
-
-class DurationSeconds:
-    """
-    Ensures that when the entries are dumped as JSON in grok_exporter_logger.py,
-    the desired formatting of the duration in seconds is preserved.
-    """
-
-    def __init__(self, nanoseconds: int):
-        self.nanoseconds = nanoseconds
-        self.seconds = nanoseconds / 1000000000.0
-
-    def to_nanoseconds(self) -> int:
-        return self.nanoseconds
-
-    def __repr__(self) -> str:
-        # Print 9 decimal places because the minimum possible value is 0.000000001 (1 nanosecond)
-        return f"{self.seconds:.9f}"
-
-    def __str__(self) -> str:
-        return self.__repr__()
-
-    def to_json(self):
-        """
-        Used by the custom-JSON-encoding function in the grok_exporter_logger module
-        """
-        return self.__repr__()
-
-
-class ResultsEntry:
-
-    def __init__(self, result_entry_raw: Dict):
-        self.result_raw = result_entry_raw["result"]
-        self.title = result_entry_raw["title"]
-        self.summary = result_entry_raw["summary-line"]
-        self.duration_seconds = DurationSeconds(result_entry_raw["duration"])
-        self.resource = result_entry_raw["resource-id"]
-        self.description = result_entry_raw["meta"]["desc"]
-        if self.result_raw == 0:
-            # Test passed
-            self.result_string = "PASS"
-        elif self.result_raw == 1:
-            # Test failed
-            self.result_string = "FAIL"
-        elif self.result_raw == 2:
-            # Test was skipped (this is not usually due to error)
-            self.result_string = "SKIPPED"
-        else:
-            # This should never happpen
-            self.result_string = f"UNKNOWN (Goss result = {self.result_raw})"
-
-    def multiline_string(self, source: str, node_name: str) -> str:
-        """
-        Return a string of the results formatted as a multi-line string,
-        followed by a blank line
-        """
-        return (f"Result: {self.result_string}\n"
-                f"Source: {source}\n"
-                f"Test Name: {self.title}\n"
-                f"Description: {self.description}\n"
-                f"Test Summary: {self.summary}\n"
-                f"Execution Time: {self.duration_seconds} seconds\n"
-                f"Node: {node_name}\n\n")
-
-    def dict(self, source: str, node_name: str) -> dict:
-        """
-        Return the results in dict format.
-
-        To avoid JSON printing the seconds duration in scientific notation (which causes problems
-        for the grok exporter that parses the log), we record it here as a string in the
-        non-scientific format.
-        """
-        return {
-            "Result Code": self.result_raw,
-            "Result String": self.result_string,
-            "Source": source,
-            "Test Name": self.title,
-            "Description": self.description,
-            "Test Summary": self.summary,
-            "Execution Time (seconds)": self.duration_seconds,
-            "Execution Time (nanoseconds)":
-            self.duration_seconds.to_nanoseconds(),
-            "Node": node_name
-        }
 
 
 def extract_results_data(
@@ -540,8 +314,8 @@ def show_results(source: str, selected_results: List[ResultsEntry],
     return manual_pass_count, manual_fail_count, manual_unknown_count
 
 
-suite_test_file_pattern = "^(?:suites|tests)/[^/]+[.]yaml$"
-suite_test_file_prog = re.compile(suite_test_file_pattern)
+SUITE_TEST_FILE_PATTERN = "^(?:suites|tests)/[^/]+[.]yaml$"
+suite_test_file_prog = re.compile(SUITE_TEST_FILE_PATTERN)
 
 
 def is_suite_test_file(check_string: str) -> bool:
