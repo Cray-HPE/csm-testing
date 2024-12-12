@@ -20,7 +20,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 This script checks workflow templates.
 """
@@ -76,7 +75,9 @@ def check_and_kill_pod(workflow_name: str, namespace: str) -> bool:
 
         # Check if the main container has finished
         if is_main_container_finished(pod_name, namespace):
-            print(f"INFO: Main container finished in pod {pod_name}. Deleting pod.")
+            print(
+                f"INFO: Main container finished in pod {pod_name}. Deleting pod."
+            )
             k8s_v1.delete_namespaced_pod(name=pod_name, namespace=namespace)
             print(f"INFO: Pod {pod_name} deleted.")
             return True
@@ -103,14 +104,14 @@ def update_image_version_in_template(
         str: updated workflow template
     """
     updated_workflow_template_str = workflow_template_str.replace(
-        old_image_prefix + old_version, old_image_prefix + new_version
-    )
+        old_image_prefix + old_version, old_image_prefix + new_version)
     return updated_workflow_template_str
 
 
-def wait_for_workflow_to_succeed(
-    namespace: str, workflow_name: str, timeout=6000, interval=20
-):
+def wait_for_workflow_to_succeed(namespace: str,
+                                 workflow_name: str,
+                                 timeout=6000,
+                                 interval=20):
     """
     Polls the workflow status until it succeeds or the timeout is reached.
     Args:
@@ -156,7 +157,9 @@ def wait_for_workflow_to_succeed(
             return True
 
         if status in ["Failed", "Error"]:
-            print(f"ERROR: Workflow {workflow_name} failed with status {status}.")
+            print(
+                f"ERROR: Workflow {workflow_name} failed with status {status}."
+            )
             return False
 
         if status == "Running":
@@ -171,7 +174,9 @@ def wait_for_workflow_to_succeed(
         # Wait before polling again
         time.sleep(interval)
 
-    print(f"ERROR: Workflow {workflow_name} did not complete within {timeout} seconds.")
+    print(
+        f"ERROR: Workflow {workflow_name} did not complete within {timeout} seconds."
+    )
     return False
 
 
@@ -193,9 +198,10 @@ def delete_resources(namespace, workflow_name, workflow_template_name):
         try:
             print(f"INFO: Deleting {resource} {name}...")
             subprocess.run(
-                ["kubectl", "delete", resource, name, "-n", namespace], check=True
-            )
-            print(f"INFO: {resource.capitalize()} {name} deleted successfully.")
+                ["kubectl", "delete", resource, name, "-n", namespace],
+                check=True)
+            print(
+                f"INFO: {resource.capitalize()} {name} deleted successfully.")
         except subprocess.CalledProcessError as err:
             print(f"ERROR: Failed to delete {resource} {name}: {err}")
             continue
@@ -209,16 +215,16 @@ def delete_resources(namespace, workflow_name, workflow_template_name):
             universal_newlines=True,
         ).stdout
     except subprocess.CalledProcessError as err:
-        print(f"ERROR: Failed to retrieve pod list for workflow {workflow_name}: {err}")
+        print(
+            f"ERROR: Failed to retrieve pod list for workflow {workflow_name}: {err}"
+        )
         return
     try:
         pod_names = [
             pod["metadata"]["name"]
-            for pod in json.loads(pods_json).get("items", [])
-            if any(
-                owner.get("name") == workflow_name
-                for owner in pod.get("metadata", {}).get("ownerReferences", [])
-            )
+            for pod in json.loads(pods_json).get("items", []) if any(
+                owner.get("name") == workflow_name for owner in pod.get(
+                    "metadata", {}).get("ownerReferences", []))
         ]
 
     except json.JSONDecodeError as err:
@@ -234,16 +240,15 @@ def delete_resources(namespace, workflow_name, workflow_template_name):
         try:
             print(f"INFO: Deleting pod {pod_name}...")
             subprocess.run(
-                ["kubectl", "delete", "pod", pod_name, "-n", namespace], check=True
-            )
+                ["kubectl", "delete", "pod", pod_name, "-n", namespace],
+                check=True)
             print(f"INFO: Pod {pod_name} deleted successfully.")
         except subprocess.CalledProcessError as err:
             print(f"ERROR: Failed to delete pod {pod_name}: {err}")
 
 
-def create_workflowtemplate_and_workflow(
-    workflow_template_dict: dict, workflow_dict: dict
-):
+def create_workflowtemplate_and_workflow(workflow_template_dict: dict,
+                                         workflow_dict: dict):
     """
     Function to create workflow and workflow template
     Args:
@@ -306,10 +311,8 @@ def main():
     The main entry point
     """
     if len(sys.argv) != 4:
-        print(
-            "Usage: python script.py <workflow_template_file_path> "
-            "<workflow_file_path> <new_image_version>"
-        )
+        print("Usage: python script.py <workflow_template_file_path> "
+              "<workflow_file_path> <new_image_version>")
         sys.exit(1)
 
     workflow_template_file = sys.argv[1]
@@ -334,8 +337,7 @@ def main():
 
     # Update the image version in the WorkflowTemplate
     updated_workflow_template_str = update_image_version_in_template(
-        workflow_template_str, old_image_prefix, old_version, new_version
-    )
+        workflow_template_str, old_image_prefix, old_version, new_version)
 
     # Load the updated string back into a YAML dict
     workflow_template_dict = yaml.safe_load(updated_workflow_template_str)
@@ -345,8 +347,7 @@ def main():
         workflow_dict = yaml.safe_load(stream)
 
     api_response = create_workflowtemplate_and_workflow(
-        workflow_template_dict, workflow_dict
-    )
+        workflow_template_dict, workflow_dict)
     workflow_name = api_response.get("metadata", {}).get("name")
 
     if not workflow_name:
@@ -361,7 +362,8 @@ def main():
     workflow_status = wait_for_workflow_to_succeed("argo", workflow_name)
 
     if workflow_status:
-        print("INFO: Workflow completed successfully, proceeding to next step.")
+        print(
+            "INFO: Workflow completed successfully, proceeding to next step.")
     else:
         print("ERROR: Workflow did not succeed, aborting.")
         sys.exit(1)

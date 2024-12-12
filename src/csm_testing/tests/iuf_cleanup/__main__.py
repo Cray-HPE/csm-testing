@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 This script executes deletion of logs , workflows and directories created for an iuf activity.
 """
@@ -42,6 +41,7 @@ def delete_workflows(activity_name: str):
     """
     command = f"kubectl get workflow -n argo -o \
 custom-columns=NAME:.metadata.name|grep {activity_name}"
+
     workflows = []
     try:
         result = subprocess.run(
@@ -57,7 +57,8 @@ custom-columns=NAME:.metadata.name|grep {activity_name}"
     except subprocess.CalledProcessError as err:
         print(err)
 
-    if isinstance(workflows, list) and all(isinstance(wf, str) for wf in workflows):
+    if isinstance(workflows, list) and all(
+            isinstance(wf, str) for wf in workflows):
         print(f"INFO: Workflows found for {activity_name} :{workflows}")
         for workflow in workflows:
             command_delete_workflow = f"kubectl delete workflow {workflow} -n argo"
@@ -88,6 +89,7 @@ def delete_configmaps(activity_name: str):
     """
     command = f"kubectl get configmap -n argo -o \
 custom-columns=NAME:.metadata.name|grep {activity_name}"
+
     configmaps = []
     try:
         result = subprocess.run(
@@ -103,7 +105,8 @@ custom-columns=NAME:.metadata.name|grep {activity_name}"
     except subprocess.CalledProcessError as err:
         print(err)
 
-    if isinstance(configmaps, list) and all(isinstance(cm, str) for cm in configmaps):
+    if isinstance(configmaps, list) and all(
+            isinstance(cm, str) for cm in configmaps):
         print(f"INFO: configmaps found for {activity_name} :{configmaps}")
         for configmap in configmaps:
             command_delete_configmap = f"kubectl delete configmap {configmap} -n argo"

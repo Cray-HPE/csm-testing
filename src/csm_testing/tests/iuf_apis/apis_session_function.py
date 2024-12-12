@@ -26,8 +26,7 @@ This script executes session apis testing.
 
 from urllib.error import HTTPError
 from csm_testing.tests.iuf_apis.apis_activity_functions import (
-    print_no_of_test_passed,
-)
+    print_no_of_test_passed, )
 
 
 def get_sessions(apis, activity: str, count: int):
@@ -179,7 +178,9 @@ def get_activity_session(apis, activity: str, count: int):
         msg = f"ERROR: Sessions not found for activity: {activity}"
         print_no_of_test_passed(msg, count)
 
-    print(f"INFO: Get activity/session for activity: {activity} , session:{session}")
+    print(
+        f"INFO: Get activity/session for activity: {activity} , session:{session}"
+    )
 
     try:
         session = apis.get_activity_session(activity, session)

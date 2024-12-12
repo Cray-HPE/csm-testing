@@ -46,13 +46,10 @@ def run(*args):
         log_dir = args[2]
         command = (
             f"iuf -a {activity_name} -m {MEDIA_DIR} --log-dir {log_dir} run "
-            f"-rv {MEDIA_DIR}/product_vars.yaml -r process-media"
-        )
+            f"-rv {MEDIA_DIR}/product_vars.yaml -r process-media")
     else:
-        command = (
-            f"iuf -a {activity_name} -m {MEDIA_DIR} run "
-            f"-rv {MEDIA_DIR}/product_vars.yaml -r process-media"
-        )
+        command = (f"iuf -a {activity_name} -m {MEDIA_DIR} run "
+                   f"-rv {MEDIA_DIR}/product_vars.yaml -r process-media")
     media_dir_setup(tar_dir)
     try:
         result = subprocess.run(

@@ -34,7 +34,7 @@ import sys
 from csm_testing.lib.iuf_constants import MEDIA_DIR
 
 
-def check_logs(activity : str):
+def check_logs(activity: str):
     """
     Function to check the logs for the activity and print the info.
     Args:
@@ -53,7 +53,7 @@ def check_logs(activity : str):
         sys.exit(1)
 
 
-def check_configmap(activity : str):
+def check_configmap(activity: str):
     """
     Function to check the configmap for the activity and print the info.
     Args:
@@ -80,12 +80,11 @@ def check_configmap(activity : str):
     except subprocess.CalledProcessError as err:
         print(
             f"ERROR: ConfigMap '{configmap_name}' does NOT exist in the '{namespace}' namespace.\n\
-Error: {err}"
-        )
+Error: {err}")
         sys.exit(1)
 
 
-def check_state(activity : str):
+def check_state(activity: str):
     """
     Function to check the contents of the state directory.
     Args:
@@ -109,12 +108,17 @@ def check_state(activity : str):
             sys.exit(1)
 
         if os.path.exists(f"{state_dir}/stage_hist.yaml"):
-            print(f"TEST CASE: stage_hist.yaml present for {activity} in state folder")
+            print(
+                f"TEST CASE: stage_hist.yaml present for {activity} in state folder"
+            )
         else:
-            print(f"ERROR: stage_hist.yaml not present for {activity} in state folder")
+            print(
+                f"ERROR: stage_hist.yaml not present for {activity} in state folder"
+            )
             sys.exit(1)
     else:
-        print(f"ERROR: State directory does NOT exist for activity: {activity}")
+        print(
+            f"ERROR: State directory does NOT exist for activity: {activity}")
         sys.exit(1)
 
     print("INFO:Checking session_vars")
@@ -142,7 +146,8 @@ def main():
     check_state(activity_name)
     check_logs(activity_name)
     check_configmap(activity_name)
-    print("------------------------ END OF POST-CHECKS ------------------------")
+    print(
+        "------------------------ END OF POST-CHECKS ------------------------")
     print()
 
 

@@ -30,8 +30,7 @@ from csm_testing.lib.iuf_common import (
     run_command,
 )
 from csm_testing.lib.iuf_constants import (
-    NEXUS_URL,
-)
+    NEXUS_URL, )
 
 REPO_URL = f"{NEXUS_URL}/service/rest/v1/repositories/yum/hosted"
 
@@ -50,7 +49,10 @@ def nexus_repo_setup():
             "writePolicy": "ALLOW",
         },
         "cleanup": None,
-        "yum": {"repodataDepth": 0, "deployPolicy": "STRICT"},
+        "yum": {
+            "repodataDepth": 0,
+            "deployPolicy": "STRICT"
+        },
         "format": "yum",
         "type": "hosted",
     }
@@ -146,8 +148,7 @@ def validate_images(images_name_and_ids: str, test_cases: int):
             name, final_image_id = image.split(":")
             print(
                 f"INFO: Checking cray ims images for image Name: {name.strip()} "
-                f"with image ID: {final_image_id.strip()}"
-            )
+                f"with image ID: {final_image_id.strip()}")
             check_ims_cmd = f"cray ims images describe {final_image_id.strip()}"
             ims_info, _ = run_command(check_ims_cmd)
             if not ims_info:
@@ -179,5 +180,7 @@ def validate_images(images_name_and_ids: str, test_cases: int):
         return test_cases
     except subprocess.CalledProcessError as err:
         print(f"Error: {err}")
-        print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+        print(
+            f"INFO: Total test cases executed for stage operations: {test_cases}"
+        )
         sys.exit(1)

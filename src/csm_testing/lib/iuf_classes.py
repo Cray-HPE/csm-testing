@@ -21,7 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 Defining class for API calls
 """
@@ -57,13 +56,15 @@ class Auth:
         try:
             config.load_kube_config()
             k8s_v1 = client.CoreV1Api()
-            sec = k8s_v1.read_namespaced_secret("admin-client-auth", "default").data
-            username = base64.b64decode(sec.get("client-id").strip()).decode("utf-8")
-            password = base64.b64decode(sec.get("client-secret").strip()).decode(
-                "utf-8"
-            )
+            sec = k8s_v1.read_namespaced_secret("admin-client-auth",
+                                                "default").data
+            username = base64.b64decode(
+                sec.get("client-id").strip()).decode("utf-8")
+            password = base64.b64decode(
+                sec.get("client-secret").strip()).decode("utf-8")
         except Exception as err:
-            raise AuthException("Unable to load secrets from Kubernetes") from err
+            raise AuthException(
+                "Unable to load secrets from Kubernetes") from err
 
         return username, password
 
@@ -92,7 +93,8 @@ class Auth:
 
             token = keycloak_openid.token(grant_type="client_credentials")
         except Exception as err:
-            raise AuthException("Unable to obtain token from Keycloak") from err
+            raise AuthException(
+                "Unable to obtain token from Keycloak") from err
 
         return token["access_token"]
 
@@ -135,7 +137,9 @@ class ApiInterface:
             API response
         """
         method = method.upper()
-        assert method in ["GET", "HEAD", "DELETE", "POST", "PUT", "PATCH", "OPTIONS"]
+        assert method in [
+            "GET", "HEAD", "DELETE", "POST", "PUT", "PATCH", "OPTIONS"
+        ]
 
         url = self.apiurl + self.resource + path
 
@@ -150,13 +154,16 @@ class ApiInterface:
         method_func = method.lower()
         try:
             if payload:
-                result = getattr(requests, method_func)(
-                    url, headers=headers, json=payload, verify=False, timeout=timeout
-                )
+                result = getattr(requests, method_func)(url,
+                                                        headers=headers,
+                                                        json=payload,
+                                                        verify=False,
+                                                        timeout=timeout)
             else:
-                result = getattr(requests, method_func)(
-                    url, headers=headers, verify=False, timeout=timeout
-                )
+                result = getattr(requests, method_func)(url,
+                                                        headers=headers,
+                                                        verify=False,
+                                                        timeout=timeout)
         except Exception as err:
             print(err)
             raise

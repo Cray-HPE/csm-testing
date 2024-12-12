@@ -27,8 +27,7 @@ This script calls the list apis and is being imported by __main__.py for iuf_api
 from urllib.error import HTTPError
 import requests
 from csm_testing.tests.iuf_apis.apis_activity_functions import (
-    print_no_of_test_passed,
-)
+    print_no_of_test_passed, )
 
 
 def no_auth_list_stages(count: int):
@@ -42,8 +41,7 @@ def no_auth_list_stages(count: int):
     print("TEST CASE: w/o security API call: Try Api Call without token")
     try:
         api_response = requests.get(
-            "https://api-gw-service-nmn.local/apis/iuf/v1/stages"
-        )
+            "https://api-gw-service-nmn.local/apis/iuf/v1/stages")
         if api_response is not None:
             msg = "ERROR: Api Working without token"
             print_no_of_test_passed(msg, count)

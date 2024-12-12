@@ -112,7 +112,9 @@ def main():
     print("*" * 50)
 
     print("~" * 50)
-    print(f"INFO: Total test cases passed: {count} test cases skipped: {15 - count}")
+    print(
+        f"INFO: Total test cases passed: {count} test cases skipped: {15 - count}"
+    )
     print("~" * 50)
 
 

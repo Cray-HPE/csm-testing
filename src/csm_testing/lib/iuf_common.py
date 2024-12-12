@@ -61,7 +61,7 @@ def run_command(command):
 
 
 def media_dir_setup(tar_dir):
-    """Function to setup the media directory 
+    """Function to setup the media directory
 
     Args:
         tar_dir (str): path of the tar file for media directory
@@ -84,9 +84,8 @@ def media_dir_setup(tar_dir):
         sys.exit(1)
 
 
-def get_nexus_credentials(
-    namespace="nexus", secret_name="nexus-admin-credential"
-):
+def get_nexus_credentials(namespace="nexus",
+                          secret_name="nexus-admin-credential"):
     """Retrieve Nexus credentials from a Kubernetes secret.
     Args:
         namespace(str): Namespace. Defaults to 'nexus'
@@ -123,7 +122,7 @@ def get_ca_certificates(namespace, cert_configmap_name):
     """
     config.load_kube_config()
 
-    v1 = client.CoreV1Api() 
+    v1 = client.CoreV1Api()
     configmap = v1.read_namespaced_config_map(cert_configmap_name, namespace)
 
     ca_cert_path = "/tmp/ca.crt"
@@ -135,17 +134,13 @@ def get_ca_certificates(namespace, cert_configmap_name):
 
 def vcs_auth():
     """
-    Function for VCS authentication 
+    Function for VCS authentication
     """
-    user_cmd = (
-        "kubectl get secret -n services vcs-user-credentials "
-        "--template={{.data.vcs_username}} | base64 --decode"
-    )
+    user_cmd = ("kubectl get secret -n services vcs-user-credentials "
+                "--template={{.data.vcs_username}} | base64 --decode")
 
-    pass_cmd = (
-        "kubectl get secret -n services vcs-user-credentials "
-        "--template={{.data.vcs_password}} | base64 --decode"
-    )
+    pass_cmd = ("kubectl get secret -n services vcs-user-credentials "
+                "--template={{.data.vcs_password}} | base64 --decode")
     vcs_user, _ = run_command(user_cmd)
     vcs_password, _ = run_command(pass_cmd)
 
@@ -173,16 +168,13 @@ def load_yaml(file_path):
             return yaml.safe_load(file)
     except yaml.YAMLError as err:
         raise ManifestValidationError(
-            f"ERROR: Error loading YAML file {file_path}: {err}"
-        ) from err
+            f"ERROR: Error loading YAML file {file_path}: {err}") from err
     except FileNotFoundError as err:
         raise ManifestValidationError(
-            f"ERROR: File not found: {file_path}: {err}"
-        ) from err
+            f"ERROR: File not found: {file_path}: {err}") from err
     except Exception as err:
         raise ManifestValidationError(
-            f"ERROR: Error reading file {file_path}: {err}"
-        ) from err
+            f"ERROR: Error reading file {file_path}: {err}") from err
 
 
 def validate_instance(instance, schema):
@@ -190,6 +182,7 @@ def validate_instance(instance, schema):
     try:
         validate(instance=instance, schema=schema)
     except ValidationError as err:
-        raise ManifestValidationError(f"ERROR: Validation failed: {err}") from err
+        raise ManifestValidationError(
+            f"ERROR: Validation failed: {err}") from err
     except SchemaError as err:
         raise ManifestValidationError(f"ERROR: Schema error: {err}") from err

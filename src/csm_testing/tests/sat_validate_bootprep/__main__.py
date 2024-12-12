@@ -20,7 +20,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 This script validates bootprep file.
 """
@@ -60,7 +59,8 @@ def main():
     try:
         if os.path.exists(bootprep_file):
             bootprep_instance = load_yaml(bootprep_file)
-            print(f"INFO: Bootprep file '{bootprep_file}' loaded successfully.")
+            print(
+                f"INFO: Bootprep file '{bootprep_file}' loaded successfully.")
         else:
             print(f"{bootprep_file} : FileNotFoundError")
             sys.exit(1)

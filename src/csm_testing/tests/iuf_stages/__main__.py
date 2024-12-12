@@ -67,7 +67,9 @@ def process_media(*args):
             test_cases += 1
         else:
             print(f"ERROR: Folder does not exist: {folder_to_check}")
-            print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+            print(
+                f"INFO: Total test cases executed for stage operations: {test_cases}"
+            )
             sys.exit(1)
 
         if os.path.isfile(file_to_check):
@@ -75,7 +77,9 @@ def process_media(*args):
             test_cases += 1
         else:
             print(f"ERROR: File does not exist: {file_to_check}")
-            print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+            print(
+                f"INFO: Total test cases executed for stage operations: {test_cases}"
+            )
             sys.exit(1)
 
         check_configmap_command = f"kubectl get configmap {activity_name} -n argo"
@@ -86,11 +90,15 @@ def process_media(*args):
             test_cases += 1
             return test_cases
         print("ERROR: ConfigMap not found.")
-        print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+        print(
+            f"INFO: Total test cases executed for stage operations: {test_cases}"
+        )
         sys.exit(1)
     else:
         print("ERROR: Unable to run process-media.")
-        print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+        print(
+            f"INFO: Total test cases executed for stage operations: {test_cases}"
+        )
         sys.exit(1)
 
 
@@ -106,8 +114,7 @@ def pre_install_check(activity_name: str, test_cases: int):
     """
     command = (
         f"iuf -a {activity_name} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml "
-        f"-r pre-install-check"
-    )
+        f"-r pre-install-check")
     try:
         result = subprocess.run(
             command,
@@ -125,7 +132,9 @@ def pre_install_check(activity_name: str, test_cases: int):
         return test_cases
     except subprocess.CalledProcessError as err:
         print(f"ERROR: {err}")
-        print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+        print(
+            f"INFO: Total test cases executed for stage operations: {test_cases}"
+        )
         sys.exit(1)
 
 
@@ -142,8 +151,7 @@ def deliver_product(activity_name: str, test_cases: int):
     nexus_repo_setup()
     command = (
         f"iuf -a {activity_name} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml "
-        f"-r deliver-product"
-    )
+        f"-r deliver-product")
     try:
         result = subprocess.run(
             command,
@@ -154,18 +162,21 @@ def deliver_product(activity_name: str, test_cases: int):
             universal_newlines=True,
         )
         print("Command output:", result.stdout)
-        cray_product_catalog = ProductCatalog(name=CONFIGMAP_NAME, namespace=NAMESPACE)
-        dummy_product = cray_product_catalog.get_product(PRODUCT_NAME, PRODUCT_VERSION)
+        cray_product_catalog = ProductCatalog(name=CONFIGMAP_NAME,
+                                              namespace=NAMESPACE)
+        dummy_product = cray_product_catalog.get_product(
+            PRODUCT_NAME, PRODUCT_VERSION)
 
         if not check_product_data(dummy_product):
             print("ERROR: Exiting due to missing product data.")
-            print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+            print(
+                f"INFO: Total test cases executed for stage operations: {test_cases}"
+            )
             sys.exit(1)
         test_cases += 5
         print("INFO: Checking cm...")
         check_configmap_command = (
-            f"kubectl get configmap {CONFIGMAP_NAME} -n {NAMESPACE} -o json"
-        )
+            f"kubectl get configmap {CONFIGMAP_NAME} -n {NAMESPACE} -o json")
         configmap_output, _ = run_command(check_configmap_command)
         if configmap_output:
             print(
@@ -188,11 +199,15 @@ def deliver_product(activity_name: str, test_cases: int):
             sys.exit(1)
         else:
             print(f"ERROR: ConfigMap {CONFIGMAP_NAME} not found.")
-            print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+            print(
+                f"INFO: Total test cases executed for stage operations: {test_cases}"
+            )
             sys.exit(1)
     except subprocess.CalledProcessError as err:
         print(f"Error: {err}")
-        print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+        print(
+            f"INFO: Total test cases executed for stage operations: {test_cases}"
+        )
         sys.exit(1)
 
 
@@ -207,11 +222,14 @@ def update_vcs_config(activity_name: str, test_cases: int):
         int: number of executed test cases
     """
     try:
-        cray_product_catalog = ProductCatalog(name=CONFIGMAP_NAME, namespace=NAMESPACE)
+        cray_product_catalog = ProductCatalog(name=CONFIGMAP_NAME,
+                                              namespace=NAMESPACE)
         dummy_product = cray_product_catalog.get_product("dummy", "1.0.0")
         if not dummy_product.configuration:
             print("Error: No configurations present!")
-            print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+            print(
+                f"INFO: Total test cases executed for stage operations: {test_cases}"
+            )
             sys.exit(1)
         else:
             test_cases += 1
@@ -219,8 +237,7 @@ def update_vcs_config(activity_name: str, test_cases: int):
 
         command = (
             f"iuf -a {activity_name} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml "
-            f"-bm {MEDIA_DIR}/management-bootprep.yaml -r update-vcs-config"
-        )
+            f"-bm {MEDIA_DIR}/management-bootprep.yaml -r update-vcs-config")
         run_command(command)
 
         dummy_repo_url, auth, ca_cert_path = vcs_auth()
@@ -236,11 +253,17 @@ def update_vcs_config(activity_name: str, test_cases: int):
             return test_cases
         if resp.status_code == 404:
             print(f"ERROR: Repository '{dummy_repo_url}' not found.")
-            print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+            print(
+                f"INFO: Total test cases executed for stage operations: {test_cases}"
+            )
             sys.exit(1)
         else:
-            print(f"ERROR: Failed to fetch repository: {resp.status_code}, {resp.text}")
-            print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+            print(
+                f"ERROR: Failed to fetch repository: {resp.status_code}, {resp.text}"
+            )
+            print(
+                f"INFO: Total test cases executed for stage operations: {test_cases}"
+            )
             sys.exit(1)
 
         repo_info = resp.json()
@@ -249,7 +272,9 @@ def update_vcs_config(activity_name: str, test_cases: int):
             print(f"INFO: Default Branch: {repo_info['default_branch']}")
     except subprocess.CalledProcessError as err:
         print(f"Error: {err}")
-        print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+        print(
+            f"INFO: Total test cases executed for stage operations: {test_cases}"
+        )
         sys.exit(1)
 
 
@@ -266,25 +291,24 @@ def update_cfs_config(activity_name: str, test_cases: int):
     try:
         command = (
             f"iuf -a {activity_name} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml "
-            f"-bm {MEDIA_DIR}/management-bootprep.yaml -r update-cfs-config"
-        )
+            f"-bm {MEDIA_DIR}/management-bootprep.yaml -r update-cfs-config")
         run_command(command)
 
         kubectl_command = (
             f"kubectl get configmaps -n argo {activity_name} -o jsonpath="
             "'{.data.iuf_activity}' | jq '.operation_outputs.stage_params"
             '["update-cfs-config"]["update-management-cfs-config"]'
-            '["sat-bootprep-run"].script_stdout' + "' | xargs -0 echo -e"
-        )
+            '["sat-bootprep-run"].script_stdout' + "' | xargs -0 echo -e")
 
         kubectl_output, _ = run_command(kubectl_command)
 
         if not kubectl_output:
             print(
                 f"ERROR: The output for cfs configurations is null or empty in the "
-                f"{activity_name} configmap."
+                f"{activity_name} configmap.")
+            print(
+                f"INFO: Total test cases executed for stage operations: {test_cases}"
             )
-            print(f"INFO: Total test cases executed for stage operations: {test_cases}")
             sys.exit(1)
         else:
             print("TEST CASE: Configmap updated with cfs configurations data")
@@ -294,14 +318,18 @@ def update_cfs_config(activity_name: str, test_cases: int):
         cfs_output, _ = run_command(cfs_command)
         if not cfs_output:
             print("ERROR: No configuration found in cfs")
-            print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+            print(
+                f"INFO: Total test cases executed for stage operations: {test_cases}"
+            )
             sys.exit(1)
         print(f"TEST CASE: CFS configuration found {cfs_output}")
         test_cases += 1
         return test_cases
     except subprocess.CalledProcessError as err:
         print(f"Error: {err}")
-        print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+        print(
+            f"INFO: Total test cases executed for stage operations: {test_cases}"
+        )
         sys.exit(1)
 
 
@@ -318,21 +346,23 @@ def prepare_images(activity_name: str, test_cases: int):
     try:
         command = (
             f"iuf -a {activity_name} -m {MEDIA_DIR} run -rv {MEDIA_DIR}/product_vars.yaml "
-            f"-bm {MEDIA_DIR}/management-bootprep.yaml -r prepare-images"
-        )
+            f"-bm {MEDIA_DIR}/management-bootprep.yaml -r prepare-images")
         run_command(command)
 
         kubectl_command = (
             f"kubectl get configmaps -n argo {activity_name} -o jsonpath="
             "'{.data.iuf_activity}' | jq '.operation_outputs.stage_params"
             '["prepare-images"]["prepare-management-images"]'
-            '["sat-bootprep-run"].script_stdout' + "' | xargs -0 echo -e"
-        )
+            '["sat-bootprep-run"].script_stdout' + "' | xargs -0 echo -e")
         kubectl_output, _ = run_command(kubectl_command)
 
         if not kubectl_output:
-            print("Error: The output for configmap entry of images is null or empty.")
-            print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+            print(
+                "Error: The output for configmap entry of images is null or empty."
+            )
+            print(
+                f"INFO: Total test cases executed for stage operations: {test_cases}"
+            )
             sys.exit(1)
         else:
             print("INFO: Found the cm entry...")
@@ -348,14 +378,18 @@ def prepare_images(activity_name: str, test_cases: int):
 
         if not images_name_and_ids:
             print("ERROR: No images names and id found")
-            print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+            print(
+                f"INFO: Total test cases executed for stage operations: {test_cases}"
+            )
             sys.exit(1)
 
         test_cases = validate_images(images_name_and_ids, test_cases)
         return test_cases
     except subprocess.CalledProcessError as err:
         print(f"Error: {err}")
-        print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+        print(
+            f"INFO: Total test cases executed for stage operations: {test_cases}"
+        )
         sys.exit(1)
 
 
@@ -404,7 +438,9 @@ def main():
             "----------------------- PREPARE-IMAGES tests completed -----------------------"
         )
 
-        print(f"INFO: Total test cases executed for stage operations: {test_cases}")
+        print(
+            f"INFO: Total test cases executed for stage operations: {test_cases}"
+        )
 
 
 if __name__ == "__main__":

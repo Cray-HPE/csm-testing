@@ -46,12 +46,18 @@ def compare_versions(version1, version2):
     ver_2 = version.parse(version2)
 
     if ver_1 == ver_2:
-        print(f"INFO: Version {version1} is equal to required version {version2}")
+        print(
+            f"INFO: Version {version1} is equal to required version {version2}"
+        )
     elif ver_1 < ver_2:
-        print(f"ERROR: Version {version1} is less than required version {version2}")
+        print(
+            f"ERROR: Version {version1} is less than required version {version2}"
+        )
         sys.exit(1)
     else:
-        print(f"INFO: Version {version1} is greater than required version {version2}")
+        print(
+            f"INFO: Version {version1} is greater than required version {version2}"
+        )
 
 
 def check_proxy():
@@ -73,7 +79,10 @@ def check_proxy():
         "no_proxy": no_proxy,
     }
 
-    set_proxies = {key: value for key, value in proxy_variables.items() if value}
+    set_proxies = {
+        key: value
+        for key, value in proxy_variables.items() if value
+    }
 
     if set_proxies:
         for key, value in set_proxies.items():
@@ -97,7 +106,9 @@ def check_k8s_version(minimum_version):
         "kubectl version --short | grep -i 'server version' | awk '{print $3}'"
     )
     if returncode != 0:
-        print(f"ERROR: Failed to get Kubernetes version. Return code: {returncode}")
+        print(
+            f"ERROR: Failed to get Kubernetes version. Return code: {returncode}"
+        )
         sys.exit(1)
 
     print(f"INFO: Kubernetes version: {k8s_version}")
@@ -113,10 +124,10 @@ def check_iuf_cli_version(minimum_version):
         None
     """
     iuf_cli_version, returncode = run_command(
-        "rpm -qa | grep iuf-cli | awk -F- '{print $3}'"
-    )
+        "rpm -qa | grep iuf-cli | awk -F- '{print $3}'")
     if returncode != 0:
-        print("ERROR: Failed to get iuf-cli version. Return code: {returncode}")
+        print(
+            "ERROR: Failed to get iuf-cli version. Return code: {returncode}")
         sys.exit(1)
 
     if not iuf_cli_version:
@@ -138,11 +149,12 @@ def check_nls_image(minimum_version):
     """
     cray_nls_version, returncode = run_command(
         "kubectl get deployment cray-nls -n argo \
--o=jsonpath='{.spec.template.spec.containers[*].image}'"
-    )
+-o=jsonpath='{.spec.template.spec.containers[*].image}'")
     cray_nls_version = cray_nls_version.split(":")[1]
     if returncode != 0:
-        print(f"ERROR: Failed to get cray-nls version. Return code: {returncode}")
+        print(
+            f"ERROR: Failed to get cray-nls version. Return code: {returncode}"
+        )
         sys.exit(1)
 
     print(f"INFO: cray-nls version: {cray_nls_version}")
@@ -183,13 +195,13 @@ def check_nls_workflow_server():
     """
     nls_workflow_server, returncode = run_command(
         "kubectl get deployment cray-nls-argo-workflows-server \
--n argo -o=jsonpath='{.status.availableReplicas}'"
-    )
+-n argo -o=jsonpath='{.status.availableReplicas}'")
 
     if returncode == 0 and int(nls_workflow_server) == 3:
         print("INFO: All cray-nls-argo-workflows-server pods are running")
     elif returncode == 0:
-        print("ERROR: Some cray-nls-argo-workflows-server pods are not running")
+        print(
+            "ERROR: Some cray-nls-argo-workflows-server pods are not running")
         print(nls_workflow_server)
         sys.exit(1)
     else:
@@ -208,11 +220,12 @@ def check_nls_workflow_controller():
     """
     nls_controller_pods, returncode = run_command(
         "kubectl get deployment cray-nls-argo-workflows-workflow-controller \
--n argo -o=jsonpath='{.status.availableReplicas}'"
-    )
+-n argo -o=jsonpath='{.status.availableReplicas}'")
 
     if returncode == 0 and int(nls_controller_pods) == 2:
-        print("INFO: All cray-nls-argo-workflows-workflow-controller pods are running")
+        print(
+            "INFO: All cray-nls-argo-workflows-workflow-controller pods are running"
+        )
     elif returncode == 0:
         print(
             "ERROR: Some cray-nls-argo-workflows-workflow-controller pods are not running"
@@ -235,8 +248,7 @@ def check_nls_postgres():
     """
     nls_postgres, returncode = run_command(
         "kubectl get statefulset cray-nls-postgres \
--n argo -o=jsonpath='{.status.availableReplicas}'"
-    )
+-n argo -o=jsonpath='{.status.availableReplicas}'")
 
     if returncode == 0 and int(nls_postgres) == 3:
         print("INFO: All cray-nls pods are running")
@@ -262,7 +274,9 @@ def check_cray_iuf_chart(minimum_version):
         "helm get values cray-iuf -n argo  -o json | jq -r '.global.chart.version'"
     )
     if returncode != 0:
-        print("ERROR: Failed to get cray iuf chart version. Return code: {returncode}")
+        print(
+            "ERROR: Failed to get cray iuf chart version. Return code: {returncode}"
+        )
         sys.exit(1)
 
     if not cray_iuf_chart_version:
@@ -286,7 +300,9 @@ def check_cray_nls_chart(minimum_version):
         "helm get values cray-nls -n argo  -o json | jq -r '.global.chart.version'"
     )
     if returncode != 0:
-        print("ERROR: Failed to get cray nls chart version. Return code: {returncode}")
+        print(
+            "ERROR: Failed to get cray nls chart version. Return code: {returncode}"
+        )
         sys.exit(1)
 
     if not cray_nls_chart_version:
@@ -369,7 +385,9 @@ def check_sat():
     if returncode == 0:
         print(f"INFO: sat is installed. {sat}")
     else:
-        print("ERROR: Unable to run sat.Please verify if sat is installed and working")
+        print(
+            "ERROR: Unable to run sat.Please verify if sat is installed and working"
+        )
         sys.exit(1)
 
 
@@ -385,13 +403,16 @@ def check_docs_and_libcsm():
     if returncode == 0:
         print(f"INFO: docs-csm rpm is installed. Version: {docs_csm}")
     else:
-        print("ERROR: Unable to find docs. Please verify if docs is installed.")
+        print(
+            "ERROR: Unable to find docs. Please verify if docs is installed.")
         sys.exit(1)
     lib_csm, returncode = run_command("rpm -qa | grep docs-csm")
     if returncode == 0:
         print(f"INFO: lib-csm is installed. Version: {lib_csm}")
     else:
-        print("ERROR: Unable to find libcsm. Please verify if libcsm is installed.")
+        print(
+            "ERROR: Unable to find libcsm. Please verify if libcsm is installed."
+        )
         sys.exit(1)
 
 
@@ -404,10 +425,11 @@ def check_cpc():
         None
     """
     _, returncode = run_command(
-        "kubectl get cm -n services | grep cray-product-catalog"
-    )
+        "kubectl get cm -n services | grep cray-product-catalog")
     if returncode == 0:
-        print("INFO: Cray-Product-Catalog configmap exists in services namespace")
+        print(
+            "INFO: Cray-Product-Catalog configmap exists in services namespace"
+        )
     else:
         print("ERROR: Unable to find Cray-Product-Catalog configmap.")
         sys.exit(1)
@@ -430,7 +452,7 @@ def check_available_space():
         print(f"INFO: Available space: {free_gb}G")
 
 
-def check_url_status(cluster_name : str):
+def check_url_status(cluster_name: str):
     """
     Function to check argo,vcs,nexus reachability and print the info.
     Args:
@@ -471,7 +493,8 @@ def check_ssh():
     ssh_output, returncode = run_command(ssh_command)
 
     if returncode == 0:
-        print("INFO: SSH to ncn-m002 successful. Now going back to ncn-m001...")
+        print(
+            "INFO: SSH to ncn-m002 successful. Now going back to ncn-m001...")
         ssh_command_2 = "ssh -o BatchMode=yes -q ncn-m001 exit"
         ssh_output_2, r_code = run_command(ssh_command_2)
         if r_code == 0:
@@ -492,12 +515,10 @@ def main():
     """
     print("INFO: Running IUF pre-checks")
     if len(sys.argv) != 7:
-        print(
-            "Usage: script.py \
+        print("Usage: script.py \
 <K8S_MINIMUM_VERSION> <IUF_CLI_MINIMUM_VERSION> <CLUSTER_NAME> \
 <CRAY_NLS_IMAGE_MINIMUM_VERSION> <IUF_CHART_MINIMUM_VERSION> \
-<CRAY_NLS_CHART_MINIMUM_VERSION>"
-        )
+<CRAY_NLS_CHART_MINIMUM_VERSION>")
         sys.exit(1)
 
     k8s_minimum_version = sys.argv[1]

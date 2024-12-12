@@ -20,7 +20,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 """
 This script validates IUF manifest.
 """
@@ -36,6 +35,7 @@ SCHEMA_FILE = "/opt/cray/tests/install/ncn/scripts/iuf_schemas/iuf-manifest-sche
 
 class ProductManifestValidationError(Exception):
     """Custom exception for product manifest validation errors."""
+
 
 def main():
     """
@@ -76,10 +76,8 @@ def main():
     # Validate the product manifest file against the schema
     try:
         validate_instance(manifest_instance, schema)
-        print(
-            f"INFO: SUCCESS: IUF product manifest file \
-'{manifest_file}' is valid against the schema."
-        )
+        print(f"INFO: SUCCESS: IUF product manifest file \
+'{manifest_file}' is valid against the schema.")
         print("INFO: SUCCESS: Passed")
     except ProductManifestValidationError as err:
         print(f"{err}")

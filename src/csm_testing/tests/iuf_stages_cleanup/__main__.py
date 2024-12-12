@@ -85,8 +85,7 @@ def cleanup_deliver_product():
 
     remove_dummy_entry = (
         "kubectl patch configmap cray-product-catalog -n services --type merge -p "
-        '\'{"data":{"dummy":null}}\''
-    )
+        '\'{"data":{"dummy":null}}\'')
 
     print("INFO: Removing dummy entry from cray-product-catalog ConfigMap...")
     run_command(remove_dummy_entry)
@@ -102,7 +101,9 @@ def cleanup_deliver_product():
         print(f"INFO: Removing deletion file: {DELETION_FILE_PATH}")
         os.remove(DELETION_FILE_PATH)
     else:
-        print(f"INFO: Deletion file {DELETION_FILE_PATH} not found, skipping deletion.")
+        print(
+            f"INFO: Deletion file {DELETION_FILE_PATH} not found, skipping deletion."
+        )
 
     print("INFO: Cleanup complete for DELIVER-PRODUCT stage!")
 
@@ -125,14 +126,18 @@ def cleanup_vcs_repo():
     elif resp.status_code == 404:
         print(f"WARNING: Repository '{dummy_repo_url}' not found.")
     else:
-        print(f"ERROR: Failed to delete repository: {resp.status_code}, {resp.text}")
+        print(
+            f"ERROR: Failed to delete repository: {resp.status_code}, {resp.text}"
+        )
         sys.exit(1)
 
     if os.path.exists(ca_cert_path):
         print(f"INFO: Removing certificate file: {ca_cert_path}")
         os.remove(ca_cert_path)
     else:
-        print(f"INFO: Certificate file {ca_cert_path} not found, skipping deletion.")
+        print(
+            f"INFO: Certificate file {ca_cert_path} not found, skipping deletion."
+        )
     print("INFO: Cleanup complete for UPDATE-VCS-CONFIG stage!")
 
 
@@ -143,8 +148,7 @@ def cleanup_cfs_configurations():
     Returns: None
     """
     cfs_delete_command = (
-        "cray cfs configurations delete config-minimal-management-dummy-1.0.0"
-    )
+        "cray cfs configurations delete config-minimal-management-dummy-1.0.0")
     run_command(cfs_delete_command)
     print("INFO: Cleanup complete for UPDATE-CFS-CONFIG stage!")
 
@@ -172,7 +176,9 @@ def main():
     cleanup_vcs_repo()
     cleanup_cfs_configurations()
     cleanup_prepared_images()
-    print("--------------- CLEANUP FOR STAGE OPERATIONS COMPLETED --------------")
+    print(
+        "--------------- CLEANUP FOR STAGE OPERATIONS COMPLETED --------------"
+    )
 
 
 if __name__ == "__main__":

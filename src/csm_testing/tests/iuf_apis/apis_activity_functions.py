@@ -39,7 +39,9 @@ def print_no_of_test_passed(ex, count: int):
     """
     print(f"ERROR: {ex}")
     print("~" * 50)
-    print(f"INFO: TOTAL test cases passed: {count} test cases skipped: {15 - count}")
+    print(
+        f"INFO: TOTAL test cases passed: {count} test cases skipped: {15 - count}"
+    )
     print("~" * 50)
     sys.exit(1)
 
