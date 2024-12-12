@@ -162,7 +162,6 @@ def vcs_auth():
     return dummy_repo_url, auth, ca_cert_path
 
 
-# Custom exception for IUF Product Manifest validation errors
 class ManifestValidationError(Exception):
     """Custom exception for validation errors."""
 

@@ -24,11 +24,9 @@
 
 {{ $pre_checks := .Vars.iuf_pre_checks }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/iuf_run_setup" }}
 {{ $activity := .Vars.iuf_activity }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks" }}
-{{ $iuf_run := $scripts | printf "%s/python/iuf_run" }}
 {{ $iuf_abort := $scripts | printf "%s/check_iuf_abort.sh" }}
 {{ $iuf_cleanup := $scripts | printf "%s/python/iuf_cleanup" }}
 command:

@@ -34,7 +34,6 @@ from packaging import version
 from csm_testing.lib.iuf_common import run_command
 
 
-# compare_versions is a helper functions being used by other functions
 def compare_versions(version1, version2):
     """
     Function to compare given two versions and print the result info.
@@ -460,7 +459,6 @@ def check_url_status(cluster_name : str):
             sys.exit(1)
 
 
-# function to check ssh connectivity
 def check_ssh():
     """
     Function to check ssh connectivity and print the info.

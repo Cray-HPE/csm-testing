@@ -34,7 +34,6 @@ from csm_testing.lib.iuf_common import load_yaml, validate_instance
 SCHEMA_FILE = "/opt/cray/tests/install/ncn/scripts/iuf_schemas/iuf-manifest-schema.yaml"
 
 
-# Custom exception for IUF Product Manifest validation errors
 class ProductManifestValidationError(Exception):
     """Custom exception for product manifest validation errors."""
 

@@ -24,10 +24,8 @@
 
 {{ $pre_checks := .Vars.iuf_pre_checks }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/iuf_run_setup" }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks" }}
-{{ $iuf_run := $scripts | printf "%s/python/iuf_run" }}
 {{ $iuf_abort := $scripts | printf "%s/check_iuf_abort.sh" }}
 {{ $iuf_cleanup := $scripts | printf "%s/python/iuf_cleanup" }}
 command:
@@ -53,7 +51,7 @@ command:
           # Cleanup the workflows,log and media dir
           "{{$iuf_cleanup}}"
 
-          # Exit with code 1 if the iuf_run command failed with exit code 1
+          # Exit with code 1 if the iuf command failed with exit code 1
           if [ $run_exit_code -eq 1 ]; then
             exit 1
           fi

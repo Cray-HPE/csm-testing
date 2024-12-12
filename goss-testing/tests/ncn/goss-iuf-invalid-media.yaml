@@ -50,7 +50,7 @@ command:
         # Run cleanup step
         "{{$iuf_cleanup}}" "{{ index $activity 2 }}"
 
-        # Exit with code 1 if the iuf_run command failed
+        # Exit with code 1 if the iuf command failed
         if [ $run_exit_code -eq 1 ]; then
           exit 1
         fi

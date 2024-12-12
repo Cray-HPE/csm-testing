@@ -164,7 +164,6 @@ pit_node: false
 # false by default--overriden when vshasta is deployed
 vshasta: false
 
-
 iuf_pre_checks:
   - v1.22.13
   - "iuf-cli-1.6.11-1.x86_64"

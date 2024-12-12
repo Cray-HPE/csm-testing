@@ -24,7 +24,6 @@
 
 {{ $pre_checks := .Vars.iuf_pre_checks }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks" }}
 {{ $validate_iuf_manifest := .Env.GOSS_BASE | printf "%s/scripts/python/validate_iuf_manifest.py" }}
 {{ $manifest := .Vars.iuf_manifest }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
