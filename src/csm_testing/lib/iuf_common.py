@@ -38,7 +38,14 @@ from csm_testing.lib.iuf_constants import MEDIA_DIR, NAMESPACE
 FOLDER_NAME = "dummy-1.0.0"
 
 
-def run_command(command):  # pylint: disable=missing-function-docstring
+def run_command(command):
+    """
+    Function to run a given command
+    Args:
+        command(str): Command to be executed
+    Returns:
+        None
+    """
     try:
         result = subprocess.run(
             command,
@@ -53,7 +60,12 @@ def run_command(command):  # pylint: disable=missing-function-docstring
         sys.exit(1)
 
 
-def media_dir_setup(tar_dir):  # pylint: disable=missing-function-docstring
+def media_dir_setup(tar_dir):
+    """Function to setup the media directory 
+
+    Args:
+        tar_dir (str): path of the tar file for media directory
+    """
     try:
         os.makedirs(MEDIA_DIR, exist_ok=True)
         print(f"INFO: Directory {MEDIA_DIR} created successfully.")
@@ -74,8 +86,14 @@ def media_dir_setup(tar_dir):  # pylint: disable=missing-function-docstring
 
 def get_nexus_credentials(
     namespace="nexus", secret_name="nexus-admin-credential"
-):  # pylint: disable=missing-function-docstring
-    """Retrieve Nexus credentials from a Kubernetes secret."""
+):
+    """Retrieve Nexus credentials from a Kubernetes secret.
+    Args:
+        namespace(str): Namespace. Defaults to 'nexus'
+        secret_name(str): Secret Name. Defaults to 'nexus-admin-credential'
+    Returns:
+        None
+    """
     # Check if the secret exists
     run_command(f"kubectl get secret -n {namespace} {secret_name}")
 
@@ -95,10 +113,17 @@ def get_nexus_credentials(
 
 
 def get_ca_certificates(namespace, cert_configmap_name):
-    """Retrieve CA certificates from the specified ConfigMap"""
+    """
+    Retrieve CA certificates from the specified ConfigMap
+    Args:
+        namespace(str): Namespace
+        cert_configmap_name(str): certificate configmap name
+    Returns:
+        None
+    """
     config.load_kube_config()
 
-    v1 = client.CoreV1Api()  # pylint: disable=invalid-name
+    v1 = client.CoreV1Api() 
     configmap = v1.read_namespaced_config_map(cert_configmap_name, namespace)
 
     ca_cert_path = "/tmp/ca.crt"
@@ -108,7 +133,10 @@ def get_ca_certificates(namespace, cert_configmap_name):
     return ca_cert_path
 
 
-def vcs_auth():  # pylint: disable=missing-function-docstring
+def vcs_auth():
+    """
+    Function for VCS authentication 
+    """
     user_cmd = (
         "kubectl get secret -n services vcs-user-credentials "
         "--template={{.data.vcs_username}} | base64 --decode"
