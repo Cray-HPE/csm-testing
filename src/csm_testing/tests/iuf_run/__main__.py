@@ -33,10 +33,12 @@ from csm_testing.lib.iuf_common import media_dir_setup
 
 
 def run(*args):
-    """Runs process media using dummy product
+    """
+    Runs process media using dummy product
 
-    Args: tar_dir is from where media_dir content will be copied,
-          activity_name for the IUF run
+    Args:   tar_dir is from where media_dir content will be copied,
+            for the IUF run
+    Returns:    None
     """
     tar_dir = args[0]
     activity_name = args[1]
@@ -69,7 +71,11 @@ def run(*args):
 
 
 def main():
-    """entry point"""
+    """
+    The main entry point of the program
+    Args: None
+    returns: None
+    """
     if len(sys.argv) < 3 or len(sys.argv) > 4:
         print("Usage: script.py <tar_dir> <activity_name>")
         sys.exit(1)

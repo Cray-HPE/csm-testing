@@ -328,7 +328,7 @@ def check_cfs():
             sys.exit(1)
     except subprocess.CalledProcessError:
         print("INFO: All cray-cfs-api* pods are running")
-    except Exception:    # pylint: disable=W0703
+    except Exception:
         sys.exit(1)
 
     command = (
@@ -354,7 +354,7 @@ def check_cfs():
             sys.exit(1)
     except subprocess.CalledProcessError:
         print("INFO: All cfs-ara-postgres* pods are running")
-    except Exception:    # pylint: disable=W0703
+    except Exception:
         sys.exit(1)
 
 
@@ -431,7 +431,7 @@ def check_available_space():
         print(f"INFO: Available space: {free_gb}G")
 
 
-def check_url_status(cluster_name):
+def check_url_status(cluster_name : str):
     """
     Function to check argo,vcs,nexus reachability and print the info.
     Args:

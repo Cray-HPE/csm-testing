@@ -27,13 +27,18 @@ This script calls the list apis and is being imported by __main__.py for iuf_api
 from urllib.error import HTTPError
 import requests
 from csm_testing.tests.iuf_apis.apis_activity_functions import (
-    COUNT,
     print_no_of_test_passed,
 )
 
 
-def no_auth_list_stages():  # pylint: disable=missing-function-docstring
-    global COUNT  # pylint: disable=global-statement
+def no_auth_list_stages(count: int):
+    """
+    Function to try and access apis without a token
+    Args:
+        None
+    Returns:
+        None
+    """
     print("TEST CASE: w/o security API call: Try Api Call without token")
     try:
         api_response = requests.get(
@@ -41,42 +46,52 @@ def no_auth_list_stages():  # pylint: disable=missing-function-docstring
         )
         if api_response is not None:
             msg = "ERROR: Api Working without token"
-            print_no_of_test_passed(msg)
+            print_no_of_test_passed(msg, count)
     except HTTPError as err:
         print(f"INFO: {err}")
-        COUNT += 1
+        count += 1
+        return count
 
 
-def list_stages(apis):  # pylint: disable=missing-function-docstring
-    global COUNT  # pylint: disable=global-statement
+def list_stages(apis, count: int):
+    """
+    Function to list iuf stages
+    Args:
+        apis: ApiInterface Object
+    """
     print("TEST CASE: List Stages")
     try:
         stage_result = apis.get_stages()
         print(stage_result)
         stages = stage_result.json()
     except HTTPError as ex:
-        print_no_of_test_passed(ex)
+        print_no_of_test_passed(ex, count)
 
     if stages is not None:
         stage_list = [stage["name"] for stage in stages["stages"]]
         print("\n".join(stage_list))
-        COUNT += 1
-    else:
-        msg = ""
-        print_no_of_test_passed(msg)
+        count += 1
+        return count
+    msg = ""
+    print_no_of_test_passed(msg, count)
 
 
-def list_activities(apis):  # pylint: disable=missing-function-docstring
-    global COUNT  # pylint: disable=global-statement
+def list_activities(apis, count: int):
+    """
+    Function to list iuf activities
+    Args:
+        apis: ApiInterface object
+    """
     print("TEST CASE: List Activities")
     try:
         activities_result = apis.get_activities()
         print(activities_result)
-        COUNT += 1
+        count += 1
         activities = activities_result.json()
     except HTTPError as ex:
-        print_no_of_test_passed(ex)
+        print_no_of_test_passed(ex, count)
 
     if activities is not None:
         act_list = sorted([act["name"] for act in activities])
         print("\n".join(act_list))
+    return count

@@ -22,10 +22,10 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $pre_checks := .Vars.pre_checks }}
+{{ $pre_checks := .Vars.iuf_pre_checks }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/iuf_run_setup" }}
-{{ $activity := .Vars.activity }}
+{{ $activity := .Vars.iuf_activity }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks" }}
 {{ $iuf_run := $scripts | printf "%s/python/iuf_run" }}

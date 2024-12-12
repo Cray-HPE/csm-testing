@@ -50,68 +50,69 @@ from csm_testing.tests.iuf_apis.apis_session_function import (
     get_sessions,
     get_workflows,
 )
-from csm_testing.tests.iuf_apis.apis_activity_functions import COUNT, TOTAL_COUNT
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def main():  # pylint: disable=missing-function-docstring
+def main():
+    """
+    The main entry point of the program
+    """
     tar_dir = "/opt/cray/tests/install/ncn/scripts/iuf_run_setup"
     media_dir_setup(tar_dir)
     activity = sys.argv[1]
     print(f"INFO: This is the activity: {activity}")
 
+    count = 0
     apis = ApiInterface()
-    no_auth_list_stages()
+    count = no_auth_list_stages(count)
     print("*" * 50)
 
-    list_stages(apis)
+    count = list_stages(apis, count)
     print("*" * 50)
 
-    list_activities(apis)
+    count = list_activities(apis, count)
     print("*" * 50)
 
-    activity_create(apis, activity)
+    count = activity_create(apis, activity, count)
     print("*" * 50)
 
-    activity_run(apis, activity, MEDIA_DIR)
-    print("*" * 50)
-    time.sleep(3)
-
-    activity_abort(apis, activity)
+    count = activity_run(apis, activity, MEDIA_DIR, count)
     print("*" * 50)
     time.sleep(3)
 
-    activity_resume(apis, activity)
+    count = activity_abort(apis, activity, count)
     print("*" * 50)
     time.sleep(3)
 
-    activity_abort(apis, activity)
+    count = activity_resume(apis, activity, count)
     print("*" * 50)
     time.sleep(3)
 
-    activity_restart(apis, activity)
+    count = activity_abort(apis, activity, count)
+    print("*" * 50)
+    time.sleep(3)
+
+    count = activity_restart(apis, activity, count)
     print("*" * 50)
 
-    get_sessions(apis, activity)
+    count = get_sessions(apis, activity, count)
     print("*" * 50)
 
-    get_workflows(apis, activity)
+    count = get_workflows(apis, activity, count)
     print("*" * 50)
 
-    get_history(apis, activity)
+    count = get_history(apis, activity, count)
     print("*" * 50)
 
-    get_history_time(apis, activity)
+    count = get_history_time(apis, activity, count)
     print("*" * 50)
 
-    get_activity_session(apis, activity)
+    count = get_activity_session(apis, activity, count)
     print("*" * 50)
 
     print("~" * 50)
-    print(
-        f"INFO: Total test cases passed: {COUNT} test cases skipped: {TOTAL_COUNT - COUNT}"
-    )
+    print(f"INFO: Total test cases passed: {count} test cases skipped: {15 - count}")
     print("~" * 50)
 
 

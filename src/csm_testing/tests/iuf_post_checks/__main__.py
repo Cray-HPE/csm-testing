@@ -34,7 +34,7 @@ import sys
 from csm_testing.lib.iuf_constants import MEDIA_DIR
 
 
-def check_logs(activity):
+def check_logs(activity : str):
     """
     Function to check the logs for the activity and print the info.
     Args:
@@ -53,7 +53,7 @@ def check_logs(activity):
         sys.exit(1)
 
 
-def check_configmap(activity):
+def check_configmap(activity : str):
     """
     Function to check the configmap for the activity and print the info.
     Args:
@@ -85,7 +85,7 @@ Error: {err}"
         sys.exit(1)
 
 
-def check_state(activity):
+def check_state(activity : str):
     """
     Function to check the contents of the state directory.
     Args:

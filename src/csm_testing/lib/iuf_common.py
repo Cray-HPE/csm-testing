@@ -29,16 +29,16 @@ import shutil
 import sys
 import subprocess
 import base64
-from jsonschema import validate, ValidationError, SchemaError # pylint: disable=import-error
+from jsonschema import validate, ValidationError, SchemaError
 from requests.auth import HTTPBasicAuth
 import yaml
-from kubernetes import client, config # pylint: disable=import-error
+from kubernetes import client, config
 from csm_testing.lib.iuf_constants import MEDIA_DIR, NAMESPACE
 
 FOLDER_NAME = "dummy-1.0.0"
 
 
-def run_command(command): # pylint: disable=missing-function-docstring
+def run_command(command):  # pylint: disable=missing-function-docstring
     try:
         result = subprocess.run(
             command,
@@ -53,7 +53,7 @@ def run_command(command): # pylint: disable=missing-function-docstring
         sys.exit(1)
 
 
-def media_dir_setup(tar_dir): # pylint: disable=missing-function-docstring
+def media_dir_setup(tar_dir):  # pylint: disable=missing-function-docstring
     try:
         os.makedirs(MEDIA_DIR, exist_ok=True)
         print(f"INFO: Directory {MEDIA_DIR} created successfully.")
@@ -72,7 +72,9 @@ def media_dir_setup(tar_dir): # pylint: disable=missing-function-docstring
         sys.exit(1)
 
 
-def get_nexus_credentials(namespace="nexus", secret_name="nexus-admin-credential"): # pylint: disable=missing-function-docstring
+def get_nexus_credentials(
+    namespace="nexus", secret_name="nexus-admin-credential"
+):  # pylint: disable=missing-function-docstring
     """Retrieve Nexus credentials from a Kubernetes secret."""
     # Check if the secret exists
     run_command(f"kubectl get secret -n {namespace} {secret_name}")
@@ -96,7 +98,7 @@ def get_ca_certificates(namespace, cert_configmap_name):
     """Retrieve CA certificates from the specified ConfigMap"""
     config.load_kube_config()
 
-    v1 = client.CoreV1Api() # pylint: disable=invalid-name
+    v1 = client.CoreV1Api()  # pylint: disable=invalid-name
     configmap = v1.read_namespaced_config_map(cert_configmap_name, namespace)
 
     ca_cert_path = "/tmp/ca.crt"
@@ -106,7 +108,7 @@ def get_ca_certificates(namespace, cert_configmap_name):
     return ca_cert_path
 
 
-def vcs_auth(): # pylint: disable=missing-function-docstring
+def vcs_auth():  # pylint: disable=missing-function-docstring
     user_cmd = (
         "kubectl get secret -n services vcs-user-credentials "
         "--template={{.data.vcs_username}} | base64 --decode"
@@ -147,9 +149,13 @@ def load_yaml(file_path):
             f"ERROR: Error loading YAML file {file_path}: {err}"
         ) from err
     except FileNotFoundError as err:
-        raise ManifestValidationError(f"ERROR: File not found: {file_path}: {err}") from err
+        raise ManifestValidationError(
+            f"ERROR: File not found: {file_path}: {err}"
+        ) from err
     except Exception as err:
-        raise ManifestValidationError(f"ERROR: Error reading file {file_path}: {err}") from err
+        raise ManifestValidationError(
+            f"ERROR: Error reading file {file_path}: {err}"
+        ) from err
 
 
 def validate_instance(instance, schema):

@@ -165,7 +165,7 @@ pit_node: false
 vshasta: false
 
 
-pre_checks:
+iuf_pre_checks:
   - v1.22.13
   - "iuf-cli-1.6.11-1.x86_64"
   - "starlord"
@@ -173,12 +173,12 @@ pre_checks:
   - "4.0.13"
   - "4.0.13"
 
-activity:
+iuf_activity:
   - "test-activity"
   - "INVALID_ACTIVITY"
   - "new-activity-auto"
 
-logdir:
+iuf_logdir:
   - "/etc/cray/upgrade/csm/non_existing_directory"
   - "/etc/cray/upgrade/csm/csm-testing"
 
@@ -189,6 +189,6 @@ bootprep:
   - "/etc/cray/upgrade/csm/management-bootprep.yaml"
   - "/etc/cray/upgrade/csm/compute-and-uan-bootprep.yaml"
 
-images:
+iuf_workflowtemplate_images:
   - "2.4.1"
   - "v0.1.12"

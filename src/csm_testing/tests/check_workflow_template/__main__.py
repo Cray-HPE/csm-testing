@@ -29,14 +29,22 @@ import json
 import subprocess
 import sys
 import time
-from kubernetes import client, config  # pylint: disable=import-error
-from kubernetes.client.rest import ApiException  # pylint: disable=import-error
+from kubernetes import client, config
 import yaml
 
 
-def is_main_container_finished(pod_name: str, namespace: str) -> bool:  # pylint: disable=missing-function-docstring
-    v1 = client.CoreV1Api()  # pylint: disable=invalid-name
-    pod = v1.read_namespaced_pod(name=pod_name, namespace=namespace)
+def is_main_container_finished(pod_name: str, namespace: str) -> bool:
+    """
+    Function to check if the main container is terminated
+    Args:
+        pod_name(str): Pod Name
+        namespace(str): Pod Namespace
+    Returns:
+        Boolean True: if the main container is terminated
+        Boolean False: if the main container is still running
+    """
+    k8s_v1 = client.CoreV1Api()
+    pod = k8s_v1.read_namespaced_pod(name=pod_name, namespace=namespace)
 
     for container_status in pod.status.container_statuses:
         if container_status.name == "main":
@@ -45,11 +53,19 @@ def is_main_container_finished(pod_name: str, namespace: str) -> bool:  # pylint
     return False
 
 
-def check_and_kill_pod(workflow_name, namespace):
-    """Kills the pod if the main container is finished"""
-    v1 = client.CoreV1Api()  # pylint: disable=invalid-name
+def check_and_kill_pod(workflow_name: str, namespace: str) -> bool:
+    """
+    Kills the pod if the main container is finished
+    Args:
+        worlflow_name(str): Name of the workflow
+        namespace(str): Namespace of the workflow
+    Returns:
+        Boolean True: if the pod with terminated main container is deleted
+        Boolean False: if the main container is still running in the pod
+    """
+    k8s_v1 = client.CoreV1Api()
 
-    pods = v1.list_namespaced_pod(
+    pods = k8s_v1.list_namespaced_pod(
         namespace=namespace,
         label_selector=f"workflows.argoproj.io/workflow={workflow_name}",
     ).items
@@ -61,7 +77,7 @@ def check_and_kill_pod(workflow_name, namespace):
         # Check if the main container has finished
         if is_main_container_finished(pod_name, namespace):
             print(f"INFO: Main container finished in pod {pod_name}. Deleting pod.")
-            v1.delete_namespaced_pod(name=pod_name, namespace=namespace)
+            k8s_v1.delete_namespaced_pod(name=pod_name, namespace=namespace)
             print(f"INFO: Pod {pod_name} deleted.")
             return True
         print(f"INFO: Main container still running in pod {pod_name}.")
@@ -69,11 +85,22 @@ def check_and_kill_pod(workflow_name, namespace):
 
 
 def update_image_version_in_template(
-    workflow_template_str, old_image_prefix, old_version, new_version
+    workflow_template_str: str,
+    old_image_prefix: str,
+    old_version: str,
+    new_version: str,
 ):
-    """
-    Find the image in the workflowtemplate and replace its version
+    """Find the image in the workflowtemplate and replace its version
     with the user provided version
+
+    Args:
+        workflow_template_str (str): workflow template
+        old_image_prefix (str): old image
+        old_version (str): old image version
+        new_version (str): new image version
+
+    Returns:
+        str: updated workflow template
     """
     updated_workflow_template_str = workflow_template_str.replace(
         old_image_prefix + old_version, old_image_prefix + new_version
@@ -81,9 +108,18 @@ def update_image_version_in_template(
     return updated_workflow_template_str
 
 
-def wait_for_workflow_to_succeed(namespace, workflow_name, timeout=6000, interval=20):
+def wait_for_workflow_to_succeed(
+    namespace: str, workflow_name: str, timeout=6000, interval=20
+):
     """
     Polls the workflow status until it succeeds or the timeout is reached.
+    Args:
+        namespace(str): Namespace of the workflow
+        workflow_name(str): Workflow name
+        timeout(int): Timeout duration
+        interval(int): Interval duration
+    Returns:
+        Boolean: If workflow succeeds returns True,False otherwise
     """
     start_time = time.time()
     while time.time() - start_time < timeout:
@@ -106,28 +142,30 @@ def wait_for_workflow_to_succeed(namespace, workflow_name, timeout=6000, interva
                 stderr=subprocess.PIPE,
                 universal_newlines=True,
             )
-            status = result.stdout.strip()
-
-            # Check the status of the workflow
-            print(f"Workflow {workflow_name} status: {status}")
-
-            if status == "Succeeded":
-                print(f"INFO: Workflow {workflow_name} succeeded.")
-                return True
-
-            if status in ["Failed", "Error"]:
-                print(f"ERROR: Workflow {workflow_name} failed with status {status}.")
-                return False
-
-            if status == "Running":
-                print("INFO: Check if main is done")
-                if check_and_kill_pod(workflow_name, namespace):
-                    print(
-                        f"WARNING: {workflow_name} is running but the main container is done."
-                    )
-                    return True
-        except ApiException as err:
+        except subprocess.CalledProcessError as err:
             print(f"ERROR: Exception when fetching workflow status: {err}")
+            return False
+
+        status = result.stdout.strip()
+
+        # Check the status of the workflow
+        print(f"Workflow {workflow_name} status: {status}")
+
+        if status == "Succeeded":
+            print(f"INFO: Workflow {workflow_name} succeeded.")
+            return True
+
+        if status in ["Failed", "Error"]:
+            print(f"ERROR: Workflow {workflow_name} failed with status {status}.")
+            return False
+
+        if status == "Running":
+            print("INFO: Check if main is done")
+            if check_and_kill_pod(workflow_name, namespace):
+                print(
+                    f"WARNING: {workflow_name} is running but the main container is done."
+                )
+                return True
             return False
 
         # Wait before polling again
@@ -138,7 +176,15 @@ def wait_for_workflow_to_succeed(namespace, workflow_name, timeout=6000, interva
 
 
 def delete_resources(namespace, workflow_name, workflow_template_name):
-    """Delete the workflow, workflow template, and associated pods."""
+    """
+    Delete the workflow, workflow template, and associated pods.
+    Args:
+        namespace(str): Namespace name
+        workflow_name(str): Workflow name
+        workflow_template_name(str): Workflow template name
+    Returns:
+        None
+    """
 
     for resource, name in [
         ("workflow", workflow_name),
@@ -162,6 +208,10 @@ def delete_resources(namespace, workflow_name, workflow_template_name):
             stdout=subprocess.PIPE,
             universal_newlines=True,
         ).stdout
+    except subprocess.CalledProcessError as err:
+        print(f"ERROR: Failed to retrieve pod list for workflow {workflow_name}: {err}")
+        return
+    try:
         pod_names = [
             pod["metadata"]["name"]
             for pod in json.loads(pods_json).get("items", [])
@@ -170,9 +220,7 @@ def delete_resources(namespace, workflow_name, workflow_template_name):
                 for owner in pod.get("metadata", {}).get("ownerReferences", [])
             )
         ]
-    except subprocess.CalledProcessError as err:
-        print(f"ERROR: Failed to retrieve pod list for workflow {workflow_name}: {err}")
-        return
+
     except json.JSONDecodeError as err:
         print(f"ERROR: Failed to parse pod list: {err}")
         return
@@ -195,7 +243,15 @@ def delete_resources(namespace, workflow_name, workflow_template_name):
 
 def create_workflowtemplate_and_workflow(
     workflow_template_dict: dict, workflow_dict: dict
-):  # pylint: disable=missing-function-docstring
+):
+    """
+    Function to create workflow and workflow template
+    Args:
+        workflow_template_dict(dict): Wokflow templates
+        workflow_dict(dict): Workflows
+    Returns:
+        None
+    """
     api_instance = client.CustomObjectsApi()
     group = "argoproj.io"
     version = "v1alpha1"
@@ -245,7 +301,10 @@ def create_workflowtemplate_and_workflow(
     return None
 
 
-def main():  # pylint: disable=missing-function-docstring
+def main():
+    """
+    The main entry point
+    """
     if len(sys.argv) != 4:
         print(
             "Usage: python script.py <workflow_template_file_path> "

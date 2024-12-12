@@ -22,7 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $pre_checks := .Vars.pre_checks }}
+{{ $pre_checks := .Vars.iuf_pre_checks }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $media_dir := .Env.GOSS_BASE | printf "%s/scripts/iuf_run_setup" }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}

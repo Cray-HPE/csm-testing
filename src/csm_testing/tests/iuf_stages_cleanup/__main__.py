@@ -45,8 +45,12 @@ IMAGE = "registry.local/artifactory.algol60.net/csm-docker/stable/product-deleti
 
 
 def cleanup_deliver_product():
-    """Cleans up the data uploaded, repository created while running deliver-product stage
-    using dummy-product"""
+    """
+    Cleans up the data uploaded, repository created while running deliver-product stage
+    using dummy-product
+    Args: None
+    Returns: None
+    """
 
     repo_name = "dummy-repo"
     username, password = get_nexus_credentials()
@@ -104,7 +108,11 @@ def cleanup_deliver_product():
 
 
 def cleanup_vcs_repo():
-    """Deleting the branch created while running update-vcs-config for dummy-product"""
+    """
+    Deleting the branch created while running update-vcs-config for dummy-product
+    Args: None
+    Returns: None
+    """
 
     session = Session()
     dummy_repo_url, auth, ca_cert_path = vcs_auth()
@@ -129,7 +137,11 @@ def cleanup_vcs_repo():
 
 
 def cleanup_cfs_configurations():
-    """Cleanup the configurations created by IUf for dummy-product"""
+    """
+    Cleanup the configurations created by IUf for dummy-product
+    Args: None
+    Returns: None
+    """
     cfs_delete_command = (
         "cray cfs configurations delete config-minimal-management-dummy-1.0.0"
     )
@@ -138,7 +150,11 @@ def cleanup_cfs_configurations():
 
 
 def cleanup_prepared_images():
-    """Cleanup the images created by IUf for dummy-product"""
+    """
+    Cleanup the images created by IUf for dummy-product
+    Args: None
+    Returns: None
+    """
     print(
         "INFO: The ims images and s3 artifacts already deleted by product-deletion-utility"
     )
@@ -146,7 +162,11 @@ def cleanup_prepared_images():
 
 
 def main():
-    """Calls stage by stage cleanup functions for IUF"""
+    """
+    Calls stage by stage cleanup functions for IUF
+    Args: None
+    Returns: None
+    """
     print("---------------STARTING CLEANUP FOR STAGE OPERATIONS--------------")
     cleanup_deliver_product()
     cleanup_vcs_repo()

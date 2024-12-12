@@ -22,7 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $pre_checks := .Vars.pre_checks }}
+{{ $pre_checks := .Vars.iuf_pre_checks }}
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks" }}
 {{ $validate_iuf_manifest := .Env.GOSS_BASE | printf "%s/scripts/python/validate_iuf_manifest.py" }}
