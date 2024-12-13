@@ -39,8 +39,8 @@ def delete_workflows(activity_name: str):
     Args:
         activity_name(str): The activity name whose workflows list needs to be generated
     """
-    command = f"kubectl get workflow -n argo -o \
-custom-columns=NAME:.metadata.name|grep {activity_name}"
+    command = ("kubectl get workflow -n argo -o "
+               f"custom-columns=NAME:.metadata.name|grep {activity_name}")
 
     workflows = []
     try:
@@ -87,8 +87,8 @@ def delete_configmaps(activity_name: str):
         activity_name(str): The activity name whose configmaps list needs to be generated
 
     """
-    command = f"kubectl get configmap -n argo -o \
-custom-columns=NAME:.metadata.name|grep {activity_name}"
+    command = ("kubectl get configmap -n argo -o "
+               f"custom-columns=NAME:.metadata.name|grep {activity_name}")
 
     configmaps = []
     try:

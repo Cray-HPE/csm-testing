@@ -79,8 +79,8 @@ def check_configmap(activity: str):
 
     except subprocess.CalledProcessError as err:
         print(
-            f"ERROR: ConfigMap '{configmap_name}' does NOT exist in the '{namespace}' namespace.\n\
-Error: {err}")
+            f"ERROR: ConfigMap '{configmap_name}' does NOT exist in the '{namespace}' namespace.\n"
+            f"Error: {err}")
         sys.exit(1)
 
 
