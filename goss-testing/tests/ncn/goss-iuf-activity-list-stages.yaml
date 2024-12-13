@@ -54,9 +54,9 @@ command:
           # Run cleanup step independently
           "{{$iuf_cleanup}}" "{{ index $activity 0 }}"
 
-          # Exit with code 1 if the iuf ls command failed with exit code 1
-          if [ $run_exit_code -eq 1 ]; then
-            exit 1
+          # Exit with non-zero exit code if the iuf ls command failed with non-zero exit code
+          if [ $run_exit_code -ne 0 ]; then
+            exit $run_exit_code
           fi
         '
     exit-status: 0

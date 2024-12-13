@@ -203,7 +203,7 @@ def delete_resources(namespace, workflow_name, workflow_template_name):
             print(
                 f"INFO: {resource.capitalize()} {name} deleted successfully.")
         except subprocess.CalledProcessError as err:
-            print(f"ERROR: Failed to delete {resource} {name}: {err}")
+            print(f"WARNING: Failed to delete {resource} {name}: {err}")
             continue
 
     try:
@@ -216,7 +216,7 @@ def delete_resources(namespace, workflow_name, workflow_template_name):
         ).stdout
     except subprocess.CalledProcessError as err:
         print(
-            f"ERROR: Failed to retrieve pod list for workflow {workflow_name}: {err}"
+            f"WARNING: Failed to retrieve pod list for workflow {workflow_name}: {err}"
         )
         return
     try:
@@ -228,7 +228,7 @@ def delete_resources(namespace, workflow_name, workflow_template_name):
         ]
 
     except json.JSONDecodeError as err:
-        print(f"ERROR: Failed to parse pod list: {err}")
+        print(f"WARNING: Failed to parse pod list: {err}")
         return
 
     # Delete the found pods
@@ -244,7 +244,7 @@ def delete_resources(namespace, workflow_name, workflow_template_name):
                 check=True)
             print(f"INFO: Pod {pod_name} deleted successfully.")
         except subprocess.CalledProcessError as err:
-            print(f"ERROR: Failed to delete pod {pod_name}: {err}")
+            print(f"WARNING: Failed to delete pod {pod_name}: {err}")
 
 
 def create_workflowtemplate_and_workflow(workflow_template_dict: dict,
