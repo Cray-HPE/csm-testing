@@ -36,7 +36,6 @@ command:
       sev: 0
     exec: |-
       # validate management-bootprep
-      
       "{{$logrun}}" -l "{{$testlabel}}" "{{ $sat_validate_bootprep }}" "{{ index $bootprep 0 }}"
     exit-status: 0
     timeout: 2000

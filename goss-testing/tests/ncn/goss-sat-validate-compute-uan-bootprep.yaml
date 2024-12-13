@@ -36,7 +36,6 @@ command:
       sev: 0
     exec: |-
       # validate compute-and-uan-bootprep
-      
       "{{$logrun}}" -l "{{$testlabel}}" "{{ $sat_validate_bootprep }}" "{{ index $bootprep 1 }}"
     exit-status: 0
     timeout: 2000

@@ -59,9 +59,7 @@ command:
         "{{$iuf_cleanup}}" "{{ index $activity 0 }}"
 
         # Exit with non-zero exit code if the iuf activity failed with non-zero exit code
-        if [ $run_exit_code -ne 0 ]; then
-          exit $run_exit_code
-        fi
+        exit $run_exit_code
       '
     exit-status: 0
     timeout: 180000

@@ -36,7 +36,6 @@ command:
       desc: Validates iuf_product_manifest.yaml
       sev: 0
     exec: |-
-
       # validate iuf product manifest
       "{{$logrun}}" -l "{{$testlabel}}" "{{ $validate_iuf_manifest }}" "{{ index $manifest 0 }}"
     exit-status: 0

@@ -54,9 +54,7 @@ command:
           "{{$iuf_cleanup}}"
 
           # Exit with non-zero exit code if the iuf command failed with exit non-zero exit code
-          if [ $run_exit_code -ne 0 ]; then
-            exit $run_exit_code
-          fi
+          exit $run_exit_code
         '
     exit-status: 0
     timeout: 180000
