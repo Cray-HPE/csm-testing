@@ -22,9 +22,10 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-# Note: The tests in this suite must be run using the `run_goss_tests` helper
-# function defined in `csm-testing/goss-testing/automated/run-ncn-tests.sh`.
-# This is required due to a temporary values file generated in the function
+# Note: The tests in this suite must be run using an automated script
+# that uses the `run_goss_tests` helper function.
+# This suite can be run by executing `/opt/cray/tests/install/ncn/automated/ncn-upgrade-tests-storage`.
+# This is required due to a temporary values file generated in the `run_goss_tests` function.
 # that will allow the tests to identify storage nodes.
 
 gossfile:
