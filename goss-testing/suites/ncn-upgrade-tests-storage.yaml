@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,6 +21,13 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+
+# Note: The tests in this suite must be run using an automated script
+# that uses the `run_goss_tests` helper function.
+# This suite can be run by executing `/opt/cray/tests/install/ncn/automated/ncn-upgrade-tests-storage`.
+# This is required due to a temporary values file generated in the `run_goss_tests` function.
+# that will allow the tests to identify storage nodes.
+
 gossfile:
   ../tests/goss-check-static-routes.yaml: {}
   ../tests/goss-ceph-storage-health.yaml: {}
@@ -28,3 +35,4 @@ gossfile:
   ../tests/goss-ceph-storage-config-files.yaml: {}
   ../tests/goss-check-clock-skew.yaml: {}
   ../tests/goss-rgw-health.yaml: {}
+  ../tests/goss-unused-drives-on-storage-nodes.yaml: {}
