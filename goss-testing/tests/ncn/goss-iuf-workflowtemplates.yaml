@@ -65,10 +65,9 @@ command:
         kubectl delete configmap cray-product-catalog-test -n auto && \
         kubectl delete namespace auto
 
-        # Exit with code 1 if test case failed with exit code 1
-        if [ $run_exit_code_1 -eq 1 ] || [ $run_exit_code_2 -eq 1 ]; then
-          exit 1
-        fi
+        # Fail if either subtest failed with non-zero exit code
+        [[ $run_exit_code_1 -ne 0 ]] && exit $run_exit_code_1
+        exit $run_exit_code_2
       '
     exit-status: 0
     timeout: 1800000
