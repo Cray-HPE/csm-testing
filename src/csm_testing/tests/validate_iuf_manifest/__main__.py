@@ -25,25 +25,55 @@ This script validates IUF manifest.
 """
 
 import sys
+import subprocess
 import os
-from csm_testing.lib.iuf_common import load_yaml, validate_instance
-
-# Constants
-# Path to your product manifest schema file
-SCHEMA_FILE = "/opt/cray/tests/install/ncn/scripts/iuf_schemas/iuf-manifest-schema.yaml"
 
 
-class ProductManifestValidationError(Exception):
-    """Custom exception for product manifest validation errors."""
+def validate_manifest_with_podman(manifest_file, cray_nls_image):
+    """
+    Validate the manifest file using the podman command.
+    Args:
+        manifest_file (str): Path to the manifest file
+        cray_nls_image (str): CRAY_NLS_IMAGE to use for validation
+    Returns:
+        None
+    Raises:
+        RuntimeError: If podman command fails
+    """
+    try:
+        # Ensure the manifest file exists
+        if not os.path.exists(manifest_file):
+            print(f"ERROR: Manifest file '{manifest_file}' not found.")
+            sys.exit(1)
+
+        manifest_basename = os.path.basename(manifest_file)
+
+        # Construct the podman command
+        cmd = [
+            "podman",
+            "run",
+            "--rm",
+            "--userns",
+            "keep-id",
+            "-v",
+            f"{os.path.realpath(manifest_file)}:/{manifest_basename}",
+            cray_nls_image,
+            "validate",
+            f"/{manifest_basename}",
+        ]
+
+        print(f"INFO: Running podman command for validation:\n{' '.join(cmd)}")
+
+        # Run the podman command
+        subprocess.run(cmd, check=True)
+        print("INFO: SUCCESS: IUF product manifest file is valid.")
+    except subprocess.CalledProcessError as err:
+        raise RuntimeError(f"ERROR: Schema validation failed: {err}") from err
 
 
 def main():
     """
-    The main entry point for the program
-    Args:
-        None
-    Returns:
-        None
+    Main entry point for the program.
     """
     print("Test Case: validate_iuf_product_manifest")
     if len(sys.argv) != 2:
@@ -51,36 +81,17 @@ def main():
         sys.exit(1)
 
     manifest_file = sys.argv[1]
-    # Load the schema
-    try:
-        schema = load_yaml(SCHEMA_FILE)
-        print("INFO: Schema loaded successfully.")
-    except ProductManifestValidationError as err:
-        print(f"{err}")
-        sys.exit(1)
 
-    # Load the product manifest file
     try:
-        if os.path.exists(manifest_file):
-            manifest_instance = load_yaml(manifest_file)
-            print(
-                f"INFO: IUF product manifest file '{manifest_file}' loaded successfully."
-            )
-        else:
-            print(f"{manifest_file} : FileNotFoundError")
-            sys.exit(1)
-    except ProductManifestValidationError as err:
-        print(f"{err}")
-        sys.exit(1)
+        cray_nls_image = (
+            "arti.hpc.amslabs.hpecorp.net/csm-docker-remote/stable/cray-nls:0.10.0"
+        )
 
-    # Validate the product manifest file against the schema
-    try:
-        validate_instance(manifest_instance, schema)
-        print("INFO: SUCCESS: IUF product manifest file "
-              f"'{manifest_file}' is valid against the schema.")
-        print("INFO: SUCCESS: Passed")
-    except ProductManifestValidationError as err:
-        print(f"{err}")
+        # Validate the manifest file using podman
+        validate_manifest_with_podman(manifest_file, cray_nls_image)
+
+    except (RuntimeError, ValueError) as err:
+        print(err)
         sys.exit(1)
 
 

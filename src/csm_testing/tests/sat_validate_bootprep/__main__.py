@@ -25,14 +25,74 @@ This script validates bootprep file.
 """
 
 import sys
+import subprocess
 import os
-from csm_testing.lib.iuf_common import load_yaml, validate_instance
-
-SCHEMA_FILE = "/opt/cray/tests/install/ncn/scripts/iuf_schemas/bootprep-schema.yaml"
+import yaml
+from jsonschema import validate, ValidationError, SchemaError
 
 
 class BootPrepValidationError(Exception):
     """Custom exception for BootPrep validation errors."""
+
+
+class ManifestValidationError(Exception):
+    """Custom exception for validation errors."""
+
+
+def load_yaml(file_path):
+    """Load a YAML file and return the parsed data."""
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            return yaml.safe_load(file)
+    except yaml.YAMLError as err:
+        raise ManifestValidationError(
+            f"ERROR: Error loading YAML file {file_path}: {err}"
+        ) from err
+    except FileNotFoundError as err:
+        raise ManifestValidationError(
+            f"ERROR: File not found: {file_path}: {err}"
+        ) from err
+    except Exception as err:
+        raise ManifestValidationError(
+            f"ERROR: Error reading file {file_path}: {err}"
+        ) from err
+
+
+def validate_instance(instance, schema):
+    """Validate the instance data against the schema."""
+    try:
+        validate(instance=instance, schema=schema)
+    except ValidationError as err:
+        raise ManifestValidationError(f"ERROR: Validation failed: {err}") from err
+    except SchemaError as err:
+        raise ManifestValidationError(f"ERROR: Schema error: {err}") from err
+
+
+def get_bootprep_schema():
+    """
+    Retrieve the bootprep schema using the 'sat bootprep view-schema' command.
+    Returns:
+        dict: Parsed schema YAML as a dictionary.
+    Raises:
+        BootPrepValidationError: If the command fails or returns invalid YAML.
+    """
+    try:
+        result = subprocess.run(
+            ["sat", "bootprep", "view-schema"],
+            check=True,
+            universal_newlines=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        print("INFO: Schema retrieved successfully using 'sat bootprep view-schema'.")
+        yaml_output = yaml.safe_load(result.stdout)
+        return yaml_output
+    except subprocess.CalledProcessError as err:
+        raise BootPrepValidationError(
+            f"ERROR: Failed to execute 'sat bootprep view-schema'. {err.stderr}"
+        ) from err
+    except Exception as err:
+        raise BootPrepValidationError(f"ERROR: Failed to parse schema. {err}") from err
 
 
 def main():
@@ -48,19 +108,18 @@ def main():
         sys.exit(1)
 
     bootprep_file = sys.argv[1]
+    # Fetch the schema
     try:
-        schema = load_yaml(SCHEMA_FILE)
-        print("INFO: Schema loaded successfully.")
+        schema = get_bootprep_schema()
     except BootPrepValidationError as err:
-        print(f"{err}")
+        print(err)
         sys.exit(1)
 
     # Load the bootprep file
     try:
         if os.path.exists(bootprep_file):
             bootprep_instance = load_yaml(bootprep_file)
-            print(
-                f"INFO: Bootprep file '{bootprep_file}' loaded successfully.")
+            print(f"INFO: Bootprep file '{bootprep_file}' loaded successfully.")
         else:
             print(f"{bootprep_file} : FileNotFoundError")
             sys.exit(1)
@@ -71,10 +130,8 @@ def main():
     # Validate the bootprep file against the schema
     try:
         validate_instance(bootprep_instance, schema)
-        print(
-            f"INFO: SUCCESS: Bootprep file '{bootprep_file}' is valid against the schema."
-        )
-        print("INFO: SUCCESS: Passed")
+        print(f"SUCCESS: Bootprep file '{bootprep_file}' is valid against the schema.")
+        print("SUCCESS: Test Case Passed")
     except BootPrepValidationError as err:
         print(f"{err}")
         sys.exit(1)

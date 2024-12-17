@@ -29,9 +29,7 @@ import shutil
 import sys
 import subprocess
 import base64
-from jsonschema import validate, ValidationError, SchemaError
 from requests.auth import HTTPBasicAuth
-import yaml
 from kubernetes import client, config
 from csm_testing.lib.iuf_constants import MEDIA_DIR, NAMESPACE
 
@@ -155,34 +153,3 @@ def vcs_auth():
     dummy_repo_url = f"{gitea_url}/repos/{org}/{repo_name}"
 
     return dummy_repo_url, auth, ca_cert_path
-
-
-class ManifestValidationError(Exception):
-    """Custom exception for validation errors."""
-
-
-def load_yaml(file_path):
-    """Load a YAML file and return the parsed data."""
-    try:
-        with open(file_path, "r", encoding="utf-8") as file:
-            return yaml.safe_load(file)
-    except yaml.YAMLError as err:
-        raise ManifestValidationError(
-            f"ERROR: Error loading YAML file {file_path}: {err}") from err
-    except FileNotFoundError as err:
-        raise ManifestValidationError(
-            f"ERROR: File not found: {file_path}: {err}") from err
-    except Exception as err:
-        raise ManifestValidationError(
-            f"ERROR: Error reading file {file_path}: {err}") from err
-
-
-def validate_instance(instance, schema):
-    """Validate the instance data against the schema."""
-    try:
-        validate(instance=instance, schema=schema)
-    except ValidationError as err:
-        raise ManifestValidationError(
-            f"ERROR: Validation failed: {err}") from err
-    except SchemaError as err:
-        raise ManifestValidationError(f"ERROR: Schema error: {err}") from err
