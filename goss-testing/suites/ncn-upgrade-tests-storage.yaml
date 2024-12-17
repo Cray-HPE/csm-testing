@@ -22,12 +22,6 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-# Note: The tests in this suite must be run using an automated script
-# that uses the `run_goss_tests` helper function.
-# This suite can be run by executing `/opt/cray/tests/install/ncn/automated/ncn-upgrade-tests-storage`.
-# This is required due to a temporary values file generated in the `run_goss_tests` function.
-# that will allow the tests to identify storage nodes.
-
 gossfile:
   ../tests/goss-check-static-routes.yaml: {}
   ../tests/goss-ceph-storage-health.yaml: {}
@@ -35,4 +29,3 @@ gossfile:
   ../tests/goss-ceph-storage-config-files.yaml: {}
   ../tests/goss-check-clock-skew.yaml: {}
   ../tests/goss-rgw-health.yaml: {}
-  ../tests/goss-unused-drives-on-storage-nodes.yaml: {}
