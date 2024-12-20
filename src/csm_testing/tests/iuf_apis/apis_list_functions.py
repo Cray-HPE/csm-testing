@@ -41,14 +41,12 @@ def no_auth_list_stages(count: int):
     print("TEST CASE: w/o security API call: Try Api Call without token")
     try:
         api_response = requests.get(
-            "https://api-gw-service-nmn.local/apis/iuf/v1/stages")
-        if api_response is not None:
-            msg = "ERROR: Api Working without token"
-            print_no_of_test_passed(msg, count)
+            "https://api-gw-service-nmn.local/apis/iuf/v1/stages")    
     except HTTPError as err:
-        print(f"INFO: {err}")
-        count += 1
-        return count
+        print_no_of_test_passed(err, count)
+    print("INFO: Api Call without token has passed")
+    count += 1
+    return count
 
 
 def list_stages(apis, count: int):

@@ -185,8 +185,7 @@ class ApiInterface:
         try:
             self.get_activity(activity)
             return True
-        except HTTPError as err:
-            print(err)
+        except Exception:
             return False
 
     def get_stages(self):
