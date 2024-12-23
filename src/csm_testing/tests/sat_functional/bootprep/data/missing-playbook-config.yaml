@@ -1,0 +1,11 @@
+---
+# Define a configuration that has a layer without a playbook
+# This should be allowed when using `--cfs-version v2` but not when using
+# `--cfs-version v3`.
+configurations:
+- name: "{{test.prefix}}-csm-{{csm.version}}-product-layer"
+  layers:
+  - name: csm-packages-{{csm.version}}
+    product:
+      name: csm
+      version: "{{csm.version}}"

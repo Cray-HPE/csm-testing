@@ -1,0 +1,22 @@
+---
+# Define a configuration that specifies special_parameters in its layers
+configurations:
+
+# A configuration that specifies two layers, each with special parameters
+- name: "{{test.prefix}}-csm-special-parameters-layers"
+  layers:
+    - name: csm-ncn_nodes
+      playbook: ncn_nodes.yml
+      product:
+        name: csm
+        version: "{{csm.version}}"
+      special_parameters:
+        ims_require_dkms: False
+    - name: csm-ncn-initrd
+      playbook: ncn-initrd.yml
+      product:
+        name: csm
+        branch: "{{csm.branch_name}}"
+      special_parameters:
+        ims_require_dkms: True
+

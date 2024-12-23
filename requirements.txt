@@ -15,6 +15,7 @@ requests-oauthlib
 packaging
 python-keycloak
 jsonschema
+semver
 urllib3
 
 # There are some additional Python packages that test scripts can rely on that are
