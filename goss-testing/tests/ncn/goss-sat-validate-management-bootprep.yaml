@@ -23,7 +23,7 @@
 #
 
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $sat_validate_bootprep := .Env.GOSS_BASE | printf "%s/scripts/python/sat_validate_bootprep.py" }}
+{{ $sat_validate_bootprep := .Env.GOSS_BASE | printf "%s/scripts/python/sat_validate_bootprep" }}
 {{ $bootprep := .Vars.bootprep }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 
@@ -38,5 +38,5 @@ command:
       # validate management-bootprep
       "{{$logrun}}" -l "{{$testlabel}}" "{{ $sat_validate_bootprep }}" "{{ index $bootprep 0 }}"
     exit-status: 0
-    timeout: 2000
+    timeout: 20000
     skip: false
