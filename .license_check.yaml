@@ -23,12 +23,14 @@
 #
 
 # Define custom types for our script files which should have licenses
-# but do not match a default pattern. Use yaml for .spec and .service
+# but do not match a default pattern. Use yaml for .spec, .service and .preset
 # files -- they are not in YAML, but as far as license checking is
 # concerned, they can be considered the same.
 
 file_types:
   "*.service":
+    type: yaml
+  "*.preset":
     type: yaml
   "*.spec":
     type: yaml
@@ -36,5 +38,3 @@ file_types:
     type: shell_or_python
   "build-testing/*":
     type: shell_or_python
-
-
