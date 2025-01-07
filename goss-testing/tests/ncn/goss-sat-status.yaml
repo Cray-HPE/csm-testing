@@ -22,21 +22,20 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-# This is a suite of functional tests for validating the functionality of the
-# System Admin Toolkit (SAT). Tests are split up across multiple gossfiles,
-# which are then included by this suite.
-#
-# Most `sat` commands are just making requests to the CSM APIs, so it would be
-# redundant to run each test on every node. Instead, we just run them on ncn-m001.
-
-# Use hostname from variable file, if set.
-# Otherwise use hostname from environment variable (or blank, if that is also not set)
-{{ $env_hostname := getEnv "HOSTNAME" }}
-{{ $vars_hostname := get .Vars "this_node_name" }}
-{{ $this_node_name := default $env_hostname $vars_hostname }}
-gossfile:
-  {{if eq $this_node_name "ncn-m001"}}
-  ../tests/goss-sat-version.yaml: {}
-  ../tests/goss-sat-status.yaml: {}
-  {{ end }}
-
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $sat_test := $scripts | printf "%s/python/sat_functional" }}
+command:
+    {{ $test_label := "sat_status" }}
+    {{$test_label}}:
+        title: Test the 'sat status' command
+        meta:
+            desc: Tests for the 'sat status' command
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$test_label}}" \
+                "{{$sat_test}}" "status.test_status"
+        exit-status: 0
+        stderr:
+        - OK
+        timeout: 100000 # timeout in milliseconds
