@@ -59,6 +59,31 @@ def compare_versions(version1, version2):
             f"INFO: Version {version1} is greater than required version {version2}"
         )
 
+def get_urls() -> list:
+    """
+    Function to get the Argo, VCS, and Nexus URLs from kubectl commands.
+    Args:
+        None
+    Returns:
+        list: List of URLs [Argo URL, VCS URL, Nexus URL]
+    """
+    # Argo URL
+    output_argo, returncode = run_command("kubectl get virtualservice -n argo cray-argo --no-headers")
+    argo_url = output_argo.split()[2].strip('["]')
+    argo_url = f"https://{argo_url}/"
+
+    # VCS URL
+    output_vcs, returncode = run_command("kubectl get virtualservice -n services gitea-vcs-external --no-headers")
+    vcs_url = output_vcs.split()[2].strip('["]')
+    vcs_url = f"https://{vcs_url}/"
+
+    # Nexus URL
+    output_nexus, returncode = run_command("kubectl get virtualservice -n nexus nexus --no-headers")
+    url = output_nexus.split()[2].strip('[]').split(',')
+    nexus_url = url[2].strip('"')
+    nexus_url = f"https://{nexus_url}/"
+
+    return [argo_url, vcs_url, nexus_url]
 
 def check_proxy():
     """
@@ -460,11 +485,8 @@ def check_url_status(cluster_name: str):
     Returns:
         None
     """
-    urls = [
-        f"https://argo.cmn.{cluster_name}.hpc.amslabs.hpecorp.net/",
-        f"https://vcs.cmn.{cluster_name}.hpc.amslabs.hpecorp.net/",
-        f"https://nexus.cmn.{cluster_name}.hpc.amslabs.hpecorp.net/",
-    ]
+
+    urls = get_urls()
 
     for url in urls:
         try:
