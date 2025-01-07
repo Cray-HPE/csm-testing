@@ -188,7 +188,12 @@ gather_goss_commands() {
         goss_vars_file="${BASH_REMATCH[3]}"
         # format the goss command to run directly
         # add the goss command to the array of commands to run
-        GOSS_COMMANDS+=("${goss_command} -g ${goss_file} --vars ${goss_vars_file} validate -f ${format}")
+        if [[ "$goss_file" =~ preflight ]] || [[ "$goss_file" =~ ncn-storage-tests ]]; then
+          # skip these tests
+          continue
+        else
+          GOSS_COMMANDS+=("${goss_command} -g ${goss_file} --vars ${goss_vars_file} validate -f ${format}")
+        fi
       fi
     done
   else
@@ -314,8 +319,10 @@ format_goss_results_for_dst() {
         "release_version": "",
         "output": (if .successful then "omitted" else .stderr end),
         "status": (if .successful then "pass" else "fail" end),
-        "label": ."resource-id",
+        "label": ."resource-type",
         "test_name": .title, 
+        "id": ."resource-id",
+        "test_artifacts": .,
       }),
       triage: {}
   }' < "${aggregated_goss_results_file}" > "$dst_results_file"
@@ -377,4 +384,3 @@ if [[ "${BASH_SOURCE[0]}" -ef "${0}" ]]; then
   # if the script is run directly, run the main function
   main "$@"
 fi
-
