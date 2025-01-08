@@ -1,0 +1,59 @@
+#
+# MIT License
+#
+# (C) Copyright 2024 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+
+{{ $pre_checks := .Vars.iuf_pre_checks }}
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+{{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks" }}
+{{ $iuf_abort := $scripts | printf "%s/check_iuf_abort.sh" }}
+{{ $iuf_cleanup := $scripts | printf "%s/python/iuf_cleanup" }}
+command:
+  {{ $testlabel := "iuf_activity_resume" }}
+  {{$testlabel}}:
+    title: iuf activity resume
+    meta:
+      desc: Executes resume for a particular IUF activity.
+      sev: 0
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+          # Run prechecks for IUF
+          "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
+
+          # Run an IUF session and abort it
+          "{{$iuf_abort}}" && \
+          sleep 30 && \
+          /usr/bin/iuf -a test-activity resume
+
+          # Capture the exit code of the previous step
+          run_exit_code=$?
+
+          # Cleanup the workflows,log and media dir
+          "{{$iuf_cleanup}}"
+
+          # Exit with non-zero exit code if the iuf command failed with non-zero exit code
+          exit $run_exit_code
+        '
+    exit-status: 0
+    timeout: 180000
+    skip: false
