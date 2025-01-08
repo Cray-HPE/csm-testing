@@ -11,6 +11,10 @@ kubernetes
 PyYAML
 requests
 requests-retry-session
+requests-oauthlib
+packaging
+python-keycloak
+jsonschema
 urllib3
 
 # There are some additional Python packages that test scripts can rely on that are

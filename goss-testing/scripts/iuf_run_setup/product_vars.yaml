@@ -1,0 +1,34 @@
+# Copyright 2024 Hewlett Packard Enterprise Development LP
+---
+
+# variables available for substitution
+# --------------------------------------------------------
+# {{name}} - product name from the product manifest
+# {{version_x_y}} - x.y portion of the product version
+# {{version_x_y_z}} - x.y.z portion of the product version
+# {{working_branch}} - default working branch
+
+# CAUTION
+# version substitution in working_branches must be at the very end for automatic updates to
+# work properly in the IUF `update-vcs-config` stage.
+# ex: integration-{{version_x_y}}       (will work correctly)
+# ex: integration-{{version_x_y}}-test  (will NOT work correctly)
+
+# set site specific default working_branch with an entry in a default section in site_vars.yaml
+
+# set default network_type to "mellanox" or "cassini" in the default section in site_vars.yaml
+
+# set note and/or suffix to a value such as "test" in the default section in site_vars.yaml
+# in order to namespace all CFS configurations, images and BOS session templates with that value.
+
+# CAUTION: note and suffix are used to construct key values and thus spaces must be avoided
+
+default:
+  working_branch: "integration-{{version_x_y_z}}"
+  network_type: "mellanox"
+  note: ""
+  suffix: ""
+  wlm: "future use"
+
+dummy:
+  version: 1.0.0
