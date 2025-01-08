@@ -1,0 +1,155 @@
+# MIT License
+#
+# (C) Copyright 2024 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+"""
+The script has common functions being used by iuf tests scripts
+"""
+
+import os
+import shutil
+import sys
+import subprocess
+import base64
+from requests.auth import HTTPBasicAuth
+from kubernetes import client, config
+from csm_testing.lib.iuf_constants import MEDIA_DIR, NAMESPACE
+
+FOLDER_NAME = "dummy-1.0.0"
+
+
+def run_command(command):
+    """
+    Function to run a given command
+    Args:
+        command(str): Command to be executed
+    Returns:
+        None
+    """
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        return result.stdout.decode().strip(), result.returncode
+    except subprocess.CalledProcessError as err:
+        print(f"ERROR: Command failed with error: {err}")
+        sys.exit(1)
+
+
+def media_dir_setup(tar_dir):
+    """Function to setup the media directory
+
+    Args:
+        tar_dir (str): path of the tar file for media directory
+    """
+    try:
+        os.makedirs(MEDIA_DIR, exist_ok=True)
+        print(f"INFO: Directory {MEDIA_DIR} created successfully.")
+    except OSError as err:
+        print(f"ERROR: Unable to create directory {MEDIA_DIR}: {err}")
+        sys.exit(1)
+
+    # Copying product tar file and manifest files into the media directory
+    try:
+        shutil.copy(f"{tar_dir}/{FOLDER_NAME}.tar.gz", MEDIA_DIR)
+        shutil.copy(f"{tar_dir}/product_vars.yaml", MEDIA_DIR)
+        shutil.copy(f"{tar_dir}/management-bootprep.yaml", MEDIA_DIR)
+        print(f"INFO: Files copied successfully to {MEDIA_DIR}.")
+    except IOError as err:
+        print(f"ERROR: Failed while copying files: {err}")
+        sys.exit(1)
+
+
+def get_nexus_credentials(namespace="nexus",
+                          secret_name="nexus-admin-credential"):
+    """Retrieve Nexus credentials from a Kubernetes secret.
+    Args:
+        namespace(str): Namespace. Defaults to 'nexus'
+        secret_name(str): Secret Name. Defaults to 'nexus-admin-credential'
+    Returns:
+        None
+    """
+    # Check if the secret exists
+    run_command(f"kubectl get secret -n {namespace} {secret_name}")
+
+    # Retrieve and decode credentials
+    username_base64, _ = run_command(
+        f"kubectl get secret -n {namespace} {secret_name} --template={{{{.data.username}}}}"
+    )
+    password_base64, _ = run_command(
+        f"kubectl get secret -n {namespace} {secret_name} --template={{{{.data.password}}}}"
+    )
+
+    if username_base64 and password_base64:
+        username = base64.b64decode(username_base64).decode()
+        password = base64.b64decode(password_base64).decode()
+        return username, password
+    sys.exit("ERROR: Failed to retrieve credentials")
+
+
+def get_ca_certificates(namespace, cert_configmap_name):
+    """
+    Retrieve CA certificates from the specified ConfigMap
+    Args:
+        namespace(str): Namespace
+        cert_configmap_name(str): certificate configmap name
+    Returns:
+        None
+    """
+    config.load_kube_config()
+
+    v1 = client.CoreV1Api()
+    configmap = v1.read_namespaced_config_map(cert_configmap_name, namespace)
+
+    ca_cert_path = "/tmp/ca.crt"
+    with open(ca_cert_path, "w", encoding="utf-8") as file:
+        file.write(configmap.data["certificate_authority.crt"])
+
+    return ca_cert_path
+
+
+def vcs_auth():
+    """
+    Function for VCS authentication
+    """
+    user_cmd = ("kubectl get secret -n services vcs-user-credentials "
+                "--template={{.data.vcs_username}} | base64 --decode")
+
+    pass_cmd = ("kubectl get secret -n services vcs-user-credentials "
+                "--template={{.data.vcs_password}} | base64 --decode")
+    vcs_user, _ = run_command(user_cmd)
+    vcs_password, _ = run_command(pass_cmd)
+
+    configmap_name = "cray-configmap-ca-public-key"
+    gitea_base_url = "https://api-gw-service-nmn.local/vcs"
+    gitea_url = f'{gitea_base_url.rstrip("/")}/api/v1'
+    org = "cray"
+    repo_name = "dummy-config-management"
+
+    ca_cert_path = get_ca_certificates(NAMESPACE, configmap_name)
+    auth = HTTPBasicAuth(vcs_user, vcs_password)
+    dummy_repo_url = f"{gitea_url}/repos/{org}/{repo_name}"
+
+    return dummy_repo_url, auth, ca_cert_path
