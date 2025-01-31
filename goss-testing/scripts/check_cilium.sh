@@ -1,7 +1,8 @@
+#!/usr/bin/env bash
 #
 # MIT License
 #
-# (C) Copyright 2014-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,23 +22,17 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+# This test checks that if cilium is up and running in case cilium is installed
 
-#
-# This suite is run:
-# * During CSM installs before CSM services have been deployed,
-# * During CSM Health Validation (after CSM services have been deployed), both
-#   before and after PIT redeployment
-#
+if [ "$(kubectl get pods -n kube-system -o wide | grep -E 'cilium')" ]; then
+  phase_count=$(cilium status -o json | jq -r '.phase_count.cilium.Running')
+  if [ "$phase_count" -gt 0 ]; then
+    echo "PASS"
+  fi
+else
+  echo $(weave --local status connections)
+  if [ "$?" -ne 0 ]; then
+    echo "Weave is running"
+  fi
+fi
 
-# During health validation, these tests are executed on every master node
-# in the cluster. Tests that are executed on just a single master node are
-# in the corresponding -single.yaml suite file.
-gossfile:
-  ../tests/goss-ceph-status.yaml: {}
-  ../tests/goss-etcdlvm-drive-master.yaml: {}
-  ../tests/goss-k8s-etcd-service.yaml: {}
-  ../tests/goss-ncn-xname.yaml: {}
-  ../tests/goss-weave-health.yaml: {}
-  ../tests/goss-weave-status-daemon-sets.yaml: {}
-  ../tests/goss-check-taints.yaml: {}
-  ../tests/goss-cilium-health.yaml: {}
