@@ -30,9 +30,8 @@ if [ "$(kubectl get pods -n kube-system -o wide | grep -E 'cilium')" ]; then
     echo "PASS"
   fi
 else
-  echo $(weave --local status connections)
-  if [ "$?" -ne 0 ]; then
-    echo "Weave is running"
+  if [ "$(weave --local status connections)" ]; then
+    echo "Weave is operational"
   fi
 fi
 
