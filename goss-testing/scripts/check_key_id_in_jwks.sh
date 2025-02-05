@@ -44,7 +44,7 @@ jwt_kid=$(echo ${jwt::jwt_len} | base64 -d | jq -r .kid) || exit 30
 # Make sure the value we found is non-empty
 [[ -n ${jwt_kid} ]] || exit 40
 
-kubectl exec -n spire spire-postgres-0 -c postgres -- curl http://cray-spire-jwks/keys \
+kubectl exec -n spire cray-spire-postgres-0 -c postgres -- curl http://cray-spire-jwks/keys \
   | jq -r '.[][].kid' | grep -Eq "^${jwt_kid}$" || exit 50
 
 echo "PASSED"
