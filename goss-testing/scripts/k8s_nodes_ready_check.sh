@@ -71,9 +71,9 @@ while read NODE STATE REST ; do
         err_echo "Kubernetes node name does not match expected format: ${NODE}"
     fi
     
-    # And verify that the state is Ready
-    if [[ ${STATE} != Ready ]]; then
-        err_echo "Node '${NODE}' state is '${STATE}', not 'Ready'"
+    # Verify that the state is Ready or Ready,SchedulingDisabled
+    if [[ ${STATE} != "Ready" && ${STATE} != "Ready,SchedulingDisabled" ]]; then
+        err_echo "Node '${NODE}' state is '${STATE}', not 'Ready' or 'Ready,SchedulingDisabled'"
     fi
 done < "${TMPFILE}"
 
