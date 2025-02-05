@@ -55,7 +55,7 @@ rc=$?
 # executing on as the postgres tests include all of the members of
 # the cluster.
 
-export CLUSTER_NAME=spire-postgres
+export CLUSTER_NAME=cray-spire-postgres
 export CLUSTER_NS=spire
 
 echo $'\n\e[1;33m'---------------$'\e[0m'

@@ -26,6 +26,5 @@ gossfile:
   ../tests/goss-cray-spire-verify-pods.yaml: {}
   ../tests/goss-spire-healthcheck.yaml: {}
   ../tests/goss-spire-bss-metadata-exist.yaml: {}
-  ../tests/goss-spire-verify-pods.yaml: {}
   ../tests/goss-spire-verify-api-fetch-jwt.yaml: {}
   ../tests/goss-spire-agent-service-running.yaml: {}

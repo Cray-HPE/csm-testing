@@ -47,7 +47,6 @@ gossfile:
   ../tests/goss-cray-spire-verify-pods.yaml: {}
   ../tests/goss-spire-bss-metadata-exist.yaml: {}
   ../tests/goss-spire-verify-api-fetch-jwt.yaml: {}
-  ../tests/goss-spire-verify-pods.yaml: {}
   ../tests/goss-k8s-postgres-backups.yaml: {}
   ../tests/goss-k8s-postgres-clusters-running.yaml: {}
   ../tests/goss-k8s-postgres-leader.yaml: {}
