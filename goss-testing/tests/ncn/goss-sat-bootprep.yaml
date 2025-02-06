@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2024-2025 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -22,25 +22,20 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-# This is a suite of functional tests for validating the functionality of the
-# System Admin Toolkit (SAT). Tests are split up across multiple gossfiles,
-# which are then included by this suite.
-#
-# Most `sat` commands are just making requests to the CSM APIs, so it would be
-# redundant to run each test on every node. Instead, we just run them on ncn-m001.
-
-# Use hostname from variable file, if set.
-# Otherwise use hostname from environment variable (or blank, if that is also not set)
-{{ $env_hostname := getEnv "HOSTNAME" }}
-{{ $vars_hostname := get .Vars "this_node_name" }}
-{{ $this_node_name := default $env_hostname $vars_hostname }}
-gossfile:
-  {{if eq $this_node_name "ncn-m001"}}
-  ../tests/goss-sat-bootprep.yaml: {}
-  ../tests/goss-sat-init.yaml: {}
-  ../tests/goss-sat-nid2xname.yaml: {}
-  ../tests/goss-sat-showrev.yaml: {}
-  ../tests/goss-sat-status.yaml: {}
-  ../tests/goss-sat-version.yaml: {}
-  {{ end }}
-
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := $scripts | printf "%s/log_run.sh" }}
+{{ $sat_test := $scripts | printf "%s/python/sat_functional" }}
+command:
+    {{ $test_label := "sat_bootprep_configs" }}
+    {{$test_label}}:
+        title: Test the 'sat bootprep run' command to create CFS configurations
+        meta:
+            desc: Tests that the 'sat bootprep run' command creates CFS configurations
+            sev: 0
+        exec: |-
+            "{{$logrun}}" -l "{{$test_label}}" \
+                "{{$sat_test}}" "bootprep.test_bootprep.TestBootprepCreateConfigs"
+        exit-status: 0
+        stderr:
+        - OK
+        timeout: 800000 # timeout in milliseconds

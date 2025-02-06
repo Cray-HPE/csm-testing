@@ -1,0 +1,28 @@
+---
+# Define a configuration to use in image customization
+configurations:
+
+# A simple configuration that has just one layer that runs a simple playbook
+- name: "{{test.prefix}}-simple-passing-configuration"
+  layers:
+  - name: successful-layer
+    playbook: test.yml
+    git:
+      # The url does not currently support templating, so this doesn't work yet
+      url: "https://api-gw-service-nmn.local/vcs/cray/{{test.vcs_repo_name}}.git"
+      branch: "main"
+
+images:
+- name: "{{test.prefix}}-simple-customized-image"
+  base:
+    product:
+      name: csm
+      version: "{{csm.version}}"
+      type: image
+      filter:
+        arch: x86_64
+        wildcard: "*barebones*"
+  configuration: "{{test.prefix}}-simple-passing-configuration"
+  configuration_group_names:
+  - Compute
+

@@ -60,6 +60,7 @@ license = { file = 'LICENSE' }
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+package-data = {"csm_testing" = ["tests/sat_functional/bootprep/data/*"]}
 
 [build-system]
 build-backend = 'setuptools.build_meta'

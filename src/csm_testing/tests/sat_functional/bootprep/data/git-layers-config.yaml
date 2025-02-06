@@ -1,0 +1,39 @@
+---
+# Define various configurations that define layers in terms of a git clone URL
+configurations:
+
+# A configuration that speicfies a layer from a git clone URL and a commit
+- name: "{{test.prefix}}-csm-git-commit-layer"
+  layers:
+  - name: csm-packages
+    playbook: csm_packages.yml
+    git:
+      url: "https://api-gw-service-nmn.local/vcs/cray/csm-config-management.git"
+      commit: "{{csm.commit_hash}}"
+
+# A configuration that speicfies a layer from a git clone URL and a branch
+- name: "{{test.prefix}}-csm-git-branch-layer"
+  layers:
+  - name: csm-packages
+    playbook: csm_packages.yml
+    git:
+      url: "https://api-gw-service-nmn.local/vcs/cray/csm-config-management.git"
+      # master is the default branch of the repo and does not contain any content,
+      # but this is just a test that specifying a branch does work
+      branch: "{{csm.branch_name}}"
+
+# A configuration that specifies two layers with git clone URLs
+- name: "{{test.prefix}}-csm-two-git-layers"
+  layers:
+  - name: csm-ncn_nodes
+    playbook: ncn_nodes.yml
+    git:
+      url: "https://api-gw-service-nmn.local/vcs/cray/csm-config-management.git"
+      commit: "{{csm.commit_hash}}"
+  - name: csm-ncn-initrd
+    playbook: ncn-initrd.yml
+    git:
+      url: "https://api-gw-service-nmn.local/vcs/cray/csm-config-management.git"
+      # master is the default branch of the repo and does not contain any content,
+      # but this is just a test that specifying a branch does work
+      branch: "{{csm.branch_name}}"

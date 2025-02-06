@@ -1,0 +1,43 @@
+---
+# Define a configuration that specifies additional_inventory
+configurations:
+
+# A configuration that specifies additional_inventory with a branch
+- name: "{{test.prefix}}-csm-additional-inventory-branch"
+  layers:
+    - name: csm-ncn_nodes
+      playbook: ncn_nodes.yml
+      product:
+        name: csm
+        version: "{{csm.version}}"
+    - name: csm-ncn-initrd
+      playbook: ncn-initrd.yml
+      product:
+        name: csm
+        branch: "{{csm.branch_name}}"
+  additional_inventory:
+    name: csm-additional-inventory
+    # Note that the CSM product's VCS repo does not really contain additional inventory,
+    # but it is sufficient to test creation of a configuration additional inventory.
+    url: "https://api-gw-service-nmn.local/vcs/cray/csm-config-management.git"
+    branch: "{{csm.branch_name}}"
+
+# A configuration that specifies additional_inventory with a commit hash
+- name: "{{test.prefix}}-csm-additional-inventory-commit"
+  layers:
+    - name: csm-ncn_nodes
+      playbook: ncn_nodes.yml
+      product:
+        name: csm
+        version: "{{csm.version}}"
+    - name: csm-ncn-initrd
+      playbook: ncn-initrd.yml
+      product:
+        name: csm
+        branch: "{{csm.branch_name}}"
+  additional_inventory:
+    name: csm-additional-inventory
+    # Note that the CSM product's VCS repo does not really contain additional inventory,
+    # but it is sufficient to test creation of a configuration additional inventory.
+    url: "https://api-gw-service-nmn.local/vcs/cray/csm-config-management.git"
+    commit: "{{csm.commit_hash}}"
