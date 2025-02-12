@@ -32,8 +32,20 @@ command:
             desc: Checks if any posgresql have status SyncFailed. If this fails, investigate postgresql statuses. Refer to 'operations/kubernetes/Troubleshoot_Postgres_Database.md' in the CSM documentation for more information on diagnosing and fixing clusters in a SyncFailed state.
             sev: 0
         exec: |-
-            "{{$logrun}}" -l "{{$testlabel}}" \
-                "{{$kubectl}}" get postgresql -A -o jsonpath='{.items[*].status.PostgresClusterStatus}'
+            retries=3
+            count=0
+            while [[ $count -lt $retries ]]; do
+                result=$("{{$logrun}}" -l "{{$testlabel}}" \
+                    "{{$kubectl}}" get postgresql -A -o jsonpath='{.items[*].status.PostgresClusterStatus}')
+                if [[ $result != *"SyncFailed"* ]]; then
+                    echo "$result"
+                    exit 0
+                fi
+                count=$((count + 1))
+                sleep 2
+            done
+            echo "$result"
+            exit 1
         stdout:
         - "!SyncFailed"
         exit-status: 0
