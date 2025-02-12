@@ -193,7 +193,7 @@ gather_goss_commands() {
           continue
         else
           # for tests that cannot run concurrently, add the --max-concurrent 1 flag
-          if [[ "$goss_file" =~ ncn-iuf- ]]; then
+          if [[ "$goss_file" =~ ncn-iuf- || "$goss_file" =~ ncn-iscsi- ]]; then
             GOSS_COMMANDS+=("${goss_command} -g ${goss_file} --vars ${goss_vars_file} validate -f ${format} --max-concurrent 1") 
           # for all other tests, run them concurrently
           else
