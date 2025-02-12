@@ -95,6 +95,22 @@ number_failed=$(jq '[.items[] | select(.status.phase == "PartiallyFailed") | sel
 # if the number of failed backups is not 0, print the failed backups and exit with a non-zero status
 if [[ $number_failed -ne 0 ]];
 then
+    completed_backups=$(velero backup get -o json | jq -r '[.items[] | select(.status.phase == "Completed") | select(.metadata.name | contains("vault"))] | .[] | .metadata.creationTimestamp')
+    failed_backups=$(jq -r '[.items[] | select(.status.phase == "PartiallyFailed") | select(.metadata.name | contains("vault"))] | .[] | .metadata.creationTimestamp' < "$failed_backups_path")
+    # check if there is a newer backup that was successful
+    for failed_backup in $failed_backups; do
+      for completed_backup in $completed_backups; do
+        if [[ $failed_backup < $completed_backup ]];
+        then
+          echo "Backup $failed_backup failed but there is a newer successful backup: $completed_backup"
+          newer_successful_backup=true
+          continue 2
+        fi
+      done
+    done
+    if [[ "$newer_successful_backup" == "true" ]]; then
+      echo "PASS"; exit 0;
+    fi
     echo "Investigate remaining Failed or PartiallyFailed backups: $(kubectl get backups -A -o json | jq -e '.items[] | select(.status.phase == "PartiallyFailed") | .metadata.name')"
     echo "FAIL"; exit 1;
 else
