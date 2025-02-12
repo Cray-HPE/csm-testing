@@ -22,13 +22,29 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-failFlag=0
-postgresStatuses="$(kubectl get postgresql -A -o jsonpath='{.items[*].status.PostgresClusterStatus}')"
-for status in $postgresStatuses
+maxRetries=3
+retryCount=0
+retryDelay=2
+
+while [[ $retryCount -lt $maxRetries ]]
 do
-    if [[ $status != "Running" && $status != "Updating" ]]; then failFlag=1; fi
+    failFlag=0
+    postgresStatuses="$(kubectl get postgresql -A -o jsonpath='{.items[*].status.PostgresClusterStatus}')"
+    for status in $postgresStatuses
+    do
+        if [[ $status != "Running" && $status != "Updating" ]]; then failFlag=1; fi
+    done
+
+    if [[ $failFlag -eq 0 ]]; then
+        result="PASS"
+        break
+    else
+        result="FAIL"
+    fi
+
+    retryCount=$((retryCount + 1))
+    sleep "$retryDelay"
 done
 
-if [[ $failFlag -eq 0 ]]; then echo "PASS"; exit 0;
-else exit 1
-fi
+echo "$result"
+if [[ $result == "PASS" ]]; then exit 0; else exit 1; fi
