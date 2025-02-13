@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -23,15 +23,16 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # This test checks that if cilium is up and running in case cilium is installed
-
-if [ "$(kubectl get pods -n kube-system -o wide | grep -E 'cilium')" ]; then
+set -euo pipefail
+k8s_cni="$(kubectl get pods -n kube-system -o wide | grep -E 'cilium')"
+if [ "$k8s_cni" ]; then
   phase_count=$(cilium status -o json | jq -r '.phase_count.cilium.Running')
   if [ "$phase_count" -gt 0 ]; then
-    echo "PASS"
+    echo "PASS-Cilium is up"
   fi
 else
-  if [ "$(weave --local status connections)" ]; then
-    echo "Weave is operational"
+  if weave --local status connections; then
+    echo "PASS-Weave is up"
   fi
 fi
 
