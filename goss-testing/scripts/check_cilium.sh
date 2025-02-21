@@ -16,7 +16,7 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
@@ -24,8 +24,8 @@
 #
 # This test checks that if cilium is up and running in case cilium is installed
 set -euo pipefail
-k8s_cni="$(kubectl get pods -n kube-system -o wide | grep -E 'cilium')"
-if [ "$k8s_cni" ]; then
+k8s_cni="$(kubectl get pods -n kube-system -l name=cilium-envoy -o jsonpath='{range.items[*]}{.status.phase}{"\n"}{end}')"
+if [[ "$k8s_cni" == *"Running"* ]]; then
   phase_count=$(cilium status -o json | jq -r '.phase_count.cilium.Running')
   if [ "$phase_count" -gt 0 ]; then
     echo "PASS-Cilium is up"
