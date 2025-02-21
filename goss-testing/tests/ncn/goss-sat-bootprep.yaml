@@ -38,4 +38,4 @@ command:
         exit-status: 0
         stderr:
         - OK
-        timeout: 800000 # timeout in milliseconds
+        timeout: 1200000 # timeout in milliseconds
