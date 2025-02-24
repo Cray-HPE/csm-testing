@@ -2,11 +2,11 @@
 # Define a configuration to use in image customization
 configurations:
 
-# A simple configuration that has just one layer that runs a simple playbook
-- name: "{{test.prefix}}-simple-passing-configuration"
+# A simple configuration that has just one layer that runs a simple failing playbook
+- name: "{{test.prefix}}-simple-failing-configuration"
   layers:
   - name: successful-layer
-    playbook: test.yml
+    playbook: test-fail.yml
     git:
       url: "https://api-gw-service-nmn.local/vcs/cray/{{test.vcs_repo_name}}.git"
       branch: "main"
@@ -21,7 +21,7 @@ images:
       filter:
         arch: x86_64
         wildcard: "*barebones*"
-  configuration: "{{test.prefix}}-simple-passing-configuration"
+  configuration: "{{test.prefix}}-simple-failing-configuration"
   configuration_group_names:
   - Compute
 

@@ -35,9 +35,10 @@ import shlex
 import shutil
 import subprocess
 import tempfile
-from typing import List
+from typing import List, Optional
 import unittest
 
+import requests.exceptions
 from kubernetes.client import CoreV1Api
 from kubernetes.client.exceptions import ApiException
 from kubernetes.config.config_exception import ConfigException
@@ -112,17 +113,24 @@ class BootprepRunTestCase(unittest.TestCase):
         vars_file_path = os.path.join(cls.temp_dir.name, cls.vars_file_name)
         vars_data = {
             'test': {
-                'prefix': cls.test_prefix
+                'prefix': cls.test_prefix,
+                'vcs_repo_name': cls.vcs_repo_name
             },
             'csm': cls.csm_vars
         }
         with open(vars_file_path, 'w', encoding='utf-8') as vars_file:
             yaml.dump(vars_data, vars_file)
 
+        for error in cls.set_up_errors:
+            logging.warning(f"{error}")
+
     @classmethod
     def tearDownClass(cls):
         """Remove the temporary directory for bootprep input files."""
         cls.temp_dir.cleanup()
+        # TODO: uncomment to test if repo deletion works
+        if cls.delete_vcs_repository(f'sat-vcs-goss-testing-{datetime.now().strftime("%Y-%m-%d")}') == "":
+            cls.set_up_errors.append(f"Unable to delete the vcs repository {cls.vcs_repo_name}")
 
     @classmethod
     def get_product_catalog_data(cls) -> None:
@@ -149,8 +157,6 @@ class BootprepRunTestCase(unittest.TestCase):
                                      f'failed to read configmap: {err}')
             return
 
-
-
     @classmethod
     def get_branch_name(cls, commit_url):
 
@@ -164,7 +170,7 @@ class BootprepRunTestCase(unittest.TestCase):
             vcs_creds_encoded = proc.stdout.decode()
             vcs_creds_decoded = base64.b64decode(vcs_creds_encoded).decode('utf-8')
 
-            git_command = f'git ls-remote --heads https://crayvcs:{vcs_creds_decoded}@api-gw-service-nmn.local/vcs/cray/' + git_repo_name
+            git_command = f'git ls-remote --heads https://crayvcs:{vcs_creds_decoded}@api-gw-service-nmn.local/vcs/cray/{git_repo_name}'
 
             proc = subprocess.run(shlex.split(git_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    check=True)
@@ -180,11 +186,139 @@ class BootprepRunTestCase(unittest.TestCase):
                 return branches[0]
 
         except subprocess.CalledProcessError as err:
-            cls.set_up_errors.append()
-            logging.warning('Failed to get branch names for "%s" '
-                            'created by test: %s'
-                            'defaulting to main branch', git_repo_name, err.stderr)
+            cls.set_up_errors.append(f'Failed to get branch names for {git_repo_name} '
+                            f'created by test: {err.stderr}'
+                            'defaulting to main branch')
             return "main"
+
+    @classmethod
+    def populate_vcs_repository(cls, repo_name: str):
+        """Push test files to a vcs repository for testing
+
+        repo_name: the name of the vcs repo that has been created
+
+        vcs_password: the vcs password from the system
+        """
+        url = f"https://{cls.vcs_username}:{cls.vcs_password}@api-gw-service-nmn.local/vcs/cray/{repo_name}.git"
+
+        vcs_tmp_path = os.path.join(cls.temp_dir.name, repo_name)
+
+        git_commands = [
+            "git init",
+            "git branch -m main",
+            "git add test.yml",
+            "git add test-fail.yml",
+            "git commit -am \"Add test playbooks\"",
+            f"git remote add origin {url}",
+            "git push -u origin main"
+        ]
+        try:
+            os.makedirs(vcs_tmp_path, exist_ok=True)
+            cls.copy_to_tmp_dir("test.yml", repo_name)
+            cls.copy_to_tmp_dir("test-fail.yml", repo_name)
+            for command in git_commands:
+                cls.run_shell_command(command, vcs_tmp_path)
+        except OSError as e:
+            cls.set_up_errors.append(f"Failed with OSError {e}")
+        except Exception as e:
+            cls.set_up_errors.append(f"Failed to push changes to the branch with error {e}")
+
+    @classmethod
+    def get_encoded_vcs_credentials(cls):
+        try:
+            # Get the username from the Kubernetes secret
+            username_command = f"kubectl get secret -n services vcs-user-credentials -o jsonpath={{.data.vcs_username}}"
+            username_base64 = subprocess.check_output(username_command, shell=True).strip()
+            username = base64.b64decode(username_base64).decode('utf-8')
+            cls.vcs_username = username
+
+            # Get the password from the Kubernetes secret
+            password_command = f"kubectl get secret -n services vcs-user-credentials -o jsonpath={{.data.vcs_password}}"
+            password_base64 = subprocess.check_output(password_command, shell=True).strip()
+            password = base64.b64decode(password_base64).decode('utf-8')
+            cls.vcs_password = password
+
+            # Encode credentials
+            credentials = f"{username}:{password}"
+            encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+
+            return encoded_credentials
+        except Exception as e:
+            raise e
+
+    @classmethod
+    def create_vcs_repository(cls, repo_name) -> str:
+        """ Creates a vcs repository and populates it with files to be used for testing
+
+        repo_name: the name of the repo to be created
+        """
+        try:
+            encoded_vcs_creds = cls.get_encoded_vcs_credentials()
+
+            url = "https://api-gw-service-nmn.local/vcs/api/v1/admin/users/cray/repos"
+            headers = {
+                'accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': f'Basic {encoded_vcs_creds}'
+            }
+
+            # Define the data payload
+            data = {
+                "name": repo_name
+            }
+
+            response = requests.post(url, headers=headers, json=data)
+            response.raise_for_status()
+
+            cls.populate_vcs_repository(repo_name)
+
+        except subprocess.CalledProcessError as err:
+            cls.set_up_errors.append(f'Failed to get vcs password with error: {err}')
+            return ""
+        except requests.exceptions.RequestException as err:
+            cls.set_up_errors.append(f'Failed to make vcs api call with error: {err}')
+            return ""
+        except Exception as err:
+            cls.set_up_errors.append(f"Failed to create vcs repo with err {err}")
+            return ""
+
+        return repo_name
+
+    @classmethod
+    def delete_vcs_repository(cls, repo_name) -> str:
+        """ Deletes a vcs repository
+
+        repo_name: the name of the repo to be deleted
+        """
+        get_vcs_password_cmd = "kubectl get secret -n services vcs-user-credentials -o jsonpath={.data.vcs_password}"
+        try:
+            encoded_vcs_creds = cls.get_encoded_vcs_credentials()
+
+            # run a curl command with the username and password to delete the repo
+            url = f"https://api-gw-service-nmn.local/vcs/api/v1/repos/cray/{repo_name}"
+            # Define the data payload
+            headers = {
+                'accept': 'application/json',
+                'Authorization': f'Basic {encoded_vcs_creds}'
+            }
+
+            response = requests.delete(url, headers=headers)
+
+            if response.status_code != 204:
+                cls.set_up_errors.append(f"Failed to delete the repository. Status code: {response.status_code}, Response: {response.text}")
+                return ""
+
+        except subprocess.CalledProcessError as err:
+            cls.set_up_errors.append(f'Failed to get vcs password with error: {err}')
+            return ""
+        except requests.exceptions.RequestException as err:
+            cls.set_up_errors.append(f'Failed to make vcs api call with error: {err}')
+            return ""
+        except Exception as err:
+            cls.set_up_errors.append(f"Failed to delete vcs repo with err {err}")
+            return ""
+
+        return repo_name
 
     @classmethod
     def get_csm_vars(cls):
@@ -235,6 +369,13 @@ class BootprepRunTestCase(unittest.TestCase):
         else:
             cls.set_up_errors.append('Unable to get barebones image id from latest CSM version')
 
+        vcs_repo_name = cls.create_vcs_repository(f'sat-vcs-goss-testing-{datetime.now().strftime("%Y-%m-%d")}')
+
+        if vcs_repo_name != "":
+            cls.vcs_repo_name = vcs_repo_name
+        else:
+            cls.set_up_errors.append("Unable to create the vcs repository")
+
     def assert_in_log_messages(self, level: str, message_substring: str, stderr: str) -> None:
         """Assert that the given substring appears in a log message prefixed with the given level.
 
@@ -250,6 +391,17 @@ class BootprepRunTestCase(unittest.TestCase):
         self.assertTrue(any(message_substring in message for message in messages),
                         f'No {level} log message containing "{message_substring}" found in stderr')
 
+    @classmethod
+    def run_shell_command(cls, command, path):
+        """Run a shell command and return the output."""
+        try:
+            result = subprocess.run(command, shell=True, cwd=path, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return result.stdout.decode().strip()
+        except subprocess.CalledProcessError as err:
+            cls.set_up_errors.append(f"When trying to run {command}\n"
+                                      f"an error occured: {err.stderr.decode()}")
+            raise err
+
     @staticmethod
     def delete_cfs_configuration(cfs_config_name):
         """Delete a CFS configuration using the 'cray' CLI.
@@ -262,7 +414,6 @@ class BootprepRunTestCase(unittest.TestCase):
         except subprocess.CalledProcessError as err:
             logging.warning('Failed to delete CFS configuration "%s" '
                             'created by test: %s', cfs_config_name, err.stderr)
-
 
     @staticmethod
     def delete_all_cfs_configurations_matching_prefix(cfs_config_prefix):
@@ -294,7 +445,6 @@ class BootprepRunTestCase(unittest.TestCase):
             except subprocess.CalledProcessError as err:
                 logging.warning('Failed to delete CFS configuration "%s" '
                                 'created by test: %s', configuration_name, err.stderr)
-
 
     @staticmethod
     def delete_ims_image(ims_image_id, permanent=True):
@@ -354,15 +504,7 @@ class BootprepRunTestCase(unittest.TestCase):
         bootprep_opts_str = f'--vars-file {self.vars_file_name}'
         if bootprep_opts:
             bootprep_opts_str += f' {bootprep_opts}'
-        # Find the path to the given bootprep_file in the data directory
-        src_bootprep_file_path = pkg_resources.resource_filename(
-            'csm_testing',
-            f'tests/sat_functional/bootprep/data/{bootprep_file}'
-        )
-
-        # Copy the bootprep input file into the temporary directory
-        tmp_bootprep_file_path = os.path.join(self.temp_dir.name, os.path.basename(bootprep_file))
-        shutil.copy(src_bootprep_file_path, tmp_bootprep_file_path)
+        self.copy_to_tmp_dir(bootprep_file, "")
 
         # Since the command is executed in the temporary directory containing
         # the bootprep input file, just use the relative file path
@@ -372,12 +514,30 @@ class BootprepRunTestCase(unittest.TestCase):
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         except subprocess.CalledProcessError as err:
             logging.error(f"\nFailed to run command: {' '.join(err.cmd)}\n"
-                          f"Exit Status: {err.returncode}\n"
-                          f"Standard Output: \n{err.output.decode()}\n"
-                          f"Standard Error: \n{err.stderr.decode()}\n")
+                          f"with error: \n{err.stderr.decode()}")
             raise
 
         return result
+
+    @classmethod
+    def copy_to_tmp_dir(cls, bootprep_file, dest_folder):
+        """copy file from data directory to the current tmp directory
+
+        Args:
+            bootprep_file: The name of the bootprep input file to use. This file
+                will first be copied into the temporary directory created in the
+                setUpClass method.
+            dest_folder: the destination folder created in the tmp directory or ""
+            if target is the tmp directory itself
+        """
+        # Find the path to the given bootprep_file in the data directory
+        src_bootprep_file_path = pkg_resources.resource_filename(
+            'csm_testing',
+            f'tests/sat_functional/bootprep/data/{bootprep_file}'
+        )
+        # Copy the bootprep input file into the temporary directory
+        tmp_bootprep_file_path = os.path.join(cls.temp_dir.name, dest_folder, os.path.basename(bootprep_file))
+        shutil.copy(src_bootprep_file_path, tmp_bootprep_file_path)
 
 
 class TestBootprepCreateConfigs(BootprepRunTestCase):
@@ -496,6 +656,41 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         self.assert_in_log_messages(
             "ERROR",
             "The CFS configuration at index 0 is not valid.",
+            decoded_stderr
+        )
+
+    def test_image_customization(self):
+        """Test creating an ims image with a configuration"""
+        result = self.run_bootprep('image-customization.yaml', '--format json')
+
+        report = json.loads(result.stdout.decode())
+        self.assertEqual(1, len(report['configurations']))
+        self.assertEqual(1, len(report['images']))
+
+        for config in report['configurations']:
+            self.validate_cfs_config(config['name'])
+
+        for config in report['configurations']:
+            self.items_to_delete['configurations'].append(config['name'])
+
+        for image in report['images']:
+            self.items_to_delete['images'].append(image['final_image_id'])
+
+    def test_image_customization_fail(self):
+        """Test creating a failing ims image"""
+        result = self.run_bootprep('image-customization-fail.yaml', '--format json', check=False)
+
+        self.assertEqual(1, result.returncode)
+        decoded_stderr = result.stderr.decode()
+
+        self.assert_in_log_messages(
+            "ERROR",
+            f"Creation of image {self.test_prefix}-simple-customized-image failed",
+            decoded_stderr
+        )
+        self.assert_in_log_messages(
+            "ERROR",
+            "Creation of 1 images failed",
             decoded_stderr
         )
 

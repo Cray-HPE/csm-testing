@@ -1,0 +1,12 @@
+#!/usr/bin/env ansible-playbook
+#
+# Ansible playbook to print a message during image customization
+- hosts:
+  - Compute
+  - Application
+  any_errors_fatal: true
+  remote_user: root
+  tasks:
+  - name: say hello
+    debug:
+      msg: Hello world
