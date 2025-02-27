@@ -694,6 +694,43 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
             decoded_stderr
         )
 
+    def test_session_template(self):
+        """Test creating a bos session template"""
+        result = self.run_bootprep('ims-image-session-template.yaml', '--format json')
+
+        report = json.loads(result.stdout.decode())
+        self.assertEqual(1, len(report['configurations']))
+        self.assertEqual(1, len(report['session_templates']))
+
+        for config in report['configurations']:
+            self.validate_cfs_config(config['name'])
+
+        for config in report['configurations']:
+            self.items_to_delete['configurations'].append(config['name'])
+
+        for image in report['session_templates']:
+            self.items_to_delete['session_templates'].append(image['name'])
+
+    def test_configs_images_and_session_templates(self):
+        """Test creating a bos session template"""
+        result = self.run_bootprep('configs-images-and-session-templates.yaml', '--format json')
+
+        report = json.loads(result.stdout.decode())
+        self.assertEqual(1, len(report['configurations']))
+        self.assertEqual(1, len(report['images']))
+        self.assertEqual(1, len(report['session_templates']))
+
+        for config in report['configurations']:
+            self.validate_cfs_config(config['name'])
+
+        for config in report['configurations']:
+            self.items_to_delete['configurations'].append(config['name'])
+
+        for image in report['images']:
+            self.items_to_delete['images'].append(image['final_image_id'])
+
+        for image in report['session_templates']:
+            self.items_to_delete['session_templates'].append(image['name'])
 
 if __name__ == '__main__':
     unittest.main()
