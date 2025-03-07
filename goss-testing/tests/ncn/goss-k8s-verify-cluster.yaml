@@ -45,7 +45,6 @@ command:
             - /^kube-multus-ds-.*Running/
             - /^kube-proxy-.*Running/
             - /^kube-scheduler-.*Running/
-            - /^weave-net-.*Running/
         exit-status: 0
         timeout: 20000
     {{ $testlabel_2 := "k8s_verify_cluster_2" }}
