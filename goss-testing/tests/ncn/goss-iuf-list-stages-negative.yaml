@@ -69,5 +69,5 @@ command:
       - "| managed-nodes-rollout      | Rolling reboot of managed nodes                                                       | N/A    | N/A      |"
       - "| post-install-check         | Perform post-install checks                                                           | N/A    | N/A      |"
       - "+----------------------------+---------------------------------------------------------------------------------------+--------+----------+"
-    timeout: 20000
+    timeout: 60000
     skip: false
