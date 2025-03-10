@@ -32,5 +32,3 @@
 gossfile:
   ../tests/goss-dedicated-drive-worker.yaml: {}
   ../tests/goss-ncn-xname.yaml: {}
-  ../tests/goss-weave-health.yaml: {}
-  ../tests/goss-weave-status-daemon-sets.yaml: {}
