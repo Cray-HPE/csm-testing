@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -42,8 +42,8 @@ do
              exit 0;;
           \?) echo "usage:  ceph-service-status.sh # runs a simple ceph health check"
              echo "        ceph-service-status.sh -n <node> -s <service> # checks a single service on a single node"
-             echo "        ceph-service-status.sh -n <node> -A true # checks all Ceph services on a node"
-             echo "        ceph-service-status.sh -a true # checks all Ceph services on all nodes in a rolling fashion"
+             echo "        ceph-service-status.sh -n <node> -a true # checks all Ceph services on a node"
+             echo "        ceph-service-status.sh -A true # checks all Ceph services on all nodes in a rolling fashion"
              echo "        ceph-service-status.sh -s <service name> # will find the where the service is running and report its status"
              exit 1;;
   esac
@@ -157,7 +157,11 @@ function check_service(){
       fi
       # adding service_name_2 to make the selection more specific, sometimes a random string contains mds, rgw, etc. which fails a test
       service_name_2=$(echo $service|cut -d "." -f 2)
-      read -r -d "\n" service_unit status  < <(pdsh -N -w "$host" podman ps --format json 2>&1|grep -v "Permanently added"|jq --arg service "${service_name}-${service_name_2}" -r '.[]|select(.Names[]|contains($service))|.Names[], .State')
+      specific_service_name="${service_name}"
+      if [[ "$service_name_2" != "$service" ]]; then
+	      specific_service_name="${service_name}-${service_name_2}"
+      fi
+      read -r -d "\n" service_unit status  < <(pdsh -N -w "$host" podman ps --format json 2>&1|grep -v "Permanently added"|jq --arg service "${specific_service_name}" -r '.[]|select(.Names[]|contains($service))|.Names[], .State')
       (( tests++ ))
       if [[ "$service_unit" =~ $FSID_STR-$service_name ]]
       then
