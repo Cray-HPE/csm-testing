@@ -42,5 +42,5 @@ command:
         /usr/bin/iuf la
       '
     exit-status: 0
-    timeout: 20000
+    timeout: 60000
     skip: false

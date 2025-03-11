@@ -1,6 +1,7 @@
+#
 # MIT License
 #
-# (C) Copyright 2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -19,28 +20,14 @@
 # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
-
-{{ $pre_checks := .Vars.iuf_pre_checks }}
-{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
-{{ $iuf_pre_checks := $scripts | printf "%s/python/iuf_pre_checks" }}
-
-command:
-  {{ $testlabel := "iuf_list_stages" }}
-  {{$testlabel}}:
-    title: IUF list-stages/ls
-    meta:
-      desc: Lists all the stages of IUF.
-      sev: 0
-    exec: |-
-      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
-        # Run pre-checks for IUF
-        "{{$iuf_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
-
-        # Run IUF ls command
-        echo "Running iuf list-stages test case" && \
-        /usr/bin/iuf ls
-      '
-    exit-status: 0
-    timeout: 60000
-    skip: false
+#
+gossfile:
+  ../tests/goss-iuf-list-stages.yaml: {}
+  ../tests/goss-iuf-list-activities.yaml: {}
+  ../tests/goss-iuf-activity-restart.yaml: {}
+  ../tests/goss-iuf-activity-resume.yaml: {}
+  ../tests/goss-iuf-activity.yaml: {}
+  ../tests/goss-iuf-activity-list-stages.yaml: {}
+  ../tests/goss-iuf-list-activity-workflows.yaml: {}
+  ../tests/goss-iuf-specified-log-dir.yaml: {}
+  ../tests/goss-iuf-activity-abort.yaml: {}

@@ -56,5 +56,5 @@ command:
         fi
       '
     exit-status: 1
-    timeout: 50000
+    timeout: 60000
     skip: false

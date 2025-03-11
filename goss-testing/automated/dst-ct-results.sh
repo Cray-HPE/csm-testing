@@ -192,7 +192,13 @@ gather_goss_commands() {
           # skip these tests
           continue
         else
-          GOSS_COMMANDS+=("${goss_command} -g ${goss_file} --vars ${goss_vars_file} validate -f ${format}")
+          # for tests that cannot run concurrently, add the --max-concurrent 1 flag
+          if [[ "$goss_file" =~ ncn-iuf- ]]; then
+            GOSS_COMMANDS+=("${goss_command} -g ${goss_file} --vars ${goss_vars_file} validate -f ${format} --max-concurrent 1") 
+          # for all other tests, run them concurrently
+          else
+            GOSS_COMMANDS+=("${goss_command} -g ${goss_file} --vars ${goss_vars_file} validate -f ${format}")
+          fi
         fi
       fi
     done
