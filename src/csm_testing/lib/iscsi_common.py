@@ -196,7 +196,7 @@ def check_cli_minimum_version_xname(
     Returns:
         None
     """
-    cli_version_command = f"rpm -q --qf '%{{VERSION}}'  {cli_name} | sed 's/^[a-zA-Z.-]*-\\([0-9][^ ]*\\)-.*$/\\1/'"  # pylint: disable=line-too-long
+    cli_version_command = f"rpm -q --qf '%{{VERSION}}' {cli_name}"
     ssh_command = f'ssh -o BatchMode=yes -q  root@{xname} "{cli_version_command}" '
     current_cli_version, returncode = run_command(ssh_command)
     if returncode != 0:
