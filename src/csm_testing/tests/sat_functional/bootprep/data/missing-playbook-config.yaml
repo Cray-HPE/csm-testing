@@ -4,6 +4,7 @@
 # `--cfs-version v3`.
 configurations:
 - name: "{{test.prefix}}-csm-{{csm.version}}-product-layer"
+  if_exists: 'overwrite'
   layers:
   - name: csm-packages-{{csm.version}}
     product:
