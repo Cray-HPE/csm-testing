@@ -15,6 +15,7 @@ requests-oauthlib
 packaging
 python-keycloak
 jsonschema
+Jinja2
 semver
 urllib3
 

@@ -155,7 +155,7 @@ def get_compute_node() -> List[str]:
         iscsi_prechecks_failed()
     return compute_node_list
 
-def get_uan_node() -> list:
+def get_uan_node() -> List[str]:
     """
     Function to get list of stable uan nodes.
     Args:
@@ -163,7 +163,7 @@ def get_uan_node() -> list:
     Returns:
         UAN Nodes List (list)
     """
-    #Get List of configured compute nodes
+    #Get List of configured UAN nodes
     sat_status_output, returncode = run_command(
         command="""sat status --filter 'SubRole=UAN and \
                State=Ready and \"Configuration Status\"=configured ' \
@@ -177,7 +177,6 @@ def get_uan_node() -> list:
         print("ERROR: No UAN Node Found")
         iscsi_prechecks_failed()
     else:
-        #check if atleast 2 compute nodes are present
         uan_node_list = [xname.strip() for xname in sat_status_output.split("\n")]
         uan_node_list = [
             xname for xname in uan_node_list if check_ssh_xname(xname)
