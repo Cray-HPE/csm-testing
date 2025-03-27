@@ -207,13 +207,13 @@ iscsi_readiness:
  - "2.1.75"
 
 iscsi_compute_reboot:
- - "hsn"
- - "s3://boot-images/594b7c79-9cb5-48f6-bceb-18f3596f0dbb/manifest.json"
- - "d3300926acab3ae1ea41a07bda7ac446"
- - "ssi-compute-25.1.0-160a"
+  interface: "hsn"
+  image_path: "s3://boot-images/594b7c79-9cb5-48f6-bceb-18f3596f0dbb/manifest.json"
+  image_etag: "d3300926acab3ae1ea41a07bda7ac446"
+  cfs_configuration: "ssi-compute-25.1.0-160a"
 
 iscsi_uan_reboot:
- - "nmn"
- - "s3://boot-images/ba31a433-9291-4d99-8de3-e0b9b146cb87/manifest.json"
- - "701e7f0efbf082a8e475abb3c113ae28"
- - "ssi-uan-25.1.0-160a"
+  interface: "nmn"
+  image_path: "s3://boot-images/ba31a433-9291-4d99-8de3-e0b9b146cb87/manifest.json"
+  image_etag: "701e7f0efbf082a8e475abb3c113ae28"
+  cfs_configuration: "ssi-uan-25.1.0-160a"

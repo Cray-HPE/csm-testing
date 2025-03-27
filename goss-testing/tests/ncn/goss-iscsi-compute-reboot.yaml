@@ -28,6 +28,7 @@
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 {{ $iscsi_node_reboot := $scripts | printf "%s/python/iscsi_node_reboot" }}
+{{ $iscsi_pre_checks := $scripts | printf "%s/python/iscsi_prechecks" }}
 
 command:
   {{if eq $this_node_name "ncn-m001"}}
@@ -40,10 +41,10 @@ command:
       exec: |-
         "{{$logrun}}" -l "{{$testlabel}}" bash -c '
           # Run pre-checks for iSCSI
-          "{{$iscsi_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}"
+        "{{$iscsi_pre_checks}}" "{{ index $pre_checks 0 }}" "{{ index $pre_checks 1 }}" "{{ index $pre_checks 2 }}" "{{ index $pre_checks 3 }}" "{{ index $pre_checks 4 }}" "{{ index $pre_checks 5 }}" && \
 
           # Run compute node reboot
-          "{{ $iscsi_node_reboot }}" "compute" "{{ index $iscsi_compute_reboot 0 }}" "{{ index $iscsi_compute_reboot 1 }}" "{{ index $iscsi_compute_reboot 2 }}" "{{ index $iscsi_compute_reboot 3 }}"
+        "{{ $iscsi_node_reboot }}" "compute" "{{ $iscsi_compute_reboot.interface }}" "{{ $iscsi_compute_reboot.image_path }}" "{{ $iscsi_compute_reboot.image_etag }}" "{{ $iscsi_compute_reboot.cfs_configuration }}" "{{ $scripts }}"
         '
       exit-status: 0
       timeout: 3000000

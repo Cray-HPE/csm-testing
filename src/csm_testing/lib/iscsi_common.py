@@ -173,14 +173,13 @@ def get_uan_node() -> List[str]:
     if returncode != 0:
         print(f"ERROR: Command sat status returned error. Return code: {returncode}")
         iscsi_prechecks_failed()
-    elif sat_status_output == "":
+    if sat_status_output == "":
         print("ERROR: No UAN Node Found")
         iscsi_prechecks_failed()
-    else:
-        uan_node_list = [xname.strip() for xname in sat_status_output.split("\n")]
-        uan_node_list = [
-            xname for xname in uan_node_list if check_ssh_xname(xname)
-        ]
+    uan_node_list = [xname.strip() for xname in sat_status_output.split("\n")]
+    uan_node_list = [
+            xname for xname in uan_node_list if check_ssh_xname(xname) and check_iscsid(xname, "uan") and check_multipathd(xname, "uan")
+    ]
     return uan_node_list
 
 

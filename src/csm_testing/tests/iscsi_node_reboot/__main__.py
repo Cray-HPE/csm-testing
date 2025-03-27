@@ -263,10 +263,10 @@ def main() -> None:
         None
 
     """
-    if len(sys.argv) != 6:
+    if len(sys.argv) != 7:
         print(
             "Usage: script.py <node_type> <interface_type> "
-            "<image_path> <image_etag> <cfs_configuration>"
+            "<image_path> <image_etag> <cfs_configuration> <json_path>"
         )
         sys.exit(1)
     try:
@@ -274,7 +274,9 @@ def main() -> None:
 
         # Load the JSON template
         try:
-            with open("bos-template.json", "r", encoding="utf-8") as file:
+            with open(
+                f"{sys.argv[6]}/bos-template.json", "r", encoding="utf-8"
+            ) as file:
                 template_content = file.read()
         except Exception as err:
             raise RebootError(f"Unable to update the bos-template.json: {err}") from err
@@ -297,10 +299,14 @@ def main() -> None:
 
         rendered_content = template.render(context)
 
-        with open("bos-auto-template.json", "w", encoding="utf-8") as file:
+        with open(
+            f"{sys.argv[6]}/bos-auto-template.json", "w", encoding="utf-8"
+        ) as file:
             file.write(rendered_content)
 
-        template_name = create_session_template("bos-auto-template.json", sys.argv[1])
+        template_name = create_session_template(
+            f"{sys.argv[6]}/bos-auto-template.json", sys.argv[1]
+        )
         reboot_and_check_multipath(node, template_name)
         print("INFO: Test completed successfully.")
     except RebootError as err:
