@@ -1,0 +1,20 @@
+{
+    "enable_cfs": true,
+    "description": "{{ description }}",
+    "boot_sets": {
+        "{{ node_type }}": {
+            "rootfs_provider": "sbps",
+            "rootfs_provider_passthrough": "{{ rootfs_provider_passthrough }}",
+            "kernel_parameters": "ip=dhcp quiet spire_join_token=${SPIRE_JOIN_TOKEN}",
+            "node_roles_groups": [
+                "{{ node_roles_groups }}"
+            ],
+            "type": "s3",
+            "path": "{{ path }}",
+            "etag": "{{ etag }}"
+        }
+    },
+    "cfs": {
+        "configuration": "{{ cfs_configuration }}"
+    }
+}

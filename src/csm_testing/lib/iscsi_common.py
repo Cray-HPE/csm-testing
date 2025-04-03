@@ -155,6 +155,33 @@ def get_compute_node() -> List[str]:
         iscsi_prechecks_failed()
     return compute_node_list
 
+def get_uan_node() -> List[str]:
+    """
+    Function to get list of stable uan nodes.
+    Args:
+        None
+    Returns:
+        UAN Nodes List (list)
+    """
+    #Get List of configured UAN nodes
+    sat_status_output, returncode = run_command(
+        command="""sat status --filter 'SubRole=UAN and \
+               State=Ready and \"Configuration Status\"=configured ' \
+               --fields xname  --no-borders --no-headings"""
+    )
+
+    if returncode != 0:
+        print(f"ERROR: Command sat status returned error. Return code: {returncode}")
+        iscsi_prechecks_failed()
+    if sat_status_output == "":
+        print("ERROR: No UAN Node Found")
+        iscsi_prechecks_failed()
+    uan_node_list = [xname.strip() for xname in sat_status_output.split("\n")]
+    uan_node_list = [
+            xname for xname in uan_node_list if check_ssh_xname(xname) and check_iscsid(xname, "uan") and check_multipathd(xname, "uan")
+    ]
+    return uan_node_list
+
 
 def get_worker_node() -> List[str]:
     """
