@@ -110,6 +110,21 @@ jq '.results[] | select(.successful == false)' < /tmp/tmp.XbwecrPyr5 # path from
 jq '.tests[] | select(.status == "fail")' < /tmp/api-results.json # default
 ```
 
+## Parsing Goss Results Executed Via CT Pipeline
+
+There is too much output to display in Slack, but you can investigate the results locally on the machine CT ran on.  The local path with the Run ID can be found in the slack output.
+
+```shell
+# parse CT pipeline file from a run ID of 1692511 /mnt/developer/dst/1692511/CSM-GOSS-csm-goss-config
+jq '.[].test_artifacts | select(.successful == false)' < 1692511-goss-results.json
+
+# parse payload file that is submitted to the API from a run ID of 1692511 /mnt/developer/dst/1692511/CSM-GOSS-csm-goss-config
+jq '.tests[] | select(.status == "fail") | .test_artifacts' < 1692511-payload.json
+
+# parse an individual node's results
+jq '.tests[] | select(.status == "fail") | .test_artifacts' < ncn-m001/api-results.json
+```
+
 
 ## Running Tests Remotely
 
