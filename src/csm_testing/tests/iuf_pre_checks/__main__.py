@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2024-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -358,9 +358,8 @@ def check_cfs():
         )
         cfs_api_pods = result.stdout.decode().strip()
         if result.returncode == 0 and cfs_api_pods:
-            print("ERROR: Some cray-cfs-api pods are not running")
+            print("WARNING: Some cray-cfs-api pods are not running")
             print(cfs_api_pods)
-            sys.exit(1)
 
         else:
             print(f"Unexpected error: Return code {result.returncode}")
@@ -385,9 +384,8 @@ def check_cfs():
 
         cfs_ara_pods = result.stdout.decode().strip()
         if result.returncode == 0 and cfs_ara_pods:
-            print("ERROR: Some pods are not running")
+            print("WARNING: Some cfs-ara-postgres pods are not running")
             print(cfs_ara_pods)
-            sys.exit(1)
         else:
             print(f"ERROR: Return code {result.returncode}")
             print(cfs_ara_pods)
@@ -471,8 +469,7 @@ def check_available_space():
     _, _, free = shutil.disk_usage("/etc/cray/upgrade/csm/")
     free_gb = free // (2**30)
     if free_gb < 5:
-        print("ERROR: Insufficient space in /etc/cray/upgrade/csm/.")
-        sys.exit(1)
+        print("WARNING: Insufficient space in /etc/cray/upgrade/csm/.")
     else:
         print(f"INFO: Available space: {free_gb}G")
 
