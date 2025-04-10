@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -25,8 +25,6 @@
 # This script is to do some sanity tests for iSCSI based boot content 
 # projection.
 
-# shellcheck disable=SC2207,SC2143,SC2002
-
 LIO_ACT=0
 
 echo "Checking whether the node is configured with iSCSI"
@@ -41,10 +39,19 @@ else
     echo "${HOSTNAME} is configured with iSCSI"
 fi
 
-# Verifying whether Marshal agent is running or not
+EXIT_VAL=0
+
+# Verifying whether Marshal agent is running or not and if there are any errors
 
 echo "*******************************"
 echo "Marshal agent is $(systemctl is-active sbps-marshal.service)"
+
+ERR=$(journalctl -xeu sbps-marshal.service | tac | sed '/START SCAN/q' | grep -i error)
+
+if [ -n "${ERR}" ]; then
+    echo "Marshal agent is having errors, please check"
+    EXIT_VAL=1
+fi
 echo "*******************************"
 
 # Verifying whether LIO target(s) is active
@@ -62,6 +69,7 @@ echo "*******************************"
 
 # Verify TCP service probes complete against all active portals (iSCSI)
 
+# shellcheck disable=SC2207
 PORTALS=($(ss -tnpl | grep ':3260 ' | awk '{ print $4 }' ))
 
 if [[ -n "${PORTALS[*]}" ]]; then
@@ -104,9 +112,11 @@ if [ -s tmp_file ];then
     echo "*******************************"
 else
     echo "DNS SRV records do not exist, please create them"
+    rm tmp_file
     exit 1
 fi
 
+# shellcheck disable=SC2207,SC2002
 SRV=($(cat tmp_file | awk '{print $(NF)}' | sed -e 's/\.$//'))
 
 echo "DNS A records are as below"
@@ -114,7 +124,13 @@ echo "--------------------------"
 
 for i in "${SRV[@]}"
 do
-    dig -t A +short "${i}"
+    DNS_A=$(dig -t A +short "${i}")
+    if [ -z "${DNS_A}" ]; then
+        echo "ERROR: DNS A record is absent for ${i}"
+        EXIT_VAL=1
+    else
+        echo "DNS A record is present: ${DNS_A} for ${i}"
+    fi
 done
 
 rm tmp_file
@@ -128,3 +144,5 @@ echo "*********************************************"
 for s in $(dig -t srv +short _sbps-hsn._tcp."${host}" | sort -k3 | awk '{print $NF;}' | xargs); do printf '** %s **\n' "$s"; dig +short "$s"; done
 
 for s in $(dig -t srv +short _sbps-nmn._tcp."${host}" | sort -k3 | awk '{print $NF;}' | xargs); do printf '** %s **\n' "$s"; dig +short "$s"; done
+
+exit ${EXIT_VAL}
