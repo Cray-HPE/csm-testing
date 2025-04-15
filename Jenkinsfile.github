@@ -59,8 +59,10 @@ pipeline {
         stage('Prepare: RPMs') {
             steps {
                 runLibraryScript("addRpmMetaData.sh", "${env.NAME}.spec")
+                runLibraryScript("addRpmMetaData.sh", "${env.NAME}-internal.spec")
                 sh "make prepare"
                 sh "git update-index --assume-unchanged ${env.NAME}.spec"
+                sh "git update-index --assume-unchanged ${env.NAME}.spec ${env.NAME}-internal.spec"
 
                 // Just using this as a means to generate the netrc file that we need
                 getDockerBuildArgs()
