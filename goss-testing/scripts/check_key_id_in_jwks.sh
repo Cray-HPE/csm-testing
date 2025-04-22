@@ -26,7 +26,7 @@
 set -euo pipefail
 
 jwt=$(/usr/bin/heartbeat-spire-agent api fetch jwt -socketPath /var/lib/spire/agent.sock -audience goss-test -output json \
-  | jq -r '.[]?.svids[]?.svid') || exit 10
+  | jq -r '.[0]?.svids[0]?.svid') || exit 10
 
 # Make sure the value of the variable is not empty
 [[ -n ${jwt} ]] || exit 20
