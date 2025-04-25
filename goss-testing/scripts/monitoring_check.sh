@@ -25,7 +25,7 @@
 # Verify that the monitoring URLs are redirecting and responding.
 
 failFlag=0
-monitoring="$(kubectl get vs -A --no-headers=false | awk '{print $1","$4}' | grep "kiali\|prometheus\|alertmanager\|grafana\|jaeger")"
+monitoring="$(kubectl get vs -A --no-headers=false | awk '{print $1","$4}' | grep "kiali\|prometheus\|alertmanager\|grafana\|jaeger\|vmselect\|vmagent")"
 
 for m in $monitoring
 do
