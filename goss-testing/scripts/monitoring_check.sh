@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2022, 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -25,7 +25,7 @@
 # Verify that the monitoring URLs are redirecting and responding.
 
 failFlag=0
-monitoring="$(kubectl get vs -A --no-headers=false | awk '{print $1","$4}' | grep "kiali\|prometheus\|alertmanager\|grafana\|jaeger")"
+monitoring="$(kubectl get vs -A --no-headers=false | awk '{print $1","$4}' | grep "kiali\|prometheus\|alertmanager\|grafana\|jaeger\|vmselect\|vmagent")"
 
 for m in $monitoring
 do
