@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2019-2024 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2019-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -45,16 +45,22 @@ endif
 
 PYTHON_BIN := $(shell basename $(PY_BIN_PATH))
 
-SPEC_FILE := ${NAME}.spec
-SOURCE_NAME := ${NAME}-${VERSION}
+SPEC_FILES := ${NAME}.spec ${NAME}-internal.spec
+STANDARD_SPEC := ${NAME}.spec
+INTERNAL_SPEC := ${NAME}-internal.spec
+SOURCE_NAME_STANDARD := ${NAME}-${VERSION}
+SOURCE_NAME_INTERNAL := ${NAME}-internal-${VERSION}
 
 BUILD_DIR ?= $(PWD)/dist/rpmbuild
-SOURCE_PATH := ${BUILD_DIR}/SOURCES/${SOURCE_NAME}.tar.bz2
+SOURCE_PATH_STANDARD := ${BUILD_DIR}/SOURCES/${SOURCE_NAME_STANDARD}.tar.bz2
+SOURCE_PATH_INTERNAL := ${BUILD_DIR}/SOURCES/${SOURCE_NAME_INTERNAL}.tar.bz2
 PYLINT_VENV_DIR := pylint-venv
 PYLINT_VENV_PYBIN := $(PYLINT_VENV_DIR)/bin/python3
 MIN_PYLINT_RATING ?= 9.3
 
-rpm: rpm_package_source rpm_build_source rpm_build
+rpm: rpm_all
+
+rpm_all: rpm_package_source rpm_build_source rpm_build
 
 pymod:
 	SIMPLE_VERSION=$(SIMPLE_VERSION) ./update-pyproject.sh
@@ -78,13 +84,29 @@ prepare:
 	@echo $(NAME)
 	rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)/SPECS $(BUILD_DIR)/SOURCES
-	cp $(SPEC_FILE) $(BUILD_DIR)/SPECS/
+	cp $(SPEC_FILES) $(BUILD_DIR)/SPECS/
 
-rpm_package_source:
-	tar --transform 'flags=r;s,^,/$(SOURCE_NAME)/,' --exclude ./.nox --exclude .git --exclude ./build --exclude ./'$(PYLINT_VENV_DIR)' --exclude ./dist --exclude ./${SOURCE_NAME}.tar.bz2 -cvjf $(SOURCE_PATH) .
+rpm_package_source: rpm_package_source_standard rpm_package_source_internal
 
-rpm_build_source:
-	rpmbuild -vv -bs $(BUILD_DIR)/SPECS/$(SPEC_FILE) --target ${ARCH} --define "_topdir $(BUILD_DIR)"
+rpm_package_source_standard:
+	tar --transform 'flags=r;s,^,/$(SOURCE_NAME_STANDARD)/,' --exclude ./.nox --exclude .git --exclude ./build --exclude ./'$(PYLINT_VENV_DIR)' --exclude ./dist --exclude ./$(SOURCE_NAME_STANDARD).tar.bz2 -cvjf $(SOURCE_PATH_STANDARD) .
 
-rpm_build:
-	rpmbuild -vv -ba $(BUILD_DIR)/SPECS/$(SPEC_FILE) --target ${ARCH} --define "_topdir $(BUILD_DIR)"
+rpm_package_source_internal:
+	tar --transform 'flags=r;s,^,/$(SOURCE_NAME_INTERNAL)/,' --exclude ./.nox --exclude .git --exclude ./build --exclude ./'$(PYLINT_VENV_DIR)' --exclude ./dist --exclude ./$(SOURCE_NAME_INTERNAL).tar.bz2 -cvjf $(SOURCE_PATH_INTERNAL) .
+
+rpm_build_source: rpm_build_source_standard rpm_build_source_internal
+
+rpm_build_source_standard:
+	rpmbuild -vv -bs $(BUILD_DIR)/SPECS/$(STANDARD_SPEC) --target ${ARCH} --define "_topdir $(BUILD_DIR)"
+
+rpm_build_source_internal:
+	rpmbuild -vv -bs $(BUILD_DIR)/SPECS/$(INTERNAL_SPEC) --target ${ARCH} --define "_topdir $(BUILD_DIR)"
+
+rpm_build: rpm_build_standard rpm_build_internal
+
+rpm_build_standard: 
+	rpmbuild -vv -ba $(BUILD_DIR)/SPECS/$(STANDARD_SPEC) --target ${ARCH} --define "_topdir $(BUILD_DIR)"
+
+rpm_build_internal:
+	rpmbuild -vv -ba $(BUILD_DIR)/SPECS/$(INTERNAL_SPEC) --target ${ARCH} --define "_topdir $(BUILD_DIR)"
+
