@@ -68,7 +68,7 @@ class TestInit(unittest.TestCase):
 
         command_output = self.execute_command(command)
 
-        self.assertEqual(self.get_success_output("/root/.config/sat/sat.toml"), command_output)
+        self.assertEqual(self.get_success_output(self.temp_dir_path + "/sat.toml"), command_output)
         self.assertTrue(os.path.isfile(self.temp_dir_path + "/sat.toml"))
         self.assertTrue(os.path.isdir(self.temp_dir_path + "/tokens"))
         self.validate_toml_headings(self.temp_dir_path + "/sat.toml", TOML_HEADINGS)
@@ -108,7 +108,7 @@ class TestInit(unittest.TestCase):
             config = file.read()
         self.assertNotIn(text_to_append, config)
 
-        self.assertEqual(self.get_success_output("/root/.config/sat/sat.toml"), command_output)
+        self.assertEqual(self.get_success_output(sat_toml_file_path), command_output)
         self.assertTrue(os.path.isfile(self.temp_dir_path + "/sat.toml"))
         self.assertTrue(os.path.isdir(self.temp_dir_path + "/tokens"))
         self.validate_toml_headings(self.temp_dir_path + "/sat.toml", TOML_HEADINGS)
@@ -146,9 +146,9 @@ class TestInit(unittest.TestCase):
 
         command_output = self.execute_command(command)
 
-        self.assertEqual(self.get_success_output("/root/.config/sat/sat.toml"), command_output)
+        self.assertEqual(self.get_success_output(output_dir + file_name), command_output)
         # TODO: add back this test in CRAYSAT-1978
-        # self.assertTrue(os.path.isfile(output_dir + file_name))
+        self.assertTrue(os.path.isfile(output_dir + file_name))
 
         # Cleanup
         del os.environ["SAT_CONFIG_FILE"]
