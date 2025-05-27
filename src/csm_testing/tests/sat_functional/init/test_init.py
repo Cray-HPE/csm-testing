@@ -34,7 +34,7 @@ import unittest
 SAT_INIT_NON_EMPTY_DIR_ERROR="""WARNING: Configuration file "/root/.config/sat/sat.toml" already exists. Not generating configuration file."""
 TOML_HEADINGS = ['api_gateway', 'bos', 'cfs', 'bootsys', 'format', 'general', 'logging', 's3']
 
-class TestStatus(unittest.TestCase):
+class TestInit(unittest.TestCase):
     """Test the `sat init` command."""
 
     def setUp(self):
