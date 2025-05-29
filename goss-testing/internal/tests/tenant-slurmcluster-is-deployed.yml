@@ -40,8 +40,9 @@ matching:
  {{ end }}
 
 {{ range $pod := .Vars.items }}
-  {{ with $pod.status.containerStatuses }}
-  {{ range $container := . }}
+  {{ if ne (index $pod.metadata.labels "app.kubernetes.io/name" | default "") "slurmdbd-backup" }} # revert when USS-3925 is resolved
+  {{ if hasKey $pod.status "containerStatuses" }}                                                  # revert when USS-3925 is resolved
+  {{ range $container := $pod.status.containerStatuses }}                                          # revert when USS-3925 is resolved
   container_{{ $container.name }}_in_pod_{{ $pod.metadata.name }}_is_running_or_completed:
     title: Pod {{ $pod.metadata.name }} container {{ $container.name }} is running or successful
     meta:
@@ -60,6 +61,7 @@ matching:
         - and:
           - have-key-with-value:
               ready: true
+    {{ end }}                                                # revert when USS-3925 is resolved
     {{ end }}
     {{ end }}
 {{ end }}
