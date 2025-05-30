@@ -31,8 +31,15 @@ import os
 import shutil
 import unittest
 
-SAT_INIT_NON_EMPTY_DIR_ERROR="""WARNING: Configuration file "/root/.config/sat/sat.toml" already exists. Not generating configuration file."""
 TOML_HEADINGS = ['api_gateway', 'bos', 'cfs', 'bootsys', 'format', 'general', 'logging', 's3']
+
+
+def get_success_output(path):
+    return f"INFO: Configuration file \"{path}\" generated."
+
+def get_failure_output(path):
+    return f"WARNING: Configuration file \"{path}\" already exists. Not generating configuration file."
+
 
 class TestInit(unittest.TestCase):
     """Test the `sat init` command."""
@@ -51,9 +58,6 @@ class TestInit(unittest.TestCase):
         command_output = proc.stdout.decode().strip()
         return command_output
 
-    def get_success_output(self, directory):
-        return f"INFO: Configuration file \"{directory}\" generated."
-
     def validate_toml_headings(self, path, headers_to_validate):
         with open(path, 'r') as file:
             config = file.read()
@@ -68,7 +72,7 @@ class TestInit(unittest.TestCase):
 
         command_output = self.execute_command(command)
 
-        self.assertEqual(self.get_success_output(self.temp_dir_path + "/sat.toml"), command_output)
+        self.assertEqual(get_success_output(self.temp_dir_path + "/sat.toml"), command_output)
         self.assertTrue(os.path.isfile(self.temp_dir_path + "/sat.toml"))
         self.assertTrue(os.path.isdir(self.temp_dir_path + "/tokens"))
         self.validate_toml_headings(self.temp_dir_path + "/sat.toml", TOML_HEADINGS)
@@ -82,7 +86,7 @@ class TestInit(unittest.TestCase):
                               check=True)
         command_error = proc.stderr.decode().strip()
 
-        self.assertEqual(SAT_INIT_NON_EMPTY_DIR_ERROR, command_error)
+        self.assertEqual(get_failure_output(self.temp_dir_path + "sat.toml"), command_error)
 
     def test_init_command_force(self):
         """Test that `sat init -f` overwrites the original file"""
@@ -108,7 +112,7 @@ class TestInit(unittest.TestCase):
             config = file.read()
         self.assertNotIn(text_to_append, config)
 
-        self.assertEqual(self.get_success_output(sat_toml_file_path), command_output)
+        self.assertEqual(get_success_output(sat_toml_file_path), command_output)
         self.assertTrue(os.path.isfile(self.temp_dir_path + "/sat.toml"))
         self.assertTrue(os.path.isdir(self.temp_dir_path + "/tokens"))
         self.validate_toml_headings(self.temp_dir_path + "/sat.toml", TOML_HEADINGS)
@@ -126,7 +130,7 @@ class TestInit(unittest.TestCase):
 
         command_output = self.execute_command(command)
 
-        self.assertEqual(self.get_success_output(output_dir + file_name), command_output)
+        self.assertEqual(get_success_output(output_dir + file_name), command_output)
 
         # TODO: add back this test in CRAYSAT-1978
         # self.assertTrue(os.path.isfile(output_dir + file_name))
@@ -146,7 +150,7 @@ class TestInit(unittest.TestCase):
 
         command_output = self.execute_command(command)
 
-        self.assertEqual(self.get_success_output(output_dir + file_name), command_output)
+        self.assertEqual(get_success_output(output_dir + file_name), command_output)
         # TODO: add back this test in CRAYSAT-1978
         self.assertTrue(os.path.isfile(output_dir + file_name))
 
