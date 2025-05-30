@@ -133,7 +133,7 @@ class TestInit(unittest.TestCase):
         self.assertEqual(get_success_output(output_dir + file_name), command_output)
 
         # TODO: add back this test in CRAYSAT-1978
-        # self.assertTrue(os.path.isfile(output_dir + file_name))
+        self.assertTrue(os.path.isfile(output_dir + file_name))
 
     def test_set_sat_config_file(self):
         """Test that `sat init` outputs to the path in the SAT_CONFIG_FILE variable"""
