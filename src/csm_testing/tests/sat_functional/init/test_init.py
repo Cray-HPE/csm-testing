@@ -86,7 +86,7 @@ class TestInit(unittest.TestCase):
                               check=True)
         command_error = proc.stderr.decode().strip()
 
-        self.assertEqual(get_failure_output(self.temp_dir_path + "sat.toml"), command_error)
+        self.assertEqual(get_failure_output(self.temp_dir_path + "/sat.toml"), command_error)
 
     def test_init_command_force(self):
         """Test that `sat init -f` overwrites the original file"""
