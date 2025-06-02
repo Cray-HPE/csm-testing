@@ -27,15 +27,23 @@ Simple tests for the functionality of the `sat status` command.
 import shlex
 import subprocess
 import re
+from typing import List
 import unittest
 
-SAT_STATUS_HEADER = ['xname', 'Aliases', 'Type', 'NID', 'State', 'Flag', 'Enabled', 'Arch', 'Class', 'Role', 'SubRole', 'Net Type', 'Locked', 'Desired Config', 'Configuration Status', 'Error Count', 'Boot Status', 'Most Recent BOS Session', 'Most Recent Session Template', 'Most Recent Image']
+SAT_STATUS_HEADER = ['xname', 'Aliases', 'Type', 'NID', 'State', 'Flag', 'Enabled', 'Arch',
+                     'Class', 'Role', 'SubRole', 'Net Type', 'Locked', 'Desired Config',
+                     'Configuration Status', 'Error Count', 'Boot Status',
+                     'Most Recent BOS Session', 'Most Recent Session Template',
+                     'Most Recent Image']
 SAT_FIELDS_HEADER = ['xname', 'Aliases']
-SAT_HSM_FIELDS_HEADER = ['xname', 'Type', 'NID', 'State', 'Flag', 'Enabled', 'Arch', 'Class', 'Role', 'SubRole', 'Net Type', 'Locked']
+SAT_HSM_FIELDS_HEADER = ['xname', 'Type', 'NID', 'State', 'Flag', 'Enabled', 'Arch', 'Class',
+                         'Role', 'SubRole', 'Net Type', 'Locked']
 SAT_SLS_FIELDS_HEADER = ['xname', 'Aliases']
-SAT_HSM_AND_SLS_FIELDS_HEADER = ['xname', 'Aliases', 'Type', 'NID', 'State', 'Flag', 'Enabled', 'Arch', 'Class', 'Role', 'SubRole', 'Net Type', 'Locked']
+SAT_HSM_AND_SLS_FIELDS_HEADER = ['xname', 'Aliases', 'Type', 'NID', 'State', 'Flag', 'Enabled',
+                                 'Arch', 'Class', 'Role', 'SubRole', 'Net Type', 'Locked']
 SAT_CFS_FIELDS_HEADER = ['xname', 'Desired Config', 'Configuration Status', 'Error Count']
-SAT_BOS_FIELDS_HEADER = ['xname', 'Boot Status', 'Most Recent BOS Session', 'Most Recent Session Template', 'Most Recent Image']
+SAT_BOS_FIELDS_HEADER = ['xname', 'Boot Status', 'Most Recent BOS Session',
+                         'Most Recent Session Template', 'Most Recent Image']
 
 
 def get_header(command, num_lines_in_header):
@@ -47,7 +55,10 @@ def get_header(command, num_lines_in_header):
     status_output_header = '\n'.join(status_output.splitlines()[:num_lines_in_header])
     return status_output, status_err, status_output_header
 
-def adjust_expected_header(header, sat_output):
+def adjust_expected_header(header: List[str], sat_output: str) -> List[str]:
+    """
+    Return a copy of the specified header, removing keys which were omitted in the SAT output
+    """
     new_header = header.copy()
     for col in header:
         info_line = f"INFO: All values for '{col}' are 'MISSING', omitting key."
@@ -55,7 +66,8 @@ def adjust_expected_header(header, sat_output):
             new_header.remove(col)
     return new_header
 
-def get_column_names_list(input_string):
+def get_column_names_list(input_string: str) -> List[str]:
+    """ Return the list of column names specified in the header line of the input string """
     # Split the input string into lines
     lines = input_string.strip().split('\n')
 
