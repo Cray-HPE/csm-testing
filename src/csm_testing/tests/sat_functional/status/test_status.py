@@ -48,12 +48,12 @@ def get_header(command, num_lines_in_header):
     return status_output, status_err, status_output_header
 
 def adjust_expected_header(header, sat_output):
-        new_header = header.copy()
-        for col in header:
-            info_line = f"INFO: All values for '{col}' are 'MISSING', omitting key."
-            if info_line in sat_output:
-                new_header.remove(col)
-        return new_header
+    new_header = header.copy()
+    for col in header:
+        info_line = f"INFO: All values for '{col}' are 'MISSING', omitting key."
+        if info_line in sat_output:
+            new_header.remove(col)
+    return new_header
 
 def get_column_names_list(input_string):
     # Split the input string into lines
