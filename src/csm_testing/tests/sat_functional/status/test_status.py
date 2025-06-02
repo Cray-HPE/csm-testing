@@ -27,7 +27,7 @@ Simple tests for the functionality of the `sat status` command.
 import shlex
 import subprocess
 import re
-from typing import List
+from typing import List, Tuple
 import unittest
 
 SAT_STATUS_HEADER = ['xname', 'Aliases', 'Type', 'NID', 'State', 'Flag', 'Enabled', 'Arch',
@@ -46,7 +46,12 @@ SAT_BOS_FIELDS_HEADER = ['xname', 'Boot Status', 'Most Recent BOS Session',
                          'Most Recent Session Template', 'Most Recent Image']
 
 
-def get_header(command, num_lines_in_header):
+def get_header(command: str, num_lines_in_header: int) -> Tuple[str, str, str]:
+    """
+    Run the specified command.
+    Return the standard output, standard error, and the header (meaning the first
+    num_lines_in_header lines in the output)
+    """
     # Use stdout and stderr instead of capture_output=True for Python 3.6 compatibility
     proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                           check=True)
@@ -83,7 +88,7 @@ def get_column_names_list(input_string: str) -> List[str]:
 class TestStatus(unittest.TestCase):
     """Test the `sat status` command."""
 
-    def test_status_command(self):
+    def test_status_command(self) -> None:
         """Test that `sat status` returns the proper header."""
         command = 'sat status'
 
@@ -96,7 +101,7 @@ class TestStatus(unittest.TestCase):
 
         self.assertEqual(expected_header, status_output_header)
 
-    def test_status_fields_command(self):
+    def test_status_fields_command(self) -> None:
         """Test that `sat status --fields xname,aliases` returns the proper header."""
         command = 'sat status --fields xname,aliases'
 
@@ -109,7 +114,7 @@ class TestStatus(unittest.TestCase):
 
         self.assertEqual(expected_header, status_output_header)
 
-    def test_status_no_borders_command(self):
+    def test_status_no_borders_command(self) -> None:
         """Test that `sat status --no-borders` returns the proper header."""
         command = 'sat status --no-borders'
 
@@ -122,7 +127,7 @@ class TestStatus(unittest.TestCase):
 
         self.assertEqual(expected_header, column_names)
 
-    def test_status_no_headings_command(self):
+    def test_status_no_headings_command(self) -> None:
         """Test that `sat status --no-headings` returns the proper header."""
         command = 'sat status --no-headings'
 
@@ -135,7 +140,7 @@ class TestStatus(unittest.TestCase):
 
         self.assertNotEqual(expected_header, status_output_header)
 
-    def test_status_hsm_fields_command(self):
+    def test_status_hsm_fields_command(self) -> None:
         """Test that `sat status --hsm-fields` returns the proper header."""
         command = 'sat status --hsm-fields'
 
@@ -148,7 +153,7 @@ class TestStatus(unittest.TestCase):
 
         self.assertEqual(expected_header, status_output_header)
 
-    def test_status_sls_fields_command(self):
+    def test_status_sls_fields_command(self) -> None:
         """Test that `sat status --sls-fields` returns the proper header."""
         command = 'sat status --sls-fields'
 
@@ -161,7 +166,7 @@ class TestStatus(unittest.TestCase):
 
         self.assertEqual(expected_header, status_output_header)
 
-    def test_status_hsm_and_sls_fields_command(self):
+    def test_status_hsm_and_sls_fields_command(self) -> None:
         """Test that `sat status --sls-fields` returns the proper header."""
         command = 'sat status --hsm-fields --sls-fields'
 
@@ -174,7 +179,7 @@ class TestStatus(unittest.TestCase):
 
         self.assertEqual(expected_header, status_output_header)
 
-    def test_status_cfs_fields_command(self):
+    def test_status_cfs_fields_command(self) -> None:
         """Test that `sat status --cfs-fields` returns the proper header."""
         command = 'sat status --cfs-fields'
 
@@ -187,7 +192,7 @@ class TestStatus(unittest.TestCase):
 
         self.assertEqual(expected_header, status_output_header)
 
-    def test_status_bos_fields_command(self):
+    def test_status_bos_fields_command(self) -> None:
         """Test that `sat status --bos-fields` returns the proper header."""
         command = 'sat status --bos-fields'
 
