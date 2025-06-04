@@ -204,3 +204,39 @@ class TestStatus(unittest.TestCase):
         expected_header = adjust_expected_header(SAT_BOS_FIELDS_HEADER, status_all_output)
 
         self.assertEqual(expected_header, status_output_header)
+
+    def test_status_unambiguous_fields_command(self) -> None:
+        """Test that `sat status --fields xna,alia` returns the proper header unambiguosly"""
+        command = 'sat status --fields xna,alia'
+
+        status_output, status_err, status_output_header_str = get_header(command, 3)
+        status_output_header = get_column_names_list(status_output_header_str)
+
+        # Combine status_output and status_err for searching INFO lines
+        status_all_output = status_output + '\n' + status_err
+        expected_header = adjust_expected_header(SAT_FIELDS_HEADER, status_all_output)
+
+        self.assertEqual(expected_header, status_output_header)
+
+    def test_status_ambiguous_field_rol(self) -> None:
+        """Test that `sat status --fields rol` warns about ambiguity and outputs the first match."""
+        command = 'sat status --fields rol'
+
+        status_output, status_err, status_output_header_str = get_header(command, 3)
+        status_output_header = get_column_names_list(status_output_header_str)
+        status_all_output = status_output + '\n' + status_err
+
+        # Check for the ambiguity warning
+        self.assertIn(
+            "WARNING: Heading 'rol' is ambiguous.",
+            status_all_output,
+            msg="Ambiguous field warning not found in output."
+        )
+        self.assertIn(
+            "Using first match: 'Role' from",
+            status_all_output,
+            msg="First match warning not found in output."
+        )
+
+        # Check that the header is just 'Role'
+        self.assertEqual(status_output_header, ['Role'], "Expected only 'Role' column in table header.")
