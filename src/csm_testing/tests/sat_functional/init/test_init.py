@@ -57,7 +57,6 @@ class TestInit(unittest.TestCase):
 
     def tearDown(self):
         del os.environ["SAT_CONFIG_DIR"]
-        del os.environ["SAT_CONFIG_FILE"]
         shutil.rmtree(self.temp_dir_path)
 
     def validate_toml_headings(self, path, headers_to_validate):
