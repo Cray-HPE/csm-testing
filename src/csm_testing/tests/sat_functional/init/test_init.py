@@ -171,5 +171,5 @@ class TestInit(unittest.TestCase):
 
         with open(self.temp_dir_path + "/sat.toml", 'r') as file:
             config = file.read()
-            print("DEBUG===========config")
-            print(config)
+
+        self.assertIn(f'username = "{test_username}"', config)
