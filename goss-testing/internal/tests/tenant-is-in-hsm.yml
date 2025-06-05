@@ -55,7 +55,7 @@ matching:
               not:
                 match-regexp: "^x" # TODO: improve regex
 
-  tenant_{ .Env.TENANT_NAME }}_in_hsm_has_vcluster_prefix_in_tags:
+  tenant_{{ .Env.TENANT_NAME }}_in_hsm_has_vcluster_prefix_in_tags:
     title: "{{ .Env.TENANT_NAME }} has xnames assigned to members ids"
     meta:
       desc: "if this test fails, run 'cray hsm groups describe {{ .Env.TENANT_NAME }}' and check the tags for the vcluster prefix"  
