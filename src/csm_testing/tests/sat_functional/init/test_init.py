@@ -157,3 +157,20 @@ class TestInit(unittest.TestCase):
 
         # Cleanup
         del os.environ["SAT_CONFIG_FILE"]
+
+    def test_init_command_with_user(self):
+        """Test that `sat init` outputs the correct value when --username is set."""
+        test_username = 'fake_user'
+        command = f'sat --username {test_username} init'
+
+        command_output = execute_command(command)
+
+        self.assertEqual(get_success_output(self.temp_dir_path + "/sat.toml"), command_output)
+        self.assertTrue(os.path.isfile(self.temp_dir_path + "/sat.toml"))
+        self.assertTrue(os.path.isdir(self.temp_dir_path + "/tokens"))
+        self.validate_toml_headings(self.temp_dir_path + "/sat.toml", TOML_HEADINGS)
+
+        with open(self.temp_dir_path + "/sat.toml", 'r') as file:
+            config = file.read()
+            print("DEBUG===========config")
+            print(config)
