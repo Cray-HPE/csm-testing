@@ -41,6 +41,13 @@ def get_failure_output(path):
     return f"WARNING: Configuration file \"{path}\" already exists. Not generating configuration file."
 
 
+def execute_command(command):
+    proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                          check=True)
+    command_output = proc.stdout.decode().strip()
+    return command_output
+
+
 class TestInit(unittest.TestCase):
     """Test the `sat init` command."""
 
@@ -50,13 +57,8 @@ class TestInit(unittest.TestCase):
 
     def tearDown(self):
         del os.environ["SAT_CONFIG_DIR"]
+        del os.environ["SAT_CONFIG_FILE"]
         shutil.rmtree(self.temp_dir_path)
-
-    def execute_command(self, command):
-        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                              check=True)
-        command_output = proc.stdout.decode().strip()
-        return command_output
 
     def validate_toml_headings(self, path, headers_to_validate):
         with open(path, 'r') as file:
@@ -70,7 +72,7 @@ class TestInit(unittest.TestCase):
         configuration files exist in SAT_CONFIG_DIR"""
         command = 'sat init'
 
-        command_output = self.execute_command(command)
+        command_output = execute_command(command)
 
         self.assertEqual(get_success_output(self.temp_dir_path + "/sat.toml"), command_output)
         self.assertTrue(os.path.isfile(self.temp_dir_path + "/sat.toml"))
@@ -81,7 +83,7 @@ class TestInit(unittest.TestCase):
         """Test that `sat init` returns the proper error when it has already been run."""
         command = 'sat init'
 
-        self.execute_command(command)
+        execute_command(command)
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                               check=True)
         command_error = proc.stderr.decode().strip()
@@ -105,7 +107,7 @@ class TestInit(unittest.TestCase):
         # validate that header is in the file
         self.validate_toml_headings(sat_toml_file_path, [text_to_append])
 
-        command_output = self.execute_command(second_command)
+        command_output = execute_command(second_command)
 
         # validate that the file has been overwritten
         with open(sat_toml_file_path, 'r') as file:
@@ -128,7 +130,7 @@ class TestInit(unittest.TestCase):
 
         command += " " + output_dir + file_name
 
-        command_output = self.execute_command(command)
+        command_output = execute_command(command)
 
         self.assertEqual(get_success_output(output_dir + file_name), command_output)
 
@@ -147,7 +149,7 @@ class TestInit(unittest.TestCase):
 
         self.assertEqual(os.environ["SAT_CONFIG_FILE"], output_dir + file_name)
 
-        command_output = self.execute_command(command)
+        command_output = execute_command(command)
 
         self.assertEqual(get_success_output(output_dir + file_name), command_output)
         # TODO: add back this test in CRAYSAT-1978
