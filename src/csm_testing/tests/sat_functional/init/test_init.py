@@ -173,3 +173,4 @@ class TestInit(unittest.TestCase):
             config = file.read()
 
         self.assertIn(f'username = "{test_username}"', config)
+
