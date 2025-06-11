@@ -240,3 +240,79 @@ class TestStatus(unittest.TestCase):
 
         # Check that the header is just 'Role'
         self.assertEqual(status_output_header, ['Role'], "Expected only 'Role' column in table header.")
+
+    def test_status_unambiguous_filter_command(self) -> None:
+        """Test that `sat status --filter NID="1000*"` returns the proper header unambiguosly"""
+        command = 'sat status --filter NID="1000*"'
+
+        status_output, status_err, status_output_header_str = get_header(command, 3)
+        status_output_header = get_column_names_list(status_output_header_str)
+
+        # Combine status_output and status_err for searching INFO lines
+        status_all_output = status_output + '\n' + status_err
+        expected_header = adjust_expected_header(SAT_STATUS_HEADER, status_all_output)
+
+        self.assertEqual(expected_header, status_output_header)
+
+    def test_status_ambiguous_filter_command(self) -> None:
+        """Test that `sat status --filter srol=storage` warns about ambiguity and outputs the first match."""
+        command = 'sat status --filter srol=storage'
+
+        status_output, status_err, status_output_header_str = get_header(command, 3)
+        status_output_header = get_column_names_list(status_output_header_str)
+        status_all_output = status_output + '\n' + status_err
+
+        # Check for the ambiguity warning
+        self.assertIn(
+            "WARNING: Heading 'srol' is ambiguous.",
+            status_all_output,
+            msg="Ambiguous field warning not found in output."
+        )
+        self.assertIn(
+            "Using first match: 'SubRole' from",
+            status_all_output,
+            msg="First match warning not found in output."
+        )
+        expected_header = adjust_expected_header(SAT_STATUS_HEADER, status_all_output)
+
+        self.assertEqual(status_output_header, expected_header)
+
+    def test_status_operator_filter_command(self) -> None:
+        """Test that `sat status --filter Role!=Management` returns the output which are not Management"""
+        command = 'sat status --filter Role!=Management'
+
+        status_output, status_err, status_output_header_str = get_header(command, 3)
+        status_output_header = get_column_names_list(status_output_header_str)
+
+        # Combine status_output and status_err for searching INFO lines
+        status_all_output = status_output + '\n' + status_err
+        expected_header = adjust_expected_header(SAT_STATUS_HEADER, status_all_output)
+
+        self.assertEqual(expected_header, status_output_header)
+
+    def test_status_boolean_filter_command(self) -> None:
+        """Test that `sat status --filter "xname = x* and Aliases = nid??????"` returns proper header after filtering"""
+        command = 'sat status --filter "xname = x* and Aliases = nid??????"'
+
+        status_output, status_err, status_output_header_str = get_header(command, 3)
+        status_output_header = get_column_names_list(status_output_header_str)
+
+        # Combine status_output and status_err for searching INFO lines
+        status_all_output = status_output + '\n' + status_err
+        expected_header = adjust_expected_header(SAT_STATUS_HEADER, status_all_output)
+
+        self.assertEqual(expected_header, status_output_header)
+
+    def test_status_multiple_filter_command(self) -> None:
+        """Test that `sat status --hsm-fields --filter Role=Management --filter SubRole=Master` returns proper header after multiple filtering"""
+        command = 'sat status --hsm-fields --filter Role=Management --filter SubRole=Master'
+
+        status_output, status_err, status_output_header_str = get_header(command, 3)
+        status_output_header = get_column_names_list(status_output_header_str)
+
+        # Combine status_output and status_err for searching INFO lines
+        status_all_output = status_output + '\n' + status_err
+        expected_header = adjust_expected_header(SAT_HSM_FIELDS_HEADER, status_all_output)
+
+        self.assertEqual(expected_header, status_output_header)
+
