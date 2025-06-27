@@ -88,44 +88,6 @@ Use the following command to run a single test or a suite of tests on the local 
 $ goss -g /opt/cray/tests/install/ncn/tests/[test_file.yaml] --vars /opt/cray/tests/install/ncn/vars/[variable_file.yaml] validate
 ```
 
-## Running All Test Suites Locally
-
-The goss tests can be executed directly (not via the http endpoint) on any node type using a single script.  This will save both a GOSS-formatted JSON file and a DST-compatible JSON file.  
-
-It will run any test that is currently part of a suite connected to a GOSS endpoint on that node.  
-
-It currently runs *all* available suites, sans the LiveCD/PIT tests.  This is used by the CT pipeline to run all tests on a nightly-basis.  Future versions of the script, will allow finer-tuned control.
-
-```bash
-/opt/cray/tests/install/ncn/automated/dst-ct-results.sh
-```
-
-The resulting JSON files can be parsed to get the details.
-
-```shell
-# parse the original goss output for failures
-jq '.results[] | select(.successful == false)' < /tmp/tmp.XbwecrPyr5 # path from stdout after script execution
-
-# parse the dst-compatible file for failures
-jq '.tests[] | select(.status == "fail")' < /tmp/api-results.json # default
-```
-
-## Parsing Goss Results Executed Via CT Pipeline
-
-There is too much output to display in Slack, but you can investigate the results locally on the machine CT ran on.  The local path with the Run ID can be found in the slack output.
-
-```shell
-# parse CT pipeline file from a run ID of 1692511 /mnt/developer/dst/1692511/CSM-GOSS-csm-goss-config
-jq '.[].test_artifacts | select(.successful == false)' < 1692511-goss-results.json
-
-# parse payload file that is submitted to the API from a run ID of 1692511 /mnt/developer/dst/1692511/CSM-GOSS-csm-goss-config
-jq '.tests[] | select(.status == "fail") | .test_artifacts' < 1692511-payload.json
-
-# parse an individual node's results
-jq '.tests[] | select(.status == "fail") | .test_artifacts' < ncn-m001/api-results.json
-```
-
-
 ## Running Tests Remotely
 
 Use the following command to run a suite of tests on a remote machine where there is a running Goss server endpoint.
