@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2024-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -101,7 +101,7 @@ echo "*******************************"
 
 # Verify DNS SRV and A records exist for the worker respective of the iSCSI portals
 
-host=$(kubectl get vs -n sysmgmt-health cray-sysmgmt-health-grafana -o jsonpath='{.spec.hosts[0]}' | sed -e 's/grafana\.[^.]*\.//')
+host=$(kubectl -n loftsman get secret site-init -o jsonpath='{.data.customizations\.yaml}' | base64 -d | yq4 .spec.network.dns.external)
 
 dig -t SRV +short _sbps-hsn._tcp."${host}" _sbps-nmn._tcp."${host}" >> tmp_file
 
