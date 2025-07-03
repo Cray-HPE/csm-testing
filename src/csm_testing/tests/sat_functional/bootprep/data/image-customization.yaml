@@ -13,7 +13,6 @@ configurations:
 
 images:
 - name: "{{test.prefix}}-simple-customized-image"
-  if_exists: 'overwrite'
   base:
     product:
       name: csm

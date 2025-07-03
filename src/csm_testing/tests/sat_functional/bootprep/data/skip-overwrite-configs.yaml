@@ -21,21 +21,13 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
-{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $sat_test := $scripts | printf "%s/python/sat_functional" }}
-command:
-    {{ $test_label := "sat_bootprep_configs" }}
-    {{$test_label}}:
-        title: Test the 'sat bootprep run' command to create CFS configurations
-        meta:
-            desc: Tests that the 'sat bootprep run' command creates CFS configurations
-            sev: 0
-        exec: |-
-            "{{$logrun}}" -l "{{$test_label}}" \
-                "{{$sat_test}}" "bootprep.test_bootprep.TestBootprepCreateConfigs"
-        exit-status: 0
-        stderr:
-        - OK
-        timeout: 2700000 # timeout in milliseconds, currently set to 45 minutes
+---
+configurations:
+# A configuration that will always be skipped if it already exists
+- name: "{{test.config_name}}-skip"
+  if_exists: "skip"
+  layers: []
+# A configuration that will always be overwritten if it already exists
+- name: "{{test.config_name}}-overwrite"
+  if_exists: "overwrite"
+  layers: []
