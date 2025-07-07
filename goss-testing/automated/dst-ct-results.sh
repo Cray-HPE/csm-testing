@@ -23,9 +23,9 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Run CSM goss tests and produce a DST-compatible results.json file.
-#
+# 
 # 1. Query the cgroups file for the pids of the goss suites/vars that are linked to an http endpoint
-# 2. Get the command each PID is running
+# 2. Get the command each PID is running 
 # 3. Reformat the command into a goss command that can be run directly instead of with 'goss serve'
 # 4. Loop through and run each newly-formatted goss command and save the results to a file
 # 5. Aggregate each iteration into an api-results.json file, used by DST (additional formatting is required)
@@ -54,7 +54,7 @@ prereqs() {
   fi
 
   reqs_rpms=(
-    csm-testing
+    csm-testing 
     goss-servers
   )
   for req in "${reqs_rpms[@]}"; do
@@ -188,13 +188,13 @@ gather_goss_commands() {
         goss_vars_file="${BASH_REMATCH[3]}"
         # format the goss command to run directly
         # add the goss command to the array of commands to run
-        if [[ "$goss_file" =~ preflight ]] || [[ "$goss_file" =~ ncn-storage-tests ]] || [[ "$goss_file" =~ ncn-sat-functional-tests ]]; then
+        if [[ "$goss_file" =~ preflight ]] || [[ "$goss_file" =~ ncn-storage-tests ]]; then
           # skip these tests
           continue
         else
           # for tests that cannot run concurrently, add the --max-concurrent 1 flag
           if [[ "$goss_file" =~ ncn-iuf- || "$goss_file" =~ ncn-iscsi- ]]; then
-            GOSS_COMMANDS+=("${goss_command} -g ${goss_file} --vars ${goss_vars_file} validate -f ${format} --max-concurrent 1")
+            GOSS_COMMANDS+=("${goss_command} -g ${goss_file} --vars ${goss_vars_file} validate -f ${format} --max-concurrent 1") 
           # for all other tests, run them concurrently
           else
             GOSS_COMMANDS+=("${goss_command} -g ${goss_file} --vars ${goss_vars_file} validate -f ${format}")
@@ -249,13 +249,13 @@ run_goss_aggregate_results() {
 process_goss_command() {
   local goss_command="${1:-}"
   local aggregated_goss_results_file="${2:-}"
-
+  
   # get the goss file name for the current suite
   local goss_file
   goss_file=$(echo "$goss_command" | awk '{print $3}')
   goss_file=$(basename -- "${goss_file}")
   printf "%s" "Running ${goss_file}..."
-
+  
   # execute goss validate and save the result
   local result
   result=$($goss_command || echo {}) # || it should not fail since we just aggregate the results at the end
@@ -273,7 +273,7 @@ process_goss_command() {
 #######################################
 # Munges the aggregated results file into a format that is compatible with the DST pipeline
 # Globals:
-#   CSM_VER
+#   CSM_VER 
 #   AGGREGATED_GOSS_RESULTS_FILE
 #   TOTAL_TEST_COUNT
 #   TOTAL_FAILED_COUNT
@@ -292,7 +292,7 @@ format_goss_results_for_dst() {
   local aggregated_goss_results_file="${1:-$AGGREGATED_GOSS_RESULTS_FILE}"
   local dst_results_file="${2:-$DST_RESULTS_FILE}"
   # See https://github.hpe.com/hpe/hpc-dst-ct-results-api/blob/master/docs/usage/getting-started.md#creating-a-payload-for-the-json-endpoint
-  #
+  # 
   # 1. extract the results key and assigns it to the variable $results
   # 2. map the $results array to a new array of objects called "tests", required by DST
   # 3. for each object in the $results array, create a new object, compatible with DST
@@ -359,7 +359,7 @@ main() {
   prereqs "${OSTYPE:=}"
   # if prereqs passes, set the global variables
   set_vars
-
+  
   # parse the options into named variables
   local dst_results_file="${1:-$DST_RESULTS_FILE}"
   # parse the options
