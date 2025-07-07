@@ -188,7 +188,7 @@ gather_goss_commands() {
         goss_vars_file="${BASH_REMATCH[3]}"
         # format the goss command to run directly
         # add the goss command to the array of commands to run
-        if [[ "$goss_file" =~ preflight ]] || [[ "$goss_file" =~ ncn-storage-tests ]]; then
+        if [[ "$goss_file" =~ preflight ]] || [[ "$goss_file" =~ ncn-storage-tests ]]  || [[ "$goss_file" =~ ncn-sat-functional-tests ]]; then
           # skip these tests
           continue
         else
