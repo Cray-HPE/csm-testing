@@ -4,6 +4,7 @@ configurations:
 
 # A configuration that specifies a layer from a specific CSM version
 - name: "{{test.prefix}}-csm-{{csm.version}}-product-layer"
+  if_exists: 'overwrite'
   layers:
   - name: csm-packages-{{csm.version}}
     playbook: csm_packages.yml
@@ -13,6 +14,7 @@ configurations:
 
 # A configuration that specifies a layer from the latest CSM version
 - name: "{{test.prefix}}-csm-latest-product-layer"
+  if_exists: 'overwrite'
   layers:
   - name: csm-packages-{{csm.version}}
     playbook: csm_packages.yml
@@ -22,6 +24,7 @@ configurations:
 
 # A configuration that specifies a layer from the CSM product with a specific commit
 - name: "{{test.prefix}}-csm-product-layer-commit"
+  if_exists: 'overwrite'
   layers:
   - name: csm-packages-{{csm.version}}
     playbook: csm_packages.yml
@@ -31,6 +34,7 @@ configurations:
 
 # A configuration that specifies a layer from the CSM product with a specific branch
 - name: "{{test.prefix}}-csm-product-layer-branch"
+  if_exists: 'overwrite'
   layers:
   - name: csm-packages-{{csm.version}}
     playbook: csm_packages.yml
@@ -42,6 +46,7 @@ configurations:
 
 # A configuration that specifies two product-based layers
 - name: "{{test.prefix}}-csm-two-product-layers"
+  if_exists: 'overwrite'
   layers:
     - name: csm-ncn_nodes
       playbook: ncn_nodes.yml

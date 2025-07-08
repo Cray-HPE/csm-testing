@@ -26,6 +26,7 @@ Tests for functionality of the `sat bootprep` command.
 """
 import base64
 import re
+import time
 from datetime import datetime
 import functools
 import json
@@ -116,6 +117,10 @@ class BootprepRunTestCase(unittest.TestCase):
                 'prefix': cls.test_prefix,
                 'vcs_repo_name': cls.vcs_repo_name
             },
+            'default': {
+                'system_name': 'test_system_name',
+                'site_domain': 'test_site_domain'
+            },
             'csm': cls.csm_vars
         }
         with open(vars_file_path, 'w', encoding='utf-8') as vars_file:
@@ -128,8 +133,7 @@ class BootprepRunTestCase(unittest.TestCase):
     def tearDownClass(cls):
         """Remove the temporary directory for bootprep input files."""
         cls.temp_dir.cleanup()
-        # TODO: uncomment to test if repo deletion works
-        if cls.delete_vcs_repository(f'sat-vcs-goss-testing-{datetime.now().strftime("%Y-%m-%d")}') == "":
+        if cls.delete_vcs_repository(cls.vcs_repo_name, silent=False) == "":
             cls.set_up_errors.append(f"Unable to delete the vcs repository {cls.vcs_repo_name}")
 
     @classmethod
@@ -252,6 +256,10 @@ class BootprepRunTestCase(unittest.TestCase):
 
         repo_name: the name of the repo to be created
         """
+
+        # Begin by deleting the vcs repo in case it was not cleaned up
+        cls.delete_vcs_repository(repo_name, silent=True)
+
         try:
             encoded_vcs_creds = cls.get_encoded_vcs_credentials()
 
@@ -285,12 +293,12 @@ class BootprepRunTestCase(unittest.TestCase):
         return repo_name
 
     @classmethod
-    def delete_vcs_repository(cls, repo_name) -> str:
+    def delete_vcs_repository(cls, repo_name, silent) -> str:
         """ Deletes a vcs repository
 
         repo_name: the name of the repo to be deleted
+        silent: boolean if true method does not output error if unsuccessful
         """
-        get_vcs_password_cmd = "kubectl get secret -n services vcs-user-credentials -o jsonpath={.data.vcs_password}"
         try:
             encoded_vcs_creds = cls.get_encoded_vcs_credentials()
 
@@ -305,7 +313,8 @@ class BootprepRunTestCase(unittest.TestCase):
             response = requests.delete(url, headers=headers)
 
             if response.status_code != 204:
-                cls.set_up_errors.append(f"Failed to delete the repository. Status code: {response.status_code}, Response: {response.text}")
+                if not silent:
+                    cls.set_up_errors.append(f"Failed to delete the repository. Status code: {response.status_code}, Response: {response.text}")
                 return ""
 
         except subprocess.CalledProcessError as err:
@@ -446,6 +455,31 @@ class BootprepRunTestCase(unittest.TestCase):
                 logging.warning('Failed to delete CFS configuration "%s" '
                                 'created by test: %s', configuration_name, err.stderr)
 
+
+
+    @staticmethod
+    def image_exists(image_id, check_deleted=True):
+        """Check if the given image exists in IMS.
+
+        Args:
+            image_id (str): the ID of the image in IMS
+            check_deleted (bool): if True, also check the /deleted/images API endpoint
+                to see if the image has been deleted but not permanently removed.
+
+        Returns:
+            bool: True if the image exists, False otherwise.
+        """
+
+        def image_exists_helper(deleted=False):
+            """Helper function to check if an image or deleted image exists in IMS."""
+            command = f'cray ims {"deleted" if deleted else ""} images describe {image_id} --format json'
+            process = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if process.returncode != 0 and "not found" in process.stderr.decode().lower():
+                return False
+            return True
+
+        return image_exists_helper() or (check_deleted and image_exists_helper(deleted=True))
+
     @staticmethod
     def delete_ims_image(ims_image_id, permanent=True):
         """Delete an IMS image using the 'cray' CLI.
@@ -562,6 +596,16 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
             logging.error("Failed to get cfs config %s"
                           "with error: %s", config_name, err)
 
+    def cleanup_items(self, report):
+        if 'configurations' in report:
+            for config in report['configurations']:
+                self.items_to_delete['configurations'].append(config['name'])
+        if 'images' in report:
+            for image in report['images']:
+                self.items_to_delete['images'].append(image['final_image_id'])
+        if 'session_templates' in report:
+            for image in report['session_templates']:
+                self.items_to_delete['session_templates'].append(image['name'])
 
     def test_no_configs(self):
         """Test that a file with an empty list of configs creates no configs"""
@@ -596,8 +640,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
-        for config in report['configurations']:
-            self.items_to_delete['configurations'].append(config['name'])
+        self.cleanup_items(report)
 
     def test_git_layers(self):
         """Test creating multiple CFS configurations with git-based layers"""
@@ -609,8 +652,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
-        for config in report['configurations']:
-            self.items_to_delete['configurations'].append(config['name'])
+        self.cleanup_items(report)
 
     def test_special_parameters(self):
         """Test creating a CFS configuration with special parameters"""
@@ -624,8 +666,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
-        for config in report['configurations']:
-            self.items_to_delete['configurations'].append(config['name'])
+        self.cleanup_items(report)
 
     def test_additional_inventory(self):
         """Test creating CFS configurations with additional inventory"""
@@ -639,8 +680,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
-        for config in report['configurations']:
-            self.items_to_delete['configurations'].append(config['name'])
+        self.cleanup_items(report)
 
     def test_missing_playbook(self):
         """Test creating a CFS configuration with a missing playbook using CFS v3 fails"""
@@ -670,11 +710,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
-        for config in report['configurations']:
-            self.items_to_delete['configurations'].append(config['name'])
-
-        for image in report['images']:
-            self.items_to_delete['images'].append(image['final_image_id'])
+        self.cleanup_items(report)
 
     def test_image_customization_fail(self):
         """Test creating a failing ims image"""
@@ -705,15 +741,50 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
-        for config in report['configurations']:
-            self.items_to_delete['configurations'].append(config['name'])
-
-        for image in report['session_templates']:
-            self.items_to_delete['session_templates'].append(image['name'])
+        self.cleanup_items(report)
 
     def test_configs_images_and_session_templates(self):
-        """Test creating a bos session template"""
-        result = self.run_bootprep('configs-images-and-session-templates.yaml', '--format json')
+        """Test creating, skipping and overwriting configurations, images and session templates"""
+        bootprep_options = '--format json '
+
+        result = self.run_bootprep('configs-images-and-session-templates.yaml', bootprep_options)
+        report = json.loads(result.stdout.decode())
+
+        original_image_id = report['images'][0]['final_image_id']
+        self.assertTrue(self.image_exists(original_image_id, check_deleted=False))
+
+        skip_result = self.run_bootprep('configs-images-and-session-templates.yaml', bootprep_options)
+        skip_report = json.loads(skip_result.stdout.decode())
+
+        overwrite_result = self.run_bootprep('configs-images-and-session-templates-overwrite.yaml', bootprep_options)
+        overwrite_report = json.loads(overwrite_result.stdout.decode())
+
+        self.assertEqual(1, len(report['configurations']))
+        self.assertEqual(1, len(report['images']))
+        self.assertEqual(1, len(report['session_templates']))
+
+        for config in report['configurations']:
+            self.validate_cfs_config(config['name'])
+
+
+        # Test when items already exist
+        self.assertEqual(1, len(skip_report['skipped_configurations']))
+        self.assertEqual(1, len(skip_report['skipped_images']))
+        self.assertEqual(1, len(skip_report['skipped_session_templates']))
+
+        # Test overwriting items
+        self.assertEqual(1, len(overwrite_report['configurations']))
+        self.assertEqual(1, len(overwrite_report['images']))
+        self.assertEqual(1, len(overwrite_report['session_templates']))
+
+        self.assertFalse(self.image_exists(original_image_id, check_deleted=False))
+
+        self.cleanup_items(overwrite_report)
+
+    def test_cfs_version(self):
+        """Test running bootprep with cfs v2"""
+        # Not adding test for cfs v3 since that is used by default
+        result = self.run_bootprep('configs-images-and-session-templates.yaml', '--format json --cfs-version v2')
 
         report = json.loads(result.stdout.decode())
         self.assertEqual(1, len(report['configurations']))
@@ -723,14 +794,83 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
-        for config in report['configurations']:
-            self.items_to_delete['configurations'].append(config['name'])
+        self.cleanup_items(report)
 
-        for image in report['images']:
-            self.items_to_delete['images'].append(image['final_image_id'])
+    def test_dry_run_and_save(self):
+        """Test running bootprep in dry-run and saving files"""
+        bootprep_opts = '--format json '
+        bootprep_opts += '--dry-run '
+        bootprep_opts += '--save-files '
+        result = self.run_bootprep('configs-images-and-session-templates.yaml', bootprep_opts)
 
-        for image in report['session_templates']:
-            self.items_to_delete['session_templates'].append(image['name'])
+        self.assert_in_log_messages(
+            "INFO",
+            "Would create 1 CFS configuration",
+            result.stderr.decode()
+        )
+        self.assert_in_log_messages(
+            "INFO",
+            "Would create 1 images",
+            result.stderr.decode()
+        )
+        self.assert_in_log_messages(
+            "INFO",
+            "Would create 1 BOS session template",
+            result.stderr.decode()
+        )
+
+        cfs_config_file = f'cfs-configuration-{self.test_prefix}-simple-passing-configuration.json'
+        session_template_file = f'bos-session-template-{self.test_prefix}-simple-session-template.json'
+
+        self.assertTrue(os.path.isfile(os.path.join(self.temp_dir.name, cfs_config_file)))
+        self.assertTrue(os.path.isfile(os.path.join(self.temp_dir.name, session_template_file)))
+
+    def test_limit_option(self):
+        """Test limit option when creating items"""
+        bootprep_options = '--format json --limit configurations'
+        limit_configs_result = self.run_bootprep('configs-images-and-session-templates.yaml', bootprep_options)
+        bootprep_options = '--format json --limit images'
+        limit_images_result = self.run_bootprep('configs-images-and-session-templates.yaml', bootprep_options)
+
+        bootprep_options = '--format json --limit session_templates'
+        limit_session_templates_result = self.run_bootprep(
+            'configs-images-and-session-templates-overwrite.yaml',
+             bootprep_options)
+
+        bootprep_options = '--format json --limit session_templates --limit configurations'
+        limit_two_result = self.run_bootprep(
+            'configs-images-and-session-templates-overwrite.yaml',
+            bootprep_options)
+
+        configs_report = json.loads(limit_configs_result.stdout.decode())
+        self.assertEqual(1, len(configs_report['configurations']))
+        self.assertFalse('images' in configs_report)
+        self.assertFalse('session_templates' in configs_report)
+
+        for config in configs_report['configurations']:
+            self.validate_cfs_config(config['name'])
+
+        images_report = json.loads(limit_images_result.stdout.decode())
+        self.assertEqual(1, len(images_report['images']))
+        self.assertFalse('configurations' in images_report)
+        self.assertFalse('session_templates' in images_report)
+
+        session_templates_report = json.loads(limit_session_templates_result.stdout.decode())
+        self.assertEqual(1, len(session_templates_report['session_templates']))
+        self.assertFalse('images' in session_templates_report)
+        self.assertFalse('configurations' in session_templates_report)
+
+        limit_two_report = json.loads(limit_two_result.stdout.decode())
+        self.assertEqual(1, len(limit_two_report['configurations']))
+        self.assertEqual(1, len(limit_two_report['session_templates']))
+        self.assertFalse('images' in limit_two_report)
+
+        for config in limit_two_report['configurations']:
+            self.validate_cfs_config(config['name'])
+
+        self.cleanup_items(images_report)
+        self.cleanup_items(limit_two_report)
+
 
 if __name__ == '__main__':
     unittest.main()

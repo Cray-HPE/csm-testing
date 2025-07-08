@@ -4,6 +4,7 @@ configurations:
 
 # A configuration that specifies additional_inventory with a branch
 - name: "{{test.prefix}}-csm-additional-inventory-branch"
+  if_exists: 'overwrite'
   layers:
     - name: csm-ncn_nodes
       playbook: ncn_nodes.yml
@@ -24,6 +25,7 @@ configurations:
 
 # A configuration that specifies additional_inventory with a commit hash
 - name: "{{test.prefix}}-csm-additional-inventory-commit"
+  if_exists: 'overwrite'
   layers:
     - name: csm-ncn_nodes
       playbook: ncn_nodes.yml

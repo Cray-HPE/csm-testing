@@ -11,6 +11,21 @@ configurations:
       url: "https://api-gw-service-nmn.local/vcs/cray/{{test.vcs_repo_name}}.git"
       branch: "main"
 
+images:
+- name: "{{test.prefix}}-simple-customized-image"
+  if_exists: 'overwrite'
+  base:
+    product:
+      name: csm
+      version: "{{csm.version}}"
+      type: image
+      filter:
+        arch: x86_64
+        wildcard: "*barebones*"
+  configuration: "{{test.prefix}}-simple-passing-configuration"
+  configuration_group_names:
+  - Compute
+
 session_templates:
 - name: "{{test.prefix}}-simple-session-template"
   if_exists: 'overwrite'
@@ -27,3 +42,4 @@ session_templates:
         - Compute
         rootfs_provider: "sbps"
         rootfs_provider_passthrough: "sbps:v1:iqn.2023-06.csm.iscsi:_sbps-hsn._tcp.{{default.system_name}}.{{default.site_domain}}:300"
+

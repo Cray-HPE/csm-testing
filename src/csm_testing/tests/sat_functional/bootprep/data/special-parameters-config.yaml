@@ -4,6 +4,7 @@ configurations:
 
 # A configuration that specifies two layers, each with special parameters
 - name: "{{test.prefix}}-csm-special-parameters-layers"
+  if_exists: 'overwrite'
   layers:
     - name: csm-ncn_nodes
       playbook: ncn_nodes.yml

@@ -3,6 +3,7 @@
 configurations:
 # A simple configuration that has just one layer that runs a simple playbook
 - name: "{{test.prefix}}-simple-passing-configuration"
+  if_exists: 'skip'
   layers:
   - name: successful-layer
     playbook: test.yml
@@ -12,6 +13,7 @@ configurations:
 
 images:
 - name: "{{test.prefix}}-simple-customized-image"
+  if_exists: 'skip'
   base:
     product:
       name: csm
@@ -26,6 +28,7 @@ images:
 
 session_templates:
 - name: "{{test.prefix}}-simple-session-template"
+  if_exists: 'skip'
   image:
     ims:
       id: "{{csm.image_id}}"
