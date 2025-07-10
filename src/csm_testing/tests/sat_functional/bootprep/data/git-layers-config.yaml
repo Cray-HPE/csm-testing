@@ -4,7 +4,6 @@ configurations:
 
 # A configuration that specifies a layer from a git clone URL and a commit
 - name: "{{test.prefix}}-csm-git-commit-layer"
-  if_exists: 'overwrite'
   layers:
   - name: csm-packages
     playbook: csm_packages.yml
@@ -14,7 +13,6 @@ configurations:
 
 # A configuration that specifies a layer from a git clone URL and a branch
 - name: "{{test.prefix}}-csm-git-branch-layer"
-  if_exists: 'overwrite'
   layers:
   - name: csm-packages
     playbook: csm_packages.yml
@@ -26,7 +24,6 @@ configurations:
 
 # A configuration that specifies two layers with git clone URLs
 - name: "{{test.prefix}}-csm-two-git-layers"
-  if_exists: 'overwrite'
   layers:
   - name: csm-ncn_nodes
     playbook: ncn_nodes.yml

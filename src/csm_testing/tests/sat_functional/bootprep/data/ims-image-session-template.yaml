@@ -3,7 +3,6 @@
 configurations:
 # A simple configuration that has just one layer that runs a simple playbook
 - name: "{{test.prefix}}-simple-passing-configuration"
-  if_exists: 'overwrite'
   layers:
   - name: successful-layer
     playbook: test.yml
@@ -13,7 +12,6 @@ configurations:
 
 session_templates:
 - name: "{{test.prefix}}-simple-session-template"
-  if_exists: 'overwrite'
   image:
     ims:
       id: "{{csm.image_id}}"

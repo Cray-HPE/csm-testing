@@ -1,9 +1,7 @@
 ---
-# Define a session template that references an existing IMS image
 configurations:
 # A simple configuration that has just one layer that runs a simple playbook
-- name: "{{test.prefix}}-simple-passing-configuration"
-  if_exists: 'skip'
+- name: "{{test.config_name}}"
   layers:
   - name: successful-layer
     playbook: test.yml
@@ -12,8 +10,8 @@ configurations:
       branch: "main"
 
 images:
-- name: "{{test.prefix}}-simple-customized-image"
-  if_exists: 'skip'
+# An image based on the CSM barebones image and customized with the simple configuration
+- name: "{{test.image_name}}"
   base:
     product:
       name: csm
@@ -22,17 +20,17 @@ images:
       filter:
         arch: x86_64
         wildcard: "*barebones*"
-  configuration: "{{test.prefix}}-simple-passing-configuration"
+  configuration: "{{test.config_name}}"
   configuration_group_names:
   - Compute
 
 session_templates:
-- name: "{{test.prefix}}-simple-session-template"
-  if_exists: 'skip'
+# A session template that references an IMS image by ID and the simple configuration
+- name: "{{test.session_template_name}}"
   image:
     ims:
       id: "{{csm.image_id}}"
-  configuration: "{{test.prefix}}-simple-passing-configuration"
+  configuration: "{{test.config_name}}"
   bos_parameters:
     boot_sets:
       compute:
@@ -42,4 +40,3 @@ session_templates:
         - Compute
         rootfs_provider: "sbps"
         rootfs_provider_passthrough: "sbps:v1:iqn.2023-06.csm.iscsi:_sbps-hsn._tcp.{{default.system_name}}.{{default.site_domain}}:300"
-

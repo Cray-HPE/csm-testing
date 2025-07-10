@@ -24,5 +24,4 @@
 ---
 configurations:
 - name: "{{test.prefix}}-no-layers"
-  if_exists: 'overwrite'
   layers: []
