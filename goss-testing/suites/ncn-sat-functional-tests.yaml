@@ -35,12 +35,10 @@
 {{ $vars_hostname := get .Vars "this_node_name" }}
 {{ $this_node_name := default $env_hostname $vars_hostname }}
 gossfile:
-  {{if eq $this_node_name "ncn-m001"}}
   ../tests/goss-sat-bootprep.yaml: {}
   ../tests/goss-sat-init.yaml: {}
   ../tests/goss-sat-nid2xname.yaml: {}
   ../tests/goss-sat-showrev.yaml: {}
   ../tests/goss-sat-status.yaml: {}
   ../tests/goss-sat-version.yaml: {}
-  {{ end }}
 
