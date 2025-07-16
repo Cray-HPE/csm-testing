@@ -30,6 +30,11 @@ from typing import List, NoReturn, Optional, Tuple
 from packaging import version
 
 
+HSM_GROUP_NAME = "iscsi_worker"
+K8S_LABEL_NAME = "iscsi"
+K8S_LABEL_VALUE = "sbps"
+
+
 def run_command(command: str) -> Tuple[str, int]:
     """
     Function to run a given command
