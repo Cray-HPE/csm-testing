@@ -17,7 +17,7 @@ requests
 requests-retry-session
 requests-oauthlib
 semver
-typing_extensions
+typing-extensions
 urllib3
 
 # There are some additional Python packages that test scripts can rely on that are
