@@ -7,14 +7,15 @@ boto3
 botocore
 colorama
 cray-product-catalog
+jsonschema
 kubernetes
+packaging
+python-keycloak
 PyYAML
 requests
 requests-retry-session
 requests-oauthlib
-packaging
-python-keycloak
-jsonschema
+typing-extensions
 urllib3
 
 # There are some additional Python packages that test scripts can rely on that are
