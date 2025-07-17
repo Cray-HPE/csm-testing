@@ -30,11 +30,12 @@ import json
 import datetime
 import uuid
 import tempfile
+from typing import List
 
 SAT_FIRMWARE_HEADER = ['xname', 'name', 'target_name', 'version']
 
 
-def get_xnames() -> list:
+def get_xnames() -> List[str]:
     """Get xnames from cray hsm inventory list"""
     command = "cray hsm inventory hardware list --type NodeBMC"
     proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
@@ -47,7 +48,7 @@ def get_xnames() -> list:
 class TestFirmware(unittest.TestCase):
 
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         cls.xnames = get_xnames()
         cls.test_start_time = datetime.datetime.now()
 
@@ -65,14 +66,14 @@ class TestFirmware(unittest.TestCase):
             xname_file.write(f"{cls.xnames[0]}\n{cls.xnames[1]}\n")
 
     @classmethod
-    def tearDownClass(cls):
+    def tearDownClass(cls) -> None:
         """Clean up all SAT snapshots created during the test class execution."""
         cls.test_end_time = datetime.datetime.now()
         cls.delete_sat_snapshots_in_time_window(cls.test_start_time, cls.test_end_time)
         cls.temp_dir.cleanup()
 
     @classmethod
-    def create_firmware_snapshot(cls, xname:str) -> str:
+    def create_firmware_snapshot(cls, xname: str) -> str:
         """Test that running `sat firmware` creates a snapshot and return snapshot name"""
         command = f'sat firmware -x {xname}'
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
@@ -89,7 +90,9 @@ class TestFirmware(unittest.TestCase):
             raise RuntimeError("Snapshot creation failed. Errors encountered:\n" + info_msg)
 
     @classmethod
-    def delete_sat_snapshots_in_time_window(cls, start_time, end_time):
+    def delete_sat_snapshots_in_time_window(
+        cls, start_time: datetime.datetime, end_time: datetime.datetime
+    ) -> None:
         """Find and delete all SAT snapshots created between the start and end times."""
         command = "sat firmware --snapshots"
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
@@ -106,13 +109,13 @@ class TestFirmware(unittest.TestCase):
                     cls.delete_snapshot(snapshot)
 
     @staticmethod
-    def delete_snapshot(snapshot_name):
+    def delete_snapshot(snapshot_name: str) -> None:
         """Delete a single SAT snapshot."""
         command = f'sat firmware --delete-snapshot {snapshot_name}'
         subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE, check=True )
 
-    def test_firmware_describe_existing_snapshot(self):
+    def test_firmware_describe_existing_snapshot(self) -> None:
         """Test that `sat firmware --snapshots SNAPSHOT` describes an existing firmware snapshot."""
         snapshot = self.snapshot1
         command = f'sat firmware --snapshots {snapshot}'
@@ -124,7 +127,7 @@ class TestFirmware(unittest.TestCase):
         for col in SAT_FIRMWARE_HEADER:
             self.assertIn(col, output)
 
-    def test_firmware_query_multiple_snapshots(self):
+    def test_firmware_query_multiple_snapshots(self) -> None:
         """Test that `sat firmware --snapshots SNAPSHOT_1 SNAPSHOT_2` prints the details for two snapshots."""
         snap1 = self.snapshot1
         snap2 = self.snapshot2
@@ -138,7 +141,7 @@ class TestFirmware(unittest.TestCase):
         for col in SAT_FIRMWARE_HEADER:
             self.assertIn(col, output)
 
-    def test_firmware_query_nonexistent_snapshot(self):
+    def test_firmware_query_nonexistent_snapshot(self) -> None:
         """Test that `sat firmware --snapshots NON_EXISTENT_SNAPSHOT` querying a non-existent firmware snapshot."""
         non_existent_snapshot = str(uuid.uuid4())
         command = f'sat firmware --snapshots {non_existent_snapshot}'
@@ -150,7 +153,7 @@ class TestFirmware(unittest.TestCase):
         error_message = 'ERROR: Failed to get snapshots: No firmware found.'
         self.assertIn(error_message, stderr_output, f'Expected error not found in stderr: {stderr_output}')
 
-    def test_firmware_query_single_xname(self):
+    def test_firmware_query_single_xname(self) -> None:
         """Test that `sat firmware -x <xname>` prints firmware info for a single xname."""
         xnames = get_xnames()
         self.assertGreater(len(xnames), 0, "No xnames found in sat firmware output.")
@@ -163,7 +166,7 @@ class TestFirmware(unittest.TestCase):
         for col in SAT_FIRMWARE_HEADER:
             self.assertIn(col, xname_output)
 
-    def test_firmware_query_multiple_xnames(self):
+    def test_firmware_query_multiple_xnames(self) -> None:
         """Test that `sat firmware -x <xname1>,<xname2>` prints firmware info for multiple xnames."""
         xnames = get_xnames()
         self.assertGreaterEqual(len(xnames), 2, "Less than two unique xnames found in sat firmware output.")
@@ -176,7 +179,7 @@ class TestFirmware(unittest.TestCase):
         for col in SAT_FIRMWARE_HEADER:
             self.assertIn(col, multi_xname_output)
 
-    def test_firmware_query_xnames_from_file(self):
+    def test_firmware_query_xnames_from_file(self) -> None:
         """Test that `sat firmware --xname-file <file>` prints firmware info for xnames listed in a file."""
         command = f'sat firmware --xname-file {self.xname_file}'
         proc = subprocess.run(shlex.split(command), cwd=self.temp_dir.name,
@@ -187,7 +190,7 @@ class TestFirmware(unittest.TestCase):
         for col in SAT_FIRMWARE_HEADER:
             self.assertIn(col, file_xname_output)
 
-    def test_firmware_list_snapshots(self):
+    def test_firmware_list_snapshots(self) -> None:
         """Test that `sat firmware --snapshots` prints a list of snapshot names."""
         command = 'sat firmware --snapshots'
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
