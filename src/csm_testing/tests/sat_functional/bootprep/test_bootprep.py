@@ -487,14 +487,14 @@ class BootprepRunTestCase(unittest.TestCase):
                 if cfs_config_prefix in image['name']:
                     print(f"image to delete: {image['name']}")
                     print(f"image to delete: {image['id']}")
-                    # found_image_ids.append(image['id'])
+                    found_image_ids.append(image['id'])
 
         except subprocess.CalledProcessError as err:
             logging.warning('Failed to find CFS configurations with prefix "%s" '
                             'created by test: %s', cfs_config_prefix, err.stderr)
 
-        # for image_id in found_image_ids:
-        #     cls.delete_ims_image(image_id)
+        for image_id in found_image_ids:
+            cls.delete_ims_image(image_id)
 
     @classmethod
     def delete_all_session_templates_matching_prefix(cls, session_template_prefix):
@@ -520,8 +520,8 @@ class BootprepRunTestCase(unittest.TestCase):
             logging.warning('Failed to find CFS configurations with prefix "%s" '
                             'created by test: %s', session_template_prefix, err.stderr)
 
-        # for configuration_name in found_templates:
-        #     cls.delete_bos_session_template(configuration_name)
+        for configuration_name in found_templates:
+            cls.delete_bos_session_template(configuration_name)
 
 
     @staticmethod
