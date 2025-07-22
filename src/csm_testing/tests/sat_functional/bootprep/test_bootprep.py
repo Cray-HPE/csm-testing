@@ -96,6 +96,7 @@ class BootprepRunTestCase(unittest.TestCase):
             self.delete_bos_session_template(bos_session_template_name)
 
         self.delete_all_cfs_configurations_matching_prefix(self.test_prefix)
+        self.delete_all_ims_images_matching_prefix(self.test_prefix)
         self.delete_all_session_templates_matching_prefix(self.test_prefix)
 
     @classmethod
