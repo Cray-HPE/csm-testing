@@ -889,7 +889,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         overwrite_result = self.run_bootprep('configs-images-and-session-templates.yaml',
                                              f'{bootprep_options} {overwrite_options}')
         overwrite_report = json.loads(overwrite_result.stdout.decode())
-        self.cleanup_items(overwrite_report)
+        # self.cleanup_items(overwrite_report)
 
         self.assertTrue(self.configuration_exists(self.config_name))
         # The overwritten image is deleted, but not fully
