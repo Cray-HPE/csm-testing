@@ -96,6 +96,7 @@ class BootprepRunTestCase(unittest.TestCase):
             self.delete_bos_session_template(bos_session_template_name)
 
         self.delete_all_cfs_configurations_matching_prefix(self.test_prefix)
+        self.delete_all_session_templates_matching_prefix(self.test_prefix)
 
     @classmethod
     def setUpClass(cls):
@@ -453,18 +454,11 @@ class BootprepRunTestCase(unittest.TestCase):
         try:
             proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                   check=True)
-            proc_lines = proc.stdout.decode().splitlines()
             configs_json = json.loads(proc.stdout.decode())
             for config in configs_json['configurations']:
                 if cfs_config_prefix in config['name']:
                     print(f"config to delete: {config['name']}")
-                    # found_configurations.append(config['name'])
-
-            filtered_lines = [line for line in proc_lines if cfs_config_prefix in line]
-
-            simplified_values = [re.search(r'"([^"]*)"$', item).group(1) for item in filtered_lines]
-
-            found_configurations = simplified_values
+                    found_configurations.append(config['name'])
 
         except subprocess.CalledProcessError as err:
             logging.warning('Failed to find CFS configurations with prefix "%s" '
@@ -472,6 +466,62 @@ class BootprepRunTestCase(unittest.TestCase):
 
         for configuration_name in found_configurations:
             cls.delete_cfs_configuration(configuration_name)
+
+    @classmethod
+    def delete_all_ims_images_matching_prefix(cls, cfs_config_prefix):
+        """Find and delete all IMS images matching a prefix using the 'cray' CLI.
+
+        This relies on the cray CLI being configured and authenticated on the system.
+
+        Args:
+            cfs_config_prefix (str): ims image prefix to match
+        """
+        find_command = 'cray ims images list'
+        found_image_ids = []
+        try:
+            proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                  check=True)
+            images_json = json.loads(proc.stdout.decode())
+            for image in images_json:
+                if cfs_config_prefix in image['name']:
+                    print(f"image to delete: {image['name']}")
+                    print(f"image to delete: {image['id']}")
+                    # found_image_ids.append(image['id'])
+
+        except subprocess.CalledProcessError as err:
+            logging.warning('Failed to find CFS configurations with prefix "%s" '
+                            'created by test: %s', cfs_config_prefix, err.stderr)
+
+        # for image_id in found_image_ids:
+        #     cls.delete_ims_image(image_id)
+
+    @classmethod
+    def delete_all_session_templates_matching_prefix(cls, session_template_prefix):
+        """Find and delete all BOS session templates matching a prefix using the 'cray' CLI.
+
+        This relies on the cray CLI being configured and authenticated on the system.
+
+        Args:
+            session_template_prefix (str): session template prefix to match
+        """
+        find_command = 'cray bos sessiontemplates list'
+        found_templates = []
+        try:
+            proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                  check=True)
+            templates_json = json.loads(proc.stdout.decode())
+            for template in templates_json:
+                if session_template_prefix in template['name']:
+                    print(f"template to delete: {template['name']}")
+                    # found_templates.append(template['name'])
+
+        except subprocess.CalledProcessError as err:
+            logging.warning('Failed to find CFS configurations with prefix "%s" '
+                            'created by test: %s', session_template_prefix, err.stderr)
+
+        # for configuration_name in found_templates:
+        #     cls.delete_bos_session_template(configuration_name)
+
 
     @staticmethod
     def delete_ims_image(ims_image_id, permanent=True):
