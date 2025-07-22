@@ -439,11 +439,14 @@ class BootprepRunTestCase(unittest.TestCase):
             logging.warning('Failed to delete CFS configuration "%s" '
                             'created by test: %s', cfs_config_name, err.stderr)
 
-    @staticmethod
-    def delete_all_cfs_configurations_matching_prefix(cfs_config_prefix):
+    @classmethod
+    def delete_all_cfs_configurations_matching_prefix(cls, cfs_config_prefix):
         """Find and delete all CFS configurations matching a prefix using the 'cray' CLI.
 
         This relies on the cray CLI being configured and authenticated on the system.
+
+        Args:
+            cfs_config_prefix (str): cfs configuration prefix to match
         """
         find_command = 'cray cfs v3 configurations list'
         found_configurations = []
@@ -451,6 +454,10 @@ class BootprepRunTestCase(unittest.TestCase):
             proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                   check=True)
             proc_lines = proc.stdout.decode().splitlines()
+            configs_json = json.loads(proc.stdout.decode())
+            for config in configs_json['configs'][0]:
+                if cfs_config_prefix in config['name']:
+                    print(f"config to delete: {config['name']}")
 
             filtered_lines = [line for line in proc_lines if cfs_config_prefix in line]
 
@@ -463,12 +470,7 @@ class BootprepRunTestCase(unittest.TestCase):
                             'created by test: %s', cfs_config_prefix, err.stderr)
 
         for configuration_name in found_configurations:
-            delete_command = f'cray cfs configurations delete {configuration_name}'
-            try:
-                subprocess.run(shlex.split(delete_command), check=True)
-            except subprocess.CalledProcessError as err:
-                logging.warning('Failed to delete CFS configuration "%s" '
-                                'created by test: %s', configuration_name, err.stderr)
+            cls.delete_cfs_configuration(configuration_name)
 
     @staticmethod
     def delete_ims_image(ims_image_id, permanent=True):
