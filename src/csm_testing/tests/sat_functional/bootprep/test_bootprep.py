@@ -455,7 +455,7 @@ class BootprepRunTestCase(unittest.TestCase):
                                   check=True)
             proc_lines = proc.stdout.decode().splitlines()
             configs_json = json.loads(proc.stdout.decode())
-            for config in configs_json['configs']:
+            for config in configs_json['configurations']:
                 if cfs_config_prefix in config['name']:
                     print(f"config to delete: {config['name']}")
                     # found_configurations.append(config['name'])
