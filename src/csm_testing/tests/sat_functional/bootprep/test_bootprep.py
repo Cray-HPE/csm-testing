@@ -455,9 +455,10 @@ class BootprepRunTestCase(unittest.TestCase):
                                   check=True)
             proc_lines = proc.stdout.decode().splitlines()
             configs_json = json.loads(proc.stdout.decode())
-            for config in configs_json['configs'][0]:
+            for config in configs_json['configs']:
                 if cfs_config_prefix in config['name']:
                     print(f"config to delete: {config['name']}")
+                    # found_configurations.append(config['name'])
 
             filtered_lines = [line for line in proc_lines if cfs_config_prefix in line]
 
@@ -867,7 +868,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         result = self.run_bootprep('configs-images-and-session-templates.yaml',
                                    f'{bootprep_options} --limit configurations --limit session_templates')
         report = json.loads(result.stdout.decode())
-        self.cleanup_items(report)
+        # self.cleanup_items(report)
         self.assertEqual(1, len(report['configurations']))
         self.assertEqual(1, len(report['session_templates']))
 
