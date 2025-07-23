@@ -79,22 +79,9 @@ class BootprepRunTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.items_to_delete = {
-            'configurations': set(),
-            'images': set(),
-            'session_templates': set()
-        }
+        pass
 
     def tearDown(self):
-        for cfs_config_name in self.items_to_delete['configurations']:
-            self.delete_cfs_configuration(cfs_config_name)
-
-        for ims_image_id in self.items_to_delete['images']:
-            self.delete_ims_image(ims_image_id, permanent=True)
-
-        for bos_session_template_name in self.items_to_delete['session_templates']:
-            self.delete_bos_session_template(bos_session_template_name)
-
         self.delete_all_cfs_configurations_matching_prefix(self.test_prefix)
         self.delete_all_ims_images_matching_prefix(self.test_prefix)
         self.delete_all_session_templates_matching_prefix(self.test_prefix)
@@ -458,7 +445,6 @@ class BootprepRunTestCase(unittest.TestCase):
             configs_json = json.loads(proc.stdout.decode())
             for config in configs_json['configurations']:
                 if cfs_config_prefix in config['name']:
-                    print(f"config to delete: {config['name']}")
                     found_configurations.append(config['name'])
 
         except subprocess.CalledProcessError as err:
@@ -485,8 +471,6 @@ class BootprepRunTestCase(unittest.TestCase):
             images_json = json.loads(proc.stdout.decode())
             for image in images_json:
                 if cfs_config_prefix in image['name']:
-                    print(f"image to delete: {image['name']}")
-                    print(f"image to delete: {image['id']}")
                     found_image_ids.append(image['id'])
 
         except subprocess.CalledProcessError as err:
@@ -513,15 +497,14 @@ class BootprepRunTestCase(unittest.TestCase):
             templates_json = json.loads(proc.stdout.decode())
             for template in templates_json:
                 if session_template_prefix in template['name']:
-                    print(f"template to delete: {template['name']}")
-                    # found_templates.append(template['name'])
+                    found_templates.append(template['name'])
 
         except subprocess.CalledProcessError as err:
             logging.warning('Failed to find CFS configurations with prefix "%s" '
                             'created by test: %s', session_template_prefix, err.stderr)
 
-        for configuration_name in found_templates:
-            cls.delete_bos_session_template(configuration_name)
+        for template_name in found_templates:
+            cls.delete_bos_session_template(template_name)
 
 
     @staticmethod
@@ -757,17 +740,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
             logging.error("Failed to get cfs config %s"
                           "with error: %s", config_name, err)
 
-    def cleanup_items(self, report):
-        if 'configurations' in report:
-            for config in report['configurations']:
-                self.items_to_delete['configurations'].add(config['name'])
-        if 'images' in report:
-            for image in report['images']:
-                self.items_to_delete['images'].add(image['final_image_id'])
-        if 'session_templates' in report:
-            for image in report['session_templates']:
-                self.items_to_delete['session_templates'].add(image['name'])
-
     def test_no_configs(self):
         """Test that a file with an empty list of configs creates no configs"""
         result = self.run_bootprep('no-configs.yaml', '--format json')
@@ -788,8 +760,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         self.assertEqual(1, len(report['configurations']))
         self.assertEqual(f'{self.test_prefix}-no-layers', report['configurations'][0]['name'])
 
-        self.items_to_delete['configurations'].add(f'{self.test_prefix}-no-layers')
-
     @skip_test_if_csm_var_missing(['version', 'commit_hash'])
     def test_product_layers(self):
         """Test creating multiple CFS configurations using product-based layers"""
@@ -801,8 +771,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
-        self.cleanup_items(report)
-
     def test_git_layers(self):
         """Test creating multiple CFS configurations with git-based layers"""
         result = self.run_bootprep('git-layers-config.yaml', '--format json')
@@ -812,8 +780,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
 
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
-
-        self.cleanup_items(report)
 
     def test_special_parameters(self):
         """Test creating a CFS configuration with special parameters"""
@@ -827,8 +793,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
-        self.cleanup_items(report)
-
     def test_additional_inventory(self):
         """Test creating CFS configurations with additional inventory"""
         result = self.run_bootprep('additional-inventory-config.yaml', '--format json')
@@ -840,8 +804,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
 
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
-
-        self.cleanup_items(report)
 
     def test_missing_playbook(self):
         """Test creating a CFS configuration with a missing playbook using CFS v3 fails"""
@@ -870,8 +832,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
 
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
-
-        self.cleanup_items(report)
 
     def test_image_customization_fail(self):
         """Test creating a failing ims image"""
@@ -902,8 +862,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
-        self.cleanup_items(report)
-
     def test_configs_images_and_session_templates(self):
         """Test creating, skipping and overwriting configurations, images and session templates"""
         bootprep_options = '--format json'
@@ -913,8 +871,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         # Speed up the tests by creating an empty IMS image to start with
         empty_image = self.create_empty_ims_image(self.image_name)
         empty_image_id = empty_image['id']
-        # Although this image will be overwritten, it is not permanently deleted
-        self.items_to_delete['images'].add(empty_image_id)
         # Create the configurations and session templates with bootprep
         result = self.run_bootprep('configs-images-and-session-templates.yaml',
                                    f'{bootprep_options} --limit configurations --limit session_templates')
@@ -971,8 +927,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
 
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
-
-        self.cleanup_items(report)
 
     def test_dry_run_and_save(self):
         """Test running bootprep in dry-run and saving files"""
@@ -1054,10 +1008,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in limit_two_report['configurations']:
             self.validate_cfs_config(config['name'])
 
-        # Make sure everything created by these tests is marked for cleanup
-        for report in [configs_report, images_report, session_templates_report, limit_two_report]:
-            self.cleanup_items(report)
-
     def test_if_exists_configs(self):
         """Test the 'if_exists' property for CFS configurations"""
         skipped_name = f'{self.config_name}-skip'
@@ -1079,9 +1029,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         skipped_config_names = [config['name'] for config in second_report['skipped_configurations']]
         self.assertEqual([overwritten_name], created_config_names)
         self.assertEqual([skipped_name], skipped_config_names)
-
-        self.cleanup_items(first_report)
-        self.cleanup_items(second_report)
 
     def test_if_exists_images(self):
         """Test the 'if_exists' property for IMS images"""
@@ -1107,11 +1054,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         self.assertFalse(self.image_exists(empty_overwrite_image['id'], check_deleted=False))
         self.assertTrue(self.deleted_image_exists(empty_overwrite_image['id']))
 
-        # Clean up images created by "cray ims" commands as well as bootprep
-        self.items_to_delete['images'].add(empty_skip_image['id'])
-        self.items_to_delete['images'].add(empty_overwrite_image['id'])
-        self.cleanup_items(report)
-
     def test_if_exists_session_templates(self):
         """Test the 'if_exists' property for BOS session templates"""
         skipped_name = f'{self.session_template_name}-skip'
@@ -1134,9 +1076,6 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         skipped_session_template_names = [template['name'] for template in second_report['skipped_session_templates']]
         self.assertEqual([overwritten_name], created_session_template_names)
         self.assertEqual([skipped_name], skipped_session_template_names)
-
-        self.cleanup_items(first_report)
-        self.cleanup_items(second_report)
 
 
 if __name__ == '__main__':
