@@ -486,7 +486,7 @@ class BootprepRunTestCase(unittest.TestCase):
         Args:
             session_template_prefix (str): session template prefix to match
         """
-        find_command = 'cray bos sessiontemplates list'
+        find_command = 'cray bos v2 sessiontemplates list'
         found_templates = []
         try:
             proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
