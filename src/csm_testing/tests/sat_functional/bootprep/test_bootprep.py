@@ -78,9 +78,6 @@ class BootprepRunTestCase(unittest.TestCase):
     the files it contains.
     """
 
-    def setUp(self):
-        pass
-
     def tearDown(self):
         self.delete_all_cfs_configurations_matching_prefix(self.test_prefix)
         self.delete_all_ims_images_matching_prefix(self.test_prefix)
@@ -428,8 +425,8 @@ class BootprepRunTestCase(unittest.TestCase):
             logging.warning('Failed to delete CFS configuration "%s" '
                             'created by test: %s', cfs_config_name, err.stderr)
 
-    @classmethod
-    def delete_all_cfs_configurations_matching_prefix(cls, cfs_config_prefix):
+    @staticmethod
+    def delete_all_cfs_configurations_matching_prefix( cfs_config_prefix):
         """Find and delete all CFS configurations matching a prefix using the 'cray' CLI.
 
         This relies on the cray CLI being configured and authenticated on the system.
@@ -452,10 +449,10 @@ class BootprepRunTestCase(unittest.TestCase):
                             'created by test: %s', cfs_config_prefix, err.stderr)
 
         for configuration_name in found_configurations:
-            cls.delete_cfs_configuration(configuration_name)
+            BootprepRunTestCase.delete_cfs_configuration(configuration_name)
 
-    @classmethod
-    def delete_all_ims_images_matching_prefix(cls, cfs_config_prefix):
+    @staticmethod
+    def delete_all_ims_images_matching_prefix(cfs_config_prefix):
         """Find and delete all IMS images matching a prefix using the 'cray' CLI.
 
         This relies on the cray CLI being configured and authenticated on the system.
@@ -478,10 +475,10 @@ class BootprepRunTestCase(unittest.TestCase):
                             'created by test: %s', cfs_config_prefix, err.stderr)
 
         for image_id in found_image_ids:
-            cls.delete_ims_image(image_id)
+            BootprepRunTestCase.delete_ims_image(image_id)
 
-    @classmethod
-    def delete_all_session_templates_matching_prefix(cls, session_template_prefix):
+    @staticmethod
+    def delete_all_session_templates_matching_prefix(session_template_prefix):
         """Find and delete all BOS session templates matching a prefix using the 'cray' CLI.
 
         This relies on the cray CLI being configured and authenticated on the system.
@@ -504,7 +501,7 @@ class BootprepRunTestCase(unittest.TestCase):
                             'created by test: %s', session_template_prefix, err.stderr)
 
         for template_name in found_templates:
-            cls.delete_bos_session_template(template_name)
+            BootprepRunTestCase.delete_bos_session_template(template_name)
 
 
     @staticmethod
