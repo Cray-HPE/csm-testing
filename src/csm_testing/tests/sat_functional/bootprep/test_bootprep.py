@@ -441,7 +441,7 @@ class BootprepRunTestCase(unittest.TestCase):
                                   check=True)
             configs_json = json.loads(proc.stdout.decode())
             for config in configs_json['configurations']:
-                if cfs_config_prefix in config['name']:
+                if config['name'].startsWith(cfs_config_prefix):
                     found_configurations.append(config['name'])
 
         except subprocess.CalledProcessError as err:
@@ -452,13 +452,13 @@ class BootprepRunTestCase(unittest.TestCase):
             BootprepRunTestCase.delete_cfs_configuration(configuration_name)
 
     @staticmethod
-    def delete_all_ims_images_matching_prefix(cfs_config_prefix):
+    def delete_all_ims_images_matching_prefix(ims_image_prefix):
         """Find and delete all IMS images matching a prefix using the 'cray' CLI.
 
         This relies on the cray CLI being configured and authenticated on the system.
 
         Args:
-            cfs_config_prefix (str): ims image prefix to match
+            ims_image_prefix (str): ims image prefix to match
         """
         find_command = 'cray ims images list'
         found_image_ids = []
@@ -467,12 +467,12 @@ class BootprepRunTestCase(unittest.TestCase):
                                   check=True)
             images_json = json.loads(proc.stdout.decode())
             for image in images_json:
-                if cfs_config_prefix in image['name']:
+                if image['name'].startsWith(ims_image_prefix):
                     found_image_ids.append(image['id'])
 
         except subprocess.CalledProcessError as err:
             logging.warning('Failed to find CFS configurations with prefix "%s" '
-                            'created by test: %s', cfs_config_prefix, err.stderr)
+                            'created by test: %s', ims_image_prefix, err.stderr)
 
         for image_id in found_image_ids:
             BootprepRunTestCase.delete_ims_image(image_id)
@@ -493,7 +493,7 @@ class BootprepRunTestCase(unittest.TestCase):
                                   check=True)
             templates_json = json.loads(proc.stdout.decode())
             for template in templates_json:
-                if session_template_prefix in template['name']:
+                if template['name'].startsWith(session_template_prefix):
                     found_templates.append(template['name'])
 
         except subprocess.CalledProcessError as err:
