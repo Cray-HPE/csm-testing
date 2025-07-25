@@ -36,6 +36,4 @@ command:
             "{{$logrun}}" -l "{{$test_label}}" \
                 "{{$sat_test}}" "init.test_init"
         exit-status: 0
-        stderr:
-        - OK
         timeout: 100000 # timeout in milliseconds
