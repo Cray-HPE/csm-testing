@@ -58,10 +58,8 @@ def skip_test_if_csm_var_missing(var_names: List[str]) -> callable:
         def wrapper(self, *args, **kwargs):
             missing_vars = [var_name for var_name in var_names if var_name not in self.csm_vars]
             if missing_vars:
-                self.skipTest('\n'.join(
-                    [f'Missing CSM vars from vars file: {", ".join(missing_vars)}.'] +
-                    getattr(self, 'set_up_errors', []))
-                )
+                missing_vars_str = ', '.join(f'csm.{var_name}' for var_name in missing_vars)
+                self.skipTest(f'Unable to get values for variables: {missing_vars_str}')
             return test_method(self, *args, **kwargs)
 
         return wrapper
@@ -160,9 +158,9 @@ class BootprepRunTestCase(unittest.TestCase):
             return
 
     @classmethod
-    def get_branch_name(cls, commit_url):
+    def get_branch_name(cls, clone_url):
 
-        git_repo_name = str.split(commit_url, "/")[-1]
+        git_repo_name = str.split(clone_url, "/")[-1]
         vcs_credentials_command = ("kubectl get secret -n services vcs-user-credentials "
                                    "-o jsonpath='{.data.vcs_password}'")
 
@@ -351,31 +349,40 @@ class BootprepRunTestCase(unittest.TestCase):
             return
 
         good_csm_versions = []
+        required_keys = ('configurations', 'images', 'recipes')
         for version, data in csm_data.items():
-            # Ensure that 'configuration' and 'images' keys are present, so that
-            # we can find the supplied VCS commit hash and the barebones image ID
-            if 'configuration' in data and 'images' in data:
+            # Ensure that 'configuration', 'images', and 'recipes' keys are present, so
+            # we can hopefully find the barebones image and recipe and the VCS repo info
+            if all(key in data for key in required_keys):
                 good_csm_versions.append(version)
         good_csm_versions.sort(key=VersionInfo.parse)
 
         if not good_csm_versions:
             cls.set_up_errors.append('Unable to get CSM data from product catalog; no versions '
-                                     'with both "configuration" and "images" keys')
+                                     f'with {", ".join(required_keys)}.')
             return
 
         cls.csm_vars['version'] = latest_csm_version = good_csm_versions[-1]
-        commit_url = ""
 
+        clone_url = ""
         try:
             # Use a different CSM version for the commit hash if possible
             first_csm_version = good_csm_versions[0]
             cls.csm_vars['commit_hash'] = csm_data[first_csm_version]['configuration']['commit']
-            commit_url = csm_data[first_csm_version]['configuration']['clone_url']
+            clone_url = csm_data[first_csm_version]['configuration']['clone_url']
         except KeyError as err:
             cls.set_up_errors.append(f'Unable to get commit hash from first '
                                      f'CSM version; missing "{err}" key')
 
-        cls.csm_vars['branch_name'] = cls.get_branch_name(commit_url)
+        cls.csm_vars['branch_name'] = cls.get_branch_name(clone_url)
+
+        latest_barebones_recipes = [recipe_data['id'] for recipe_name, recipe_data
+                                    in csm_data[latest_csm_version]['recipes'].items()
+                                    if 'barebones' in recipe_name and 'x86' in recipe_name]
+        if latest_barebones_recipes:
+            cls.csm_vars['recipe_id'] = latest_barebones_recipes[0]
+        else:
+            cls.set_up_errors.append(f'Unable to get barebones recipe ID from latest CSM version')
 
         latest_barebones_images = [image_data['id'] for image_name, image_data
                                    in csm_data[latest_csm_version]['images'].items()
@@ -435,6 +442,7 @@ class BootprepRunTestCase(unittest.TestCase):
         Args:
             cfs_config_prefix (str): cfs configuration prefix to match
         """
+        find_command = 'cray cfs v3 configurations list'
         found_configurations = []
         next_id = None
 
@@ -779,7 +787,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         self.assertEqual(1, len(report['configurations']))
         self.assertEqual(f'{self.test_prefix}-no-layers', report['configurations'][0]['name'])
 
-    @skip_test_if_csm_var_missing(['version', 'commit_hash'])
+    @skip_test_if_csm_var_missing(['branch_name', 'commit_hash', 'version'])
     def test_product_layers(self):
         """Test creating multiple CFS configurations using product-based layers"""
         result = self.run_bootprep('product-layers-config.yaml', '--format json')
@@ -790,6 +798,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
+    @skip_test_if_csm_var_missing(['branch_name', 'commit_hash'])
     def test_git_layers(self):
         """Test creating multiple CFS configurations with git-based layers"""
         result = self.run_bootprep('git-layers-config.yaml', '--format json')
@@ -800,6 +809,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
+    @skip_test_if_csm_var_missing(['branch_name', 'version'])
     def test_special_parameters(self):
         """Test creating a CFS configuration with special parameters"""
         result = self.run_bootprep('special-parameters-config.yaml', '--format json')
@@ -812,6 +822,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
+    @skip_test_if_csm_var_missing(['branch_name', 'commit_hash', 'version'])
     def test_additional_inventory(self):
         """Test creating CFS configurations with additional inventory"""
         result = self.run_bootprep('additional-inventory-config.yaml', '--format json')
@@ -824,6 +835,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
+    @skip_test_if_csm_var_missing(['version'])
     def test_missing_playbook(self):
         """Test creating a CFS configuration with a missing playbook using CFS v3 fails"""
         result = self.run_bootprep('missing-playbook-config.yaml', '--format json', check=False)
@@ -841,6 +853,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
             decoded_stderr
         )
 
+    @skip_test_if_csm_var_missing(['image_id', 'version'])
     def test_image_customization(self):
         """Test creating an ims image with a configuration"""
         result = self.run_bootprep('image-customization.yaml', '--format json')
@@ -852,6 +865,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
+    @skip_test_if_csm_var_missing(['image_id', 'version'])
     def test_image_customization_fail(self):
         """Test creating a failing ims image"""
         result = self.run_bootprep('image-customization-fail.yaml', '--format json', check=False)
@@ -870,6 +884,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
             decoded_stderr
         )
 
+    @skip_test_if_csm_var_missing(['image_id'])
     def test_session_template(self):
         """Test creating a bos session template"""
         result = self.run_bootprep('ims-image-session-template.yaml', '--format json')
@@ -881,6 +896,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
+    @skip_test_if_csm_var_missing(['image_id', 'version'])
     def test_configs_images_and_session_templates(self):
         """Test creating, skipping and overwriting configurations, images and session templates"""
         bootprep_options = '--format json'
@@ -931,6 +947,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in overwrite_report['configurations']:
             self.validate_cfs_config(config['name'])
 
+    @skip_test_if_csm_var_missing(['image_id', 'version'])
     def test_cfs_version(self):
         """Test running bootprep with cfs v2"""
         # Not adding test for cfs v3 since that is used by default
@@ -945,6 +962,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
+    @skip_test_if_csm_var_missing(['image_id', 'version'])
     def test_dry_run_and_save(self):
         """Test running bootprep in dry-run and saving files"""
         bootprep_opts = ' '.join([
@@ -976,6 +994,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         self.assertTrue(os.path.isfile(os.path.join(self.temp_dir.name, cfs_config_file)))
         self.assertTrue(os.path.isfile(os.path.join(self.temp_dir.name, session_template_file)))
 
+    @skip_test_if_csm_var_missing(['image_id', 'version'])
     def test_limit_option(self):
         """Test limit option when creating items"""
         overwrite_options = ' '.join([f'--overwrite-{item}' for item in ('configs', 'images', 'templates')])
@@ -1047,6 +1066,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         self.assertEqual([overwritten_name], created_config_names)
         self.assertEqual([skipped_name], skipped_config_names)
 
+    @skip_test_if_csm_var_missing(['recipe_id', 'version'])
     def test_if_exists_images(self):
         """Test the 'if_exists' property for IMS images"""
         skipped_name = f'{self.image_name}-skip'
@@ -1071,6 +1091,7 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         self.assertFalse(self.image_exists(empty_overwrite_image['id'], check_deleted=False))
         self.assertTrue(self.deleted_image_exists(empty_overwrite_image['id']))
 
+    @skip_test_if_csm_var_missing(['image_id'])
     def test_if_exists_session_templates(self):
         """Test the 'if_exists' property for BOS session templates"""
         skipped_name = f'{self.session_template_name}-skip'
