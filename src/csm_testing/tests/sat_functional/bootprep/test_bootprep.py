@@ -687,6 +687,10 @@ class BootprepRunTestCase(unittest.TestCase):
         try:
             result = subprocess.run(shlex.split(command), cwd=self.temp_dir.name, check=check,
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except KeyboardInterrupt:
+            logging.error("Keyboard interrupt detected, attempting to cleanup bootprep run...")
+            self.tearDown()
+            raise
         except subprocess.CalledProcessError as err:
             logging.error(f"\nFailed to run command: {' '.join(err.cmd)}\n"
                           f"with error: \n{err.stderr.decode()}")
