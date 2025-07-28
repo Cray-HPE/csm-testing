@@ -449,7 +449,7 @@ class BootprepRunTestCase(unittest.TestCase):
                 configs_json = json.loads(proc.stdout.decode())
 
                 for config in configs_json['configurations']:
-                    if config['name'].startsWith(cfs_config_prefix):
+                    if config['name'].startswith(cfs_config_prefix):
                         found_configurations.append(config['name'])
 
                 next_id = configs_json.get('next')
@@ -480,7 +480,7 @@ class BootprepRunTestCase(unittest.TestCase):
                                   check=True)
             images_json = json.loads(proc.stdout.decode())
             for image in images_json:
-                if image['name'].startsWith(ims_image_prefix):
+                if image['name'].startswith(ims_image_prefix):
                     found_image_ids.append(image['id'])
 
         except subprocess.CalledProcessError as err:
@@ -506,7 +506,7 @@ class BootprepRunTestCase(unittest.TestCase):
                                   check=True)
             templates_json = json.loads(proc.stdout.decode())
             for template in templates_json:
-                if template['name'].startsWith(session_template_prefix):
+                if template['name'].startswith(session_template_prefix):
                     found_templates.append(template['name'])
 
         except subprocess.CalledProcessError as err:
