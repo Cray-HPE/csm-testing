@@ -434,19 +434,32 @@ class BootprepRunTestCase(unittest.TestCase):
         Args:
             cfs_config_prefix (str): cfs configuration prefix to match
         """
-        find_command = 'cray cfs v3 configurations list'
         found_configurations = []
-        try:
-            proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                  check=True)
-            configs_json = json.loads(proc.stdout.decode())
-            for config in configs_json['configurations']:
-                if config['name'].startsWith(cfs_config_prefix):
-                    found_configurations.append(config['name'])
+        next_id = None
 
-        except subprocess.CalledProcessError as err:
-            logging.warning('Failed to find CFS configurations with prefix "%s" '
-                            'created by test: %s', cfs_config_prefix, err.stderr)
+        while True:
+            find_command = 'cray cfs v3 configurations list'
+
+            if next_id:
+                find_command += f' --after-id {next_id}'
+
+            try:
+                proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                      check=True)
+                configs_json = json.loads(proc.stdout.decode())
+
+                for config in configs_json['configurations']:
+                    if config['name'].startsWith(cfs_config_prefix):
+                        found_configurations.append(config['name'])
+
+                next_id = configs_json.get('next')
+                if next_id is None:
+                    break
+
+            except subprocess.CalledProcessError as err:
+                logging.warning('Failed to find CFS configurations with prefix "%s" '
+                                'created by test: %s', cfs_config_prefix, err.stderr)
+                break
 
         for configuration_name in found_configurations:
             BootprepRunTestCase.delete_cfs_configuration(configuration_name)
