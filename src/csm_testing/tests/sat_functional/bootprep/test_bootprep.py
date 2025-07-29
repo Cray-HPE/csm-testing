@@ -453,10 +453,11 @@ class BootprepRunTestCase(unittest.TestCase):
                         found_configurations.append(config['name'])
 
                 next_obj = configs_json.get('next')
-                next_id = next_obj.get('after_id')
-                print(f'nextID: {next_id} if: {next_id is None}')
-                if next_id is None:
+                if next_obj is None:
                     break
+                else:
+                    next_id = next_obj.get('after_id')
+                print(f'nextID: {next_id} if: {next_id is None}')
 
             except subprocess.CalledProcessError as err:
                 logging.warning('Failed to find CFS configurations with prefix "%s" '
