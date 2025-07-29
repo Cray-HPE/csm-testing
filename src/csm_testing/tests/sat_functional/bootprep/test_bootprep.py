@@ -457,7 +457,6 @@ class BootprepRunTestCase(unittest.TestCase):
                     break
                 else:
                     next_id = next_obj.get('after_id')
-                print(f'nextID: {next_id} if: {next_id is None}')
 
             except subprocess.CalledProcessError as err:
                 logging.warning('Failed to find CFS configurations with prefix "%s" '
