@@ -452,7 +452,9 @@ class BootprepRunTestCase(unittest.TestCase):
                     if config['name'].startswith(cfs_config_prefix):
                         found_configurations.append(config['name'])
 
-                next_id = configs_json.get('next')
+                next_obj = configs_json.get('next')
+                next_id = next_obj.get('after_id')
+                print(f'nextID: {next_id} if: {next_id is None}')
                 if next_id is None:
                     break
 
