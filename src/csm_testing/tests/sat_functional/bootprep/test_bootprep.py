@@ -426,7 +426,7 @@ class BootprepRunTestCase(unittest.TestCase):
                             'created by test: %s', cfs_config_name, err.stderr)
 
     @staticmethod
-    def delete_all_cfs_configurations_matching_prefix( cfs_config_prefix):
+    def delete_all_cfs_configurations_matching_prefix(cfs_config_prefix):
         """Find and delete all CFS configurations matching a prefix using the 'cray' CLI.
 
         This relies on the cray CLI being configured and authenticated on the system.
@@ -486,7 +486,7 @@ class BootprepRunTestCase(unittest.TestCase):
                     found_image_ids.append(image['id'])
 
         except subprocess.CalledProcessError as err:
-            logging.warning('Failed to find CFS configurations with prefix "%s" '
+            logging.warning('Failed to find IMS images with prefix "%s" '
                             'created by test: %s', ims_image_prefix, err.stderr)
 
         for image_id in found_image_ids:
@@ -512,7 +512,7 @@ class BootprepRunTestCase(unittest.TestCase):
                     found_templates.append(template['name'])
 
         except subprocess.CalledProcessError as err:
-            logging.warning('Failed to find CFS configurations with prefix "%s" '
+            logging.warning('Failed to find BOS session templates with prefix "%s" '
                             'created by test: %s', session_template_prefix, err.stderr)
 
         for template_name in found_templates:
