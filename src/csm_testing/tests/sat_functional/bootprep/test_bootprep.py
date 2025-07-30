@@ -420,7 +420,8 @@ class BootprepRunTestCase(unittest.TestCase):
         """
         delete_command = f'cray cfs configurations delete {cfs_config_name}'
         try:
-            subprocess.run(shlex.split(delete_command), check=True)
+            subprocess.run(shlex.split(delete_command), check=True,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         except subprocess.CalledProcessError as err:
             logging.warning('Failed to delete CFS configuration "%s" '
                             'created by test: %s', cfs_config_name, err.stderr)
@@ -534,7 +535,8 @@ class BootprepRunTestCase(unittest.TestCase):
             """Helper function to delete an IMS image or deleted IMS image."""
             delete_command = f'cray ims {"deleted" if deleted else ""} images delete {ims_image_id}'
             try:
-                subprocess.run(shlex.split(delete_command), check=True)
+                subprocess.run(shlex.split(delete_command), check=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             except subprocess.CalledProcessError as err:
                 logging.warning('Failed to delete IMS %s with ID "%s": %s',
                                 'deleted image' if deleted else 'image',
@@ -561,7 +563,8 @@ class BootprepRunTestCase(unittest.TestCase):
         """
         delete_command = f'cray bos sessiontemplates delete {bos_session_template_name}'
         try:
-            subprocess.run(shlex.split(delete_command), check=True)
+            subprocess.run(shlex.split(delete_command), check=True,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         except subprocess.CalledProcessError as err:
             logging.warning('Failed to delete BOS session template "%s" '
                             'created by test: {%s}', bos_session_template_name, err.stderr)
