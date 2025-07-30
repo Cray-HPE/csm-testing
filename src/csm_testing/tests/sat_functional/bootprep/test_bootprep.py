@@ -349,7 +349,7 @@ class BootprepRunTestCase(unittest.TestCase):
             return
 
         good_csm_versions = []
-        required_keys = ('configurations', 'images', 'recipes')
+        required_keys = ('configuration', 'images', 'recipes')
         for version, data in csm_data.items():
             # Ensure that 'configuration', 'images', and 'recipes' keys are present, so
             # we can hopefully find the barebones image and recipe and the VCS repo info
