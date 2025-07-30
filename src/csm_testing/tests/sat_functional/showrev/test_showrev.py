@@ -180,6 +180,9 @@ class TestShowRev(unittest.TestCase):
                 kubectl_product_names.add(key)
 
         kubectl_product_count = len(kubectl_product_names)
+        # >= is used here rather than == as sat can find custom
+        # products on systems that this kubectl command is unable to find
+        # (more info can be found in CRAYSAT-2015)
         self.assertGreaterEqual(sat_product_count, kubectl_product_count)
 
     def test_showrev_system_headings(self):
