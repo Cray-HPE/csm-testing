@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022,2024-2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -189,8 +189,8 @@ bootprep:
   - "/etc/cray/upgrade/csm/compute-and-uan-bootprep.yaml"
 
 iuf_workflowtemplate_images:
-  - "2.4.1"
-  - "v0.1.12"
+  - "2.7.1"
+  - "v0.1.13"
 
 iscsi_prechecks:
  - "1.6.1"
