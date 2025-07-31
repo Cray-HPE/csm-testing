@@ -21,28 +21,16 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-
 # This is a suite of functional tests for validating the functionality of the
-# System Admin Toolkit (SAT). Tests are split up across multiple gossfiles,
-# which are then included by this suite.
+# System Admin Toolkit (SAT). Tests are written as Python unittests in the
+# csm_testing.tests.sat_functional package. This Goss suite just includes the
+# goss-sat-functional-tests.yaml Goss file, which dynamically creates a Goss
+# "command" test for each unittest.TestCase in the sat_functional package.
 #
-# Most `sat` commands are just making requests to the CSM APIs, so it would be
-# redundant to run each test on every node. Instead, we just run them on ncn-m001.
+# Most `sat` commands are just making requests to the CSM APIs, so these tests
+# can be run on any ncn-m node in the system. Running on a single node is handled
+# by the tests/functional/sat_functional_tests.sh script in the hpc-dst-goss-testing
+# repository for the DST CT pipeline.
 
-# Use hostname from variable file, if set.
-# Otherwise use hostname from environment variable (or blank, if that is also not set)
-{{ $env_hostname := getEnv "HOSTNAME" }}
-{{ $vars_hostname := get .Vars "this_node_name" }}
-{{ $this_node_name := default $env_hostname $vars_hostname }}
 gossfile:
-  {{if eq $this_node_name "ncn-m001"}}
-  ../tests/goss-sat-bootprep.yaml: {}
-  ../tests/goss-sat-firmware.yaml: {}
-  ../tests/goss-sat-hwinv.yaml: {}
-  ../tests/goss-sat-init.yaml: {}
-  ../tests/goss-sat-nid2xname.yaml: {}
-  ../tests/goss-sat-showrev.yaml: {}
-  ../tests/goss-sat-status.yaml: {}
-  ../tests/goss-sat-version.yaml: {}
-  {{ end }}
-
+  ../tests/goss-sat-functional-tests.yaml: {}

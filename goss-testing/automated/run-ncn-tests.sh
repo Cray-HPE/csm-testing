@@ -1,6 +1,6 @@
 # MIT License
 #
-# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2021-2023, 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -698,7 +698,7 @@ function add_local_vars {
         return 1
     fi
 
-    local this_node_name this_node_manufacturer var_string node nodes is_vshasta test cmsdev_test_list
+    local this_node_name this_node_manufacturer var_string node nodes is_vshasta test cmsdev_test_list sat_functional
 
     if is_vshasta_node; then
         # vshasta
@@ -769,6 +769,14 @@ function add_local_vars {
         for test in $(/opt/cray/csm/scripts/hms_verification/run_hms_ct_tests.sh -l); do
             var_string+="  - ${test}\n"
         done
+    fi
+
+    # add list of SAT functional tests, if not running on the PIT node
+    if ! is_pit_node; then
+        sat_functional="${GOSS_BASE}/scripts/python/sat_functional"
+        if [ -f "${sat_functional}" ]; then
+            var_string+="\n$(${sat_functional} list --format yaml)"
+        fi
     fi
 
     var_string+="\n${is_vshasta}\n"
