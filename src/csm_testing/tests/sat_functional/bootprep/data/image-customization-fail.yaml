@@ -5,7 +5,7 @@ configurations:
 # A simple configuration that has just one layer that runs a simple failing playbook
 - name: "{{test.prefix}}-simple-failing-configuration"
   layers:
-  - name: successful-layer
+  - name: failing-layer
     playbook: test-fail.yml
     git:
       url: "https://api-gw-service-nmn.local/vcs/cray/{{test.vcs_repo_name}}.git"

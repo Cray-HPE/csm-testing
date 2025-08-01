@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2024-2025 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -26,14 +26,16 @@
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
 {{ $sat_test := $scripts | printf "%s/python/sat_functional" }}
 command:
-    {{ $test_label := "sat_status" }}
+    {{ $test_label := "sat_hwinv" }}
     {{$test_label}}:
-        title: Test the 'sat status' command
+        title: Test the 'sat hwinv' command
         meta:
-            desc: Tests for the 'sat status' command
+            desc: Tests for the 'sat hwinv' command
             sev: 0
         exec: |-
             "{{$logrun}}" -l "{{$test_label}}" \
-                "{{$sat_test}}" "status.test_status"
+                "{{$sat_test}}" "hwinv.test_hwinv"
         exit-status: 0
-        timeout: 100000 # timeout in milliseconds
+        stderr:
+        - OK
+        timeout: 200000 # timeout in milliseconds

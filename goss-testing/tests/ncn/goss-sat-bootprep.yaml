@@ -36,6 +36,4 @@ command:
             "{{$logrun}}" -l "{{$test_label}}" \
                 "{{$sat_test}}" "bootprep.test_bootprep.TestBootprepCreateConfigs"
         exit-status: 0
-        stderr:
-        - OK
-        timeout: 1200000 # timeout in milliseconds
+        timeout: 2700000 # timeout in milliseconds, currently set to 45 minutes

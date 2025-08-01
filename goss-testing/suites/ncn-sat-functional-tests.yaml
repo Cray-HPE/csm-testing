@@ -36,6 +36,8 @@
 {{ $this_node_name := default $env_hostname $vars_hostname }}
 gossfile:
   ../tests/goss-sat-bootprep.yaml: {}
+  ../tests/goss-sat-firmware.yaml: {}
+  ../tests/goss-sat-hwinv.yaml: {}
   ../tests/goss-sat-init.yaml: {}
   ../tests/goss-sat-nid2xname.yaml: {}
   ../tests/goss-sat-showrev.yaml: {}

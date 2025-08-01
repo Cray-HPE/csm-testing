@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2024-2025 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -24,16 +24,18 @@
 
 {{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
 {{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $sat_test := $scripts | printf "%s/python/sat_functional" }}
+{{ $check_for_bad_iscsi_hsm_group := $scripts | printf "%s/python/check_for_bad_iscsi_hsm_group" }}
 command:
-    {{ $test_label := "sat_status" }}
-    {{$test_label}}:
-        title: Test the 'sat status' command
+    {{ $testlabel := "check_for_bad_iscsi_hsm_group" }}
+    {{$testlabel}}:
+        title: If iSCSI HSM group exists, verify that it contains at least one worker NCN
         meta:
-            desc: Tests for the 'sat status' command
+            desc: |-
+              If this test fails, run "{{$check_for_bad_iscsi_hsm_group}}" on a Kubernetes NCN for details on the problem.
+              For more information, see 'operations/iscsi_sbps/' in the CSM documentation.
             sev: 0
         exec: |-
-            "{{$logrun}}" -l "{{$test_label}}" \
-                "{{$sat_test}}" "status.test_status"
+            "{{$logrun}}" -l "{{$testlabel}}" \
+                "{{$check_for_bad_iscsi_hsm_group}}"
         exit-status: 0
-        timeout: 100000 # timeout in milliseconds
+        timeout: 10000

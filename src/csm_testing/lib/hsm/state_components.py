@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2024-2025 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,19 +21,24 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+"""Shared Python function library: HSM: State/Components"""
 
-{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $logrun := $scripts | printf "%s/log_run.sh" }}
-{{ $sat_test := $scripts | printf "%s/python/sat_functional" }}
-command:
-    {{ $test_label := "sat_status" }}
-    {{$test_label}}:
-        title: Test the 'sat status' command
-        meta:
-            desc: Tests for the 'sat status' command
-            sev: 0
-        exec: |-
-            "{{$logrun}}" -l "{{$test_label}}" \
-                "{{$sat_test}}" "status.test_status"
-        exit-status: 0
-        timeout: 100000 # timeout in milliseconds
+from typing import List, Optional
+
+from csm_testing.lib.api_requests import get_retry_validate
+from csm_testing.lib.hsm.defs import MGMT_NCN_HSM_SUBROLE, HSM_V2_BASE_URL
+
+SMD_HSM_COMPONENTS_URL = f"{HSM_V2_BASE_URL}/State/Components"
+
+
+def get_management_ncn_xnames(subrole: Optional[MGMT_NCN_HSM_SUBROLE] = None) -> List[str]:
+    """
+    Return a sorted list of the xnames of the management NCNs
+    """
+    params = {"type": "Node", "role": "Management"}
+    if subrole is not None:
+        params["subrole"] = subrole
+    resp = get_retry_validate(url=SMD_HSM_COMPONENTS_URL, expected_status_codes=200,
+                              add_api_token=True, params=params)
+    component_list = resp.json()["Components"]
+    return sorted([comp["ID"] for comp in component_list])

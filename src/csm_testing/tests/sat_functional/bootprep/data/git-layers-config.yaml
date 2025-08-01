@@ -2,7 +2,7 @@
 # Define various configurations that define layers in terms of a git clone URL
 configurations:
 
-# A configuration that speicfies a layer from a git clone URL and a commit
+# A configuration that specifies a layer from a git clone URL and a commit
 - name: "{{test.prefix}}-csm-git-commit-layer"
   layers:
   - name: csm-packages
@@ -11,7 +11,7 @@ configurations:
       url: "https://api-gw-service-nmn.local/vcs/cray/csm-config-management.git"
       commit: "{{csm.commit_hash}}"
 
-# A configuration that speicfies a layer from a git clone URL and a branch
+# A configuration that specifies a layer from a git clone URL and a branch
 - name: "{{test.prefix}}-csm-git-branch-layer"
   layers:
   - name: csm-packages

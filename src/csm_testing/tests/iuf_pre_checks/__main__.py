@@ -128,7 +128,7 @@ def check_k8s_version(minimum_version):
         None
     """
     k8s_version, returncode = run_command(
-        "kubectl version --short | grep -i 'server version' | awk '{print $3}'"
+        "kubectl version | grep -i 'server version' | awk '{print $3}'"
     )
     if returncode != 0:
         print(
