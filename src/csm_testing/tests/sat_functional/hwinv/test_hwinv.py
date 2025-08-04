@@ -406,6 +406,181 @@ class TestHwinv(unittest.TestCase):
                     f"Expected: {expected_header}, Actual: {actual_header}"
                 )
 
+    def test_hwinv_summarize_nodes(self) -> None:
+        """Test that `sat hwinv --summarize-nodes` outputs summary tables and listings for node attributes."""
+        command = 'sat hwinv --summarize-nodes'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assertIn("Summary of all nodes in the system", stdout)
+        counts_keys = [
+            "Cabinet Type", "Memory Type", "Memory Device Type", "Memory Manufacturer",
+            "Memory Model", "Memory Size (GiB)", "Memory Module Count",
+            "Processor Manufacturer", "Processor Model", "Accelerator Count",
+            "Accelerator Riser Count", "HSN NIC Count", "Drive Count",
+            "Total Drive Capacity (GiB)"
+        ]
+        for key in counts_keys:
+            # Counts of nodes by <Key>
+            self.assertRegex(stdout, rf"Counts of nodes by {re.escape(key)}")
+            # Table header in the form "| <Key> | Count |"
+            header_pattern = rf"\|\s*{re.escape(key)}\s*\|\s*Count\s*\|"
+            self.assertRegex(stdout, header_pattern)
+            # Verify at least one listing section for nodes
+            list_pattern = rf"Listings of nodes by {re.escape(key)}"
+            self.assertRegex(stdout, list_pattern)
+
+    def test_hwinv_summarize_procs(self) -> None:
+        """Test that `sat hwinv --summarize-procs` outputs summary tables for processors attributes."""
+        command = 'sat hwinv --summarize-procs'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assertIn("Summary of all processors in the system", stdout)
+        counts_keys = [
+            "Manufacturer", "Model", "Total Cores", "Total Threads", "Max Speed (MHz)"
+        ]
+        for key in counts_keys:
+            # Counts of nodes by <Key>
+            self.assertRegex(stdout, rf"Counts of processors by {re.escape(key)}")
+            # Table header in the form "| <Key> | Count |"
+            header_pattern = rf"\|\s*{re.escape(key)}\s*\|\s*Count\s*\|"
+            self.assertRegex(stdout, header_pattern)
+
+    def test_hwinv_summarize_mems(self) -> None:
+        """Test that `sat hwinv --summarize-mems` outputs summary tables for memory modules attributes."""
+        command = 'sat hwinv --summarize-mems'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assertIn("Summary of all memory modules in the system", stdout)
+        counts_keys = [
+            "Manufacturer", "Model", "Memory Type", "Device Type", "Capacity (MiB)", "Operating Speed (MHz)"
+        ]
+        for key in counts_keys:
+            # Counts of nodes by <Key>
+            self.assertRegex(stdout, rf"Counts of memory modules by {re.escape(key)}")
+            # Table header in the form "| <Key> | Count |"
+            header_pattern = rf"\|\s*{re.escape(key)}\s*\|\s*Count\s*\|"
+            self.assertRegex(stdout, header_pattern)
+
+    def test_hwinv_summarize_all(self) -> None:
+        """Test that `sat hwinv --summarize-all` outputs summary tables for nodes and processors."""
+        command = 'sat hwinv --summarize-all'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+
+        # Check summary for memory modules
+        self.assertIn("Summary of all memory modules in the system", stdout)
+        memory_keys = [
+            "Manufacturer", "Model", "Memory Type", "Device Type", "Capacity (MiB)", "Operating Speed (MHz)"
+        ]
+        for key in memory_keys:
+            self.assertRegex(stdout, rf"Counts of memory modules by {re.escape(key)}")
+            header_pattern = rf"\|\s*{re.escape(key)}\s*\|\s*Count\s*\|"
+            self.assertRegex(stdout, header_pattern)
+
+        # Check summary for nodes
+        self.assertIn("Summary of all nodes in the system", stdout)
+        node_keys = [
+            "Cabinet Type", "Memory Type", "Memory Device Type", "Memory Manufacturer", 
+            "Memory Model", "Memory Size (GiB)", "Memory Module Count", 
+            "Processor Manufacturer", "Processor Model", "Accelerator Count", 
+            "Accelerator Riser Count", "HSN NIC Count", "Drive Count", 
+            "Total Drive Capacity (GiB)"
+        ]
+        for key in node_keys:
+            self.assertRegex(stdout, rf"Counts of nodes by {re.escape(key)}")
+            header_pattern = rf"\|\s*{re.escape(key)}\s*\|\s*Count\s*\|"
+            self.assertRegex(stdout, header_pattern)
+            # Verify at least one listing section for nodes
+            list_pattern = rf"Listings of nodes by {re.escape(key)}"
+            self.assertRegex(stdout, list_pattern)
+
+        # Check summary for processors
+        self.assertIn("Summary of all processors in the system", stdout)
+        proc_keys = [
+            "Manufacturer", "Model", "Total Cores", "Total Threads", "Max Speed (MHz)"
+        ]
+        for key in proc_keys:
+            self.assertRegex(stdout, rf"Counts of processors by {re.escape(key)}")
+            header_pattern = rf"\|\s*{re.escape(key)}\s*\|\s*Count\s*\|"
+            self.assertRegex(stdout, header_pattern)
+
+    def test_hwinv_summarize_nodes_fields(self) -> None:
+        """Test that `sat hwinv --summarize-nodes --node-summary-fields drivecount,hsnniccount` outputs summary tables and listings for specified node attributes."""
+        command = 'sat hwinv --summarize-nodes --node-summary-fields drivecount,hsnniccount'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assertIn("Summary of all nodes in the system", stdout)
+        counts_keys = [
+            "Drive Count", "HSN NIC Count"
+        ]
+        for key in counts_keys:
+            # Counts of nodes by <Key>
+            self.assertRegex(stdout, rf"Counts of nodes by {re.escape(key)}")
+            # Table header in the form "| <Key> | Count |"
+            header_pattern = rf"\|\s*{re.escape(key)}\s*\|\s*Count\s*\|"
+            self.assertRegex(stdout, header_pattern)
+            # Verify at least one listing section for nodes
+            list_pattern = rf"Listings of nodes by {re.escape(key)}"
+            self.assertRegex(stdout, list_pattern)
+
+    def test_hwinv_summarize_nodes_count_only(self) -> None:
+        """Test that `sat hwinv --summarize-nodes --show-node-xnames off` outputs summary tables for node attributes."""
+        command = 'sat hwinv --summarize-nodes --show-node-xnames off'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assertIn("Summary of all nodes in the system", stdout)
+        counts_keys = [
+            "Cabinet Type", "Memory Type", "Memory Device Type", "Memory Manufacturer",
+            "Memory Model", "Memory Size (GiB)", "Memory Module Count",
+            "Processor Manufacturer", "Processor Model", "Accelerator Count",
+            "Accelerator Riser Count", "HSN NIC Count", "Drive Count",
+            "Total Drive Capacity (GiB)"
+        ]
+        for key in counts_keys:
+            # Counts of nodes by <Key>
+            self.assertRegex(stdout, rf"Counts of nodes by {re.escape(key)}")
+            # Table header in the form "| <Key> | Count |"
+            header_pattern = rf"\|\s*{re.escape(key)}\s*\|\s*Count\s*\|"
+            self.assertRegex(stdout, header_pattern)
+
+    def test_hwinv_summarize_procs_show_xnames(self) -> None:
+        """Test that `sat hwinv --summarize-procs --show-proc-xnames` outputs summary tables and listings for processors attributes."""
+        command = 'sat hwinv --summarize-procs --show-proc-xnames'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assertIn("Summary of all processors in the system", stdout)
+        counts_keys = [
+            "Manufacturer", "Model", "Total Cores", "Total Threads", "Max Speed (MHz)"
+        ]
+        for key in counts_keys:
+            # Counts of nodes by <Key>
+            self.assertRegex(stdout, rf"Counts of processors by {re.escape(key)}")
+            # Table header in the form "| <Key> | Count |"
+            header_pattern = rf"\|\s*{re.escape(key)}\s*\|\s*Count\s*\|"
+            self.assertRegex(stdout, header_pattern)
+            # Verify at least one listing section for processors
+            list_pattern = rf"Listings of processors by {re.escape(key)}"
+            self.assertRegex(stdout, list_pattern)
+
+    def test_hwinv_summarize_mems_show_xnames(self) -> None:
+        """Test that `sat hwinv --summarize-mems --show-mem-xnames` outputs summary tables and listings for memory modules attributes."""
+        command = 'sat hwinv --summarize-mems --show-mem-xnames'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assertIn("Summary of all memory modules in the system", stdout)
+        counts_keys = [
+            "Manufacturer", "Model", "Memory Type", "Device Type", "Capacity (MiB)", "Operating Speed (MHz)"
+        ]
+        for key in counts_keys:
+            # Counts of nodes by <Key>
+            self.assertRegex(stdout, rf"Counts of memory modules by {re.escape(key)}")
+            # Table header in the form "| <Key> | Count |"
+            header_pattern = rf"\|\s*{re.escape(key)}\s*\|\s*Count\s*\|"
+            self.assertRegex(stdout, header_pattern)
+            # Verify at least one listing section for memory modules
+            list_pattern = rf"Listings of memory modules by {re.escape(key)}"
+            self.assertRegex(stdout, list_pattern)
+
 
 if __name__ == "__main__":
     unittest.main()
