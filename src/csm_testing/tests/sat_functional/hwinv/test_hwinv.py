@@ -167,13 +167,13 @@ def get_column_names_list(input_string: str) -> List[str]:
     return []
 
 
-class TestHwinv(unittest.TestCase):
+class TestHwinvList(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
         cls.present_components = get_present_components()
 
-    def run_hwinv_test(self, command: str, expected_key: str, adjust_headers: bool = True) -> None:
+    def run_hwinv_list_test(self, command: str, expected_key: str, adjust_headers: bool = True) -> None:
         """Helper function to run an hwinv command test."""
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         stdout = proc.stdout.decode()
@@ -198,107 +198,107 @@ class TestHwinv(unittest.TestCase):
     def test_hwinv_list_nodes(self) -> None:
         """Test that `sat hwinv --list-nodes` returns the proper header."""
         command = 'sat hwinv --list-nodes'
-        self.run_hwinv_test(command, 'nodes')
+        self.run_hwinv_list_test(command, 'nodes')
 
     def test_hwinv_list_nodes_include_miss_and_empty(self) -> None:
         """Test that `sat hwinv --list-nodes --show-missing --show-empty` returns all the header."""
         command = 'sat hwinv --list-nodes --show-missing --show-empty'
-        self.run_hwinv_test(command, 'nodes', adjust_headers=False)
+        self.run_hwinv_list_test(command, 'nodes', adjust_headers=False)
 
     def test_hwinv_list_drives_include_miss_and_empty(self) -> None:
         """Test that `sat hwinv --list-drives --show-missing --show-empty` returns all the header."""
         command = 'sat hwinv --list-drives --show-missing --show-empty'
-        self.run_hwinv_test(command, 'drives', adjust_headers=False)
+        self.run_hwinv_list_test(command, 'drives', adjust_headers=False)
 
     def test_hwinv_list_chassis(self) -> None:
         """Test that `sat hwinv --list-chassis` returns proper header."""
         command = 'sat hwinv --list-chassis'
-        self.run_hwinv_test(command, 'chassis')
+        self.run_hwinv_list_test(command, 'chassis')
 
     def test_hwinv_list_hsnboards(self) -> None:
         """Test that `sat hwinv --list-hsn-boards` returns proper header"""
         command = 'sat hwinv --list-hsn-boards'
-        self.run_hwinv_test(command, 'HSN boards')
+        self.run_hwinv_list_test(command, 'HSN boards')
 
     def test_hwinv_list_compute_modules(self) -> None:
         """Test that `sat hwinv --list-compute-modules` returns proper header"""
         command = 'sat hwinv --list-compute-modules'
-        self.run_hwinv_test(command, 'compute modules')
+        self.run_hwinv_list_test(command, 'compute modules')
 
     def test_hwinv_list_router_modules(self) -> None:
         """Test that `sat hwinv --list-router-modules` returns proper header"""
         command = 'sat hwinv --list-router-modules'
-        self.run_hwinv_test(command, 'router modules')
+        self.run_hwinv_list_test(command, 'router modules')
 
     def test_hwinv_list_node_enclosures(self) -> None:
         """Test that `sat hwinv --list-node-enclosures` returns proper header"""
         command = 'sat hwinv --list-node-enclosures'
-        self.run_hwinv_test(command, 'node enclosures')
+        self.run_hwinv_list_test(command, 'node enclosures')
 
     def test_hwinv_list_node_enclosure_power_supplies(self) -> None:
         """Test that `sat hwinv --list-node-enclosure-power-supplies` returns proper header"""
         command = 'sat hwinv --list-node-enclosure-power-supplies'
-        self.run_hwinv_test(command, 'node enclosure power supplies')
+        self.run_hwinv_list_test(command, 'node enclosure power supplies')
 
     def test_hwinv_list_procs(self) -> None:
         """Test that `sat hwinv --list-procs` returns proper header"""
         command = 'sat hwinv --list-procs'
-        self.run_hwinv_test(command, 'processors')
+        self.run_hwinv_list_test(command, 'processors')
 
     def test_hwinv_list_node_accels(self) -> None:
         """Test that `sat hwinv --list-node-accels` returns proper header"""
         command = 'sat hwinv --list-node-accels'
-        self.run_hwinv_test(command, 'node accelerators')
+        self.run_hwinv_list_test(command, 'node accelerators')
 
     def test_hwinv_list_node_accel_risers(self) -> None:
         """Test that `sat hwinv --list-node-accel-risers` returns proper header"""
         command = 'sat hwinv --list-node-accel-risers'
-        self.run_hwinv_test(command, 'node accelerator risers')
+        self.run_hwinv_list_test(command, 'node accelerator risers')
 
     def test_hwinv_list_node_hsn_nics(self) -> None:
         """Test that `sat hwinv --list-node-hsn-nics` returns proper header"""
         command = 'sat hwinv --list-node-hsn-nics'
-        self.run_hwinv_test(command, 'node HSN NICS')
+        self.run_hwinv_list_test(command, 'node HSN NICS')
 
     def test_hwinv_list_mems(self) -> None:
         """Test that `sat hwinv --list-mems` returns proper header"""
         command = 'sat hwinv --list-mems'
-        self.run_hwinv_test(command, 'memory modules')
+        self.run_hwinv_list_test(command, 'memory modules')
 
     def test_hwinv_list_drives(self) -> None:
         """Test that `sat hwinv --list-drives` returns proper header"""
         command = 'sat hwinv --list-drives'
-        self.run_hwinv_test(command, 'drives')
+        self.run_hwinv_list_test(command, 'drives')
 
     def test_hwinv_list_cmm_rectifiers(self) -> None:
         """Test that `sat hwinv --list-cmm-rectifiers` returns proper header"""
         command = 'sat hwinv --list-cmm-rectifiers'
-        self.run_hwinv_test(command, 'CMM rectifiers')
+        self.run_hwinv_list_test(command, 'CMM rectifiers')
 
     def test_hwinv_list_node_bmcs(self) -> None:
         """Test that `sat hwinv --list-node-bmcs` returns proper header"""
         command = 'sat hwinv --list-node-bmcs'
-        self.run_hwinv_test(command, 'node bmcs')
+        self.run_hwinv_list_test(command, 'node bmcs')
 
     def test_hwinv_list_router_bmcs(self) -> None:
         """Test that `sat hwinv --list-router-bmcs` returns proper header"""
         command = 'sat hwinv --list-router-bmcs'
-        self.run_hwinv_test(command, 'router bmcs')
+        self.run_hwinv_list_test(command, 'router bmcs')
 
     def test_hwinv_list_mgmt_switches(self) -> None:
         """Test that `sat hwinv --list-mgmt-switches` returns proper header"""
         command = 'sat hwinv --list-mgmt-switches'
-        self.run_hwinv_test(command, 'mgmt switches')
+        self.run_hwinv_list_test(command, 'mgmt switches')
 
     def test_hwinv_list_cabinet_pdus(self) -> None:
         """Test that `sat hwinv --list-cabinet-pdus` returns proper header"""
         command = 'sat hwinv --list-cabinet-pdus'
-        self.run_hwinv_test(command, 'cabinet pdus')
+        self.run_hwinv_list_test(command, 'cabinet pdus')
 
     def test_hwinv_list_cabinet_pdu_power_connectors(self) -> None:
         """Test that `sat hwinv --list-cabinet-pdu-power-connectors` returns proper header"""
         command = 'sat hwinv --list-cabinet-pdu-power-connectors'
-        self.run_hwinv_test(command, 'cabinet pdu power connectors')
+        self.run_hwinv_list_test(command, 'cabinet pdu power connectors')
 
     def test_hwinv_list_all(self) -> None:
         """Test that `sat hwinv --list-all --show-missing --show-empty` validates only the components present in the system."""
@@ -405,6 +405,121 @@ class TestHwinv(unittest.TestCase):
                     f"Header for section '{section_name}' does not match the expected fields. "
                     f"Expected: {expected_header}, Actual: {actual_header}"
                 )
+
+
+class TestHwinvSummarize(unittest.TestCase):
+    """Tests for the `sat hwinv --summarize-<component>` commands"""
+
+    def setUp(self):
+        """Save some lists of expected summary keys for each component type."""
+        # This is a mapping from the human-readable component type to the keys by which it is summarized
+        self.summary_keys = {
+            "nodes": [
+                "Cabinet Type", "Memory Type", "Memory Device Type", "Memory Manufacturer",
+                "Memory Model", "Memory Size (GiB)", "Memory Module Count",
+                "Processor Manufacturer", "Processor Model", "Accelerator Count",
+                "Accelerator Riser Count", "HSN NIC Count", "Drive Count",
+                "Total Drive Capacity (GiB)"
+            ],
+            "processors": [
+                "Manufacturer", "Model", "Total Cores", "Total Threads", "Max Speed (MHz)"
+            ],
+            "memory modules": [
+                "Manufacturer", "Model", "Memory Type", "Device Type",
+                "Capacity (MiB)", "Operating Speed (MHz)"
+            ]
+        }
+
+    def assert_summary_sections(self, output: str, component_type: str,
+                                summary_keys: List[str] = None,
+                                expect_listing: bool = False):
+        """Assert that the expected summary sections are present in the output.
+
+        Args:
+            output: the output string to check.
+            component_type: the human-readable component type being summarized
+            summary_keys: optional list of fields components should be summarized by.
+                If omitted, the default summary keys for the component type will be used.
+            expect_listing: whether to expect a listing section for the component type
+        """
+        if summary_keys is None:
+            try:
+                summary_keys = self.summary_keys[component_type]
+            except KeyError:
+                self.fail(f'No summary keys defined for component type: {component_type}')
+
+        self.assertIn(f"Summary of all {component_type} in the system", output)
+        for key in summary_keys:
+            # Counts of <component_type> by <key>
+            self.assertRegex(output, rf"Counts of {component_type} by {re.escape(key)}")
+            # Table header in the form "| <Key> | Count |"
+            header_pattern = rf"\|\s*{re.escape(key)}\s*\|\s*Count\s*\|"
+            self.assertRegex(output, header_pattern)
+            if expect_listing:
+                # Verify at least one listing section for the component type
+                list_pattern = rf"Listings of {component_type} by {re.escape(key)}"
+                self.assertRegex(output, list_pattern)
+
+    def test_hwinv_summarize_nodes(self) -> None:
+        """Test that `sat hwinv --summarize-nodes` outputs summary tables and listings for node attributes."""
+        command = 'sat hwinv --summarize-nodes'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assert_summary_sections(stdout, 'nodes', expect_listing=True)
+
+    def test_hwinv_summarize_procs(self) -> None:
+        """Test that `sat hwinv --summarize-procs` outputs summary tables for processors attributes."""
+        command = 'sat hwinv --summarize-procs'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assert_summary_sections(stdout, 'processors')
+
+    def test_hwinv_summarize_mems(self) -> None:
+        """Test that `sat hwinv --summarize-mems` outputs summary tables for memory modules attributes."""
+        command = 'sat hwinv --summarize-mems'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assert_summary_sections(stdout, 'memory modules')
+
+    def test_hwinv_summarize_all(self) -> None:
+        """Test that `sat hwinv --summarize-all` outputs summary tables for nodes and processors."""
+        command = 'sat hwinv --summarize-all'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assert_summary_sections(stdout, 'nodes', expect_listing=True)
+        self.assert_summary_sections(stdout, 'processors')
+        self.assert_summary_sections(stdout, 'memory modules')
+
+    def test_hwinv_summarize_nodes_fields(self) -> None:
+        """Test that `sat hwinv --summarize-nodes --node-summary-fields drivecount,hsnniccount` outputs summary tables and listings for specified node attributes."""
+        command = 'sat hwinv --summarize-nodes --node-summary-fields drivecount,hsnniccount'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        counts_keys = [
+            "Drive Count", "HSN NIC Count"
+        ]
+        self.assert_summary_sections(stdout, 'nodes', summary_keys=counts_keys, expect_listing=True)
+
+    def test_hwinv_summarize_nodes_count_only(self) -> None:
+        """Test that `sat hwinv --summarize-nodes --show-node-xnames off` outputs summary tables for node attributes."""
+        command = 'sat hwinv --summarize-nodes --show-node-xnames off'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assert_summary_sections(stdout, 'nodes', expect_listing=False)
+
+    def test_hwinv_summarize_procs_show_xnames(self) -> None:
+        """Test that `sat hwinv --summarize-procs --show-proc-xnames` outputs summary tables and listings for processors attributes."""
+        command = 'sat hwinv --summarize-procs --show-proc-xnames'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assert_summary_sections(stdout, 'processors', expect_listing=True)
+
+    def test_hwinv_summarize_mems_show_xnames(self) -> None:
+        """Test that `sat hwinv --summarize-mems --show-mem-xnames` outputs summary tables and listings for memory modules attributes."""
+        command = 'sat hwinv --summarize-mems --show-mem-xnames'
+        proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        stdout = proc.stdout.decode()
+        self.assert_summary_sections(stdout, 'memory modules', expect_listing=True)
 
 
 if __name__ == "__main__":

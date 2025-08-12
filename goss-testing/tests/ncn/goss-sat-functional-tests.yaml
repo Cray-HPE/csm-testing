@@ -1,0 +1,47 @@
+#
+# MIT License
+#
+# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+# This goss file creates a single Goss "command" test for each unittest.TestCase
+# in the csm_testing.tests.sat_functional package. The variable "sat_tests" is
+# populated by calling the sat_functional main script with the `list` command in
+# the add_local_vars function in goss-testing/automated/run-ncn-tests.sh.
+
+{{ $sat_functional := .Env.GOSS_BASE | printf "%s/scripts/python/sat_functional" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+command:
+  {{ range $test := index .Vars "sat_tests" }}
+  {{ $test_label := printf "sat_functional.%s" $test }}
+  {{ $test_label }}:
+    title: Execute SAT functional test {{ $test }}
+    meta:
+      desc: >
+        Performs SAT functional tests defined in {{ $test }}. If the test fails, it can be executed manually
+        by running '{{ $sat_functional }} run {{ $test }}' on the node where it failed.
+    exec: "{{ $logrun }} -l {{ $test_label }} {{ $sat_functional }} run {{ $test }}"
+    exit-status: 0
+    {{ if contains "bootprep" $test }}
+    timeout: 1800000  # use a longer 30-minute timeout for bootprep tests
+    {{ else }}
+    timeout: 600000  # use a shorter 10-minute timeout for other tests
+    {{ end }}
+  {{ end }}
