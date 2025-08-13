@@ -29,7 +29,8 @@ import subprocess
 import re
 from typing import List, Tuple
 import unittest
-from ..sat_testing_utils import  SatTestingUtils
+
+from csm_testing.tests.sat_functional.sat_testing_utils import SatTestingUtils
 
 SAT_STATUS_HEADER = ['xname', 'Aliases', 'Type', 'NID', 'State', 'Flag', 'Enabled', 'Arch',
                      'Class', 'Role', 'SubRole', 'Net Type', 'Locked', 'Desired Config',
