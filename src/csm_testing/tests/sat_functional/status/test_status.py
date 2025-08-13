@@ -112,15 +112,20 @@ class TestStatus(unittest.TestCase):
 
         self.assertEqual(expected_header, status_output_header)
 
-    def test_status_formatting_command(self) -> None:
-        """Test that `sat status --format (json | yaml)` returns the properly formatted response"""
+    def test_status_formatting_json(self) -> None:
+        """Test that `sat status --format json` returns the properly formatted response"""
         json_command = 'sat status --format json'
-        yaml_command = 'sat status --format yaml'
 
         json_std_out, json_std_err = get_command_output(json_command)
-        yaml_std_out, yaml_std_err = get_command_output(yaml_command)
 
         self.assertTrue(SatTestingUtils.validate_json(json_std_out))
+
+    def test_status_formatting_yaml(self) -> None:
+        """Test that `sat status --format yaml` returns the properly formatted response"""
+        yaml_command = 'sat status --format yaml'
+
+        yaml_std_out, yaml_std_err = get_command_output(yaml_command)
+
         self.assertTrue(SatTestingUtils.validate_yaml(yaml_std_out))
 
     def test_status_fields_command(self) -> None:
