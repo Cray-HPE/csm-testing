@@ -30,7 +30,7 @@ import re
 from typing import List, Tuple
 import unittest
 
-from csm_testing.tests.sat_functional.sat_testing_utils import SatTestingUtils
+from src.csm_testing.tests.sat_functional.sat_testing_utils import *
 
 SAT_STATUS_HEADER = ['xname', 'Aliases', 'Type', 'NID', 'State', 'Flag', 'Enabled', 'Arch',
                      'Class', 'Role', 'SubRole', 'Net Type', 'Locked', 'Desired Config',
@@ -117,7 +117,7 @@ class TestStatus(unittest.TestCase):
         json_command = 'sat status --format json'
 
         json_std_out, json_std_err = get_command_output(json_command)
-        json_response = SatTestingUtils.validate_json(json_std_out)
+        json_response = validate_json(json_std_out)
 
         self.assertTrue(json_response)
 
@@ -126,7 +126,7 @@ class TestStatus(unittest.TestCase):
         yaml_command = 'sat status --format yaml'
 
         yaml_std_out, yaml_std_err = get_command_output(yaml_command)
-        yaml_response = SatTestingUtils.validate_yaml(yaml_std_out)
+        yaml_response = validate_yaml(yaml_std_out)
 
         self.assertTrue(yaml_response)
 
