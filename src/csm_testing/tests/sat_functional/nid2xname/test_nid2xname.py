@@ -25,8 +25,11 @@ import unittest
 import subprocess
 import json
 
-class TestNid2Xname(unittest.TestCase):
-    
+from csm_testing.tests.sat_functional.util import SATTestCase
+
+
+class TestNid2Xname(SATTestCase):
+
     def run_command(self, command):
         """Run a shell command and return the output."""
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
