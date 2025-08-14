@@ -29,40 +29,36 @@ import sys
 import yaml
 
 
-class SatTestingUtils:
+def validate_json(json_string: str) -> json:
+    """
+    Validates a json string and returns the validated json
 
-    @staticmethod
-    def validate_json(json_string: str) -> bool:
-        """
-        Validates a json string
+    Args:
+        json_string (str): string containing json
 
-        Args:
-            json_string (str): string containing json
+    Returns:
+        json: a json object
+    """
+    try:
+        return json.loads(json_string)
+    except json.JSONDecodeError as err:
+        sys.stderr.write(f'Unable to decode json with error: {err}')
+        assert False, f"The provided string is not valid json: {json_string}"
 
-        Returns:
-            bool: True if json is valid false otherwise
-        """
-        try:
-            json.loads(json_string)
-            return True
-        except json.JSONDecodeError as err:
-            sys.stderr.write(f'Unable to load json with error: {err}')
-            return False
 
-    @staticmethod
-    def validate_yaml(yaml_string: str) -> bool:
-        """
-        Validates a yaml string
+def validate_yaml(yaml_string: str) -> yaml:
+    """
+    Validates a yaml string and returns the validated yaml
 
-        Args:
-            yaml_string (str): string containing yaml
+    Args:
+        yaml_string (str): string containing yaml.
 
-        Returns:
-            bool: True if yaml is valid false otherwise
-        """
-        try:
-            yaml.safe_load(yaml_string)
-            return True
-        except yaml.YAMLError as err:
-            sys.stderr.write(f'Unable to load yaml with error: {err}')
-            return False
+    Returns:
+        yaml: a yaml object.
+    """
+    try:
+        return yaml.safe_load(yaml_string)
+    except yaml.YAMLError as err:
+        sys.stderr.write(f'Unable to load yaml with error: {err}')
+        assert False, f"The provided string is not valid yaml: {yaml_string}"
+

@@ -117,16 +117,18 @@ class TestStatus(unittest.TestCase):
         json_command = 'sat status --format json'
 
         json_std_out, json_std_err = get_command_output(json_command)
+        json_response = SatTestingUtils.validate_json(json_std_out)
 
-        self.assertTrue(SatTestingUtils.validate_json(json_std_out))
+        self.assertTrue(json_response)
 
     def test_status_formatting_yaml(self) -> None:
         """Test that `sat status --format yaml` returns the properly formatted response"""
         yaml_command = 'sat status --format yaml'
 
         yaml_std_out, yaml_std_err = get_command_output(yaml_command)
+        yaml_response = SatTestingUtils.validate_yaml(yaml_std_out)
 
-        self.assertTrue(SatTestingUtils.validate_yaml(yaml_std_out))
+        self.assertTrue(yaml_response)
 
     def test_status_fields_command(self) -> None:
         """Test that `sat status --fields xname,aliases` returns the proper header."""
