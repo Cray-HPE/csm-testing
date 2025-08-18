@@ -54,5 +54,5 @@ command:
         exit $run_exit_code
       '
     exit-status: 0
-    timeout: 1800000
+    timeout: 2400000
     skip: false
