@@ -40,7 +40,7 @@ command:
     exec: "{{ $logrun }} -l {{ $test_label }} {{ $sat_functional }} run {{ $test }}"
     exit-status: 0
     {{ if contains "bootprep" $test }}
-    timeout: 1800000  # use a longer 30-minute timeout for bootprep tests
+    timeout: 2400000  # use a longer 40-minute timeout for bootprep tests
     {{ else }}
     timeout: 600000  # use a shorter 10-minute timeout for other tests
     {{ end }}
