@@ -30,8 +30,7 @@ import yaml
 
 
 def validate_json(json_string: str) -> json:
-    """
-    Validates a json string and returns the validated json
+    """Validates a json string and returns the validated json
 
     Args:
         json_string (str): string containing json
@@ -47,8 +46,7 @@ def validate_json(json_string: str) -> json:
 
 
 def validate_yaml(yaml_string: str) -> yaml:
-    """
-    Validates a yaml string and returns the validated yaml
+    """Validates a yaml string and returns the validated yaml
 
     Args:
         yaml_string (str): string containing yaml.

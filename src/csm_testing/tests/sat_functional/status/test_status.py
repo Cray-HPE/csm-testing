@@ -49,9 +49,13 @@ SAT_BOS_FIELDS_HEADER = ['xname', 'Boot Status', 'Most Recent BOS Session',
 
 
 def get_command_output(command: str) -> Tuple[str, str]:
-    """
-    Run the specified command.
-    Return the standard output and standard error
+    """Run the specified command.
+
+    Args:
+        command (str): command to be run
+
+    Returns:
+        Tuple ([str, str]): standard output and standard error
     """
     # Use stdout and stderr instead of capture_output=True for Python 3.6 compatibility
     proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -62,10 +66,15 @@ def get_command_output(command: str) -> Tuple[str, str]:
     return std_output, std_err
 
 def get_header(command: str, num_lines_in_header: int) -> Tuple[str, str, str]:
-    """
-    Run the specified command.
-    Return the standard output, standard error, and the header (meaning the first
-    num_lines_in_header lines in the output)
+    """ Run the specified command.
+
+    Args:
+        command (str): command to be run
+        num_lines_in_header (int): number of lines in the output to be returned
+
+    Returns:
+         Tuple (str, str, str): the standard output, standard error, and the header (meaning the first
+         num_lines_in_header lines in the output)
     """
     status_output, status_err = get_command_output(command)
     status_output_header = '\n'.join(status_output.splitlines()[:num_lines_in_header])
