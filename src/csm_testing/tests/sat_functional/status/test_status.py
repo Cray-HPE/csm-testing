@@ -132,7 +132,8 @@ class TestStatus(unittest.TestCase):
 
         json_header_keys = json_response[0].keys()
 
-        status_output, status_err, status_output_header_str = get_header(json_command, 3)
+        status_command = 'sat status'
+        status_output, status_err, status_output_header_str = get_header(status_command, 3)
         status_all_output = status_output + '\n' + status_err
         expected_header = adjust_expected_header(SAT_STATUS_HEADER, status_all_output)
 
@@ -146,6 +147,15 @@ class TestStatus(unittest.TestCase):
         yaml_response = validate_yaml(yaml_std_out)
 
         self.assertTrue(yaml_response)
+
+        yaml_header_keys = yaml_response[0].keys()
+
+        status_command = 'sat status'
+        status_output, status_err, status_output_header_str = get_header(status_command, 3)
+        status_all_output = status_output + '\n' + status_err
+        expected_header = adjust_expected_header(SAT_STATUS_HEADER, status_all_output)
+
+        self.assertEqual(expected_header, yaml_header_keys)
 
     def test_status_fields_command(self) -> None:
         """Test that `sat status --fields xname,aliases` returns the proper header."""
