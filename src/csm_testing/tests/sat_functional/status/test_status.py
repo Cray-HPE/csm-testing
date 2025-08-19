@@ -130,6 +130,14 @@ class TestStatus(unittest.TestCase):
 
         self.assertTrue(json_response)
 
+        json_header_keys = json_response[0].keys()
+
+        status_output, status_err, status_output_header_str = get_header(json_command, 3)
+        status_all_output = status_output + '\n' + status_err
+        expected_header = adjust_expected_header(SAT_STATUS_HEADER, status_all_output)
+
+        self.assertEqual(expected_header, json_header_keys)
+
     def test_status_formatting_yaml(self) -> None:
         """Test that `sat status --format yaml` returns the properly formatted response"""
         yaml_command = 'sat status --format yaml'
