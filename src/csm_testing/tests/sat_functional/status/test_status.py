@@ -30,7 +30,7 @@ import re
 from typing import List, Tuple
 import unittest
 
-from csm_testing.tests.sat_functional.sat_testing_utils import *
+from csm_testing.tests.sat_functional.sat_testing_utils import validate_json, validate_yaml
 
 SAT_STATUS_HEADER = ['xname', 'Aliases', 'Type', 'NID', 'State', 'Flag', 'Enabled', 'Arch',
                      'Class', 'Role', 'SubRole', 'Net Type', 'Locked', 'Desired Config',
