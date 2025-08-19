@@ -130,7 +130,7 @@ class TestStatus(unittest.TestCase):
 
         self.assertTrue(json_response)
 
-        json_header_keys = json_response[0].keys()
+        json_header_keys = list(json_response[0].keys())
 
         status_command = 'sat status'
         status_output, status_err, status_output_header_str = get_header(status_command, 3)
@@ -148,7 +148,7 @@ class TestStatus(unittest.TestCase):
 
         self.assertTrue(yaml_response)
 
-        yaml_header_keys = yaml_response[0].keys()
+        yaml_header_keys = list(yaml_response[0].keys())
 
         status_command = 'sat status'
         status_output, status_err, status_output_header_str = get_header(status_command, 3)
