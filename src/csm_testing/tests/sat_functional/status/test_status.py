@@ -132,10 +132,7 @@ class TestStatus(unittest.TestCase):
 
         json_header_keys = list(json_response[0].keys())
 
-        status_command = 'sat status'
-        status_output, status_err, status_output_header_str = get_header(status_command, 3)
-        status_all_output = status_output + '\n' + status_err
-        expected_header = adjust_expected_header(SAT_STATUS_HEADER, status_all_output)
+        expected_header = adjust_expected_header(SAT_STATUS_HEADER, json_std_err)
 
         self.assertEqual(expected_header, json_header_keys)
 
@@ -150,10 +147,7 @@ class TestStatus(unittest.TestCase):
 
         yaml_header_keys = list(yaml_response[0].keys())
 
-        status_command = 'sat status'
-        status_output, status_err, status_output_header_str = get_header(status_command, 3)
-        status_all_output = status_output + '\n' + status_err
-        expected_header = adjust_expected_header(SAT_STATUS_HEADER, status_all_output)
+        expected_header = adjust_expected_header(SAT_STATUS_HEADER, yaml_std_err)
 
         self.assertEqual(expected_header, yaml_header_keys)
 
