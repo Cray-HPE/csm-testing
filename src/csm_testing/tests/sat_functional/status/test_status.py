@@ -30,6 +30,8 @@ import re
 from typing import List, Tuple
 import unittest
 
+from csm_testing.tests.sat_functional.sat_testing_utils import validate_json, validate_yaml
+
 SAT_STATUS_HEADER = ['xname', 'Aliases', 'Type', 'NID', 'State', 'Flag', 'Enabled', 'Arch',
                      'Class', 'Role', 'SubRole', 'Net Type', 'Locked', 'Desired Config',
                      'Configuration Status', 'Error Count', 'Boot Status',
@@ -46,17 +48,35 @@ SAT_BOS_FIELDS_HEADER = ['xname', 'Boot Status', 'Most Recent BOS Session',
                          'Most Recent Session Template', 'Most Recent Image']
 
 
-def get_header(command: str, num_lines_in_header: int) -> Tuple[str, str, str]:
-    """
-    Run the specified command.
-    Return the standard output, standard error, and the header (meaning the first
-    num_lines_in_header lines in the output)
+def get_command_output(command: str) -> Tuple[str, str]:
+    """Run the specified command.
+
+    Args:
+        command (str): command to be run
+
+    Returns:
+        Tuple ([str, str]): standard output and standard error
     """
     # Use stdout and stderr instead of capture_output=True for Python 3.6 compatibility
     proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                           check=True)
-    status_output = proc.stdout.decode().strip()
-    status_err = proc.stderr.decode().strip()
+    std_output = proc.stdout.decode().strip()
+    std_err = proc.stderr.decode().strip()
+
+    return std_output, std_err
+
+def get_header(command: str, num_lines_in_header: int) -> Tuple[str, str, str]:
+    """ Run the specified command.
+
+    Args:
+        command (str): command to be run
+        num_lines_in_header (int): number of lines in the output to be returned
+
+    Returns:
+         Tuple (str, str, str): the standard output, standard error, and the header (meaning the first
+         num_lines_in_header lines in the output)
+    """
+    status_output, status_err = get_command_output(command)
     status_output_header = '\n'.join(status_output.splitlines()[:num_lines_in_header])
     return status_output, status_err, status_output_header
 
@@ -100,6 +120,36 @@ class TestStatus(unittest.TestCase):
         expected_header = adjust_expected_header(SAT_STATUS_HEADER, status_all_output)
 
         self.assertEqual(expected_header, status_output_header)
+
+    def test_status_formatting_json(self) -> None:
+        """Test that `sat status --format json` returns the properly formatted response"""
+        json_command = 'sat status --format json'
+
+        json_std_out, json_std_err = get_command_output(json_command)
+        json_response = validate_json(json_std_out)
+
+        self.assertTrue(json_response)
+
+        json_header_keys = list(json_response[0].keys())
+
+        expected_header = adjust_expected_header(SAT_STATUS_HEADER, json_std_err)
+
+        self.assertEqual(expected_header, json_header_keys)
+
+    def test_status_formatting_yaml(self) -> None:
+        """Test that `sat status --format yaml` returns the properly formatted response"""
+        yaml_command = 'sat status --format yaml'
+
+        yaml_std_out, yaml_std_err = get_command_output(yaml_command)
+        yaml_response = validate_yaml(yaml_std_out)
+
+        self.assertTrue(yaml_response)
+
+        yaml_header_keys = list(yaml_response[0].keys())
+
+        expected_header = adjust_expected_header(SAT_STATUS_HEADER, yaml_std_err)
+
+        self.assertEqual(expected_header, yaml_header_keys)
 
     def test_status_fields_command(self) -> None:
         """Test that `sat status --fields xname,aliases` returns the proper header."""
