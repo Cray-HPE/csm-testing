@@ -28,7 +28,8 @@ import shlex
 import subprocess
 import re
 from typing import List, Tuple
-import unittest
+
+from csm_testing.tests.sat_functional.util import SATTestCase
 
 from csm_testing.tests.sat_functional.sat_testing_utils import validate_json, validate_yaml
 
@@ -105,7 +106,7 @@ def get_column_names_list(input_string: str) -> List[str]:
     return column_names
 
 
-class TestStatus(unittest.TestCase):
+class TestStatus(SATTestCase):
     """Test the `sat status` command."""
 
     def test_status_command(self) -> None:
@@ -365,4 +366,3 @@ class TestStatus(unittest.TestCase):
         expected_header = adjust_expected_header(SAT_HSM_FIELDS_HEADER, status_all_output)
 
         self.assertEqual(expected_header, status_output_header)
-

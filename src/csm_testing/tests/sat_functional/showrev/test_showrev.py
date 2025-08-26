@@ -28,7 +28,10 @@ import unittest
 import os
 import configparser
 
+from csm_testing.tests.sat_functional.util import SATTestCase
+
 SAT_SHOWREV_HEADER = ['product_name', 'product_version', 'images', 'image_recipes']
+
 
 def get_sles_version():
     """Gets SLES version info found in /opt/cray/sat/etc/os-release.
@@ -95,7 +98,7 @@ def get_column_names_list(input_string):
     return column_names
 
 
-class TestShowRev(unittest.TestCase):
+class TestShowRev(SATTestCase):
     """Test the `sat showrev` command."""
 
     def test_showrev_local_command(self):

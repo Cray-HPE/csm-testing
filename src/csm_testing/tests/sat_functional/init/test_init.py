@@ -29,7 +29,8 @@ import subprocess
 import tempfile
 import os
 import shutil
-import unittest
+
+from csm_testing.tests.sat_functional.util import SATTestCase
 
 TOML_HEADINGS = ['api_gateway', 'bos', 'cfs', 'bootsys', 'format', 'general', 'logging', 's3']
 
@@ -48,7 +49,7 @@ def execute_command(command):
     return command_output
 
 
-class TestInit(unittest.TestCase):
+class TestInit(SATTestCase):
     """Test the `sat init` command."""
 
     def setUp(self):
@@ -173,4 +174,3 @@ class TestInit(unittest.TestCase):
             config = file.read()
 
         self.assertIn(f'username = "{test_username}"', config)
-
