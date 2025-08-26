@@ -519,19 +519,21 @@ class BootprepTestCase(SATTestCase):
 
         This relies on the cray CLI being configured and authenticated on the system.
         """
-        find_command = 'cray ims images list'
+        resource_types = ('images', 'deleted images')
         found_image_ids = []
-        try:
-            proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                  check=True)
-            images_json = json.loads(proc.stdout.decode())
-            for image in images_json:
-                if image['name'].startswith(cls.test_prefix):
-                    found_image_ids.append(image['id'])
+        for resource_type in resource_types:
+            find_command = f'cray ims {resource_type} list --format json'
+            try:
+                proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                      check=True)
+                images_json = json.loads(proc.stdout.decode())
+                for image in images_json:
+                    if image['name'].startswith(cls.test_prefix):
+                        found_image_ids.append(image['id'])
 
-        except subprocess.CalledProcessError as err:
-            logging.warning('Failed to find IMS images with prefix "%s" '
-                            'created by test: %s', cls.test_prefix, err.stderr)
+            except subprocess.CalledProcessError as err:
+                logging.warning('Failed to find IMS %s with prefix "%s" '
+                                'created by test: %s', resource_type, cls.test_prefix, err.stderr)
 
         for image_id in found_image_ids:
             BootprepTestCase.delete_ims_image(image_id)
