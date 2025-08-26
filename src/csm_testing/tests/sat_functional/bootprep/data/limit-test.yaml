@@ -1,5 +1,4 @@
 ---
-# Define a session template that references an existing IMS image
 configurations:
 # A simple configuration that has just one layer that runs a simple playbook
 - name: "{{test.config_name}}"
@@ -10,7 +9,23 @@ configurations:
       url: "https://api-gw-service-nmn.local/vcs/cray/{{test.vcs_repo_name}}.git"
       branch: "main"
 
+images:
+# An image configured from the CSM barebones image
+- name: "{{test.image_name}}"
+  base:
+    product:
+      name: csm
+      version: "{{csm.version}}"
+      type: image
+      filter:
+        arch: x86_64
+        wildcard: "*barebones*"
+  configuration: "{{test.config_name}}"
+  configuration_group_names:
+  - Compute
+
 session_templates:
+# A session template that references an existing IMS image and the simple configuration
 - name: "{{test.session_template_name}}"
   image:
     ims:
