@@ -31,6 +31,8 @@ import re
 import json
 from typing import List
 
+from csm_testing.tests.sat_functional.util import SATTestCase
+
 
 HWINV_HEADERS = {
     "nodes": [
@@ -167,7 +169,7 @@ def get_column_names_list(input_string: str) -> List[str]:
     return []
 
 
-class TestHwinvList(unittest.TestCase):
+class TestHwinvList(SATTestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -407,7 +409,7 @@ class TestHwinvList(unittest.TestCase):
                 )
 
 
-class TestHwinvSummarize(unittest.TestCase):
+class TestHwinvSummarize(SATTestCase):
     """Tests for the `sat hwinv --summarize-<component>` commands"""
 
     def setUp(self):

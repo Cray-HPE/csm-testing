@@ -28,7 +28,9 @@ just print the semantic version of the `sat` command.
 import shlex
 import subprocess
 from typing import Optional
-import unittest
+import os
+
+from csm_testing.tests.sat_functional.util import SATTestCase
 
 SAT_VERSION_FILE = '/opt/cray/etc/sat/version'
 
@@ -46,16 +48,19 @@ def get_version_file_contents() -> Optional[str]:
         return None
 
 
-class TestVersion(unittest.TestCase):
+class TestVersion(SATTestCase):
     """Test the `sat --version` command."""
 
     def test_version_command(self):
         """Test that `sat --version` returns the semantic version."""
+        # Prepare a clean environment without SAT_IMAGE
+        env = os.environ.copy()
+        env.pop('SAT_IMAGE', None)
         command = 'sat --version'
 
         # Use stdout and stderr instead of capture_output=True for Python 3.6 compatibility
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                              check=True)
+                              check=True, env=env)
         version_output = proc.stdout.decode().strip()
 
         expected_version = get_version_file_contents()

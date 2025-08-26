@@ -25,8 +25,11 @@ import unittest
 import subprocess
 import json
 
-class TestNid2Xname(unittest.TestCase):
-    
+from csm_testing.tests.sat_functional.util import SATTestCase
+
+
+class TestNid2Xname(SATTestCase):
+
     def run_command(self, command):
         """Run a shell command and return the output."""
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -140,10 +143,22 @@ class TestNid2Xname(unittest.TestCase):
         xnames = [component['Xname'] for component in components]
 
         # Define the NID range
-        nid_range = f"nid[{int(nids[0]):06d}-{int(nids[1]):06d},{int(nids[2]):06d}-{int(nids[3]):06d}]"
+        nids_int = sorted(int(n) for n in nids)
+        ranges = []
+        start = prev = nids_int[0]
+        for nid in nids_int[1:]:
+            if nid == prev + 1:
+                prev = nid
+            else:
+                ranges.append((start, prev))
+                start = prev = nid
+
+        ranges.append((start, prev))
+        range_strs = ",".join(f"{s:06d}-{e:06d}" for s, e in ranges)
+        nid_range = f"nid[{range_strs}]"
 
         # Expected xnames corresponding to the NID range
-        expected_xnames = ','.join(xnames[:4])
+        expected_xnames = ','.join(xnames)
 
         # Convert nid range to xnames using sat command
         sat_command = f"sat nid2xname {nid_range}"

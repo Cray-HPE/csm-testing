@@ -3,7 +3,7 @@
 # This should be allowed when using `--cfs-version v2` but not when using
 # `--cfs-version v3`.
 configurations:
-- name: "{{test.prefix}}-csm-{{csm.version}}-product-layer"
+- name: "{{test.prefix}}-no-playbook"
   layers:
   - name: csm-packages-{{csm.version}}
     product:

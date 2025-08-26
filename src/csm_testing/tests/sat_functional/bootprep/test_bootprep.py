@@ -25,8 +25,7 @@
 Tests for functionality of the `sat bootprep` command.
 """
 import base64
-import re
-from datetime import datetime
+import binascii
 import functools
 import json
 import logging
@@ -38,6 +37,7 @@ import tempfile
 from typing import List
 import unittest
 
+import requests
 import requests.exceptions
 from kubernetes.client import CoreV1Api
 from kubernetes.client.exceptions import ApiException
@@ -47,6 +47,7 @@ import pkg_resources
 from semver import VersionInfo
 import yaml
 
+from csm_testing.tests.sat_functional.util import SATTestCase
 
 logging.basicConfig(level=logging.WARNING, format='%(levelname)s: %(message)s')
 
@@ -67,27 +68,52 @@ def skip_test_if_csm_var_missing(var_names: List[str]) -> callable:
     return decorator
 
 
-class BootprepRunTestCase(unittest.TestCase):
+class BootprepTestCase(SATTestCase):
     """Base test class for `sat bootprep run` tests.
 
-    This base class handles setting up a temporary directory into which bootprep
-    input files will be copied. The `sat bootprep` command will be run with this
-    temporary directory as the current working directory, which allows it to access
-    the files it contains.
+    This base class provides comprehensive setup and teardown for testing the
+    `sat bootprep run` command. It automatically does the following:
+
+    - Creates a temporary directory for bootprep input files. It runs bootprep with
+      this directory as the current working directory.
+    - Generates a unique test prefix based on the test class name for resource naming
+    - Sets up a VCS repository with simple playbooks
+    - Creates a vars.yaml file with test configuration and CSM product catalog data
+    - Provides cleanup of CFS configurations, IMS images, BOS session templates, and
+      all other resource created during tests
+
+    Test classes that test `sat bootprep run` should inherit from this class. The unique
+    test prefix can be used in the names of CFS configurations, IMS images, and BOS session
+    templates to ensure that multiple test classes can run concurrently without conflicts.
+
+    Key attributes available to subclasses:
+    - test_prefix: Unique identifier for naming test resources (e.g., "sat-bp-test-a1b2c3d4")
+    - temp_dir: Temporary directory in which bootprep commands are run
+    - config_name, image_name, session_template_name: Pre-formatted resource names
+    - vcs_repo_name: VCS repository for customization tests
+    - csm_vars: CSM product catalog data for use in bootprep files
     """
 
-    def tearDown(self):
-        self.delete_all_cfs_configurations_matching_prefix(self.test_prefix)
-        self.delete_all_ims_images_matching_prefix(self.test_prefix)
-        self.delete_all_session_templates_matching_prefix(self.test_prefix)
+    # Default to using CFS v3 for everything. Subclasses can override this.
+    cfs_version = 'v3'
+
+    # Whether this test class needs a VCS repository set up. Subclasses can override this.
+    needs_vcs_repo = False
 
     @classmethod
     def setUpClass(cls):
         """Create a temporary directory for bootprep input files."""
         cls.set_up_errors = []
         cls.temp_dir = tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
+        cls.vcs_repo_name = None  # Initialize to None to handle cases where VCS repo isn't needed
 
-        cls.test_prefix = f'sat-bp-testing-{datetime.now().strftime("%Y-%m-%d")}'
+        # Use the unique id based on the class name to create a unique test prefix
+        if cls.cfs_version != 'v3':
+            cls.test_prefix = f'sat-test-cfs-{cls.cfs_version}-{cls.unique_id}'
+        else:
+            cls.test_prefix = f'sat-test-{cls.unique_id}'
+        logging.info(f'Test class {cls.__name__} using resource prefix: {cls.test_prefix}')
+
         cls.config_name = f'{cls.test_prefix}-simple-configuration'
         cls.image_name = f'{cls.test_prefix}-simple-image'
         cls.session_template_name = f'{cls.test_prefix}-simple-session-template'
@@ -95,20 +121,9 @@ class BootprepRunTestCase(unittest.TestCase):
         cls.get_product_catalog_data()
         cls.get_csm_vars()
 
-        # TODO (CRAYSAT-2007): Improve error handling
-        vcs_repo_name = cls.create_vcs_repository(f'sat-vcs-goss-testing-{datetime.now().strftime("%Y-%m-%d")}')
-        if vcs_repo_name != "":
-            cls.vcs_repo_name = vcs_repo_name
-        else:
-            cls.set_up_errors.append("Unable to create the vcs repository")
-
-        # Create the vars.yaml file in the temporary directory
-        cls.vars_file_name = 'vars.yaml'
-        vars_file_path = os.path.join(cls.temp_dir.name, cls.vars_file_name)
         vars_data = {
             'test': {
                 'prefix': cls.test_prefix,
-                'vcs_repo_name': cls.vcs_repo_name,
                 'config_name': f'{cls.config_name}',
                 'image_name': f'{cls.image_name}',
                 'session_template_name': f'{cls.session_template_name}'
@@ -119,6 +134,16 @@ class BootprepRunTestCase(unittest.TestCase):
             },
             'csm': cls.csm_vars
         }
+
+        if cls.needs_vcs_repo:
+            cls.vcs_repo_name = cls.test_prefix
+            # Let RuntimeError bubble up if VCS repo creation fails
+            cls.create_vcs_repository(cls.vcs_repo_name)
+            vars_data['test']['vcs_repo_name'] = cls.vcs_repo_name
+
+        # Create the vars.yaml file in the temporary directory
+        cls.vars_file_name = 'vars.yaml'
+        vars_file_path = os.path.join(cls.temp_dir.name, cls.vars_file_name)
         with open(vars_file_path, 'w', encoding='utf-8') as vars_file:
             yaml.dump(vars_data, vars_file)
 
@@ -129,8 +154,25 @@ class BootprepRunTestCase(unittest.TestCase):
     def tearDownClass(cls):
         """Remove the temporary directory for bootprep input files."""
         cls.temp_dir.cleanup()
-        if cls.delete_vcs_repository(cls.vcs_repo_name, silent=False) == "":
-            cls.set_up_errors.append(f"Unable to delete the vcs repository {cls.vcs_repo_name}")
+        # Only try to delete VCS repo if one was created
+        if cls.vcs_repo_name is not None:
+            try:
+                cls.delete_vcs_repository(cls.vcs_repo_name)
+            except RuntimeError as err:
+                logging.warning(f'Failed to delete VCS repository {cls.vcs_repo_name}: {err}')
+
+    def setUp(self):
+        # Ensure resources from past tests are deleted to start with a clean slate
+        type(self).delete_matching_resources()
+
+    def tearDown(self):
+        type(self).delete_matching_resources()
+
+    @classmethod
+    def delete_matching_resources(cls):
+        cls.delete_all_cfs_configurations_matching_prefix()
+        cls.delete_all_ims_images_matching_prefix()
+        cls.delete_all_session_templates_matching_prefix()
 
     @classmethod
     def get_product_catalog_data(cls) -> None:
@@ -196,13 +238,22 @@ class BootprepRunTestCase(unittest.TestCase):
     def populate_vcs_repository(cls, repo_name: str):
         """Push test files to a vcs repository for testing
 
-        repo_name: the name of the vcs repo that has been created
+        Args:
+            repo_name: the name of the vcs repo that has been created
 
-        vcs_password: the vcs password from the system
+        Raises:
+            RuntimeError: if there is an error during repository population
         """
         url = f"https://{cls.vcs_username}:{cls.vcs_password}@api-gw-service-nmn.local/vcs/cray/{repo_name}.git"
 
         vcs_tmp_path = os.path.join(cls.temp_dir.name, repo_name)
+
+        try:
+            os.makedirs(vcs_tmp_path, exist_ok=True)
+            cls.copy_to_tmp_dir("test.yml", repo_name)
+            cls.copy_to_tmp_dir("test-fail.yml", repo_name)
+        except OSError as err:
+            raise RuntimeError(f'Failed to create temporary directory {vcs_tmp_path} with error: {err}')
 
         git_commands = [
             "git init",
@@ -213,16 +264,12 @@ class BootprepRunTestCase(unittest.TestCase):
             f"git remote add origin {url}",
             "git push -u origin main"
         ]
+        command = "" # Addresses PyCharm warning
         try:
-            os.makedirs(vcs_tmp_path, exist_ok=True)
-            cls.copy_to_tmp_dir("test.yml", repo_name)
-            cls.copy_to_tmp_dir("test-fail.yml", repo_name)
             for command in git_commands:
                 cls.run_shell_command(command, vcs_tmp_path)
-        except OSError as e:
-            cls.set_up_errors.append(f"Failed with OSError {e}")
-        except Exception as e:
-            cls.set_up_errors.append(f"Failed to push changes to the branch with error {e}")
+        except subprocess.CalledProcessError as err:
+            raise RuntimeError(f'Failed to execute "{command}" with error: {err}')
 
     @classmethod
     def get_encoded_vcs_credentials(cls):
@@ -232,20 +279,30 @@ class BootprepRunTestCase(unittest.TestCase):
             str: Base64 encoded credentials in the format 'username:password'
 
         Raises:
-            subprocess.CalledProcessError: If the kubectl command fails to retrieve the secret.
-            binascii.Error: If there is an issue decoding the base64 encoded credentials.
+            RuntimeError: If a "kubectl get secret" command fails or there is
+                an issue decoding the base64 encoded credentials
         """
-        # Get the username from the Kubernetes secret
-        username_command = 'kubectl get secret -n services vcs-user-credentials -o jsonpath={.data.vcs_username}'
-        username_base64 = subprocess.check_output(username_command, shell=True).strip()
-        username = base64.b64decode(username_base64).decode('utf-8')
-        cls.vcs_username = username
+        try:
+            # Get the username from the Kubernetes secret
+            username_command = 'kubectl get secret -n services vcs-user-credentials -o jsonpath={.data.vcs_username}'
+            username_base64 = subprocess.check_output(username_command, shell=True).strip()
+            username = base64.b64decode(username_base64).decode('utf-8')
+            cls.vcs_username = username
+        except subprocess.CalledProcessError as err:
+            raise RuntimeError(f'Failed to get vcs username with error: {err}')
+        except binascii.Error as err:
+            raise RuntimeError(f'Failed to decode base64 encoded vcs username: {err}')
 
-        # Get the password from the Kubernetes secret
-        password_command = 'kubectl get secret -n services vcs-user-credentials -o jsonpath={.data.vcs_password}'
-        password_base64 = subprocess.check_output(password_command, shell=True).strip()
-        password = base64.b64decode(password_base64).decode('utf-8')
-        cls.vcs_password = password
+        try:
+            # Get the password from the Kubernetes secret
+            password_command = 'kubectl get secret -n services vcs-user-credentials -o jsonpath={.data.vcs_password}'
+            password_base64 = subprocess.check_output(password_command, shell=True).strip()
+            password = base64.b64decode(password_base64).decode('utf-8')
+            cls.vcs_password = password
+        except subprocess.CalledProcessError as err:
+            raise RuntimeError(f'Failed to get vcs password with error: {err}')
+        except binascii.Error as err:
+            raise RuntimeError(f'Failed to decode base64 encoded vcs password: {err}')
 
         # Encode credentials
         credentials = f"{username}:{password}"
@@ -254,59 +311,46 @@ class BootprepRunTestCase(unittest.TestCase):
         return encoded_credentials
 
     @classmethod
-    def create_vcs_repository(cls, repo_name) -> str:
+    def create_vcs_repository(cls, repo_name) -> None:
         """ Creates a vcs repository and populates it with files to be used for testing
 
-        Returns:
-            str: the name of the created repository, or an empty string if creation failed
+        Raises:
+            RuntimeError: if there is an error during repository creation or population
         """
-
         # Begin by deleting the vcs repo in case it was not cleaned up
-        cls.delete_vcs_repository(repo_name, silent=True)
-
+        cls.delete_vcs_repository(repo_name)
         try:
             encoded_vcs_creds = cls.get_encoded_vcs_credentials()
-
             url = "https://api-gw-service-nmn.local/vcs/api/v1/admin/users/cray/repos"
             headers = {
                 'accept': 'application/json',
                 'Content-Type': 'application/json',
                 'Authorization': f'Basic {encoded_vcs_creds}'
             }
-
-            # Define the data payload
-            data = {
-                "name": repo_name
-            }
-
-            response = requests.post(url, headers=headers, json=data)
+            response = requests.post(url, headers=headers, json={"name": repo_name})
             response.raise_for_status()
-
-            cls.populate_vcs_repository(repo_name)
-
-        except subprocess.CalledProcessError as err:
-            cls.set_up_errors.append(f'Failed to get vcs password with error: {err}')
-            return ""
         except requests.exceptions.RequestException as err:
-            cls.set_up_errors.append(f'Failed to make vcs api call with error: {err}')
-            return ""
-        except Exception as err:
-            cls.set_up_errors.append(f"Failed to create vcs repo with err {err}")
-            return ""
+            raise RuntimeError(f'Failed to make vcs api call with error: {err}')
 
-        return repo_name
+        # This raises RuntimeError if there is an error during population
+        cls.populate_vcs_repository(repo_name)
 
     @classmethod
-    def delete_vcs_repository(cls, repo_name, silent) -> str:
-        """ Deletes a vcs repository
+    def delete_vcs_repository(cls, repo_name) -> None:
+        """Deletes a vcs repository.
 
-        repo_name: the name of the repo to be deleted
-        silent: boolean if true method does not output error if unsuccessful
+        If the repo already does not exist, it logs an info message and returns.
+
+        Args:
+            repo_name: the name of the repo to be deleted
+
+        Raises:
+            RuntimeError: if there is an error (other than 404) during repository deletion
         """
+        # This raises RuntimeError if there is an error getting the credentials
+        encoded_vcs_creds = cls.get_encoded_vcs_credentials()
         try:
-            encoded_vcs_creds = cls.get_encoded_vcs_credentials()
-
-            # run a curl command with the username and password to delete the repo
+            # Make a DELETE request to the VCS API to delete the repository
             url = f"https://api-gw-service-nmn.local/vcs/api/v1/repos/cray/{repo_name}"
             # Define the data payload
             headers = {
@@ -316,23 +360,14 @@ class BootprepRunTestCase(unittest.TestCase):
 
             response = requests.delete(url, headers=headers)
 
-            if response.status_code != 204:
-                if not silent:
-                    cls.set_up_errors.append(f"Failed to delete the repository. "
-                                             f"Status code: {response.status_code}, Response: {response.text}")
-                return ""
-
-        except subprocess.CalledProcessError as err:
-            cls.set_up_errors.append(f'Failed to get vcs password with error: {err}')
-            return ""
+            if not response.ok:
+                if response.status_code == 404:
+                    logging.info(f"Repository {repo_name} does not exist, nothing to delete")
+                else:
+                    raise RuntimeError(f"Failed to delete VCS repository {repo_name}. "
+                                       f"Status code: {response.status_code}, Response: {response.text}")
         except requests.exceptions.RequestException as err:
-            cls.set_up_errors.append(f'Failed to make vcs api call with error: {err}')
-            return ""
-        except Exception as err:
-            cls.set_up_errors.append(f"Failed to delete vcs repo with err {err}")
-            return ""
-
-        return repo_name
+            raise RuntimeError(f'Failed to make vcs api call with error: {err}')
 
     @classmethod
     def get_csm_vars(cls):
@@ -419,13 +454,13 @@ class BootprepRunTestCase(unittest.TestCase):
                                      f"an error occurred: {err.stderr.decode()}")
             raise err
 
-    @staticmethod
-    def delete_cfs_configuration(cfs_config_name):
+    @classmethod
+    def delete_cfs_configuration(cls, cfs_config_name):
         """Delete a CFS configuration using the 'cray' CLI.
 
         This relies on the cray CLI being configured and authenticated on the system.
         """
-        delete_command = f'cray cfs configurations delete {cfs_config_name}'
+        delete_command = f'cray cfs {cls.cfs_version} configurations delete {cfs_config_name}'
         try:
             subprocess.run(shlex.split(delete_command), check=True,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -433,56 +468,56 @@ class BootprepRunTestCase(unittest.TestCase):
             logging.warning('Failed to delete CFS configuration "%s" '
                             'created by test: %s', cfs_config_name, err.stderr)
 
-    @staticmethod
-    def delete_all_cfs_configurations_matching_prefix(cfs_config_prefix):
-        """Find and delete all CFS configurations matching a prefix using the 'cray' CLI.
+    @classmethod
+    def delete_all_cfs_configurations_matching_prefix(cls):
+        """Find and delete all CFS configurations matching `cls.test_prefix` using the 'cray' CLI.
 
         This relies on the cray CLI being configured and authenticated on the system.
-
-        Args:
-            cfs_config_prefix (str): cfs configuration prefix to match
         """
-        find_command = 'cray cfs v3 configurations list'
         found_configurations = []
         next_id = None
 
-        while True:
-            find_command = 'cray cfs v3 configurations list'
-
-            if next_id:
-                find_command += f' --after-id {next_id}'
-
-            try:
+        try:
+            if cls.cfs_version != 'v3':
+                find_command = f'cray cfs {cls.cfs_version} configurations list'
                 proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                       check=True)
                 configs_json = json.loads(proc.stdout.decode())
+                found_configurations = [config['name'] for config in configs_json
+                                        if config['name'].startswith(cls.test_prefix)]
+            else:
+                while True:
+                    find_command = f'cray cfs {cls.cfs_version} configurations list'
 
-                for config in configs_json['configurations']:
-                    if config['name'].startswith(cfs_config_prefix):
-                        found_configurations.append(config['name'])
+                    if next_id:
+                        find_command += f' --after-id {next_id}'
 
-                next_obj = configs_json.get('next')
-                if next_obj is None:
-                    break
-                else:
-                    next_id = next_obj.get('after_id')
+                    proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                          check=True)
+                    configs_json = json.loads(proc.stdout.decode())
 
-            except subprocess.CalledProcessError as err:
-                logging.warning('Failed to find CFS configurations with prefix "%s" '
-                                'created by test: %s', cfs_config_prefix, err.stderr)
-                break
+                    for config in configs_json['configurations']:
+                        if config['name'].startswith(cls.test_prefix):
+                            found_configurations.append(config['name'])
+
+                    next_obj = configs_json.get('next')
+                    if next_obj is None:
+                        break
+                    else:
+                        next_id = next_obj.get('after_id')
+
+        except subprocess.CalledProcessError as err:
+            logging.warning('Failed to find CFS configurations with prefix "%s" '
+                            'created by test: %s', cls.test_prefix, err.stderr)
 
         for configuration_name in found_configurations:
-            BootprepRunTestCase.delete_cfs_configuration(configuration_name)
+            cls.delete_cfs_configuration(configuration_name)
 
-    @staticmethod
-    def delete_all_ims_images_matching_prefix(ims_image_prefix):
-        """Find and delete all IMS images matching a prefix using the 'cray' CLI.
+    @classmethod
+    def delete_all_ims_images_matching_prefix(cls):
+        """Find and delete all IMS images matching `cls.test_prefix` using the 'cray' CLI.
 
         This relies on the cray CLI being configured and authenticated on the system.
-
-        Args:
-            ims_image_prefix (str): ims image prefix to match
         """
         find_command = 'cray ims images list'
         found_image_ids = []
@@ -491,24 +526,21 @@ class BootprepRunTestCase(unittest.TestCase):
                                   check=True)
             images_json = json.loads(proc.stdout.decode())
             for image in images_json:
-                if image['name'].startswith(ims_image_prefix):
+                if image['name'].startswith(cls.test_prefix):
                     found_image_ids.append(image['id'])
 
         except subprocess.CalledProcessError as err:
             logging.warning('Failed to find IMS images with prefix "%s" '
-                            'created by test: %s', ims_image_prefix, err.stderr)
+                            'created by test: %s', cls.test_prefix, err.stderr)
 
         for image_id in found_image_ids:
-            BootprepRunTestCase.delete_ims_image(image_id)
+            BootprepTestCase.delete_ims_image(image_id)
 
-    @staticmethod
-    def delete_all_session_templates_matching_prefix(session_template_prefix):
-        """Find and delete all BOS session templates matching a prefix using the 'cray' CLI.
+    @classmethod
+    def delete_all_session_templates_matching_prefix(cls):
+        """Find and delete all BOS session templates matching `cls.test_prefix` using the 'cray' CLI.
 
         This relies on the cray CLI being configured and authenticated on the system.
-
-        Args:
-            session_template_prefix (str): session template prefix to match
         """
         find_command = 'cray bos v2 sessiontemplates list'
         found_templates = []
@@ -517,15 +549,15 @@ class BootprepRunTestCase(unittest.TestCase):
                                   check=True)
             templates_json = json.loads(proc.stdout.decode())
             for template in templates_json:
-                if template['name'].startswith(session_template_prefix):
+                if template['name'].startswith(cls.test_prefix):
                     found_templates.append(template['name'])
 
         except subprocess.CalledProcessError as err:
             logging.warning('Failed to find BOS session templates with prefix "%s" '
-                            'created by test: %s', session_template_prefix, err.stderr)
+                            'created by test: %s', cls.test_prefix, err.stderr)
 
         for template_name in found_templates:
-            BootprepRunTestCase.delete_bos_session_template(template_name)
+            BootprepTestCase.delete_bos_session_template(template_name)
 
 
     @staticmethod
@@ -550,14 +582,14 @@ class BootprepRunTestCase(unittest.TestCase):
                                 'deleted image' if deleted else 'image',
                                 ims_image_id, err.stderr)
 
-        if BootprepRunTestCase.image_exists(ims_image_id):
+        if BootprepTestCase.image_exists(ims_image_id):
             delete_ims_image_helper(deleted=False)
         else:
             logging.info('Image with ID "%s" does not exist in IMS images, skipping deletion.',
                          ims_image_id)
 
         if permanent:
-            if BootprepRunTestCase.deleted_image_exists(ims_image_id):
+            if BootprepTestCase.deleted_image_exists(ims_image_id):
                 delete_ims_image_helper(deleted=True)
             else:
                 logging.info('Image with ID "%s" does not exist in IMS deleted images, skipping deletion.',
@@ -602,8 +634,8 @@ class BootprepRunTestCase(unittest.TestCase):
         except json.JSONDecodeError as err:
             self.fail(f'Failed to parse JSON output from image creation command: {err}')
 
-    @staticmethod
-    def configuration_exists(name):
+    @classmethod
+    def configuration_exists(cls, name):
         """Check if the given CFS configuration exists in the system.
 
         Args:
@@ -612,11 +644,38 @@ class BootprepRunTestCase(unittest.TestCase):
         Returns:
             bool: True if the configuration exists, False otherwise.
         """
-        command = f'cray cfs v3 configurations describe {name} --format json'
+        command = f'cray cfs {cls.cfs_version} configurations describe {name} --format json'
         process = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if process.returncode != 0 and "not found" in process.stderr.decode().lower():
             return False
         return True
+
+    def validate_cfs_config(self, config_name: str):
+        """Validate that a cfs configuration has been created on the system
+        """
+        command = f'cray cfs {self.cfs_version} configurations describe {config_name} --format json'
+
+        try:
+            result = subprocess.run(shlex.split(command), cwd=self.temp_dir.name,
+                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            configuration = json.loads(result.stdout.decode())
+
+            self.assertIn('layers', configuration)
+            self.assertGreater(len(configuration.get('layers')), 0)
+            for layer in configuration.get('layers'):
+                self.assertIn('name', layer)
+                self.assertIn('commit', layer)
+                if self.cfs_version == 'v3':
+                    self.assertIn('clone_url', layer)
+                else:
+                    self.assertIn('cloneUrl', layer)
+
+        except subprocess.CalledProcessError as err:
+            # Fail the test if the command to get the configuration fails
+            self.fail(f'Failed to get cfs config {config_name} with error: {err.stderr.decode()}')
+        except json.JSONDecodeError as err:
+            # Fail the test if we can't parse the JSON in the response
+            self.fail(f'Failed to parse JSON output from cfs config {config_name} with error: {err}')
 
     @staticmethod
     def _image_exists_helper(image_id, deleted):
@@ -647,7 +706,7 @@ class BootprepRunTestCase(unittest.TestCase):
         Returns:
             bool: True if the deleted image exists, False otherwise.
         """
-        return BootprepRunTestCase._image_exists_helper(image_id, deleted=True)
+        return BootprepTestCase._image_exists_helper(image_id, deleted=True)
 
     @staticmethod
     def image_exists(image_id, check_deleted=False):
@@ -662,8 +721,8 @@ class BootprepRunTestCase(unittest.TestCase):
             bool: True if the image exists, False otherwise.
         """
         return (
-            BootprepRunTestCase._image_exists_helper(image_id, deleted=False) or
-            (check_deleted and BootprepRunTestCase.deleted_image_exists(image_id))
+                BootprepTestCase._image_exists_helper(image_id, deleted=False) or
+                (check_deleted and BootprepTestCase.deleted_image_exists(image_id))
         )
 
     @staticmethod
@@ -702,7 +761,7 @@ class BootprepRunTestCase(unittest.TestCase):
         Raises:
             subprocess.CalledProcessError: If the command fails and check is True.
         """
-        bootprep_opts_str = f'--vars-file {self.vars_file_name}'
+        bootprep_opts_str = f'--vars-file {self.vars_file_name} --cfs-version {self.cfs_version}'
         if bootprep_opts:
             bootprep_opts_str += f' {bootprep_opts}'
         self.copy_to_tmp_dir(bootprep_file, "")
@@ -745,27 +804,8 @@ class BootprepRunTestCase(unittest.TestCase):
         shutil.copy(src_bootprep_file_path, tmp_bootprep_file_path)
 
 
-class TestBootprepCreateConfigs(BootprepRunTestCase):
-    """Tests for creating CFS configurations using `sat bootprep run`"""
-
-    def validate_cfs_config(self, config_name: str):
-        """Validate that a cfs configuration has been created on the system
-        """
-        command = "cray cfs v3 configurations describe " + config_name
-
-        try:
-            result = subprocess.run(shlex.split(command), cwd=self.temp_dir.name,
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            configuration = result.stdout.decode()
-
-            self.assertIn("clone_url", configuration)
-            self.assertIn(".git", configuration)
-            self.assertIn("commit", configuration)
-            self.assertIn("name", configuration)
-
-        except subprocess.CalledProcessError as err:
-            logging.error("Failed to get cfs config %s"
-                          "with error: %s", config_name, err)
+class TestBootprepCreateConfigsCFSV3(BootprepTestCase):
+    """Tests for creating CFS configurations using `sat bootprep run` using CFS v3"""
 
     def test_no_configs(self):
         """Test that a file with an empty list of configs creates no configs"""
@@ -853,6 +893,33 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
             decoded_stderr
         )
 
+
+class TestBootprepCreateConfigsCFSV2(TestBootprepCreateConfigsCFSV3):
+    """Tests for creating CFS configurations using `sat bootprep run` with CFS v2"""
+    cfs_version = 'v2'
+
+    # All tests are inherited from TestBootprepCreateConfigsCFSV3, except for test_missing_playbook,
+    # which has a different expected result with CFS v2.
+
+    @skip_test_if_csm_var_missing(['version'])
+    def test_missing_playbook(self):
+        """Test creating a CFS configuration with a missing playbook using CFS v2 succeeds"""
+        result = self.run_bootprep('missing-playbook-config.yaml', '--format json', check=True)
+
+        report = json.loads(result.stdout.decode())
+        self.assertEqual(1, len(report['configurations']))
+        self.assertEqual(f'{self.test_prefix}-no-playbook',
+                         report['configurations'][0]['name'])
+
+        for config in report['configurations']:
+            self.validate_cfs_config(config['name'])
+
+
+class TestBootprepImageCustomizationCFSV3(BootprepTestCase):
+    """Test for customizing an existing IMS image using CFS v3."""
+
+    needs_vcs_repo = True
+
     @skip_test_if_csm_var_missing(['image_id', 'version'])
     def test_image_customization(self):
         """Test creating an ims image with a configuration"""
@@ -860,10 +927,19 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
 
         report = json.loads(result.stdout.decode())
         self.assertEqual(1, len(report['configurations']))
+        self.validate_cfs_config(report['configurations'][0]['name'])
         self.assertEqual(1, len(report['images']))
+        self.assertTrue(self.image_exists(report['images'][0]['final_image_id']))
 
-        for config in report['configurations']:
-            self.validate_cfs_config(config['name'])
+
+class TestBootprepImageCustomizationCFSV2(TestBootprepImageCustomizationCFSV3):
+    """Test for customizing an existing IMS image using CFS v2."""
+    cfs_version = 'v2'
+
+
+class TestBootprepImageCustomizationFailure(BootprepTestCase):
+    """Test for customizing an existing IMS image that fails"""
+    needs_vcs_repo = True
 
     @skip_test_if_csm_var_missing(['image_id', 'version'])
     def test_image_customization_fail(self):
@@ -884,6 +960,10 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
             decoded_stderr
         )
 
+class TestBootprepSessionTemplates(BootprepTestCase):
+    """Test for creating BOS session templates using `sat bootprep run`"""
+    needs_vcs_repo = True
+
     @skip_test_if_csm_var_missing(['image_id'])
     def test_session_template(self):
         """Test creating a bos session template"""
@@ -895,6 +975,11 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
 
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
+
+
+class TestBootprepConfigsImagesAndSessionTemplates(BootprepTestCase):
+    """Test for creating CFS configurations, IMS images and BOS session templates using `sat bootprep run`"""
+    needs_vcs_repo = True
 
     @skip_test_if_csm_var_missing(['image_id', 'version'])
     def test_configs_images_and_session_templates(self):
@@ -944,23 +1029,10 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
         self.assertNotIn('skipped_images', overwrite_report)
         self.assertNotIn('skipped_session_templates', overwrite_report)
 
-        for config in overwrite_report['configurations']:
-            self.validate_cfs_config(config['name'])
 
-    @skip_test_if_csm_var_missing(['image_id', 'version'])
-    def test_cfs_version(self):
-        """Test running bootprep with cfs v2"""
-        # Not adding test for cfs v3 since that is used by default
-        bootprep_opts = '--format json --cfs-version v2'
-        result = self.run_bootprep('configs-images-and-session-templates.yaml', bootprep_opts)
-
-        report = json.loads(result.stdout.decode())
-        self.assertEqual(1, len(report['configurations']))
-        self.assertEqual(1, len(report['images']))
-        self.assertEqual(1, len(report['session_templates']))
-
-        for config in report['configurations']:
-            self.validate_cfs_config(config['name'])
+class TestBootprepDryRun(BootprepTestCase):
+    """Test for running `sat bootprep run` in dry-run mode"""
+    needs_vcs_repo = True
 
     @skip_test_if_csm_var_missing(['image_id', 'version'])
     def test_dry_run_and_save(self):
@@ -993,6 +1065,11 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
 
         self.assertTrue(os.path.isfile(os.path.join(self.temp_dir.name, cfs_config_file)))
         self.assertTrue(os.path.isfile(os.path.join(self.temp_dir.name, session_template_file)))
+
+
+class TestBootprepLimitOption(BootprepTestCase):
+    """Test for the limit option in `sat bootprep run`"""
+    needs_vcs_repo = True
 
     @skip_test_if_csm_var_missing(['image_id', 'version'])
     def test_limit_option(self):
@@ -1043,6 +1120,11 @@ class TestBootprepCreateConfigs(BootprepRunTestCase):
 
         for config in limit_two_report['configurations']:
             self.validate_cfs_config(config['name'])
+
+
+class TestBootprepIfExistsProperty(BootprepTestCase):
+    """Test for the 'if_exists' property of bootprep input files in `sat bootprep run`"""
+    needs_vcs_repo = True
 
     def test_if_exists_configs(self):
         """Test the 'if_exists' property for CFS configurations"""

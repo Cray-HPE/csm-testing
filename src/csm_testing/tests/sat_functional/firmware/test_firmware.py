@@ -32,6 +32,8 @@ import uuid
 import tempfile
 from typing import List
 
+from csm_testing.tests.sat_functional.util import SATTestCase
+
 SAT_FIRMWARE_HEADER = ['xname', 'name', 'target_name', 'version']
 
 
@@ -45,7 +47,7 @@ def get_xnames() -> List[str]:
 
 
 @unittest.skipIf(len(get_xnames()) < 2, "Not enough xnames available for testing. Skipping tests")
-class TestFirmware(unittest.TestCase):
+class TestFirmware(SATTestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -211,4 +213,3 @@ class TestFirmware(unittest.TestCase):
         
 if __name__ == '__main__':
     unittest.main()
-
