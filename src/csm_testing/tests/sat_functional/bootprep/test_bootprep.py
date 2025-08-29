@@ -442,6 +442,37 @@ class BootprepTestCase(SATTestCase):
         self.assertTrue(any(message_substring in message for message in messages),
                         f'No {level} log message containing "{message_substring}" found in stderr')
 
+    def assert_not_in_log_messages(self, level: str, message_substring: str, stderr: str) -> None:
+        """Assert that the given substring does not appear in a log message prefixed with the given level.
+
+        Args:
+            level: The log level to check for the messages.
+            message_substring: The message to look for
+            stderr: The stderr output from running the command
+
+        Returns:
+            None
+        """
+        messages = [line for line in stderr.splitlines() if line.startswith(level)]
+        self.assertFalse(any(message_substring in message for message in messages),
+                         f'{level} log message containing "{message_substring}" found in stderr')
+
+    def assert_info_messages(self, expected_present: List[str], expected_absent: List[str], stderr: str):
+        """Assert that the expected present and absent info messages are in the stderr
+
+        Args:
+            expected_present: List of expected present info messages
+            expected_absent: List of expected absent info messages
+            stderr: The stderr output from running the command
+
+        Returns:
+            None
+        """
+        for message in expected_present:
+            self.assert_in_log_messages("INFO", message, stderr)
+        for message in expected_absent:
+            self.assert_not_in_log_messages("INFO", message, stderr)
+
     @classmethod
     def run_shell_command(cls, command, path):
         """Run a shell command and return the output."""
@@ -519,19 +550,21 @@ class BootprepTestCase(SATTestCase):
 
         This relies on the cray CLI being configured and authenticated on the system.
         """
-        find_command = 'cray ims images list'
+        resource_types = ('images', 'deleted images')
         found_image_ids = []
-        try:
-            proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                  check=True)
-            images_json = json.loads(proc.stdout.decode())
-            for image in images_json:
-                if image['name'].startswith(cls.test_prefix):
-                    found_image_ids.append(image['id'])
+        for resource_type in resource_types:
+            find_command = f'cray ims {resource_type} list --format json'
+            try:
+                proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                      check=True)
+                images_json = json.loads(proc.stdout.decode())
+                for image in images_json:
+                    if image['name'].startswith(cls.test_prefix):
+                        found_image_ids.append(image['id'])
 
-        except subprocess.CalledProcessError as err:
-            logging.warning('Failed to find IMS images with prefix "%s" '
-                            'created by test: %s', cls.test_prefix, err.stderr)
+            except subprocess.CalledProcessError as err:
+                logging.warning('Failed to find IMS %s with prefix "%s" '
+                                'created by test: %s', resource_type, cls.test_prefix, err.stderr)
 
         for image_id in found_image_ids:
             BootprepTestCase.delete_ims_image(image_id)
@@ -988,12 +1021,17 @@ class TestBootprepConfigsImagesAndSessionTemplates(BootprepTestCase):
         skip_options = ' '.join([f'--skip-existing-{item}' for item in ('configs', 'images', 'templates')])
         overwrite_options = ' '.join([f'--overwrite-{item}' for item in ('configs', 'images', 'templates')])
 
-        # Speed up the tests by creating an empty IMS image to start with
-        empty_image = self.create_empty_ims_image(self.image_name)
-        empty_image_id = empty_image['id']
-        # Create the configurations and session templates with bootprep
-        result = self.run_bootprep('configs-images-and-session-templates.yaml',
-                                   f'{bootprep_options} --limit configurations --limit session_templates')
+        # Speed up the tests by creating empty IMS images to start with
+        empty_barebones_image = self.create_empty_ims_image(self.image_name)
+        empty_barebones_image_id = empty_barebones_image['id']
+        empty_configured_image = self.create_empty_ims_image(f'{self.image_name}-configured')
+        empty_configured_image_id = empty_configured_image['id']
+
+        # Create the configurations and session templates with bootprep using another simpler bootprep
+        # file that contains only a configuration named self.config_name and a session template named
+        # self.session_template_name.
+        result = self.run_bootprep('ims-image-session-template.yaml',
+                                   f'{bootprep_options}')
         report = json.loads(result.stdout.decode())
         self.assertEqual(1, len(report['configurations']))
         self.assertEqual(1, len(report['session_templates']))
@@ -1006,10 +1044,11 @@ class TestBootprepConfigsImagesAndSessionTemplates(BootprepTestCase):
         self.assertNotIn('images', skip_report)
         self.assertNotIn('session_templates', skip_report)
         self.assertEqual(1, len(skip_report['skipped_configurations']))
-        self.assertEqual(1, len(skip_report['skipped_images']))
+        self.assertEqual(2, len(skip_report['skipped_images']))
         self.assertEqual(1, len(skip_report['skipped_session_templates']))
         self.assertTrue(self.configuration_exists(self.config_name))
-        self.assertTrue(self.image_exists(empty_image_id, check_deleted=False))
+        self.assertTrue(self.image_exists(empty_barebones_image_id, check_deleted=False))
+        self.assertTrue(self.image_exists(empty_configured_image_id, check_deleted=False))
         self.assertTrue(self.session_template_exists(self.session_template_name))
 
         # This should overwrite everything, and the original items should be replaced
@@ -1018,12 +1057,14 @@ class TestBootprepConfigsImagesAndSessionTemplates(BootprepTestCase):
         overwrite_report = json.loads(overwrite_result.stdout.decode())
 
         self.assertTrue(self.configuration_exists(self.config_name))
-        # The overwritten image is deleted, but not fully
-        self.assertFalse(self.image_exists(empty_image_id, check_deleted=False))
-        self.assertTrue(self.deleted_image_exists(empty_image_id))
+        # The overwritten images are deleted, but not fully
+        self.assertFalse(self.image_exists(empty_barebones_image_id, check_deleted=False))
+        self.assertTrue(self.deleted_image_exists(empty_barebones_image_id))
+        self.assertFalse(self.image_exists(empty_configured_image_id, check_deleted=False))
+        self.assertTrue(self.deleted_image_exists(empty_configured_image_id))
         self.assertTrue(self.session_template_exists(self.session_template_name))
         self.assertEqual(1, len(overwrite_report['configurations']))
-        self.assertEqual(1, len(overwrite_report['images']))
+        self.assertEqual(2, len(overwrite_report['images']))
         self.assertEqual(1, len(overwrite_report['session_templates']))
         self.assertNotIn('skipped_configurations', overwrite_report)
         self.assertNotIn('skipped_images', overwrite_report)
@@ -1044,19 +1085,13 @@ class TestBootprepDryRun(BootprepTestCase):
         ])
         result = self.run_bootprep('configs-images-and-session-templates.yaml', bootprep_opts)
 
-        self.assert_in_log_messages(
-            "INFO",
-            "Would create 1 CFS configuration",
-            result.stderr.decode()
-        )
-        self.assert_in_log_messages(
-            "INFO",
-            "Would create 1 images",
-            result.stderr.decode()
-        )
-        self.assert_in_log_messages(
-            "INFO",
-            "Would create 1 BOS session template",
+        self.assert_info_messages(
+            [
+                "Would create 1 CFS configuration",
+                "Would create 2 images",
+                "Would create 1 BOS session template",
+            ],
+            [],
             result.stderr.decode()
         )
 
@@ -1073,53 +1108,53 @@ class TestBootprepLimitOption(BootprepTestCase):
 
     @skip_test_if_csm_var_missing(['image_id', 'version'])
     def test_limit_option(self):
-        """Test limit option when creating items"""
-        overwrite_options = ' '.join([f'--overwrite-{item}' for item in ('configs', 'images', 'templates')])
+        """Test limit option when creating items. Use dry-run for images to speed up the test"""
         base_bootprep_opts = '--format json'
+        overwrite_options = ' '.join([f'--overwrite-{item}' for item in ('configs', 'images', 'templates')])
 
         limit_configs_result = self.run_bootprep(
-            'configs-images-and-session-templates.yaml',
+            'limit-test.yaml',
             f'{base_bootprep_opts} --limit configurations'
         )
-        limit_images_result = self.run_bootprep(
-            'configs-images-and-session-templates.yaml',
-            f'{base_bootprep_opts} --limit images'
-        )
-        limit_session_templates_result = self.run_bootprep(
-            'configs-images-and-session-templates.yaml',
-            f'{base_bootprep_opts} --limit session_templates'
-        )
-        # Have to specify overwrite options since the configurations and session templates exist
-        limit_two_result = self.run_bootprep(
-            'configs-images-and-session-templates.yaml',
-            f'{base_bootprep_opts} {overwrite_options} --limit configurations --limit session_templates'
-        )
-
         configs_report = json.loads(limit_configs_result.stdout.decode())
         self.assertEqual(1, len(configs_report['configurations']))
         self.assertNotIn('images', configs_report)
         self.assertNotIn('session_templates', configs_report)
 
-        for config in configs_report['configurations']:
-            self.validate_cfs_config(config['name'])
+        limit_images_result = self.run_bootprep(
+            'limit-test.yaml',
+            f'{base_bootprep_opts} --dry-run --limit images'
+        )
+        self.assert_info_messages(
+            [
+                "Would create 1 images",
+                "Skipping creation of CFS configurations based on value of --limit option",
+                "Skipping creation of BOS session templates based on value of --limit option",
+            ],
+            [
+                "Would create 1 CFS configuration",
+                "Would create 1 BOS session template",
+            ],
+            limit_images_result.stderr.decode()
+        )
 
-        images_report = json.loads(limit_images_result.stdout.decode())
-        self.assertEqual(1, len(images_report['images']))
-        self.assertNotIn('configurations', images_report)
-        self.assertNotIn('session_templates', images_report)
-
+        limit_session_templates_result = self.run_bootprep(
+            'limit-test.yaml',
+            f'{base_bootprep_opts} --limit session_templates'
+        )
         session_templates_report = json.loads(limit_session_templates_result.stdout.decode())
         self.assertEqual(1, len(session_templates_report['session_templates']))
-        self.assertNotIn('images', session_templates_report)
         self.assertNotIn('configurations', session_templates_report)
+        self.assertNotIn('images', session_templates_report)
 
+        limit_two_result = self.run_bootprep(
+            'limit-test.yaml',
+            f'{base_bootprep_opts} {overwrite_options} --limit configurations --limit session_templates'
+        )
         limit_two_report = json.loads(limit_two_result.stdout.decode())
         self.assertEqual(1, len(limit_two_report['configurations']))
         self.assertEqual(1, len(limit_two_report['session_templates']))
         self.assertNotIn('images', limit_two_report)
-
-        for config in limit_two_report['configurations']:
-            self.validate_cfs_config(config['name'])
 
 
 class TestBootprepIfExistsProperty(BootprepTestCase):

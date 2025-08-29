@@ -10,26 +10,32 @@ configurations:
       branch: "main"
 
 images:
-# An image based on the CSM barebones image and customized with the simple configuration
+# An image built from the CSM barebones recipe
 - name: "{{test.image_name}}"
+  ref_name: "barebones-image"
   base:
     product:
       name: csm
       version: "{{csm.version}}"
-      type: image
+      type: recipe
       filter:
         arch: x86_64
         wildcard: "*barebones*"
+
+# A second image which references the first image as its base and configures it with the simple configuration
+- name: "{{test.image_name}}-configured"
+  ref_name: "configured-image"
+  base:
+    image_ref: "barebones-image"
   configuration: "{{test.config_name}}"
   configuration_group_names:
   - Compute
 
 session_templates:
-# A session template that references an IMS image by ID and the simple configuration
+# A session template that references an IMS image by its ref_name and the simple configuration
 - name: "{{test.session_template_name}}"
   image:
-    ims:
-      id: "{{csm.image_id}}"
+    image_ref: "configured-image"
   configuration: "{{test.config_name}}"
   bos_parameters:
     boot_sets:
