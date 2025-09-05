@@ -36,6 +36,13 @@ from csm_testing.tests.sat_functional.util import SATTestCase
 
 SAT_FIRMWARE_HEADER = ['xname', 'name', 'target_name', 'version']
 
+def sort_xnames(xnames: List[str]) -> List[str]:
+    """sort xnames in custom order: Mountain, Hill, River"""
+    mountain_xnames = [ xname for xname in xnames if xname.startswith("x1000") ]
+    hill_xnames = [ xname for xname in xnames if xname.startswith("x9000") ]
+    other_xnames = [ xname for xname in xnames if xname not in mountain_xnames and xname not in hill_xnames ]
+
+    return mountain_xnames + hill_xnames + other_xnames
 
 def get_xnames() -> List[str]:
     """Get xnames from cray hsm inventory list"""
@@ -43,7 +50,14 @@ def get_xnames() -> List[str]:
     proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, check=True)
     xnames = [item['ID'] for item in json.loads(proc.stdout)]
-    return xnames
+
+    # custom sort of xnames Mountain, Hill, River
+    # FAS only works with mountain and hill nodes
+    # on vhsasta so those need to be sorted to
+    # the top
+    sorted_xnames = sort_xnames(xnames)
+
+    return sorted_xnames
 
 
 @unittest.skipIf(len(get_xnames()) < 2, "Not enough xnames available for testing. Skipping tests")
