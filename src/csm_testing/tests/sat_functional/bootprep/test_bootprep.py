@@ -30,6 +30,7 @@ import functools
 import json
 import logging
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -66,6 +67,18 @@ def skip_test_if_csm_var_missing(var_names: List[str]) -> callable:
         return wrapper
 
     return decorator
+
+
+def skip_test_if_sle_products_missing(test_method):
+    """Decorator to skip a test if required SLE products for barebones recipe builds are unavailable"""
+    @functools.wraps(test_method)
+    def wrapper(self, *args, **kwargs):
+        if not self.sle_products_available:
+            self.skipTest('Required SLE products (sle-os-products-15-sp6-x86_64, sle-os-updates-15-sp6-x86_64) '
+                         'are not installed on the system. These are required for building images from the '
+                         'barebones recipe.')
+        return test_method(self, *args, **kwargs)
+    return wrapper
 
 
 class BootprepTestCase(SATTestCase):
@@ -120,6 +133,8 @@ class BootprepTestCase(SATTestCase):
 
         cls.get_product_catalog_data()
         cls.get_csm_vars()
+        # This method depends on data saved by get_csm_vars
+        cls.check_sle_products_availability()
 
         vars_data = {
             'test': {
@@ -411,12 +426,16 @@ class BootprepTestCase(SATTestCase):
 
         cls.csm_vars['branch_name'] = cls.get_branch_name(clone_url)
 
-        latest_barebones_recipes = [recipe_data['id'] for recipe_name, recipe_data
-                                    in csm_data[latest_csm_version]['recipes'].items()
-                                    if 'barebones' in recipe_name and 'x86' in recipe_name]
-        if latest_barebones_recipes:
-            cls.csm_vars['recipe_id'] = latest_barebones_recipes[0]
-        else:
+        # Find barebones recipe and save both ID and name
+        barebones_recipe_found = False
+        for recipe_name, recipe_data in csm_data[latest_csm_version]['recipes'].items():
+            if 'barebones' in recipe_name and 'x86' in recipe_name:
+                cls.csm_vars['recipe_id'] = recipe_data['id']
+                cls.csm_vars['recipe_name'] = recipe_name
+                barebones_recipe_found = True
+                break
+
+        if not barebones_recipe_found:
             cls.set_up_errors.append(f'Unable to get barebones recipe ID from latest CSM version')
 
         latest_barebones_images = [image_data['id'] for image_name, image_data
@@ -836,6 +855,70 @@ class BootprepTestCase(SATTestCase):
         tmp_bootprep_file_path = os.path.join(cls.temp_dir.name, dest_folder, os.path.basename(bootprep_file))
         shutil.copy(src_bootprep_file_path, tmp_bootprep_file_path)
 
+    @classmethod
+    def check_sle_products_availability(cls):
+        """Check if the required SLE products are available in the product catalog.
+
+        Extracts the SLE version from the barebones recipe name that will be used
+        in tests and uses it to construct the required SLE product names. Sets the
+        sle_products_available class attribute to True if both required SLE products
+        are present in the product catalog, False otherwise.
+        """
+        cls.sle_products_available = True
+
+        if not cls.product_catalog_data:
+            cls.sle_products_available = False
+            cls.set_up_errors.append('Product catalog data not available, cannot check for SLE products')
+            return
+
+        # Extract SLE version from the barebones recipe that will be used in tests
+        sle_version = cls._extract_sle_version_from_recipe()
+        if not sle_version:
+            cls.sle_products_available = False
+            cls.set_up_errors.append('Could not extract SLE version from barebones recipe name')
+            return
+
+        required_sle_products = [
+            f'sle-os-products-{sle_version}-x86_64',
+            f'sle-os-updates-{sle_version}-x86_64'
+        ]
+
+        missing_products = []
+        for product in required_sle_products:
+            if product not in cls.product_catalog_data:
+                missing_products.append(product)
+
+        if missing_products:
+            cls.sle_products_available = False
+            logging.info(f'SLE products not available for barebones recipe builds: {", ".join(missing_products)}')
+        else:
+            logging.info(f'Required SLE products are available for barebones recipe builds (version {sle_version})')
+
+    @classmethod
+    def _extract_sle_version_from_recipe(cls):
+        """Extract the SLE version from the barebones recipe name that will be used in tests.
+
+        Uses the recipe name saved in cls.csm_vars['recipe_name'] and looks for patterns
+        like 'sles15sp6' in the recipe name, converting them to the format used in
+        SLE product names (e.g., '15-sp6').
+
+        Returns:
+            str: The SLE version in the format expected by SLE product names (e.g., '15-sp6'),
+                 or None if no SLE version could be extracted.
+        """
+        if not hasattr(cls, 'csm_vars') or 'recipe_name' not in cls.csm_vars:
+            return None
+
+        recipe_name = cls.csm_vars['recipe_name']
+
+        # Look for pattern like 'sles15sp6' in the recipe name
+        match = re.search(r'sles(\d+)sp(\d+)', recipe_name, re.IGNORECASE)
+        if match:
+            major_version = match.group(1)
+            sp_version = match.group(2)
+            return f'{major_version}-sp{sp_version}'
+
+        return None
 
 class TestBootprepCreateConfigsCFSV3(BootprepTestCase):
     """Tests for creating CFS configurations using `sat bootprep run` using CFS v3"""
@@ -1015,6 +1098,7 @@ class TestBootprepConfigsImagesAndSessionTemplates(BootprepTestCase):
     needs_vcs_repo = True
 
     @skip_test_if_csm_var_missing(['image_id', 'version'])
+    @skip_test_if_sle_products_missing
     def test_configs_images_and_session_templates(self):
         """Test creating, skipping and overwriting configurations, images and session templates"""
         bootprep_options = '--format json'
@@ -1184,6 +1268,7 @@ class TestBootprepIfExistsProperty(BootprepTestCase):
         self.assertEqual([skipped_name], skipped_config_names)
 
     @skip_test_if_csm_var_missing(['recipe_id', 'version'])
+    @skip_test_if_sle_products_missing
     def test_if_exists_images(self):
         """Test the 'if_exists' property for IMS images"""
         skipped_name = f'{self.image_name}-skip'
