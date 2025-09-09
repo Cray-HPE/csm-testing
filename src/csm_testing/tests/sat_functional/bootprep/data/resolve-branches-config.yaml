@@ -1,0 +1,10 @@
+---
+# Define a configuration that defines a layer that specifies branch
+configurations:
+- name: "{{test.config_name}}"
+  layers:
+  - name: csm-packages
+    playbook: csm_packages.yml
+    git:
+      url: "https://api-gw-service-nmn.local/vcs/cray/csm-config-management.git"
+      branch: "{{csm.branch_name}}"
