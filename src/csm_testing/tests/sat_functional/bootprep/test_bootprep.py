@@ -754,8 +754,14 @@ class BootprepTestCase(SATTestCase):
             return False
         return True
 
-    def validate_cfs_config(self, config_name: str):
+    def validate_cfs_config(self, config_name: str, branch_expectations: List[bool] = None):
         """Validate that a cfs configuration has been created on the system
+
+        Args:
+            config_name: the name of the configuration to validate
+            branch_expectations: Optional list of booleans indicating whether
+                each layer is expected to have a 'branch' field. If None,
+                no checks are done for the presence of 'branch' fields.
         """
         command = f'cray cfs {self.cfs_version} configurations describe {config_name} --format json'
 
@@ -766,7 +772,8 @@ class BootprepTestCase(SATTestCase):
 
             self.assertIn('layers', configuration)
             self.assertGreater(len(configuration.get('layers')), 0)
-            for layer in configuration.get('layers'):
+            layers = configuration.get('layers')
+            for idx, layer in enumerate(layers):
                 self.assertIn('name', layer)
                 self.assertIn('commit', layer)
                 if self.cfs_version == 'v3':
@@ -774,6 +781,12 @@ class BootprepTestCase(SATTestCase):
                                     'Layer must contain either clone_url or source')
                 else:
                     self.assertIn('cloneUrl', layer)
+
+                if branch_expectations is not None and idx < len(branch_expectations):
+                    if branch_expectations[idx]:
+                        self.assertIn('branch', layer, f"Layer {idx} expected to have branch")
+                    else:
+                        self.assertNotIn('branch', layer, f"Layer {idx} expected NOT to have branch")
 
         except subprocess.CalledProcessError as err:
             # Fail the test if the command to get the configuration fails
@@ -1019,6 +1032,26 @@ class TestBootprepCreateConfigsCFSV3(BootprepTestCase):
 
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
+
+    @skip_test_if_csm_var_missing(['branch_name'])
+    def test_no_resolve_branches(self):
+        """Test that branch is present in the layer when --no-resolve-branches is used."""
+        result = self.run_bootprep('resolve-branches-config.yaml', '--format json --no-resolve-branches')
+
+        report = json.loads(result.stdout.decode())
+        self.assertEqual(1, len(report['configurations']))
+
+        self.validate_cfs_config(report['configurations'][0]['name'], branch_expectations=[True])
+
+    @skip_test_if_csm_var_missing(['branch_name'])
+    def test_resolve_branches(self):
+        """Test that branch is NOT present in the layer when --no-resolve-branches is NOT used."""
+        result = self.run_bootprep('resolve-branches-config.yaml', '--format json')
+
+        report = json.loads(result.stdout.decode())
+        self.assertEqual(1, len(report['configurations']))
+
+        self.validate_cfs_config(report['configurations'][0]['name'], branch_expectations=[False])
 
     @skip_test_if_csm_var_missing(['branch_name', 'version'])
     def test_special_parameters(self):
