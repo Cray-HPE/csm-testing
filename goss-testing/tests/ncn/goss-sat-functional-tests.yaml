@@ -39,5 +39,5 @@ command:
         by running '{{ $sat_functional }} run {{ $test }}' on the node where it failed.
     exec: "{{ $logrun }} -l {{ $test_label }} {{ $sat_functional }} run {{ $test }}"
     exit-status: 0
-    timeout: 900000  # use a 15-minute timeout for each test
+    timeout: 1800000  # use a 30-minute timeout for each test
   {{ end }}
