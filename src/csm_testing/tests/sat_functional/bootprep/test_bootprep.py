@@ -112,6 +112,7 @@ class BootprepTestCase(SATTestCase):
 
     # Whether this test class needs a VCS repository set up. Subclasses can override this.
     needs_vcs_repo = False
+    needs_cfs_source = False
 
     @classmethod
     def setUpClass(cls):
@@ -119,6 +120,7 @@ class BootprepTestCase(SATTestCase):
         cls.set_up_errors = []
         cls.temp_dir = tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
         cls.vcs_repo_name = None  # Initialize to None to handle cases where VCS repo isn't needed
+        cls.cfs_source_name = None  # Initialize to None to handle cases where cfs source isn't needed
 
         # Use the unique id based on the class name to create a unique test prefix
         if cls.cfs_version != 'v3':
@@ -150,11 +152,20 @@ class BootprepTestCase(SATTestCase):
             'csm': cls.csm_vars
         }
 
+        if cls.needs_cfs_source and not cls.needs_vcs_repo:
+            cls.needs_vcs_repo = True
+
         if cls.needs_vcs_repo:
             cls.vcs_repo_name = cls.test_prefix
             # Let RuntimeError bubble up if VCS repo creation fails
             cls.create_vcs_repository(cls.vcs_repo_name)
             vars_data['test']['vcs_repo_name'] = cls.vcs_repo_name
+
+        if cls.needs_cfs_source:
+            cls.cfs_source_name = f"{cls.test_prefix}-source"
+            # Let RuntimeError bubble up if cfs source creation fails
+            cls.create_cfs_source(cls.cfs_source_name)
+            vars_data['test']['cfs_source_name'] = cls.cfs_source_name
 
         # Create the vars.yaml file in the temporary directory
         cls.vars_file_name = 'vars.yaml'
@@ -175,6 +186,11 @@ class BootprepTestCase(SATTestCase):
                 cls.delete_vcs_repository(cls.vcs_repo_name)
             except RuntimeError as err:
                 logging.warning(f'Failed to delete VCS repository {cls.vcs_repo_name}: {err}')
+        if cls.cfs_source_name is not None:
+            try:
+                cls.delete_cfs_source()
+            except RuntimeError as err:
+                logging.warning(f'Failed to delete cfs source {cls.cfs_source_name}: {err}')
 
     def setUp(self):
         # Ensure resources from past tests are deleted to start with a clean slate
@@ -383,6 +399,42 @@ class BootprepTestCase(SATTestCase):
                                        f"Status code: {response.status_code}, Response: {response.text}")
         except requests.exceptions.RequestException as err:
             raise RuntimeError(f'Failed to make vcs api call with error: {err}')
+
+    @classmethod
+    def create_cfs_source(cls, source_name):
+        """Creates a cfs source.
+
+        Args
+            source_name: name of the cfs source
+        Raises:
+            RuntimeError: if the source cannot be created
+        """
+        vcs_url = f"https://api-gw-service-nmn.local/vcs/cray/{cls.vcs_repo_name}.git"
+        command = (f"cray cfs v3 sources create "
+                   f"--name {source_name} "
+                   f"--clone-url {vcs_url} "
+                   f"--credentials-username {cls.vcs_username} "
+                   f"--credentials-password {cls.vcs_password}")
+
+        try:
+            subprocess.run(shlex.split(command), check=True,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except subprocess.CalledProcessError as err:
+            raise RuntimeError(f'Failed to create cfs source with error: {err}')
+
+    @classmethod
+    def delete_cfs_source(cls):
+        """Deletes a cfs source.
+
+        Raises:
+            RuntimeError: if there is an error during source deletion
+        """
+        delete_command = f'cray cfs v3 sources delete {cls.cfs_source_name}'
+        try:
+            subprocess.run(shlex.split(delete_command), check=True,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except subprocess.CalledProcessError as err:
+            logging.warning(f'failed to run {delete_command} with error: {err}')
 
     @classmethod
     def get_csm_vars(cls):
@@ -718,7 +770,8 @@ class BootprepTestCase(SATTestCase):
                 self.assertIn('name', layer)
                 self.assertIn('commit', layer)
                 if self.cfs_version == 'v3':
-                    self.assertIn('clone_url', layer)
+                    self.assertTrue('clone_url' in layer or 'source' in layer,
+                                    'Layer must contain either clone_url or source')
                 else:
                     self.assertIn('cloneUrl', layer)
 
@@ -923,6 +976,8 @@ class BootprepTestCase(SATTestCase):
 class TestBootprepCreateConfigsCFSV3(BootprepTestCase):
     """Tests for creating CFS configurations using `sat bootprep run` using CFS v3"""
 
+    needs_cfs_source = True
+
     def test_no_configs(self):
         """Test that a file with an empty list of configs creates no configs"""
         result = self.run_bootprep('no-configs.yaml', '--format json')
@@ -991,6 +1046,16 @@ class TestBootprepCreateConfigsCFSV3(BootprepTestCase):
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
 
+    def test_source_configs(self):
+        """Test creating CFS configurations with source and clone url properties"""
+        result = self.run_bootprep('source-configs.yaml', '--format json')
+
+        report = json.loads(result.stdout.decode())
+        self.assertEqual(1, len(report['configurations']))
+
+        for config in report['configurations']:
+            self.validate_cfs_config(config['name'])
+
     @skip_test_if_csm_var_missing(['version'])
     def test_missing_playbook(self):
         """Test creating a CFS configuration with a missing playbook using CFS v3 fails"""
@@ -1029,6 +1094,18 @@ class TestBootprepCreateConfigsCFSV2(TestBootprepCreateConfigsCFSV3):
 
         for config in report['configurations']:
             self.validate_cfs_config(config['name'])
+
+    def test_source_configs(self):
+        """Test creating CFS configurations with source and clone url properties"""
+        result = self.run_bootprep('source-configs.yaml', '--format json', check=False)
+
+        self.assertEqual(1, result.returncode)
+        decoded_stderr = result.stderr.decode()
+        self.assert_in_log_messages(
+            "ERROR",
+            "The source property is not supported in CFS v2.",
+            decoded_stderr
+        )
 
 
 class TestBootprepImageCustomizationCFSV3(BootprepTestCase):
