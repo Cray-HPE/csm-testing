@@ -35,6 +35,22 @@ class TestNid2Xname(SATTestCase):
         result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return result.stdout.decode().strip()
 
+    def get_consecutive_components(self, min_count=3):
+        """
+        Return a list of components with at least min_count consecutive NIDs.
+        """
+        command = (
+            "cray hsm state components list --type Node --format json | "
+            "jq -r '.Components | map({NID: .NID, Xname: .ID}) | unique | sort_by(.NID)'"
+        )
+        components = json.loads(self.run_command(command))
+        nids_int = [int(c['NID']) for c in components]
+        for i in range(len(nids_int) - (min_count - 1)):
+            if all(nids_int[i + j] == nids_int[i] + j for j in range(min_count)):
+                indices = list(range(i, i + min_count))
+                return [components[idx] for idx in indices]
+        raise AssertionError(f"Could not find {min_count} consecutive NIDs in HSM output")
+
     def test_nid_to_xname(self):
         """Test converting nid to xname."""
         # Get the xname and nid from the HSM
@@ -98,22 +114,14 @@ class TestNid2Xname(SATTestCase):
 
             self.assertEqual(f"nid{int(expected_nid):06d}", converted_nid, f"Expected nid {int(expected_nid):06d} but got {converted_nid} for xname {xname}")
 
-
     def test_xname2nid_format_range(self):
-        """Test xname2nid with -f range option."""
-        # Get multiple xnames and nids from the HSM
-        command = "cray hsm state components list --type Node --format json | jq -r '.Components | map({NID: .NID, Xname: .ID}) | unique | sort_by(.NID) | .[0:3]'"
-        components = json.loads(self.run_command(command))
-
-        nids = [str(component['NID']) for component in components]
-        xnames = [component['Xname'] for component in components]
-
-        # Convert xnames to nid range using sat command
+        """Test xname2nid with -f range option using consecutive nids."""
+        consecutive_components = self.get_consecutive_components(min_count=3)
+        nids = [str(c['NID']) for c in consecutive_components]
+        xnames = [c['Xname'] for c in consecutive_components]
+        expected_nid_range = f"nid[{int(nids[0]):06d}-{int(nids[-1]):06d}]"
         sat_command_range = f"sat xname2nid -f range {' '.join(xnames)}"
         converted_nid_range = self.run_command(sat_command_range)
-
-        # Verify the range conversion
-        expected_nid_range = f"nid[{int(nids[0]):06d}-{int(nids[-1]):06d}]"
         self.assertEqual(expected_nid_range, converted_nid_range, f"Expected nid range {expected_nid_range} but got {converted_nid_range}")
 
     def test_xname2nid_format_nid(self):
@@ -134,36 +142,14 @@ class TestNid2Xname(SATTestCase):
         self.assertEqual(expected_nid_list, converted_nid_list, f"Expected nid list {expected_nid_list} but got {converted_nid_list}")
 
     def test_nid_range_to_xname(self):
-        """Test converting nid range to xnames."""
-        # Get multiple xnames and nids from the HSM
-        command = "cray hsm state components list --type Node --format json | jq -r '.Components | map({NID: .NID, Xname: .ID}) | unique | sort_by(.NID) | .[0:6]'"
-        components = json.loads(self.run_command(command))
-
-        nids = [str(component['NID']) for component in components]
-        xnames = [component['Xname'] for component in components]
-
-        # Define the NID range
-        nids_int = sorted(int(n) for n in nids)
-        ranges = []
-        start = prev = nids_int[0]
-        for nid in nids_int[1:]:
-            if nid == prev + 1:
-                prev = nid
-            else:
-                ranges.append((start, prev))
-                start = prev = nid
-
-        ranges.append((start, prev))
-        range_strs = ",".join(f"{s:06d}-{e:06d}" for s, e in ranges)
-        nid_range = f"nid[{range_strs}]"
-
-        # Expected xnames corresponding to the NID range
+        """Test converting nid range to xnames using consecutive nids."""
+        consecutive_components = self.get_consecutive_components(min_count=3)
+        nids = [str(c['NID']) for c in consecutive_components]
+        xnames = [c['Xname'] for c in consecutive_components]
+        nid_range = f"nid[{int(nids[0]):06d}-{int(nids[-1]):06d}]"
         expected_xnames = ','.join(xnames)
-
-        # Convert nid range to xnames using sat command
         sat_command = f"sat nid2xname {nid_range}"
         converted_xnames = self.run_command(sat_command)
-
         self.assertEqual(expected_xnames, converted_xnames, f"Expected xnames {expected_xnames} but got {converted_xnames} for nid range {nid_range}")
 
 
