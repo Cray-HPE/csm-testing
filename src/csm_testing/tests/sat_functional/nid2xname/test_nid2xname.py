@@ -30,89 +30,125 @@ from csm_testing.tests.sat_functional.util import SATTestCase
 
 class TestNid2Xname(SATTestCase):
 
-    def run_command(self, command):
-        """Run a shell command and return the output."""
-        result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        return result.stdout.decode().strip()
+    @classmethod
+    def setUpClass(cls):
+        """Set up data used by all test methods."""
+        super().setUpClass()
+        cls.components = cls.get_hsm_components()
+        cls.first_xname = cls.components[0]['Xname']
+        cls.first_nid = cls.components[0]['NID']
 
-    def get_consecutive_components(self, min_count=3):
-        """
-        Return a list of components with at least min_count consecutive NIDs.
-        """
-        command = (
-            "cray hsm state components list --type Node --format json | "
-            "jq -r '.Components | map({NID: .NID, Xname: .ID}) | unique | sort_by(.NID)'"
-        )
-        components = json.loads(self.run_command(command))
-        nids_int = [int(c['NID']) for c in components]
+    @classmethod
+    def get_hsm_components(cls):
+        """Get component data from HSM."""
+        command = "cray hsm state components list --type Node --format json"
+        command_args = command.split()
+        result = subprocess.run(command_args, check=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        raw_data = json.loads(result.stdout.decode().strip())
+        components = []
+
+        # Extract just the NID and Xname (ID) fields from each component
+        for component in raw_data.get('Components', []):
+            if 'NID' in component and 'ID' in component:
+                components.append({
+                    'NID': component['NID'],
+                    'Xname': component['ID']
+                })
+
+        # Sort by NID (as integers)
+        components.sort(key=lambda c: int(c['NID']) if c['NID'] is not None else float('inf'))
+
+        return components
+
+    @classmethod
+    def get_consecutive_components(cls, min_count=3):
+        """Return a list of components with at least min_count consecutive NIDs."""
+        nids_int = [int(c['NID']) for c in cls.components]
         for i in range(len(nids_int) - (min_count - 1)):
             if all(nids_int[i + j] == nids_int[i] + j for j in range(min_count)):
                 indices = list(range(i, i + min_count))
-                return [components[idx] for idx in indices]
+                return [cls.components[idx] for idx in indices]
         raise AssertionError(f"Could not find {min_count} consecutive NIDs in HSM output")
+
+    def run_command(self, command):
+        """Run a shell command and return the output."""
+        command_args = command.split()
+        result = subprocess.run(command_args, check=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return result.stdout.decode().strip()
 
     def test_nid_to_xname(self):
         """Test converting nid to xname."""
-        # Get the xname and nid from the HSM
-        xname_command = "cray hsm state components list --type Node --format json | jq -r '.Components[0].ID'"
-        nid_command = "cray hsm state components list --type Node --format json | jq -r '.Components[0].NID'"
-        
-        xname = self.run_command(xname_command)
-        nid = self.run_command(nid_command)
-        
+        # Use the pre-cached data
+        xname = self.first_xname
+        nid = self.first_nid
+
         # Convert nid to xname using sat command
         sat_command = f"sat nid2xname nid{nid}"
         converted_xname = self.run_command(sat_command)
-        
-        self.assertEqual(xname, converted_xname, f"Expected xname {xname} but got {converted_xname} for nid {nid}")
+
+        self.assertEqual(xname, converted_xname,
+                         f"Expected xname {xname} but got {converted_xname} for nid {nid}")
 
     def test_xname_to_nid(self):
         """Test converting xname to nid."""
-        # Get the xname and nid from the HSM
-        xname_command = "cray hsm state components list --type Node --format json | jq -r '.Components[0].ID'"
-        nid_command = "cray hsm state components list --type Node --format json | jq -r '.Components[0].NID'"
-
-        xname = self.run_command(xname_command)
-        nid = self.run_command(nid_command)
+        # Use the pre-cached data
+        xname = self.first_xname
+        nid = self.first_nid
 
         # Convert xname to nid using sat command
         sat_command_reverse = f"sat xname2nid {xname}"
         converted_nid = self.run_command(sat_command_reverse)
 
-        self.assertEqual(f"nid{int(nid):06d}", converted_nid, f"Expected nid {int(nid):06d} but got {converted_nid} for xname {xname}")
-
+        self.assertEqual(f"nid{int(nid):06d}", converted_nid,
+                         f"Expected nid {int(nid):06d} but got {converted_nid} for xname {xname}")
 
     def test_multiple_nid_to_xname(self):
-        """Test converting multiple nids to xnames."""
-        # Get multiple xnames and nids from the HSM
-        command = "cray hsm state components list --type Node --format json | jq -r '.Components | map({NID: .NID, Xname: .ID}) | unique | sort_by(.NID) | .[0:3]'"
-        components = json.loads(self.run_command(command))
+        """Test converting multiple nids to xnames in a single command call."""
+        # Use consecutive components for a better test
+        consecutive_components = self.get_consecutive_components(min_count=3)
+        nids = [str(component['NID']) for component in consecutive_components]
+        xnames = [component['Xname'] for component in consecutive_components]
 
-        nids = [str(component['NID']) for component in components]
-        xnames = [component['Xname'] for component in components]
+        # Test with space-separated nids
+        nid_args = ' '.join([f"nid{nid}" for nid in nids])
+        sat_command = f"sat nid2xname {nid_args}"
+        converted_xnames = self.run_command(sat_command)
+        expected_xnames = ','.join(xnames)
+        self.assertEqual(expected_xnames, converted_xnames,
+                        f"Space-separated test: Expected xnames {expected_xnames} but got {converted_xnames}")
 
-        for nid, expected_xname in zip(nids, xnames):
-            # Convert nid to xname using sat command
-            sat_command = f"sat nid2xname nid{nid}"
-            converted_xname = self.run_command(sat_command)
-
-            self.assertEqual(expected_xname, converted_xname, f"Expected xname {expected_xname} but got {converted_xname} for nid {nid}")
+        # Test with comma-separated nids
+        nid_list = ','.join([f"nid{nid}" for nid in nids])
+        sat_command = f"sat nid2xname {nid_list}"
+        converted_xnames = self.run_command(sat_command)
+        self.assertEqual(expected_xnames, converted_xnames,
+                        f"Comma-separated test: Expected xnames {expected_xnames} but got {converted_xnames}")
 
     def test_multiple_xname_to_nid(self):
-        """Test converting multiple xnames to nids."""
-        # Get multiple xnames and nids from the HSM
-        command = "cray hsm state components list --type Node --format json | jq -r '.Components | map({NID: .NID, Xname: .ID}) | unique | sort_by(.NID) | .[0:3]'"
-        components = json.loads(self.run_command(command))
+        """Test converting multiple xnames to nids in a single command call."""
+        # Use consecutive components for a better test
+        consecutive_components = self.get_consecutive_components(min_count=3)
+        nids = [str(c['NID']) for c in consecutive_components]
+        xnames = [c['Xname'] for c in consecutive_components]
 
-        nids = [str(component['NID']) for component in components]
-        xnames = [component['Xname'] for component in components]
+        # The default output format is range when multiple xnames are provided
+        expected_nid_range = f"nid[{int(nids[0]):06d}-{int(nids[-1]):06d}]"
 
-        for expected_nid, xname in zip(nids, xnames):
-            # Convert xname to nid using sat command
-            sat_command_reverse = f"sat xname2nid {xname}"
-            converted_nid = self.run_command(sat_command_reverse)
+        # Test with space-separated xnames
+        xname_args = ' '.join(xnames)
+        sat_command = f"sat xname2nid {xname_args}"
+        converted_nids = self.run_command(sat_command)
+        self.assertEqual(expected_nid_range, converted_nids,
+                        f"Space-separated test: Expected nid range {expected_nid_range} but got {converted_nids}")
 
-            self.assertEqual(f"nid{int(expected_nid):06d}", converted_nid, f"Expected nid {int(expected_nid):06d} but got {converted_nid} for xname {xname}")
+        # Test with comma-separated xnames
+        xname_list = ','.join(xnames)
+        sat_command = f"sat xname2nid {xname_list}"
+        converted_nids = self.run_command(sat_command)
+        self.assertEqual(expected_nid_range, converted_nids,
+                        f"Comma-separated test: Expected nid range {expected_nid_range} but got {converted_nids}")
 
     def test_xname2nid_format_range(self):
         """Test xname2nid with -f range option using consecutive nids."""
@@ -126,18 +162,14 @@ class TestNid2Xname(SATTestCase):
 
     def test_xname2nid_format_nid(self):
         """Test xname2nid with -f nid option."""
-        # Get multiple xnames and nids from the HSM
-        command = "cray hsm state components list --type Node --format json | jq -r '.Components | map({NID: .NID, Xname: .ID}) | unique | sort_by(.NID) | .[0:3]'"
-        components = json.loads(self.run_command(command))
+        # Use the first few components from the cached data
+        sample_components = self.components[:3]
+        nids = [str(component['NID']) for component in sample_components]
+        xnames = [component['Xname'] for component in sample_components]
 
-        nids = [str(component['NID']) for component in components]
-        xnames = [component['Xname'] for component in components]
-
-        # Convert xnames to individual nids using sat command
         sat_command_nid = f"sat xname2nid -f nid {' '.join(xnames)}"
         converted_nid_list = self.run_command(sat_command_nid)
 
-        # Verify the individual nids conversion
         expected_nid_list = ','.join([f"nid{int(nid):06d}" for nid in nids])
         self.assertEqual(expected_nid_list, converted_nid_list, f"Expected nid list {expected_nid_list} but got {converted_nid_list}")
 
