@@ -46,10 +46,10 @@ def sort_xnames(xnames: List[str]) -> List[str]:
 
 def get_xnames() -> List[str]:
     """Get xnames from cray hsm inventory list"""
-    command = "cray hsm inventory hardware list --type NodeBMC"
+    command = "sat firmware --format json --filter \"name = BMC\""
     proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
                           stderr=subprocess.PIPE, check=True)
-    xnames = [item['ID'] for item in json.loads(proc.stdout)]
+    xnames = [item['xname'] for item in json.loads(proc.stdout)]
 
     # custom sort of xnames Mountain, Hill, River
     # FAS only works with mountain and hill nodes
@@ -60,14 +60,13 @@ def get_xnames() -> List[str]:
     return sorted_xnames
 
 
-@unittest.skipIf(len(get_xnames()) < 2, "Not enough xnames available for testing. Skipping tests")
 class TestFirmware(SATTestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.xnames = get_xnames()
         cls.test_start_time = datetime.datetime.now()
 
+        cls.xnames = get_xnames()
         # Create smaller snapshots using specific xnames
         cls.snapshot1 = cls.create_firmware_snapshot(cls.xnames[0])
         cls.snapshot2 = cls.create_firmware_snapshot(cls.xnames[1])
@@ -171,9 +170,8 @@ class TestFirmware(SATTestCase):
 
     def test_firmware_query_single_xname(self) -> None:
         """Test that `sat firmware -x <xname>` prints firmware info for a single xname."""
-        xnames = get_xnames()
-        self.assertGreater(len(xnames), 0, "No xnames found in sat firmware output.")
-        xname = xnames[0]
+        self.assertGreater(len(self.xnames), 0, "No xnames found in sat firmware output.")
+        xname = self.xnames[0]
         command = f'sat firmware -x {xname}'
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, check=True)
@@ -184,19 +182,19 @@ class TestFirmware(SATTestCase):
 
     def test_firmware_query_multiple_xnames(self) -> None:
         """Test that `sat firmware -x <xname1>,<xname2>` prints firmware info for multiple xnames."""
-        xnames = get_xnames()
-        self.assertGreaterEqual(len(xnames), 2, "Less than two unique xnames found in sat firmware output.")
-        command = f'sat firmware -x {xnames[0]},{xnames[1]}'
+        self.assertGreaterEqual(len(self.xnames), 2, "Less than two unique xnames found in sat firmware output.")
+        command = f'sat firmware -x {self.xnames[0]},{self.xnames[1]}'
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, check=True)
         multi_xname_output = proc.stdout.decode().strip()
-        self.assertIn(xnames[0], multi_xname_output)
-        self.assertIn(xnames[1], multi_xname_output)
+        self.assertIn(self.xnames[0], multi_xname_output)
+        self.assertIn(self.xnames[1], multi_xname_output)
         for col in SAT_FIRMWARE_HEADER:
             self.assertIn(col, multi_xname_output)
 
     def test_firmware_query_xnames_from_file(self) -> None:
         """Test that `sat firmware --xname-file <file>` prints firmware info for xnames listed in a file."""
+        self.assertGreaterEqual(len(self.xnames), 2, "Less than two unique xnames found in sat firmware output.")
         command = f'sat firmware --xname-file {self.xname_file}'
         proc = subprocess.run(shlex.split(command), cwd=self.temp_dir.name,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
