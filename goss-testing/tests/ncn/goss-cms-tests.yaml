@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023,2025 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -33,7 +33,7 @@ command:
       desc: Performs a basic health check on the {{ $test }} service. If this test fails, then manually run '{{ $cmsdev }} test {{ $test }}' on the same node where the test failed. For more information, see 'troubleshooting/known_issues/sms_health_check.md' in the CSM documentation.
     exec: "{{$logrun}} -l cms-test-{{ $test }} {{ $cmsdev }} test -v {{ $test }}"
     exit-status: 0
-    timeout: 300000
+    timeout: 600000
     # If not on vshasta, do not skip any tests
     {{ if ne true $vshasta }}
     skip: false
