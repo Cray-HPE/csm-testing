@@ -586,8 +586,10 @@ class BootprepTestCase(SATTestCase):
                 proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                       check=True)
                 configs_json = json.loads(proc.stdout.decode())
+
                 found_configurations = [config['name'] for config in configs_json
-                                        if config['name'].startswith(cls.test_prefix)]
+                                        if config is not None and
+                                        config['name'].startswith(cls.test_prefix)]
             else:
                 while True:
                     find_command = f'cray cfs {cls.cfs_version} configurations list'
@@ -600,7 +602,7 @@ class BootprepTestCase(SATTestCase):
                     configs_json = json.loads(proc.stdout.decode())
 
                     for config in configs_json['configurations']:
-                        if config['name'].startswith(cls.test_prefix):
+                        if config is not None and config['name'].startswith(cls.test_prefix):
                             found_configurations.append(config['name'])
 
                     next_obj = configs_json.get('next')
