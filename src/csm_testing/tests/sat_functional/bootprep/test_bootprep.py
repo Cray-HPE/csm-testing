@@ -602,9 +602,7 @@ class BootprepTestCase(SATTestCase):
                     configs_json = json.loads(proc.stdout.decode())
 
                     for config in configs_json['configurations']:
-                        if config is not None and config[\
-                                'name'].startswith(
-                                cls.test_prefix):
+                        if config is not None and config['name'].startswith(cls.test_prefix):
                             found_configurations.append(config['name'])
 
                     next_obj = configs_json.get('next')
