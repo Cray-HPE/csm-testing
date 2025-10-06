@@ -92,8 +92,8 @@ class BootprepTestCase(SATTestCase):
     - Generates a unique test prefix based on the test class name for resource naming
     - Sets up a VCS repository with simple playbooks
     - Creates a vars.yaml file with test configuration and CSM product catalog data
-    - Provides cleanup of CFS configurations, IMS images, BOS session templates, and
-      all other resource created during tests
+    - Provides cleanup of CFS configurations, IMS images, IMS jobs, BOS session templates,
+      and all other resource created during tests
 
     Test classes that test `sat bootprep run` should inherit from this class. The unique
     test prefix can be used in the names of CFS configurations, IMS images, and BOS session
@@ -204,6 +204,7 @@ class BootprepTestCase(SATTestCase):
         cls.delete_all_cfs_configurations_matching_prefix()
         cls.delete_all_ims_images_matching_prefix()
         cls.delete_all_session_templates_matching_prefix()
+        cls.delete_all_ims_jobs_matching_prefix()
 
     @classmethod
     def get_product_catalog_data(cls) -> None:
@@ -663,6 +664,58 @@ class BootprepTestCase(SATTestCase):
         for template_name in found_templates:
             BootprepTestCase.delete_bos_session_template(template_name)
 
+    @classmethod
+    def delete_all_ims_jobs_matching_prefix(cls):
+        """Find and delete all IMS jobs matching `cls.test_prefix` using the 'cray' CLI.
+
+        This relies on the cray CLI being configured and authenticated on the system.
+        Looks for jobs created by bootprep tests by checking if the image_root_archive_name
+        starts with the test prefix (which follows the pattern 'sat-test-*').
+        """
+        found_job_ids = []
+        try:
+            # Get all IMS jobs
+            find_command = 'cray ims jobs list --format json'
+            proc = subprocess.run(shlex.split(find_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                  check=True)
+            jobs_json = json.loads(proc.stdout.decode())
+
+            # Filter jobs by image_root_archive_name starting with test prefix
+            for job in jobs_json:
+                archive_name = job.get('image_root_archive_name', '')
+                if archive_name.startswith(cls.test_prefix):
+                    try:
+                        found_job_ids.append(job['id'])
+                    except KeyError:
+                        logging.warning('Found IMS job with matching prefix but missing ID field: %s',
+                                       json.dumps(job))
+
+        except subprocess.CalledProcessError as err:
+            logging.warning('Failed to find IMS jobs with prefix "%s" '
+                            'created by test: %s', cls.test_prefix, err.stderr)
+        except json.JSONDecodeError as err:
+            logging.warning('Failed to parse IMS jobs response: %s', err)
+
+        for job_id in found_job_ids:
+            cls.delete_ims_job(job_id)
+
+    @staticmethod
+    def delete_ims_job(job_id):
+        """Delete an IMS job using the 'cray' CLI.
+
+        This relies on the cray CLI being configured and authenticated on the system.
+
+        Args:
+            job_id (str): the ID of the IMS job to delete
+        """
+        delete_command = f'cray ims jobs delete {job_id}'
+        try:
+            subprocess.run(shlex.split(delete_command), check=True,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            logging.info('Successfully deleted IMS job with ID "%s"', job_id)
+        except subprocess.CalledProcessError as err:
+            logging.warning('Failed to delete IMS job with ID "%s": %s',
+                            job_id, err.stderr.decode() if err.stderr else 'Unknown error')
 
     @staticmethod
     def delete_ims_image(ims_image_id, permanent=True):
@@ -860,11 +913,12 @@ class BootprepTestCase(SATTestCase):
         return True
 
     def run_bootprep(self, bootprep_file: str, bootprep_opts: str = None,
-                     check: bool = True) -> subprocess.CompletedProcess:
+                     check: bool = True, delete_ims_jobs: bool = True) -> subprocess.CompletedProcess:
         """Run the `sat bootprep` command with the given arguments.
 
         This handles copying the bootprep input file into the temporary directory
         and running the command with that directory as the current working directory.
+        Automatically includes --delete-ims-jobs option unless explicitly disabled.
 
         Args:
             bootprep_file: The path to the bootprep input file to use. This file
@@ -872,6 +926,8 @@ class BootprepTestCase(SATTestCase):
                 setUpClass method.
             bootprep_opts: The options to pass to the `sat bootprep run` command.
             check: Whether to raise a subprocess.CalledProcessError if the command fails.
+            delete_ims_jobs: Whether to include the --delete-ims-jobs option. Defaults to True
+                for automated testing to ensure cleanup of IMS jobs.
 
         Returns:
             The subprocess.CompletedProcess object.
@@ -880,8 +936,14 @@ class BootprepTestCase(SATTestCase):
             subprocess.CalledProcessError: If the command fails and check is True.
         """
         bootprep_opts_str = f'--vars-file {self.vars_file_name} --cfs-version {self.cfs_version}'
+
+        # Add --delete-ims-jobs option if requested
+        if delete_ims_jobs:
+            bootprep_opts_str += ' --delete-ims-jobs'
+
         if bootprep_opts:
             bootprep_opts_str += f' {bootprep_opts}'
+
         self.copy_to_tmp_dir(bootprep_file, "")
 
         # Since the command is executed in the temporary directory containing
