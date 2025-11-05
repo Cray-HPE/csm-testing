@@ -103,7 +103,7 @@ class TestShowRev(SATTestCase):
 
     def test_showrev_local_command(self):
         """Test that `sat showrev --local` returns the expected output."""
-        command = 'sat showrev --local'
+        command = f'{self.sat_base_command} showrev --local'
 
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                               check=True)
@@ -134,7 +134,7 @@ class TestShowRev(SATTestCase):
 
     def test_showrev_products_header(self):
         """Test that `sat showrev --products` returns the proper header."""
-        command = 'sat showrev --products'
+        command = f'{self.sat_base_command} showrev --products'
 
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         output = proc.stdout.decode().strip()
@@ -154,7 +154,7 @@ class TestShowRev(SATTestCase):
 
     def test_showrev_products_command(self):
         """Test that `sat showrev --products --no-borders --no-headings` returns the expected number of products."""
-        sat_command = 'sat showrev --products --no-borders --no-headings --fields product_name'
+        sat_command = f'{self.sat_base_command} showrev --products --no-borders --no-headings --fields product_name'
         sat_proc = subprocess.run(shlex.split(sat_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         sat_output = sat_proc.stdout.decode().strip()
 
@@ -190,7 +190,7 @@ class TestShowRev(SATTestCase):
 
     def test_showrev_system_headings(self):
         """Test that `sat showrev --system` returns the proper headings."""
-        command = 'sat showrev --system'
+        command = f'{self.sat_base_command} showrev --system'
 
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         output = proc.stdout.decode().strip()
@@ -213,7 +213,7 @@ class TestShowRev(SATTestCase):
 
     def test_showrev_all_command(self):
         """Test that `sat showrev --all` returns the expected output."""
-        command = 'sat showrev --all'
+        command = f'{self.sat_base_command} showrev --all'
 
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         output = proc.stdout.decode().strip()
@@ -245,7 +245,7 @@ class TestShowRev(SATTestCase):
 
     def test_showrev_release_files(self):
         """Test that `sat showrev --release-files` returns the expected warning and error messages."""
-        command = 'sat showrev --release-files'
+        command = f'{self.sat_base_command} showrev --release-files'
 
         try:
             proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, check=True)

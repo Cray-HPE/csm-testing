@@ -31,8 +31,6 @@ from typing import List, Tuple
 
 from csm_testing.tests.sat_functional.util import SATTestCase
 
-from csm_testing.tests.sat_functional.sat_testing_utils import validate_json, validate_yaml
-
 SAT_STATUS_HEADER = ['xname', 'Aliases', 'Type', 'NID', 'State', 'Flag', 'Enabled', 'Arch',
                      'Class', 'Role', 'SubRole', 'Net Type', 'Locked', 'Desired Config',
                      'Configuration Status', 'Error Count', 'Boot Status',
@@ -111,7 +109,7 @@ class TestStatus(SATTestCase):
 
     def test_status_command(self) -> None:
         """Test that `sat status` returns the proper header."""
-        command = 'sat status'
+        command = f'{self.sat_base_command} status'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -124,10 +122,10 @@ class TestStatus(SATTestCase):
 
     def test_status_formatting_json(self) -> None:
         """Test that `sat status --format json` returns the properly formatted response"""
-        json_command = 'sat status --format json'
+        json_command = f'{self.sat_base_command} status --format json'
 
         json_std_out, json_std_err = get_command_output(json_command)
-        json_response = validate_json(json_std_out)
+        json_response = self.validate_json(json_std_out)
 
         self.assertTrue(json_response)
 
@@ -139,10 +137,10 @@ class TestStatus(SATTestCase):
 
     def test_status_formatting_yaml(self) -> None:
         """Test that `sat status --format yaml` returns the properly formatted response"""
-        yaml_command = 'sat status --format yaml'
+        yaml_command = f'{self.sat_base_command} status --format yaml'
 
         yaml_std_out, yaml_std_err = get_command_output(yaml_command)
-        yaml_response = validate_yaml(yaml_std_out)
+        yaml_response = self.validate_yaml(yaml_std_out)
 
         self.assertTrue(yaml_response)
 
@@ -154,7 +152,7 @@ class TestStatus(SATTestCase):
 
     def test_status_fields_command(self) -> None:
         """Test that `sat status --fields xname,aliases` returns the proper header."""
-        command = 'sat status --fields xname,aliases'
+        command = f'{self.sat_base_command} status --fields xname,aliases'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -167,7 +165,7 @@ class TestStatus(SATTestCase):
 
     def test_status_no_borders_command(self) -> None:
         """Test that `sat status --no-borders` returns the proper header."""
-        command = 'sat status --no-borders'
+        command = f'{self.sat_base_command} status --no-borders'
 
         status_output, status_err, status_output_header = get_header(command, 1)
         column_names = re.split(r'\s{2,}', status_output_header.strip())
@@ -180,7 +178,7 @@ class TestStatus(SATTestCase):
 
     def test_status_no_headings_command(self) -> None:
         """Test that `sat status --no-headings` returns the proper header."""
-        command = 'sat status --no-headings'
+        command = f'{self.sat_base_command} status --no-headings'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -193,7 +191,7 @@ class TestStatus(SATTestCase):
 
     def test_status_hsm_fields_command(self) -> None:
         """Test that `sat status --hsm-fields` returns the proper header."""
-        command = 'sat status --hsm-fields'
+        command = f'{self.sat_base_command} status --hsm-fields'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -206,7 +204,7 @@ class TestStatus(SATTestCase):
 
     def test_status_sls_fields_command(self) -> None:
         """Test that `sat status --sls-fields` returns the proper header."""
-        command = 'sat status --sls-fields'
+        command = f'{self.sat_base_command} status --sls-fields'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -219,7 +217,7 @@ class TestStatus(SATTestCase):
 
     def test_status_hsm_and_sls_fields_command(self) -> None:
         """Test that `sat status --sls-fields` returns the proper header."""
-        command = 'sat status --hsm-fields --sls-fields'
+        command = f'{self.sat_base_command} status --hsm-fields --sls-fields'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -232,7 +230,7 @@ class TestStatus(SATTestCase):
 
     def test_status_cfs_fields_command(self) -> None:
         """Test that `sat status --cfs-fields` returns the proper header."""
-        command = 'sat status --cfs-fields'
+        command = f'{self.sat_base_command} status --cfs-fields'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -245,7 +243,7 @@ class TestStatus(SATTestCase):
 
     def test_status_bos_fields_command(self) -> None:
         """Test that `sat status --bos-fields` returns the proper header."""
-        command = 'sat status --bos-fields'
+        command = f'{self.sat_base_command} status --bos-fields'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -258,7 +256,7 @@ class TestStatus(SATTestCase):
 
     def test_status_unambiguous_fields_command(self) -> None:
         """Test that `sat status --fields xna,alia` returns the proper header unambiguosly"""
-        command = 'sat status --fields xna,alia'
+        command = f'{self.sat_base_command} status --fields xna,alia'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -271,7 +269,7 @@ class TestStatus(SATTestCase):
 
     def test_status_ambiguous_field_rol(self) -> None:
         """Test that `sat status --fields rol` warns about ambiguity and outputs the first match."""
-        command = 'sat status --fields rol'
+        command = f'{self.sat_base_command} status --fields rol'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -294,7 +292,7 @@ class TestStatus(SATTestCase):
 
     def test_status_unambiguous_filter_command(self) -> None:
         """Test that `sat status --filter NID="1000*"` returns the proper header unambiguosly"""
-        command = 'sat status --filter NID="1000*"'
+        command = f'{self.sat_base_command} status --filter NID="1000*"'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -307,7 +305,7 @@ class TestStatus(SATTestCase):
 
     def test_status_ambiguous_filter_command(self) -> None:
         """Test that `sat status --filter srol=storage` warns about ambiguity and outputs the first match."""
-        command = 'sat status --filter srol=storage'
+        command = f'{self.sat_base_command} status --filter srol=storage'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -330,7 +328,7 @@ class TestStatus(SATTestCase):
 
     def test_status_operator_filter_command(self) -> None:
         """Test that `sat status --filter Role!=Management` returns the output which are not Management"""
-        command = 'sat status --filter Role!=Management'
+        command = f'{self.sat_base_command} status --filter Role!=Management'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -343,7 +341,7 @@ class TestStatus(SATTestCase):
 
     def test_status_boolean_filter_command(self) -> None:
         """Test that `sat status --filter "xname = x* and Aliases = nid??????"` returns proper header after filtering"""
-        command = 'sat status --filter "xname = x* and Aliases = nid??????"'
+        command = f'{self.sat_base_command} status --filter "xname = x* and Aliases = nid??????"'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
@@ -356,7 +354,7 @@ class TestStatus(SATTestCase):
 
     def test_status_multiple_filter_command(self) -> None:
         """Test that `sat status --hsm-fields --filter Role=Management --filter SubRole=Master` returns proper header after multiple filtering"""
-        command = 'sat status --hsm-fields --filter Role=Management --filter SubRole=Master'
+        command = f'{self.sat_base_command} status --hsm-fields --filter Role=Management --filter SubRole=Master'
 
         status_output, status_err, status_output_header_str = get_header(command, 3)
         status_output_header = get_column_names_list(status_output_header_str)
