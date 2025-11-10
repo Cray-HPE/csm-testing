@@ -26,30 +26,27 @@
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 
 command:
-  {{ $testlabel := "rack_resiliency_enablement_check" }}
+  {{ $testlabel := "rrs_ceph_zones_check" }}
   {{$testlabel}}:
-    title: Rack Resiliency Enablement Check
+    title: Ceph Zones Check
     meta:
-      desc: Verifies that Rack Resiliency is enabled in the system by checking the customizations.yaml configuration.
+      desc: Verifies that Ceph zones are configured by checking the Ceph OSD tree for rack entries.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
-        # Get customizations.yaml from the site-init secret
-        echo "Retrieving customizations.yaml from site-init secret..." && \
-        CUSTOMIZATIONS=$(kubectl get secrets -n loftsman site-init -o jsonpath="{.data.customizations\.yaml}" | base64 -d) && \
+        # Check Ceph zones using ceph osd tree
+        echo "Checking Ceph zones (racks)..." && \
+        ceph osd tree | grep rack && \
         
-        # Check if rack-resiliency is enabled
-        echo "Checking if Rack Resiliency is enabled..." && \
-        RR_ENABLED=$(echo "$CUSTOMIZATIONS" | yq r - "spec.kubernetes.services.rack-resiliency.enabled") && \
+        # Count the number of racks
+        RACK_COUNT=$(ceph osd tree | grep rack | wc -l) && \
+        echo "Number of Ceph racks found: $RACK_COUNT" && \
         
-        echo "Rack Resiliency enabled status: $RR_ENABLED" && \
-        
-        # Verify it is set to true
-        if [ "$RR_ENABLED" = "true" ]; then
-          echo "SUCCESS: Rack Resiliency is enabled"
+        if [ "$RACK_COUNT" -gt 0 ]; then
+          echo "SUCCESS: Ceph zones are configured"
           exit 0
         else
-          echo "FAILURE: Rack Resiliency is not enabled (value: $RR_ENABLED)"
+          echo "FAILURE: No Ceph racks/zones found"
           exit 1
         fi
       '

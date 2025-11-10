@@ -26,30 +26,33 @@
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 
 command:
-  {{ $testlabel := "rack_resiliency_enablement_check" }}
+  {{ $testlabel := "rrs_helm_chart_check" }}
   {{$testlabel}}:
-    title: Rack Resiliency Enablement Check
+    title: RRS Helm chart deployment check
     meta:
-      desc: Verifies that Rack Resiliency is enabled in the system by checking the customizations.yaml configuration.
+      desc: Verifies that the cray-rrs Helm chart is deployed in the rack-resiliency namespace.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
-        # Get customizations.yaml from the site-init secret
-        echo "Retrieving customizations.yaml from site-init secret..." && \
-        CUSTOMIZATIONS=$(kubectl get secrets -n loftsman site-init -o jsonpath="{.data.customizations\.yaml}" | base64 -d) && \
+        # Check if cray-rrs Helm chart is deployed
+        echo "Checking for cray-rrs Helm chart in rack-resiliency namespace..." && \
+        helm ls -n rack-resiliency && \
         
-        # Check if rack-resiliency is enabled
-        echo "Checking if Rack Resiliency is enabled..." && \
-        RR_ENABLED=$(echo "$CUSTOMIZATIONS" | yq r - "spec.kubernetes.services.rack-resiliency.enabled") && \
+        # Verify cray-rrs chart is present
+        CHART_STATUS=$(helm ls -n rack-resiliency -o json | jq -r ".[] | select(.name==\"cray-rrs\") | .status") && \
         
-        echo "Rack Resiliency enabled status: $RR_ENABLED" && \
+        if [ -z "$CHART_STATUS" ]; then
+          echo "FAILURE: cray-rrs Helm chart not found in rack-resiliency namespace"
+          exit 1
+        fi
         
-        # Verify it is set to true
-        if [ "$RR_ENABLED" = "true" ]; then
-          echo "SUCCESS: Rack Resiliency is enabled"
+        echo "cray-rrs chart status: $CHART_STATUS" && \
+        
+        if [ "$CHART_STATUS" = "deployed" ]; then
+          echo "SUCCESS: cray-rrs Helm chart is deployed"
           exit 0
         else
-          echo "FAILURE: Rack Resiliency is not enabled (value: $RR_ENABLED)"
+          echo "FAILURE: cray-rrs chart status is $CHART_STATUS (expected: deployed)"
           exit 1
         fi
       '

@@ -28,7 +28,7 @@
 command:
   {{ $testlabel := "rrs_configmap_check" }}
   {{$testlabel}}:
-    title: RRS ConfigMap validation
+    title: ConfigMap validation
     meta:
       desc: Verifies that the required RRS ConfigMaps (rrs-mon-static and rrs-mon-dynamic) exist in the rack-resiliency namespace.
       sev: 0

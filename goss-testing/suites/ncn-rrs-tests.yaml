@@ -23,6 +23,9 @@
 #
 gossfile:
   ../tests/goss-rrs-enablement-check.yaml: {}
+  ../tests/goss-rrs-k8s-zones-check.yaml: {}
+  ../tests/goss-rrs-ceph-zones-check.yaml: {}
+  ../tests/goss-rrs-helm-chart-check.yaml: {}
   ../tests/goss-rrs-deployment-check.yaml: {}
   ../tests/goss-rrs-configmap-check.yaml: {}
   ../tests/goss-rrs-zones-list.yaml: {}
