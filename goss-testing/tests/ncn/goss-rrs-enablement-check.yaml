@@ -1,0 +1,58 @@
+#
+# MIT License
+#
+# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+
+command:
+  {{ $testlabel := "rrs_enablement_check" }}
+  {{$testlabel}}:
+    title: RRS enablement check
+    meta:
+      desc: Verifies that Rack Resiliency is enabled in the system by checking the customizations.yaml configuration.
+      sev: 0
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Get customizations.yaml from the site-init secret
+        echo "Retrieving customizations.yaml from site-init secret..." && \
+        CUSTOMIZATIONS=$(kubectl get secrets -n loftsman site-init -o jsonpath="{.data.customizations\.yaml}" | base64 -d) && \
+        
+        # Check if rack-resiliency is enabled
+        echo "Checking if Rack Resiliency is enabled..." && \
+        RR_ENABLED=$(echo "$CUSTOMIZATIONS" | yq r - "spec.kubernetes.services.rack-resiliency.enabled") && \
+        
+        echo "Rack Resiliency enabled status: $RR_ENABLED" && \
+        
+        # Verify it is set to true
+        if [ "$RR_ENABLED" = "true" ]; then
+          echo "SUCCESS: Rack Resiliency is enabled"
+          exit 0
+        else
+          echo "FAILURE: Rack Resiliency is not enabled (value: $RR_ENABLED)"
+          exit 1
+        fi
+      '
+    exit-status: 0
+    timeout: 60000
+    skip: false

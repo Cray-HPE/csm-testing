@@ -1,0 +1,53 @@
+#
+# MIT License
+#
+# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+
+command:
+  {{ $testlabel := "rrs_configmap_check" }}
+  {{$testlabel}}:
+    title: RRS ConfigMap validation
+    meta:
+      desc: Verifies that the required RRS ConfigMaps (rrs-mon-static and rrs-mon-dynamic) exist in the rack-resiliency namespace.
+      sev: 0
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Check if rrs-mon-static ConfigMap exists
+        echo "Checking rrs-mon-static ConfigMap..." && \
+        kubectl get configmap rrs-mon-static -n rack-resiliency -o jsonpath="{.metadata.name}" && \
+        echo "" && \
+        
+        # Check if rrs-mon-dynamic ConfigMap exists
+        echo "Checking rrs-mon-dynamic ConfigMap..." && \
+        kubectl get configmap rrs-mon-dynamic -n rack-resiliency -o jsonpath="{.metadata.name}" && \
+        echo "" && \
+        
+        # Validate rrs-mon-static contains critical services configuration
+        echo "Validating critical services configuration in rrs-mon-static..." && \
+        kubectl get configmap rrs-mon-static -n rack-resiliency -o jsonpath="{.data.critical-service-config\.json}" | jq -e ".critical_services" > /dev/null
+      '
+    exit-status: 0
+    timeout: 60000
+    skip: false
