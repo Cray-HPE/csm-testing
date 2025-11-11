@@ -22,34 +22,28 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
-
 command:
-  {{ $testlabel := "rrs_ceph_zones_check" }}
-  {{$testlabel}}:
+  rrs_ceph_zones_check:
     title: Ceph Zones Check
     meta:
       desc: Verifies that Ceph zones are configured by checking the Ceph OSD tree for rack entries.
       sev: 0
     exec: |-
-      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
-        # Check Ceph zones using ceph osd tree
-        echo "Checking Ceph zones (racks)..." && \
-        ceph osd tree | grep rack && \
-        
-        # Count the number of racks
-        RACK_COUNT=$(ceph osd tree | grep rack | wc -l) && \
-        echo "Number of Ceph racks found: $RACK_COUNT" && \
-        
-        if [ "$RACK_COUNT" -gt 0 ]; then
-          echo "SUCCESS: Ceph zones are configured"
-          exit 0
-        else
-          echo "FAILURE: No Ceph racks/zones found"
-          exit 1
-        fi
-      '
+      # Check Ceph zones using ceph osd tree
+      echo "Checking Ceph zones (racks)..." && \
+      ceph osd tree | grep rack && \
+      
+      # Count the number of racks
+      RACK_COUNT=$(ceph osd tree | grep rack | wc -l) && \
+      echo "Number of Ceph racks found: $RACK_COUNT" && \
+      
+      if [ "$RACK_COUNT" -gt 0 ]; then
+        echo "SUCCESS: Ceph zones are configured"
+        exit 0
+      else
+        echo "FAILURE: No Ceph racks/zones found"
+        exit 1
+      fi
     exit-status: 0
     timeout: 60000
     skip: false

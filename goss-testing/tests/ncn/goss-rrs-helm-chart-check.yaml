@@ -22,40 +22,34 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
-{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
-
 command:
-  {{ $testlabel := "rrs_helm_chart_check" }}
-  {{$testlabel}}:
+  rrs_helm_chart_check:
     title: RRS Helm chart deployment check
     meta:
       desc: Verifies that the cray-rrs Helm chart is deployed in the rack-resiliency namespace.
       sev: 0
     exec: |-
-      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
-        # Check if cray-rrs Helm chart is deployed
-        echo "Checking for cray-rrs Helm chart in rack-resiliency namespace..." && \
-        helm ls -n rack-resiliency && \
-        
-        # Verify cray-rrs chart is present
-        CHART_STATUS=$(helm ls -n rack-resiliency -o json | jq -r ".[] | select(.name==\"cray-rrs\") | .status") && \
-        
-        if [ -z "$CHART_STATUS" ]; then
-          echo "FAILURE: cray-rrs Helm chart not found in rack-resiliency namespace"
-          exit 1
-        fi
-        
-        echo "cray-rrs chart status: $CHART_STATUS" && \
-        
-        if [ "$CHART_STATUS" = "deployed" ]; then
-          echo "SUCCESS: cray-rrs Helm chart is deployed"
-          exit 0
-        else
-          echo "FAILURE: cray-rrs chart status is $CHART_STATUS (expected: deployed)"
-          exit 1
-        fi
-      '
+      # Check if cray-rrs Helm chart is deployed
+      echo "Checking for cray-rrs Helm chart in rack-resiliency namespace..." && \
+      helm ls -n rack-resiliency && \
+      
+      # Verify cray-rrs chart is present
+      CHART_STATUS=$(helm ls -n rack-resiliency -o json | jq -r ".[] | select(.name==\"cray-rrs\") | .status") && \
+      
+      if [ -z "$CHART_STATUS" ]; then
+        echo "FAILURE: cray-rrs Helm chart not found in rack-resiliency namespace"
+        exit 1
+      fi
+      
+      echo "cray-rrs chart status: $CHART_STATUS" && \
+      
+      if [ "$CHART_STATUS" = "deployed" ]; then
+        echo "SUCCESS: cray-rrs Helm chart is deployed"
+        exit 0
+      else
+        echo "FAILURE: cray-rrs chart status is $CHART_STATUS (expected: deployed)"
+        exit 1
+      fi
     exit-status: 0
     timeout: 60000
     skip: false
