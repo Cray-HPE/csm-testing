@@ -22,15 +22,15 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 gossfile:
-  ../tests/goss-rrs-enablement-check.yaml: {}
-  ../tests/goss-rrs-k8s-zones-check.yaml: {}
-  ../tests/goss-rrs-ceph-zones-check.yaml: {}
-  ../tests/goss-rrs-helm-chart-check.yaml: {}
-  ../tests/goss-rrs-deployment-check.yaml: {}
-  ../tests/goss-rrs-configmap-check.yaml: {}
-  ../tests/goss-rrs-zones-list.yaml: {}
-  ../tests/goss-rrs-zones-describe.yaml: {}
-  ../tests/goss-rrs-criticalservices-list.yaml: {}
-  ../tests/goss-rrs-criticalservices-describe.yaml: {}
-  ../tests/goss-rrs-criticalservices-status-list.yaml: {}
-  ../tests/goss-rrs-criticalservices-status-describe.yaml: {}
+  ../tests/ncn/goss-rrs-enablement-check.yaml: {}
+  ../tests/ncn/goss-rrs-k8s-zones-check.yaml: {}
+  ../tests/ncn/goss-rrs-ceph-zones-check.yaml: {}
+  ../tests/ncn/goss-rrs-helm-chart-check.yaml: {}
+  ../tests/ncn/goss-rrs-deployment-check.yaml: {}
+  ../tests/ncn/goss-rrs-configmap-check.yaml: {}
+  ../tests/ncn/goss-rrs-zones-list.yaml: {}
+  ../tests/ncn/goss-rrs-zones-describe.yaml: {}
+  ../tests/ncn/goss-rrs-criticalservices-list.yaml: {}
+  ../tests/ncn/goss-rrs-criticalservices-describe.yaml: {}
+  ../tests/ncn/goss-rrs-criticalservices-status-list.yaml: {}
+  ../tests/ncn/goss-rrs-criticalservices-status-describe.yaml: {}
