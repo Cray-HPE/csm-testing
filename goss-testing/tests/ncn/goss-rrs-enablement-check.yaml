@@ -22,31 +22,37 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+
 command:
-  rack_resiliency_enablement_check:
+  {{ $testlabel := "rack_resiliency_enablement_check" }}
+  {{$testlabel}}:
     title: Rack Resiliency Enablement Check
     meta:
       desc: Verifies that Rack Resiliency is enabled in the system by checking the customizations.yaml configuration.
       sev: 0
     exec: |-
-      # Get customizations.yaml from the site-init secret
-      echo "Retrieving customizations.yaml from site-init secret..." && \
-      CUSTOMIZATIONS=$(kubectl get secrets -n loftsman site-init -o jsonpath="{.data.customizations\.yaml}" | base64 -d) && \
-      
-      # Check if rack-resiliency is enabled
-      echo "Checking if Rack Resiliency is enabled..." && \
-      RR_ENABLED=$(echo "$CUSTOMIZATIONS" | yq r - "spec.kubernetes.services.rack-resiliency.enabled") && \
-      
-      echo "Rack Resiliency enabled status: $RR_ENABLED" && \
-      
-      # Verify it is set to true
-      if [ "$RR_ENABLED" = "true" ]; then
-        echo "SUCCESS: Rack Resiliency is enabled"
-        exit 0
-      else
-        echo "FAILURE: Rack Resiliency is not enabled (value: $RR_ENABLED)"
-        exit 1
-      fi
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Get customizations.yaml from the site-init secret
+        echo "Retrieving customizations.yaml from site-init secret..." && \
+        CUSTOMIZATIONS=$(kubectl get secrets -n loftsman site-init -o jsonpath="{.data.customizations\.yaml}" | base64 -d) && \
+        
+        # Check if rack-resiliency is enabled
+        echo "Checking if Rack Resiliency is enabled..." && \
+        RR_ENABLED=$(echo "$CUSTOMIZATIONS" | yq r - "spec.kubernetes.services.rack-resiliency.enabled") && \
+        
+        echo "Rack Resiliency enabled status: $RR_ENABLED" && \
+        
+        # Verify it is set to true
+        if [ "$RR_ENABLED" = "true" ]; then
+          echo "SUCCESS: Rack Resiliency is enabled"
+          exit 0
+        else
+          echo "FAILURE: Rack Resiliency is not enabled (value: $RR_ENABLED)"
+          exit 1
+        fi
+      '
     exit-status: 0
     timeout: 60000
     skip: false

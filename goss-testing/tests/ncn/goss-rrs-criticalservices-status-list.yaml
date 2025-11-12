@@ -22,16 +22,22 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+
 command:
-  rrs_criticalservices_status_list:
+  {{ $testlabel := "rrs_criticalservices_status_list" }}
+  {{$testlabel}}:
     title: RRS critical services status list
     meta:
       desc: Lists the status of all critical services including their running status and balance distribution across zones.
       sev: 0
     exec: |-
-      # Run RRS critical services status list command
-      echo "Running cray rrs criticalservices status list test case" && \
-      cray rrs criticalservices status list --format toml
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Run RRS critical services status list command
+        echo "Running cray rrs criticalservices status list test case" && \
+        cray rrs criticalservices status list --format toml
+      '
     exit-status: 0
     timeout: 60000
     skip: false

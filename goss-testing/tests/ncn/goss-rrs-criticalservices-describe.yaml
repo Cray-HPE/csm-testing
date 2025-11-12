@@ -22,23 +22,29 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+
 command:
-  rrs_criticalservices_describe:
+  {{ $testlabel := "rrs_criticalservices_describe" }}
+  {{$testlabel}}:
     title: RRS critical services describe
     meta:
       desc: Describes detailed information about a specific critical service including configured instances, namespace, and type.
       sev: 0
     exec: |-
-      # Get the first critical service name dynamically
-      SERVICE_NAME=$(cray rrs criticalservices list --format json | jq -r ".critical_services.namespace | to_entries[0].value[0].name // empty")
-      if [ -z "$SERVICE_NAME" ]; then
-        echo "No critical services found in the system"
-        exit 1
-      fi
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Get the first critical service name dynamically
+        SERVICE_NAME=$(cray rrs criticalservices list --format json | jq -r ".critical_services.namespace | to_entries[0].value[0].name // empty")
+        if [ -z "$SERVICE_NAME" ]; then
+          echo "No critical services found in the system"
+          exit 1
+        fi
 
-      # Run RRS critical services describe command
-      echo "Running cray rrs criticalservices describe test case for service: $SERVICE_NAME" && \
-      cray rrs criticalservices describe "$SERVICE_NAME" --format toml
+        # Run RRS critical services describe command
+        echo "Running cray rrs criticalservices describe test case for service: $SERVICE_NAME" && \
+        cray rrs criticalservices describe "$SERVICE_NAME" --format toml
+      '
     exit-status: 0
     timeout: 60000
     skip: false

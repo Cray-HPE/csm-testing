@@ -22,22 +22,28 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+
 command:
-  rrs_deployment_check:
+  {{ $testlabel := "rrs_deployment_check" }}
+  {{$testlabel}}:
     title: RRS deployment and pod health check
     meta:
       desc: Verifies that the cray-rrs deployment exists and is running properly in the rack-resiliency namespace.
       sev: 0
     exec: |-
-      # Check if cray-rrs deployment exists
-      echo "Checking cray-rrs deployment status..." && \
-      kubectl get deployment cray-rrs -n rack-resiliency -o jsonpath="{.metadata.name}" && \
-      
-      # Check if cray-rrs pod is running
-      echo "Checking cray-rrs pod status..." && \
-      POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}") && \
-      echo "Pod status: $POD_STATUS" && \
-      [ "$POD_STATUS" = "Running" ]
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Check if cray-rrs deployment exists
+        echo "Checking cray-rrs deployment status..." && \
+        kubectl get deployment cray-rrs -n rack-resiliency -o jsonpath="{.metadata.name}" && \
+        
+        # Check if cray-rrs pod is running
+        echo "Checking cray-rrs pod status..." && \
+        POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}") && \
+        echo "Pod status: $POD_STATUS" && \
+        [ "$POD_STATUS" = "Running" ]
+      '
     exit-status: 0
     timeout: 60000
     skip: false

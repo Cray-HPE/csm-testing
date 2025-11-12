@@ -22,28 +22,34 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+
 command:
-  rrs_k8s_zones_check:
+  {{ $testlabel := "rrs_k8s_zones_check" }}
+  {{$testlabel}}:
     title: RRS Kubernetes zones check
     meta:
       desc: Verifies that Kubernetes topology zones are configured by checking node labels for topology.kubernetes.io/zone.
       sev: 0
     exec: |-
-      # Check Kubernetes topology zones using node labels
-      echo "Checking Kubernetes topology zones..." && \
-      kubectl get nodes -L topology.kubernetes.io/zone && \
-      
-      # Verify that at least one node has a zone label
-      ZONE_COUNT=$(kubectl get nodes -L topology.kubernetes.io/zone --no-headers | awk "{print \$6}" | grep -v "^$" | wc -l) && \
-      echo "Number of nodes with zone labels: $ZONE_COUNT" && \
-      
-      if [ "$ZONE_COUNT" -gt 0 ]; then
-        echo "SUCCESS: Kubernetes zones are configured"
-        exit 0
-      else
-        echo "FAILURE: No Kubernetes zones found"
-        exit 1
-      fi
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Check Kubernetes topology zones using node labels
+        echo "Checking Kubernetes topology zones..." && \
+        kubectl get nodes -L topology.kubernetes.io/zone && \
+        
+        # Verify that at least one node has a zone label
+        ZONE_COUNT=$(kubectl get nodes -L topology.kubernetes.io/zone --no-headers | awk "{print \$6}" | grep -v "^$" | wc -l) && \
+        echo "Number of nodes with zone labels: $ZONE_COUNT" && \
+        
+        if [ "$ZONE_COUNT" -gt 0 ]; then
+          echo "SUCCESS: Kubernetes zones are configured"
+          exit 0
+        else
+          echo "FAILURE: No Kubernetes zones found"
+          exit 1
+        fi
+      '
     exit-status: 0
     timeout: 60000
     skip: false

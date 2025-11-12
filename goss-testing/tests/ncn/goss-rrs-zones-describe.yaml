@@ -22,23 +22,29 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+
 command:
-  rrs_zones_describe:
+  {{ $testlabel := "rrs_zones_describe" }}
+  {{$testlabel}}:
     title: RRS zones describe
     meta:
       desc: Describes detailed information for a specific zone including node details and OSD information.
       sev: 0
     exec: |-
-      # Get the first zone name dynamically
-      ZONE_NAME=$(cray rrs zones list --format json | jq -r ".Zones[0].Zone_Name // empty")
-      if [ -z "$ZONE_NAME" ]; then
-        echo "No zones found in the system"
-        exit 1
-      fi
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Get the first zone name dynamically
+        ZONE_NAME=$(cray rrs zones list --format json | jq -r ".Zones[0].Zone_Name // empty")
+        if [ -z "$ZONE_NAME" ]; then
+          echo "No zones found in the system"
+          exit 1
+        fi
 
-      # Run RRS zones describe command
-      echo "Running cray rrs zones describe test case for zone: $ZONE_NAME" && \
-      cray rrs zones describe "$ZONE_NAME" --format toml
+        # Run RRS zones describe command
+        echo "Running cray rrs zones describe test case for zone: $ZONE_NAME" && \
+        cray rrs zones describe "$ZONE_NAME" --format toml
+      '
     exit-status: 0
     timeout: 60000
     skip: false
