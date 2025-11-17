@@ -67,6 +67,7 @@ def run_command(command):
 def check_rrs_enabled():
     """
     Check if Rack Resiliency is enabled in customizations.yaml.
+    This is the gate test - if RR is not enabled, subsequent tests will be skipped.
     Returns:
         bool: True if enabled, False otherwise
     """
@@ -87,7 +88,8 @@ def check_rrs_enabled():
             logger.info("SUCCESS: Rack Resiliency is enabled")
             return True
 
-        logger.error("FAILURE: Rack Resiliency is not enabled")
+        logger.info("INFO: Rack Resiliency is not enabled on this system")
+        logger.info("NEGATIVE TEST PASS: Subsequent tests will be skipped")
         return False
     except Exception as exc:  # pylint: disable=broad-except
         logger.error("Failed to parse customizations.yaml: %s", exc)
@@ -119,7 +121,7 @@ def check_k8s_zones():
         logger.info("SUCCESS: Found %d nodes with zone labels", zone_count)
         return True
 
-    logger.error("FAILURE: No Kubernetes zones found")
+    logger.warning("WARNING: No Kubernetes zones found")
     return False
 
 
@@ -133,13 +135,13 @@ def check_ceph_zones():
     cmd = 'ceph osd tree | grep rack'
     output, returncode = run_command(cmd)
 
-    if returncode != 0 or not output:
-        logger.error("FAILURE: No Ceph racks/zones found")
-        return False
+    if returncode == 0 and output:
+        rack_count = len(output.split('\n'))
+        logger.info("SUCCESS: Found %d Ceph racks/zones", rack_count)
+        return True
 
-    rack_count = len(output.split('\n'))
-    logger.info("SUCCESS: Found %d Ceph racks/zones", rack_count)
-    return True
+    logger.warning("WARNING: No Ceph racks/zones found")
+    return False
 
 
 def check_helm_chart():
@@ -186,13 +188,15 @@ def check_helm_chart():
 def check_deployment():
     """
     Check if cray-rrs deployment and pod are running.
+    Validates that pod state matches prerequisites (zones and configmaps).
+    This function consolidates all negative testing for missing prerequisites.
     Returns:
-        bool: True if deployment is healthy, False otherwise
+        bool: True if deployment state is correct based on prerequisites
     """
     logger.info("\n=== Checking RRS Deployment ===")
 
     # Check deployment exists
-    cmd = 'kubectl get deployment cray-rrs -n rack-resiliency -o jsonpath="{.metadata.name}"'
+    cmd = 'kubectl get deployment cray-rrs -n rack-resiliency -o jsonpath="{.metadata.name}" 2>/dev/null'
     output, returncode = run_command(cmd)
 
     if returncode != 0 or output != "cray-rrs":
@@ -201,23 +205,100 @@ def check_deployment():
 
     logger.info("INFO: cray-rrs deployment exists")
 
-    # Check pod status
-    cmd = ('kubectl get pods -n rack-resiliency '
-           '-l app.kubernetes.io/instance=cray-rrs '
-           '-o jsonpath="{.items[0].status.phase}"')
-    output, returncode = run_command(cmd)
+    # Check prerequisites: K8s zones, Ceph zones, and ConfigMaps
+    logger.info("Checking prerequisites (K8s zones, Ceph zones, and ConfigMaps)...")
 
-    if returncode != 0:
-        logger.error("Failed to get pod status")
+    # Check K8s zones
+    k8s_cmd = 'kubectl get nodes -L topology.kubernetes.io/zone --no-headers 2>/dev/null'
+    k8s_output, _ = run_command(k8s_cmd)
+    k8s_zone_count = 0
+    for line in k8s_output.split('\n'):
+        if line.strip():
+            parts = line.split()
+            if len(parts) >= 6 and parts[5]:
+                k8s_zone_count += 1
+
+    # Check Ceph racks
+    ceph_cmd = 'ceph osd tree 2>/dev/null | grep rack'
+    ceph_output, ceph_returncode = run_command(ceph_cmd)
+    ceph_rack_count = len(ceph_output.split('\n')) if ceph_returncode == 0 and ceph_output else 0
+
+    # Check ConfigMaps
+    static_cmd = ('kubectl get configmap rrs-mon-static -n rack-resiliency '
+                  '-o jsonpath="{.metadata.name}" 2>/dev/null')
+    static_cm, static_returncode = run_command(static_cmd)
+    static_exists = (static_returncode == 0 and static_cm == "rrs-mon-static")
+
+    dynamic_cmd = ('kubectl get configmap rrs-mon-dynamic -n rack-resiliency '
+                   '-o jsonpath="{.metadata.name}" 2>/dev/null')
+    dynamic_cm, dynamic_returncode = run_command(dynamic_cmd)
+    dynamic_exists = (dynamic_returncode == 0 and dynamic_cm == "rrs-mon-dynamic")
+
+    logger.info("K8s zones: %d", k8s_zone_count)
+    logger.info("Ceph racks: %d", ceph_rack_count)
+    logger.info("rrs-mon-static ConfigMap: %s", "Found" if static_exists else "NotFound")
+    logger.info("rrs-mon-dynamic ConfigMap: %s", "Found" if dynamic_exists else "NotFound")
+
+    # Check pod status
+    pod_cmd = ('kubectl get pods -n rack-resiliency '
+               '-l app.kubernetes.io/instance=cray-rrs '
+               '-o jsonpath="{.items[0].status.phase}" 2>/dev/null')
+    pod_status, pod_returncode = run_command(pod_cmd)
+
+    if pod_returncode != 0 or not pod_status:
+        pod_status = "NotFound"
+
+    logger.info("Current pod status: %s", pod_status)
+
+    # Determine expected state based on prerequisites
+    prerequisites_met = (
+        k8s_zone_count > 0 and
+        ceph_rack_count > 0 and
+        static_exists and
+        dynamic_exists
+    )
+
+    if not prerequisites_met:
+        # Prerequisites NOT met - deployment should be in Init state
+        logger.info("Prerequisites NOT met - expecting Init state")
+        
+        # List which prerequisites are missing
+        missing = []
+        if k8s_zone_count == 0:
+            missing.append("K8s zones")
+        if ceph_rack_count == 0:
+            missing.append("Ceph zones")
+        if not static_exists:
+            missing.append("rrs-mon-static ConfigMap")
+        if not dynamic_exists:
+            missing.append("rrs-mon-dynamic ConfigMap")
+        logger.info("Missing prerequisites: %s", ", ".join(missing))
+        
+        # Should be in Init state (Pending or NotFound)
+        if pod_status in ["Pending", "NotFound"]:
+            logger.info(
+                "NEGATIVE TEST PASS: Deployment is in Init state as expected "
+                "(prerequisites not met)"
+            )
+            return True
+
+        logger.error(
+            "NEGATIVE TEST FAIL: Deployment should be in Init state when prerequisites "
+            "are not met, but found: %s",
+            pod_status
+        )
         return False
 
-    if output == "Running":
-        logger.info("SUCCESS: cray-rrs pod is Running")
+    # Prerequisites met - deployment should be Running
+    logger.info("Prerequisites met - expecting Running state")
+    if pod_status == "Running":
+        logger.info("SUCCESS: Deployment is Running as expected (all prerequisites met)")
         return True
 
     logger.error(
-        "FAILURE: cray-rrs pod status is %s (expected: Running)",
-        output
+        "FAILURE: Deployment should be Running when prerequisites are met, "
+        "but found: %s",
+        pod_status
     )
     return False
 
@@ -232,24 +313,24 @@ def check_configmaps():
 
     # Check rrs-mon-static
     cmd = ('kubectl get configmap rrs-mon-static -n rack-resiliency '
-           '-o jsonpath="{.metadata.name}"')
-    output, returncode = run_command(cmd)
-
-    if returncode != 0 or output != "rrs-mon-static":
-        logger.error("FAILURE: rrs-mon-static ConfigMap not found")
-        return False
-
-    logger.info("INFO: rrs-mon-static ConfigMap exists")
+           '-o jsonpath="{.metadata.name}" 2>/dev/null')
+    static_cm, static_returncode = run_command(cmd)
 
     # Check rrs-mon-dynamic
     cmd = ('kubectl get configmap rrs-mon-dynamic -n rack-resiliency '
-           '-o jsonpath="{.metadata.name}"')
-    output, returncode = run_command(cmd)
+           '-o jsonpath="{.metadata.name}" 2>/dev/null')
+    dynamic_cm, dynamic_returncode = run_command(cmd)
 
-    if returncode != 0 or output != "rrs-mon-dynamic":
-        logger.error("FAILURE: rrs-mon-dynamic ConfigMap not found")
+    static_exists = (static_returncode == 0 and static_cm == "rrs-mon-static")
+    dynamic_exists = (dynamic_returncode == 0 and dynamic_cm == "rrs-mon-dynamic")
+
+    if not static_exists or not dynamic_exists:
+        logger.warning("WARNING: Required ConfigMaps not found")
+        logger.info("rrs-mon-static: %s", "Found" if static_exists else "NotFound")
+        logger.info("rrs-mon-dynamic: %s", "Found" if dynamic_exists else "NotFound")
         return False
 
+    logger.info("INFO: rrs-mon-static ConfigMap exists")
     logger.info("INFO: rrs-mon-dynamic ConfigMap exists")
 
     # Validate rrs-mon-static contains critical services configuration
@@ -368,13 +449,31 @@ def check_critical_services_status():
 def main():
     """
     Main function to run all RRS checks.
+    Implements skip logic when RR is not enabled.
     """
     logger.info("=" * 60)
     logger.info("Running Rack Resiliency Service (RRS) Checks")
     logger.info("=" * 60)
 
+    # First check if RR is enabled - this is the gate check
+    logger.info("\nRunning gate check...")
+    rr_enabled = check_rrs_enabled()
+
+    if not rr_enabled:
+        logger.info("\n" + "=" * 60)
+        logger.info("SUMMARY")
+        logger.info("=" * 60)
+        logger.info("RRS Enablement Check: SKIPPED (RR not enabled)")
+        logger.info("All subsequent checks: SKIPPED (RR not enabled)")
+        logger.info("\n" + "-" * 60)
+        logger.info("Rack Resiliency is not enabled on this system")
+        logger.info("This is expected behavior for systems without RR configured")
+        logger.info("-" * 60)
+        logger.info("\nTests completed (RR not enabled - no failures)")
+        sys.exit(0)
+
+    # RR is enabled - run all checks
     checks = [
-        ("RRS Enablement Check", check_rrs_enabled),
         ("Kubernetes Zones Check", check_k8s_zones),
         ("Ceph Zones Check", check_ceph_zones),
         ("Helm Chart Check", check_helm_chart),
@@ -385,7 +484,7 @@ def main():
         ("Critical Services Status Check", check_critical_services_status),
     ]
 
-    results = []
+    results = [("RRS Enablement Check", True)]  # Already passed
     for check_name, check_func in checks:
         try:
             result = check_func()
