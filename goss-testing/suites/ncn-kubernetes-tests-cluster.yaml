@@ -41,3 +41,4 @@ gossfile:
   ../tests/goss-k8s-nexus-keycloak-integration.yaml: {}
   # This suite is a superset of the following test suite:
   common-kubernetes-tests-cluster.yaml: {}
+  ncn-rrs-tests.yaml: {}
