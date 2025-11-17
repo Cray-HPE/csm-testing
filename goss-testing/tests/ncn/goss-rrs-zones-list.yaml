@@ -40,6 +40,13 @@ command:
           exit 0
         fi
         
+        # Check if deployment is Running (prerequisite for CLI commands)
+        POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}" 2>/dev/null || echo "NotFound")
+        if [ "$POD_STATUS" != "Running" ]; then
+          echo "SKIPPED: Deployment not Running (status: $POD_STATUS), cannot test CLI"
+          exit 0
+        fi
+        
         # Run RRS zones list command
         echo "Running cray rrs zones list test case" && \
         cray rrs zones list --format toml

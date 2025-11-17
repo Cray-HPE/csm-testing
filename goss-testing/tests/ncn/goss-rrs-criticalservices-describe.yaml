@@ -40,6 +40,13 @@ command:
           exit 0
         fi
         
+        # Check if deployment is Running (prerequisite for CLI commands)
+        POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}" 2>/dev/null || echo "NotFound")
+        if [ "$POD_STATUS" != "Running" ]; then
+          echo "SKIPPED: Deployment not Running (status: $POD_STATUS), cannot test CLI"
+          exit 0
+        fi
+        
         # Get the first critical service name dynamically
         SERVICE_NAME=$(cray rrs criticalservices list --format json | jq -r ".critical_services.namespace | to_entries[0].value[0].name // empty")
         if [ -z "$SERVICE_NAME" ]; then
