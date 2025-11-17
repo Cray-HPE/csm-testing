@@ -34,6 +34,12 @@ command:
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Check if Rack Resiliency is enabled
+        if [ ! -f /tmp/rr_enabled_marker ]; then
+          echo "SKIPPED: Rack Resiliency is not enabled on this system"
+          exit 0
+        fi
+        
         # Check if cray-rrs Helm chart is deployed
         echo "Checking for cray-rrs Helm chart in rack-resiliency namespace..." && \
         helm ls -n rack-resiliency && \

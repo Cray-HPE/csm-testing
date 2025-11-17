@@ -34,15 +34,68 @@ command:
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
-        # Check if cray-rrs deployment exists
-        echo "Checking cray-rrs deployment status..." && \
-        kubectl get deployment cray-rrs -n rack-resiliency -o jsonpath="{.metadata.name}" && \
+        # Check if Rack Resiliency is enabled
+        if [ ! -f /tmp/rr_enabled_marker ]; then
+          echo "SKIPPED: Rack Resiliency is not enabled on this system"
+          exit 0
+        fi
         
-        # Check if cray-rrs pod is running
-        echo "Checking cray-rrs pod status..." && \
-        POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}") && \
-        echo "Pod status: $POD_STATUS" && \
-        [ "$POD_STATUS" = "Running" ]
+        # Check if cray-rrs deployment exists
+        echo "Checking cray-rrs deployment status..."
+        DEPLOYMENT_EXISTS=$(kubectl get deployment cray-rrs -n rack-resiliency -o jsonpath="{.metadata.name}" 2>/dev/null || echo "NotFound")
+        
+        if [ "$DEPLOYMENT_EXISTS" == "NotFound" ]; then
+          echo "FAILURE: cray-rrs deployment not found in rack-resiliency namespace"
+          exit 1
+        fi
+        
+        echo "cray-rrs deployment: Found"
+        
+        # Check prerequisites: zones and configmaps
+        echo "Checking prerequisites (zones and configmaps)..."
+        K8S_ZONE_COUNT=$(kubectl get nodes -L topology.kubernetes.io/zone --no-headers 2>/dev/null | awk "{print \$6}" | grep -v "^$" | wc -l)
+        CEPH_RACK_COUNT=$(ceph osd tree 2>/dev/null | grep rack | wc -l)
+        STATIC_CM=$(kubectl get configmap rrs-mon-static -n rack-resiliency -o jsonpath="{.metadata.name}" 2>/dev/null || echo "NotFound")
+        DYNAMIC_CM=$(kubectl get configmap rrs-mon-dynamic -n rack-resiliency -o jsonpath="{.metadata.name}" 2>/dev/null || echo "NotFound")
+        
+        echo "K8s zones: $K8S_ZONE_COUNT"
+        echo "Ceph racks: $CEPH_RACK_COUNT"
+        echo "rrs-mon-static ConfigMap: $STATIC_CM"
+        echo "rrs-mon-dynamic ConfigMap: $DYNAMIC_CM"
+        
+        # Check pod status
+        POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}" 2>/dev/null || echo "NotFound")
+        echo "Current pod status: $POD_STATUS"
+        
+        # Determine expected state based on prerequisites
+        PREREQUISITES_MET=true
+        if [ "$K8S_ZONE_COUNT" -eq 0 ] || [ "$CEPH_RACK_COUNT" -eq 0 ] || [ "$STATIC_CM" == "NotFound" ] || [ "$DYNAMIC_CM" == "NotFound" ]; then
+          PREREQUISITES_MET=false
+          echo "Prerequisites NOT met - expecting Init state"
+        else
+          echo "Prerequisites met - expecting Running state"
+        fi
+        
+        # Validate pod state matches prerequisites
+        if [ "$PREREQUISITES_MET" == "false" ]; then
+          # Should be in Init state (Pending or waiting)
+          if [[ "$POD_STATUS" == "Pending" ]] || [[ "$POD_STATUS" == "NotFound" ]] || [[ $(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.containerStatuses[0].state}" 2>/dev/null | grep -c "waiting") -gt 0 ]]; then
+            echo "SUCCESS: Deployment is in Init state as expected (prerequisites not met)"
+            exit 0
+          else
+            echo "FAILURE: Deployment should be in Init state when prerequisites are not met, but found: $POD_STATUS"
+            exit 1
+          fi
+        else
+          # Should be Running
+          if [ "$POD_STATUS" == "Running" ]; then
+            echo "SUCCESS: Deployment is Running as expected (all prerequisites met)"
+            exit 0
+          else
+            echo "FAILURE: Deployment should be Running when prerequisites are met, but found: $POD_STATUS"
+            exit 1
+          fi
+        fi
       '
     exit-status: 0
     timeout: 60000

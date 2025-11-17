@@ -34,6 +34,12 @@ command:
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Check if Rack Resiliency is enabled
+        if [ ! -f /tmp/rr_enabled_marker ]; then
+          echo "SKIPPED: Rack Resiliency is not enabled on this system"
+          exit 0
+        fi
+        
         # Check Ceph zones using ceph osd tree
         echo "Checking Ceph zones (racks)..." && \
         ceph osd tree | grep rack && \

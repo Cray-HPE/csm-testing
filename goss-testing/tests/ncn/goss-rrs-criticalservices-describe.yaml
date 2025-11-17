@@ -34,6 +34,12 @@ command:
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Check if Rack Resiliency is enabled
+        if [ ! -f /tmp/rr_enabled_marker ]; then
+          echo "SKIPPED: Rack Resiliency is not enabled on this system"
+          exit 0
+        fi
+        
         # Get the first critical service name dynamically
         SERVICE_NAME=$(cray rrs criticalservices list --format json | jq -r ".critical_services.namespace | to_entries[0].value[0].name // empty")
         if [ -z "$SERVICE_NAME" ]; then

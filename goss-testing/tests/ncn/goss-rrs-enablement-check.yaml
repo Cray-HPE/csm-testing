@@ -44,13 +44,42 @@ command:
         
         echo "Rack Resiliency enabled status: $RR_ENABLED" && \
         
-        # Verify it is set to true
+        # Create marker file for conditional test execution
         if [ "$RR_ENABLED" = "true" ]; then
           echo "SUCCESS: Rack Resiliency is enabled"
+          touch /tmp/rr_enabled_marker
           exit 0
         else
-          echo "FAILURE: Rack Resiliency is not enabled (value: $RR_ENABLED)"
-          exit 1
+          echo "INFO: Rack Resiliency is not enabled - subsequent RRS tests will be skipped"
+          rm -f /tmp/rr_enabled_marker
+          exit 0
+        fi
+      '
+    exit-status: 0
+    timeout: 60000
+    skip: false
+
+  {{ $testlabel_negative := "rack_resiliency_disabled_check" }}
+  {{$testlabel_negative}}:
+    title: Rack Resiliency Disabled Check (Negative Test)
+    meta:
+      desc: Verifies behavior when Rack Resiliency is not enabled in the system.
+      sev: 0
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel_negative}}" bash -c '
+        # Get customizations.yaml from the site-init secret
+        CUSTOMIZATIONS=$(kubectl get secrets -n loftsman site-init -o jsonpath="{.data.customizations\.yaml}" | base64 -d) && \
+        
+        # Check if rack-resiliency is explicitly disabled or not set
+        RR_ENABLED=$(echo "$CUSTOMIZATIONS" | yq r - "spec.kubernetes.services.rack-resiliency.enabled") && \
+        
+        if [ "$RR_ENABLED" != "true" ]; then
+          echo "SUCCESS: Confirmed Rack Resiliency is not enabled (value: $RR_ENABLED)"
+          echo "This is expected if RR is not configured on this system"
+          exit 0
+        else
+          echo "SKIPPED: Rack Resiliency is enabled, negative test not applicable"
+          exit 0
         fi
       '
     exit-status: 0

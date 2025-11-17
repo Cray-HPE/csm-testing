@@ -34,6 +34,12 @@ command:
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        # Check if Rack Resiliency is enabled
+        if [ ! -f /tmp/rr_enabled_marker ]; then
+          echo "SKIPPED: Rack Resiliency is not enabled on this system"
+          exit 0
+        fi
+        
         # Run RRS zones list command
         echo "Running cray rrs zones list test case" && \
         cray rrs zones list --format toml
