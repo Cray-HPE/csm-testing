@@ -50,7 +50,7 @@ command:
           touch /tmp/rr_enabled_marker
           exit 0
         else
-          echo "INFO: Rack Resiliency is not enabled - subsequent RRS tests will be skipped"
+          echo "INFO: Rack Resiliency is not enabled"
           rm -f /tmp/rr_enabled_marker
           exit 0
         fi
@@ -59,27 +59,40 @@ command:
     timeout: 60000
     skip: false
 
-  {{ $testlabel_negative := "rack_resiliency_disabled_check" }}
+  {{ $testlabel_negative := "rack_resiliency_disabled_deployment_check" }}
   {{$testlabel_negative}}:
-    title: Rack Resiliency Disabled Check (Negative Test)
+    title: Deployment State Check When RR Disabled (Negative Test)
     meta:
-      desc: Verifies behavior when Rack Resiliency is not enabled in the system.
+      desc: When RR is disabled, verifies that deployment is in Pending or NotFound state.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel_negative}}" bash -c '
-        # Get customizations.yaml from the site-init secret
-        CUSTOMIZATIONS=$(kubectl get secrets -n loftsman site-init -o jsonpath="{.data.customizations\.yaml}" | base64 -d) && \
+        # Check if RR is enabled via marker file
+        if [ -f /tmp/rr_enabled_marker ]; then
+          echo "SKIPPED: RR is enabled, negative test not applicable"
+          exit 0
+        fi
         
-        # Check if rack-resiliency is explicitly disabled or not set
-        RR_ENABLED=$(echo "$CUSTOMIZATIONS" | yq r - "spec.kubernetes.services.rack-resiliency.enabled") && \
+        echo "RR is disabled - checking deployment state..."
         
-        if [ "$RR_ENABLED" != "true" ]; then
-          echo "SUCCESS: Confirmed Rack Resiliency is not enabled (value: $RR_ENABLED)"
-          echo "This is expected if RR is not configured on this system"
+        # Check if deployment exists
+        DEPLOYMENT=$(kubectl get deployment cray-rrs -n rack-resiliency -o jsonpath="{.metadata.name}" 2>/dev/null || echo "NotFound")
+        
+        if [ "$DEPLOYMENT" = "NotFound" ]; then
+          echo "SUCCESS: Deployment not found (expected when RR disabled)"
+          exit 0
+        fi
+        
+        echo "Deployment exists, checking pod status..."
+        POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}" 2>/dev/null || echo "NotFound")
+        echo "Pod status: $POD_STATUS"
+        
+        if [ "$POD_STATUS" = "NotFound" ] || [ "$POD_STATUS" = "Pending" ]; then
+          echo "SUCCESS: Deployment is in expected state when RR disabled (status: $POD_STATUS)"
           exit 0
         else
-          echo "SKIPPED: Rack Resiliency is enabled, negative test not applicable"
-          exit 0
+          echo "FAILURE: When RR is disabled, deployment should be Pending or NotFound, but found: $POD_STATUS"
+          exit 1
         fi
       '
     exit-status: 0

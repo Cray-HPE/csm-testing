@@ -188,10 +188,8 @@ def check_helm_chart():
 def check_deployment():
     """
     Check if cray-rrs deployment and pod are running.
-    Validates that pod state matches prerequisites (zones and configmaps).
-    This function consolidates all negative testing for missing prerequisites.
     Returns:
-        bool: True if deployment state is correct based on prerequisites
+        bool: True if deployment is healthy, False otherwise
     """
     logger.info("\n=== Checking RRS Deployment ===")
 
@@ -205,40 +203,6 @@ def check_deployment():
 
     logger.info("INFO: cray-rrs deployment exists")
 
-    # Check prerequisites: K8s zones, Ceph zones, and ConfigMaps
-    logger.info("Checking prerequisites (K8s zones, Ceph zones, and ConfigMaps)...")
-
-    # Check K8s zones
-    k8s_cmd = 'kubectl get nodes -L topology.kubernetes.io/zone --no-headers 2>/dev/null'
-    k8s_output, _ = run_command(k8s_cmd)
-    k8s_zone_count = 0
-    for line in k8s_output.split('\n'):
-        if line.strip():
-            parts = line.split()
-            if len(parts) >= 6 and parts[5]:
-                k8s_zone_count += 1
-
-    # Check Ceph racks
-    ceph_cmd = 'ceph osd tree 2>/dev/null | grep rack'
-    ceph_output, ceph_returncode = run_command(ceph_cmd)
-    ceph_rack_count = len(ceph_output.split('\n')) if ceph_returncode == 0 and ceph_output else 0
-
-    # Check ConfigMaps
-    static_cmd = ('kubectl get configmap rrs-mon-static -n rack-resiliency '
-                  '-o jsonpath="{.metadata.name}" 2>/dev/null')
-    static_cm, static_returncode = run_command(static_cmd)
-    static_exists = (static_returncode == 0 and static_cm == "rrs-mon-static")
-
-    dynamic_cmd = ('kubectl get configmap rrs-mon-dynamic -n rack-resiliency '
-                   '-o jsonpath="{.metadata.name}" 2>/dev/null')
-    dynamic_cm, dynamic_returncode = run_command(dynamic_cmd)
-    dynamic_exists = (dynamic_returncode == 0 and dynamic_cm == "rrs-mon-dynamic")
-
-    logger.info("K8s zones: %d", k8s_zone_count)
-    logger.info("Ceph racks: %d", ceph_rack_count)
-    logger.info("rrs-mon-static ConfigMap: %s", "Found" if static_exists else "NotFound")
-    logger.info("rrs-mon-dynamic ConfigMap: %s", "Found" if dynamic_exists else "NotFound")
-
     # Check pod status
     pod_cmd = ('kubectl get pods -n rack-resiliency '
                '-l app.kubernetes.io/instance=cray-rrs '
@@ -246,58 +210,17 @@ def check_deployment():
     pod_status, pod_returncode = run_command(pod_cmd)
 
     if pod_returncode != 0 or not pod_status:
-        pod_status = "NotFound"
+        logger.error("FAILURE: Failed to get pod status")
+        return False
 
     logger.info("Current pod status: %s", pod_status)
 
-    # Determine expected state based on prerequisites
-    prerequisites_met = (
-        k8s_zone_count > 0 and
-        ceph_rack_count > 0 and
-        static_exists and
-        dynamic_exists
-    )
-
-    if not prerequisites_met:
-        # Prerequisites NOT met - deployment should be in Init state
-        logger.info("Prerequisites NOT met - expecting Init state")
-        
-        # List which prerequisites are missing
-        missing = []
-        if k8s_zone_count == 0:
-            missing.append("K8s zones")
-        if ceph_rack_count == 0:
-            missing.append("Ceph zones")
-        if not static_exists:
-            missing.append("rrs-mon-static ConfigMap")
-        if not dynamic_exists:
-            missing.append("rrs-mon-dynamic ConfigMap")
-        logger.info("Missing prerequisites: %s", ", ".join(missing))
-        
-        # Should be in Init state (Pending or NotFound)
-        if pod_status in ["Pending", "NotFound"]:
-            logger.info(
-                "NEGATIVE TEST PASS: Deployment is in Init state as expected "
-                "(prerequisites not met)"
-            )
-            return True
-
-        logger.error(
-            "NEGATIVE TEST FAIL: Deployment should be in Init state when prerequisites "
-            "are not met, but found: %s",
-            pod_status
-        )
-        return False
-
-    # Prerequisites met - deployment should be Running
-    logger.info("Prerequisites met - expecting Running state")
     if pod_status == "Running":
-        logger.info("SUCCESS: Deployment is Running as expected (all prerequisites met)")
+        logger.info("SUCCESS: cray-rrs pod is Running")
         return True
 
     logger.error(
-        "FAILURE: Deployment should be Running when prerequisites are met, "
-        "but found: %s",
+        "FAILURE: cray-rrs pod status is %s (expected: Running)",
         pod_status
     )
     return False
@@ -449,43 +372,153 @@ def check_critical_services_status():
 def main():
     """
     Main function to run all RRS checks.
-    Implements skip logic when RR is not enabled.
+    Implements sequential gate logic - each check must pass before proceeding.
     """
     logger.info("=" * 60)
     logger.info("Running Rack Resiliency Service (RRS) Checks")
     logger.info("=" * 60)
 
-    # First check if RR is enabled - this is the gate check
-    logger.info("\nRunning gate check...")
+    results = []
+    skipped_tests = []
+
+    # Gate 1: Check if RR is enabled
+    logger.info("\n[Gate Check 1/6] Checking RRS Enablement...")
     rr_enabled = check_rrs_enabled()
+    results.append(("RRS Enablement Check", rr_enabled))
 
     if not rr_enabled:
+        # RR not enabled - verify deployment is in Pending/Init state (negative test)
+        logger.info("\n[Negative Test] Verifying deployment state when RR is disabled...")
+        deployment_state_ok = _check_deployment_when_disabled()
+        results.append(("Deployment State Check (RR Disabled)", deployment_state_ok))
+        
+        skipped_tests = [
+            "Kubernetes Zones Check",
+            "Ceph Zones Check",
+            "Helm Chart Check",
+            "ConfigMaps Check",
+            "Deployment Check",
+            "Zones List Check",
+            "Critical Services List Check",
+            "Critical Services Status Check",
+        ]
         logger.info("\n" + "=" * 60)
         logger.info("SUMMARY")
         logger.info("=" * 60)
-        logger.info("RRS Enablement Check: SKIPPED (RR not enabled)")
-        logger.info("All subsequent checks: SKIPPED (RR not enabled)")
+        logger.info("RRS Enablement Check: PASS (RR not enabled - expected)")
+        logger.info(
+            "Deployment State Check (RR Disabled): %s",
+            "PASS" if deployment_state_ok else "FAIL"
+        )
+        for test in skipped_tests:
+            logger.info("%s: SKIPPED", test)
         logger.info("\n" + "-" * 60)
         logger.info("Rack Resiliency is not enabled on this system")
         logger.info("This is expected behavior for systems without RR configured")
         logger.info("-" * 60)
-        logger.info("\nTests completed (RR not enabled - no failures)")
-        sys.exit(0)
+        
+        if deployment_state_ok:
+            logger.info("\nTests completed (RR not enabled - deployment in expected state)")
+            sys.exit(0)
+        else:
+            logger.error("\nTests failed (deployment not in expected Pending state)")
+            sys.exit(1)
 
-    # RR is enabled - run all checks
-    checks = [
-        ("Kubernetes Zones Check", check_k8s_zones),
-        ("Ceph Zones Check", check_ceph_zones),
-        ("Helm Chart Check", check_helm_chart),
-        ("Deployment Check", check_deployment),
-        ("ConfigMaps Check", check_configmaps),
+    # Gate 2: Check K8s zones
+    logger.info("\n[Gate Check 2/6] Checking Kubernetes Zones...")
+    k8s_zones_ok = check_k8s_zones()
+    results.append(("Kubernetes Zones Check", k8s_zones_ok))
+
+    if not k8s_zones_ok:
+        skipped_tests = [
+            "Ceph Zones Check",
+            "Helm Chart Check",
+            "ConfigMaps Check",
+            "Deployment Check",
+            "Zones List Check",
+            "Critical Services List Check",
+            "Critical Services Status Check",
+        ]
+        logger.warning("\nK8s zones not configured - skipping remaining tests")
+        _print_summary(results, skipped_tests)
+        sys.exit(1)
+
+    # Gate 3: Check Ceph zones
+    logger.info("\n[Gate Check 3/6] Checking Ceph Zones...")
+    ceph_zones_ok = check_ceph_zones()
+    results.append(("Ceph Zones Check", ceph_zones_ok))
+
+    if not ceph_zones_ok:
+        skipped_tests = [
+            "Helm Chart Check",
+            "ConfigMaps Check",
+            "Deployment Check",
+            "Zones List Check",
+            "Critical Services List Check",
+            "Critical Services Status Check",
+        ]
+        logger.warning("\nCeph zones not configured - skipping remaining tests")
+        _print_summary(results, skipped_tests)
+        sys.exit(1)
+
+    # Gate 4: Check Helm chart
+    logger.info("\n[Gate Check 4/6] Checking Helm Chart...")
+    helm_ok = check_helm_chart()
+    results.append(("Helm Chart Check", helm_ok))
+
+    if not helm_ok:
+        skipped_tests = [
+            "ConfigMaps Check",
+            "Deployment Check",
+            "Zones List Check",
+            "Critical Services List Check",
+            "Critical Services Status Check",
+        ]
+        logger.warning("\nHelm chart not deployed - skipping remaining tests")
+        _print_summary(results, skipped_tests)
+        sys.exit(1)
+
+    # Gate 5: Check ConfigMaps
+    logger.info("\n[Gate Check 5/6] Checking ConfigMaps...")
+    configmaps_ok = check_configmaps()
+    results.append(("ConfigMaps Check", configmaps_ok))
+
+    if not configmaps_ok:
+        skipped_tests = [
+            "Deployment Check",
+            "Zones List Check",
+            "Critical Services List Check",
+            "Critical Services Status Check",
+        ]
+        logger.warning("\nConfigMaps not found - skipping remaining tests")
+        _print_summary(results, skipped_tests)
+        sys.exit(1)
+
+    # Gate 6: Check deployment
+    logger.info("\n[Gate Check 6/6] Checking Deployment...")
+    deployment_ok = check_deployment()
+    results.append(("Deployment Check", deployment_ok))
+
+    if not deployment_ok:
+        skipped_tests = [
+            "Zones List Check",
+            "Critical Services List Check",
+            "Critical Services Status Check",
+        ]
+        logger.warning("\nDeployment not healthy - skipping remaining tests")
+        _print_summary(results, skipped_tests)
+        sys.exit(1)
+
+    # All gates passed - run remaining validation checks
+    logger.info("\nAll gate checks passed - running validation checks...")
+
+    validation_checks = [
         ("Zones List Check", check_zones_list),
         ("Critical Services List Check", check_critical_services_list),
         ("Critical Services Status Check", check_critical_services_status),
     ]
 
-    results = [("RRS Enablement Check", True)]  # Already passed
-    for check_name, check_func in checks:
+    for check_name, check_func in validation_checks:
         try:
             result = check_func()
             results.append((check_name, result))
@@ -494,6 +527,24 @@ def main():
             results.append((check_name, False))
 
     # Print summary
+    _print_summary(results, [])
+
+    # Exit with error if any checks failed
+    failed = sum(1 for _, result in results if not result)
+    if failed > 0:
+        sys.exit(1)
+
+    logger.info("\nAll RRS checks passed!")
+    sys.exit(0)
+
+
+def _print_summary(results, skipped_tests):
+    """
+    Print summary of test results.
+    Args:
+        results: List of tuples (test_name, result)
+        skipped_tests: List of test names that were skipped
+    """
     logger.info("\n%s", "=" * 60)
     logger.info("SUMMARY")
     logger.info("=" * 60)
@@ -508,17 +559,64 @@ def main():
         else:
             failed += 1
 
+    for test_name in skipped_tests:
+        logger.info("%s: SKIPPED", test_name)
+
     logger.info("\n%s", "-" * 60)
-    logger.info("Total: %d | Passed: %d | Failed: %d",
-                len(results), passed, failed)
+    logger.info(
+        "Total: %d | Passed: %d | Failed: %d | Skipped: %d",
+        len(results) + len(skipped_tests),
+        passed,
+        failed,
+        len(skipped_tests)
+    )
     logger.info("-" * 60)
 
-    # Exit with error if any checks failed
-    if failed > 0:
-        sys.exit(1)
 
-    logger.info("\nAll RRS checks passed!")
-    sys.exit(0)
+def _check_deployment_when_disabled():
+    """
+    Check deployment state when RR is disabled.
+    Expects deployment to be in Pending or NotFound state.
+    Returns:
+        bool: True if deployment is in expected state, False otherwise
+    """
+    logger.info("=== Checking Deployment State (RR Disabled) ===")
+    
+    # Check if deployment exists
+    cmd = 'kubectl get deployment cray-rrs -n rack-resiliency -o jsonpath="{.metadata.name}" 2>/dev/null'
+    output, returncode = run_command(cmd)
+
+    if returncode != 0 or output != "cray-rrs":
+        logger.info("INFO: cray-rrs deployment not found (expected when RR disabled)")
+        return True
+
+    logger.info("INFO: cray-rrs deployment exists")
+
+    # Check pod status
+    pod_cmd = ('kubectl get pods -n rack-resiliency '
+               '-l app.kubernetes.io/instance=cray-rrs '
+               '-o jsonpath="{.items[0].status.phase}" 2>/dev/null')
+    pod_status, pod_returncode = run_command(pod_cmd)
+
+    if pod_returncode != 0 or not pod_status:
+        logger.info("INFO: No pod found (expected when RR disabled)")
+        return True
+
+    logger.info("Current pod status: %s", pod_status)
+
+    if pod_status == "Pending":
+        logger.info(
+            "SUCCESS: Deployment is in Pending state as expected "
+            "(RR disabled)"
+        )
+        return True
+
+    logger.error(
+        "FAILURE: When RR is disabled, deployment should be Pending or NotFound, "
+        "but found: %s",
+        pod_status
+    )
+    return False
 
 
 if __name__ == "__main__":
