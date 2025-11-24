@@ -26,33 +26,38 @@
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 
 command:
-  {{ $testlabel := "rrs_configmap_check" }}
+  {{ $testlabel := "rr_criticalservices_describe" }}
   {{$testlabel}}:
-    title: ConfigMap validation
+    title: RR critical services describe
     meta:
-      desc: Verifies that the required RRS ConfigMaps (rrs-mon-static and rrs-mon-dynamic) exist in the rack-resiliency namespace.
+      desc: Describes detailed information about a specific critical service including configured instances, namespace, and type.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        set -euo pipefail
         # Check if Rack Resiliency is enabled
         if [ ! -f /tmp/rr_enabled_marker ]; then
           echo "SKIPPED: Rack Resiliency is not enabled on this system"
           exit 0
         fi
         
-        # Check if rrs-mon-static ConfigMap exists
-        echo "Checking rrs-mon-static ConfigMap..." && \
-        kubectl get configmap rrs-mon-static -n rack-resiliency -o jsonpath="{.metadata.name}" && \
-        echo "" && \
+        # Check if deployment is Running (prerequisite for CLI commands)
+        POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}" 2>/dev/null || echo "NotFound")
+        if [ "$POD_STATUS" != "Running" ]; then
+          echo "SKIPPED: Deployment not Running (status: $POD_STATUS), cannot test CLI"
+          exit 0
+        fi
         
-        # Check if rrs-mon-dynamic ConfigMap exists
-        echo "Checking rrs-mon-dynamic ConfigMap..." && \
-        kubectl get configmap rrs-mon-dynamic -n rack-resiliency -o jsonpath="{.metadata.name}" && \
-        echo "" && \
-        
-        # Validate rrs-mon-static contains critical services configuration
-        echo "Validating critical services configuration in rrs-mon-static..." && \
-        kubectl get configmap rrs-mon-static -n rack-resiliency -o jsonpath="{.data.critical-service-config\.json}" | jq -e ".critical_services" > /dev/null
+        # Get the first critical service name dynamically
+        SERVICE_NAME=$(cray rr criticalservices list --format json | jq -r ".critical_services.namespace | to_entries[0].value[0].name // empty")
+        if [ -z "$SERVICE_NAME" ]; then
+          echo "No critical services found in the system"
+          exit 1
+        fi
+
+        # Run RR critical services describe command
+        echo "Running cray rr criticalservices describe test case for service: $SERVICE_NAME" && \
+        cray rr criticalservices describe "$SERVICE_NAME" --format toml
       '
     exit-status: 0
     timeout: 60000

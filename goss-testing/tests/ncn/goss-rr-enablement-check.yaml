@@ -34,6 +34,7 @@ command:
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        set -euo pipefail
         # Get customizations.yaml from the site-init secret
         echo "Retrieving customizations.yaml from site-init secret..." && \
         CUSTOMIZATIONS=$(kubectl get secrets -n loftsman site-init -o jsonpath="{.data.customizations\.yaml}" | base64 -d) && \
@@ -67,6 +68,7 @@ command:
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel_negative}}" bash -c '
+        set -euo pipefail
         # Check if RR is enabled via marker file
         if [ -f /tmp/rr_enabled_marker ]; then
           echo "SKIPPED: RR is enabled, negative test not applicable"

@@ -26,37 +26,43 @@
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 
 command:
-  {{ $testlabel := "rrs_criticalservices_describe" }}
+  {{ $testlabel := "rr_deployment_check" }}
   {{$testlabel}}:
-    title: RRS critical services describe
+    title: RR deployment and pod health check
     meta:
-      desc: Describes detailed information about a specific critical service including configured instances, namespace, and type.
+      desc: Verifies that the cray-rrs deployment exists and pods are running. Prerequisites (zones, helm, configmaps) are validated by earlier gates.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        set -euo pipefail
         # Check if Rack Resiliency is enabled
         if [ ! -f /tmp/rr_enabled_marker ]; then
           echo "SKIPPED: Rack Resiliency is not enabled on this system"
           exit 0
         fi
         
-        # Check if deployment is Running (prerequisite for CLI commands)
-        POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}" 2>/dev/null || echo "NotFound")
-        if [ "$POD_STATUS" != "Running" ]; then
-          echo "SKIPPED: Deployment not Running (status: $POD_STATUS), cannot test CLI"
-          exit 0
-        fi
+        # Check if cray-rrs deployment exists
+        echo "Checking cray-rrs deployment status..."
+        DEPLOYMENT_EXISTS=$(kubectl get deployment cray-rrs -n rack-resiliency -o jsonpath="{.metadata.name}" 2>/dev/null || echo "NotFound")
         
-        # Get the first critical service name dynamically
-        SERVICE_NAME=$(cray rrs criticalservices list --format json | jq -r ".critical_services.namespace | to_entries[0].value[0].name // empty")
-        if [ -z "$SERVICE_NAME" ]; then
-          echo "No critical services found in the system"
+        if [ "$DEPLOYMENT_EXISTS" == "NotFound" ]; then
+          echo "FAILURE: cray-rrs deployment not found in rack-resiliency namespace"
           exit 1
         fi
-
-        # Run RRS critical services describe command
-        echo "Running cray rrs criticalservices describe test case for service: $SERVICE_NAME" && \
-        cray rrs criticalservices describe "$SERVICE_NAME" --format toml
+        
+        echo "cray-rrs deployment: Found"
+        
+        # Check pod status - should be Running since all prerequisites passed
+        POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}" 2>/dev/null || echo "NotFound")
+        echo "Pod status: $POD_STATUS"
+        
+        if [ "$POD_STATUS" == "Running" ]; then
+          echo "SUCCESS: Deployment pods are Running"
+          exit 0
+        else
+          echo "FAILURE: Expected pods to be Running, but found: $POD_STATUS"
+          exit 1
+        fi
       '
     exit-status: 0
     timeout: 60000

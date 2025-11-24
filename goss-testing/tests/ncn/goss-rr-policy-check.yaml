@@ -26,37 +26,37 @@
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 
 command:
-  {{ $testlabel := "rrs_criticalservices_status_describe" }}
+  {{ $testlabel := "rr_policy_check" }}
   {{$testlabel}}:
-    title: RRS critical services status describe
+    title: RR Cluster Policy Check
     meta:
-      desc: Describes detailed status for a specific critical service including pod-level information, node placement, and zone distribution.
+      desc: Verifies that the insert-labels-topology-constraints ClusterPolicy exists for Rack Resiliency.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        set -euo pipefail
         # Check if Rack Resiliency is enabled
         if [ ! -f /tmp/rr_enabled_marker ]; then
           echo "SKIPPED: Rack Resiliency is not enabled on this system"
           exit 0
         fi
         
-        # Check if deployment is Running (prerequisite for CLI commands)
-        POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}" 2>/dev/null || echo "NotFound")
-        if [ "$POD_STATUS" != "Running" ]; then
-          echo "SKIPPED: Deployment not Running (status: $POD_STATUS), cannot test CLI"
-          exit 0
-        fi
+        # Check if the ClusterPolicy exists
+        echo "Checking for insert-labels-topology-constraints ClusterPolicy..."
+        POLICY_EXISTS=$(kubectl get clusterpolicy insert-labels-topology-constraints -o jsonpath="{.metadata.name}" 2>/dev/null || echo "NotFound")
         
-        # Get the first critical service name dynamically
-        SERVICE_NAME=$(cray rrs criticalservices list --format json | jq -r ".critical_services.namespace | to_entries[0].value[0].name // empty")
-        if [ -z "$SERVICE_NAME" ]; then
-          echo "No critical services found in the system"
+        if [ "$POLICY_EXISTS" == "NotFound" ]; then
+          echo "FAILURE: insert-labels-topology-constraints ClusterPolicy not found"
           exit 1
         fi
-
-        # Run RRS critical services status describe command
-        echo "Running cray rrs criticalservices status describe test case for service: $SERVICE_NAME" && \
-        cray rrs criticalservices status describe "$SERVICE_NAME" --format toml
+        
+        echo "ClusterPolicy found: $POLICY_EXISTS"
+        
+        # Get policy details
+        kubectl get clusterpolicy insert-labels-topology-constraints -o yaml
+        
+        echo "SUCCESS: insert-labels-topology-constraints ClusterPolicy exists"
+        exit 0
       '
     exit-status: 0
     timeout: 60000

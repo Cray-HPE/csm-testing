@@ -26,30 +26,34 @@
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 
 command:
-  {{ $testlabel := "rrs_criticalservices_status_list" }}
+  {{ $testlabel := "rr_configmap_check" }}
   {{$testlabel}}:
-    title: RRS critical services status list
+    title: ConfigMap validation
     meta:
-      desc: Lists the status of all critical services including their running status and balance distribution across zones.
+      desc: Verifies that the required RRS ConfigMaps (rrs-mon-static and rrs-mon-dynamic) exist in the rack-resiliency namespace.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        set -euo pipefail
         # Check if Rack Resiliency is enabled
         if [ ! -f /tmp/rr_enabled_marker ]; then
           echo "SKIPPED: Rack Resiliency is not enabled on this system"
           exit 0
         fi
         
-        # Check if deployment is Running (prerequisite for CLI commands)
-        POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}" 2>/dev/null || echo "NotFound")
-        if [ "$POD_STATUS" != "Running" ]; then
-          echo "SKIPPED: Deployment not Running (status: $POD_STATUS), cannot test CLI"
-          exit 0
-        fi
+        # Check if rrs-mon-static ConfigMap exists
+        echo "Checking rrs-mon-static ConfigMap..." && \
+        kubectl get configmap rrs-mon-static -n rack-resiliency -o jsonpath="{.metadata.name}" && \
+        echo "" && \
         
-        # Run RRS critical services status list command
-        echo "Running cray rrs criticalservices status list test case" && \
-        cray rrs criticalservices status list --format toml
+        # Check if rrs-mon-dynamic ConfigMap exists
+        echo "Checking rrs-mon-dynamic ConfigMap..." && \
+        kubectl get configmap rrs-mon-dynamic -n rack-resiliency -o jsonpath="{.metadata.name}" && \
+        echo "" && \
+        
+        # Validate rrs-mon-static contains critical services configuration
+        echo "Validating critical services configuration in rrs-mon-static..." && \
+        kubectl get configmap rrs-mon-static -n rack-resiliency -o jsonpath="{.data.critical-service-config\.json}" | jq -e ".critical_services" > /dev/null
       '
     exit-status: 0
     timeout: 60000

@@ -26,14 +26,15 @@
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 
 command:
-  {{ $testlabel := "rrs_criticalservices_list" }}
+  {{ $testlabel := "rr_zones_describe" }}
   {{$testlabel}}:
-    title: RRS critical services list
+    title: RR zones describe
     meta:
-      desc: Lists all critical services grouped by namespace that are monitored by Rack Resiliency.
+      desc: Describes detailed information for a specific zone including node details and OSD information.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        set -euo pipefail
         # Check if Rack Resiliency is enabled
         if [ ! -f /tmp/rr_enabled_marker ]; then
           echo "SKIPPED: Rack Resiliency is not enabled on this system"
@@ -47,9 +48,16 @@ command:
           exit 0
         fi
         
-        # Run RRS critical services list command
-        echo "Running cray rrs criticalservices list test case" && \
-        cray rrs criticalservices list --format toml
+        # Get the first zone name dynamically
+        ZONE_NAME=$(cray rr zones list --format json | jq -r ".Zones[0].Zone_Name // empty")
+        if [ -z "$ZONE_NAME" ]; then
+          echo "No zones found in the system"
+          exit 1
+        fi
+
+        # Run RR zones describe command
+        echo "Running cray rr zones describe test case for zone: $ZONE_NAME" && \
+        cray rr zones describe "$ZONE_NAME" --format toml
       '
     exit-status: 0
     timeout: 60000

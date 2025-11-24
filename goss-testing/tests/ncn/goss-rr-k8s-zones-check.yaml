@@ -1,0 +1,62 @@
+#
+# MIT License
+#
+# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+
+command:
+  {{ $testlabel := "rr_k8s_zones_check" }}
+  {{$testlabel}}:
+    title: RR Kubernetes zones check
+    meta:
+      desc: Verifies that Kubernetes topology zones are configured by checking node labels for topology.kubernetes.io/zone.
+      sev: 0
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        set -euo pipefail
+        # Check if Rack Resiliency is enabled
+        if [ ! -f /tmp/rr_enabled_marker ]; then
+          echo "SKIPPED: Rack Resiliency is not enabled on this system"
+          exit 0
+        fi
+        
+        # Check Kubernetes topology zones using node labels
+        echo "Checking Kubernetes topology zones..." && \
+        kubectl get nodes -L topology.kubernetes.io/zone && \
+        
+        # Verify that at least one node has a zone label
+        ZONE_COUNT=$(kubectl get nodes -L topology.kubernetes.io/zone --no-headers | awk "{print \$6}" | grep -v "^$" | wc -l) && \
+        echo "Number of nodes with zone labels: $ZONE_COUNT" && \
+        
+        if [ "$ZONE_COUNT" -gt 0 ]; then
+          echo "SUCCESS: Kubernetes zones are configured"
+          exit 0
+        else
+          echo "FAILURE: No Kubernetes zones found"
+          exit 1
+        fi
+      '
+    exit-status: 0
+    timeout: 60000
+    skip: false

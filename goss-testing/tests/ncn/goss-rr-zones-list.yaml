@@ -26,35 +26,31 @@
 {{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
 
 command:
-  {{ $testlabel := "rrs_ceph_zones_check" }}
+  {{ $testlabel := "rr_zones_list" }}
   {{$testlabel}}:
-    title: Ceph Zones Check
+    title: RR zones list
     meta:
-      desc: Verifies that Ceph zones are configured by checking the Ceph OSD tree for rack entries.
+      desc: Lists all the zones configured for Rack Resiliency.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        set -euo pipefail
         # Check if Rack Resiliency is enabled
         if [ ! -f /tmp/rr_enabled_marker ]; then
           echo "SKIPPED: Rack Resiliency is not enabled on this system"
           exit 0
         fi
         
-        # Check Ceph zones using ceph osd tree
-        echo "Checking Ceph zones (racks)..." && \
-        ceph osd tree | grep rack && \
-        
-        # Count the number of racks
-        RACK_COUNT=$(ceph osd tree | grep rack | wc -l) && \
-        echo "Number of Ceph racks found: $RACK_COUNT" && \
-        
-        if [ "$RACK_COUNT" -gt 0 ]; then
-          echo "SUCCESS: Ceph zones are configured"
+        # Check if deployment is Running (prerequisite for CLI commands)
+        POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}" 2>/dev/null || echo "NotFound")
+        if [ "$POD_STATUS" != "Running" ]; then
+          echo "SKIPPED: Deployment not Running (status: $POD_STATUS), cannot test CLI"
           exit 0
-        else
-          echo "FAILURE: No Ceph racks/zones found"
-          exit 1
         fi
+        
+        # Run RR zones list command
+        echo "Running cray rr zones list test case" && \
+        cray rr zones list --format toml
       '
     exit-status: 0
     timeout: 60000

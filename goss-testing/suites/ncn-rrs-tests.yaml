@@ -22,28 +22,31 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 gossfile:
-  # Gate 1: RRS Enablement Check (creates marker file if enabled)
-  ../tests/goss-rrs-enablement-check.yaml: {}
-  
-  # Gate 2: Kubernetes Zones Check (skipped if RR not enabled)
-  ../tests/goss-rrs-k8s-zones-check.yaml: {}
-  
-  # Gate 3: Ceph Zones Check (skipped if RR not enabled)
-  ../tests/goss-rrs-ceph-zones-check.yaml: {}
-  
-  # Gate 4: Helm Chart Check (skipped if RR not enabled)
-  ../tests/goss-rrs-helm-chart-check.yaml: {}
-  
-  # Gate 5: ConfigMaps Check (skipped if RR not enabled)
-  ../tests/goss-rrs-configmap-check.yaml: {}
-  
-  # Gate 6: Deployment Check (skipped if RR not enabled)
-  ../tests/goss-rrs-deployment-check.yaml: {}
-  
-  # Validation checks (run only if all gates pass)
-  ../tests/goss-rrs-zones-list.yaml: {}
-  ../tests/goss-rrs-zones-describe.yaml: {}
-  ../tests/goss-rrs-criticalservices-list.yaml: {}
-  ../tests/goss-rrs-criticalservices-describe.yaml: {}
-  ../tests/goss-rrs-criticalservices-status-list.yaml: {}
-  ../tests/goss-rrs-criticalservices-status-describe.yaml: {}
+  # Customization Check (Checks if Rack Resiliency is enabled)
+  ../tests/goss-rr-enablement-check.yaml: {}
+
+  # RR Ansible test (skipped if RR not enabled)
+  ../tests/goss-rr-k8s-zones-check.yaml: {}
+  ../tests/goss-rr-ceph-zones-check.yaml: {}
+
+  # Helm Chart Check (skipped if RR not enabled)
+  ../tests/goss-rr-helm-chart-check.yaml: {}
+
+  # Metadata Check (skipped if RR not enabled)
+  ../tests/goss-rr-configmap-check.yaml: {}
+  ../tests/goss-rr-policy-check.yaml: {}
+
+  # Deployment Check (skipped if RR not enabled)
+  ../tests/goss-rr-deployment-check.yaml: {}
+
+  # Functional checks (run only if all checks pass)
+
+  ## CLI/cray-rrs-api tests
+  ../tests/goss-rr-zones-list.yaml: {}
+  ../tests/goss-rr-zones-describe.yaml: {}
+
+  ## CLI/cray-rrs-rms tests
+  ../tests/goss-rr-criticalservices-list.yaml: {}
+  ../tests/goss-rr-criticalservices-describe.yaml: {}
+  ../tests/goss-rr-criticalservices-status-list.yaml: {}
+  ../tests/goss-rr-criticalservices-status-describe.yaml: {}
