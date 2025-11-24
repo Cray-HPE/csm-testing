@@ -50,3 +50,6 @@ gossfile:
   ../tests/goss-rr-criticalservices-describe.yaml: {}
   ../tests/goss-rr-criticalservices-status-list.yaml: {}
   ../tests/goss-rr-criticalservices-status-describe.yaml: {}
+
+  # Services Balance Check (verifies all services are balanced)
+  ../tests/goss-rr-services-balance-check.yaml: {}
