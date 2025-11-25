@@ -34,10 +34,7 @@ import sys
 import yaml
 
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(levelname)s: %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -56,7 +53,7 @@ def run_command(command):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True,
-            check=False
+            check=False,
         )
         return result.stdout.strip(), result.returncode
     except Exception as exc:  # pylint: disable=broad-except
@@ -81,8 +78,13 @@ def check_rrs_enabled():
 
     try:
         customizations = yaml.safe_load(base64.b64decode(output))
-        rr_enabled = customizations.get('spec', {}).get('kubernetes', {}).get(
-            'services', {}).get('rack-resiliency', {}).get('enabled', False)
+        rr_enabled = (
+            customizations.get("spec", {})
+            .get("kubernetes", {})
+            .get("services", {})
+            .get("rack-resiliency", {})
+            .get("enabled", False)
+        )
 
         if rr_enabled:
             logger.info("SUCCESS: Rack Resiliency is enabled")
@@ -103,7 +105,7 @@ def check_k8s_zones():
         bool: True if zones are configured, False otherwise
     """
     logger.info("\n=== Checking Kubernetes Zones ===")
-    cmd = 'kubectl get nodes -L topology.kubernetes.io/zone --no-headers'
+    cmd = "kubectl get nodes -L topology.kubernetes.io/zone --no-headers"
     output, returncode = run_command(cmd)
 
     if returncode != 0:
@@ -111,7 +113,7 @@ def check_k8s_zones():
         return False
 
     zone_count = 0
-    for line in output.split('\n'):
+    for line in output.split("\n"):
         if line.strip():
             parts = line.split()
             if len(parts) >= 6 and parts[5]:  # Zone is the 6th column
@@ -132,11 +134,11 @@ def check_ceph_zones():
         bool: True if zones are configured, False otherwise
     """
     logger.info("\n=== Checking Ceph Zones ===")
-    cmd = 'ceph osd tree | grep rack'
+    cmd = "ceph osd tree | grep rack"
     output, returncode = run_command(cmd)
 
     if returncode == 0 and output:
-        rack_count = len(output.split('\n'))
+        rack_count = len(output.split("\n"))
         logger.info("SUCCESS: Found %d Ceph racks/zones", rack_count)
         return True
 
@@ -151,7 +153,7 @@ def check_helm_chart():
         bool: True if chart is deployed, False otherwise
     """
     logger.info("\n=== Checking RRS Helm Chart ===")
-    cmd = 'helm ls -n rack-resiliency -o json'
+    cmd = "helm ls -n rack-resiliency -o json"
     output, returncode = run_command(cmd)
 
     if returncode != 0:
@@ -161,18 +163,16 @@ def check_helm_chart():
     try:
         charts = json.loads(output)
         for chart in charts:
-            if chart.get('name') == 'cray-rrs':
-                status = chart.get('status')
-                if status == 'deployed':
+            if chart.get("name") == "cray-rrs":
+                status = chart.get("status")
+                if status == "deployed":
                     logger.info(
-                        "SUCCESS: cray-rrs Helm chart is deployed (status: %s)",
-                        status
+                        "SUCCESS: cray-rrs Helm chart is deployed (status: %s)", status
                     )
                     return True
 
                 logger.error(
-                    "FAILURE: cray-rrs chart status is %s (expected: deployed)",
-                    status
+                    "FAILURE: cray-rrs chart status is %s (expected: deployed)", status
                 )
                 return False
 
@@ -204,9 +204,11 @@ def check_deployment():
     logger.info("INFO: cray-rrs deployment exists")
 
     # Check pod status
-    pod_cmd = ('kubectl get pods -n rack-resiliency '
-               '-l app.kubernetes.io/instance=cray-rrs '
-               '-o jsonpath="{.items[0].status.phase}" 2>/dev/null')
+    pod_cmd = (
+        "kubectl get pods -n rack-resiliency "
+        "-l app.kubernetes.io/instance=cray-rrs "
+        '-o jsonpath="{.items[0].status.phase}" 2>/dev/null'
+    )
     pod_status, pod_returncode = run_command(pod_cmd)
 
     if pod_returncode != 0 or not pod_status:
@@ -219,10 +221,7 @@ def check_deployment():
         logger.info("SUCCESS: cray-rrs pod is Running")
         return True
 
-    logger.error(
-        "FAILURE: cray-rrs pod status is %s (expected: Running)",
-        pod_status
-    )
+    logger.error("FAILURE: cray-rrs pod status is %s (expected: Running)", pod_status)
     return False
 
 
@@ -235,17 +234,21 @@ def check_configmaps():
     logger.info("\n=== Checking RRS ConfigMaps ===")
 
     # Check rrs-mon-static
-    cmd = ('kubectl get configmap rrs-mon-static -n rack-resiliency '
-           '-o jsonpath="{.metadata.name}" 2>/dev/null')
+    cmd = (
+        "kubectl get configmap rrs-mon-static -n rack-resiliency "
+        '-o jsonpath="{.metadata.name}" 2>/dev/null'
+    )
     static_cm, static_returncode = run_command(cmd)
 
     # Check rrs-mon-dynamic
-    cmd = ('kubectl get configmap rrs-mon-dynamic -n rack-resiliency '
-           '-o jsonpath="{.metadata.name}" 2>/dev/null')
+    cmd = (
+        "kubectl get configmap rrs-mon-dynamic -n rack-resiliency "
+        '-o jsonpath="{.metadata.name}" 2>/dev/null'
+    )
     dynamic_cm, dynamic_returncode = run_command(cmd)
 
-    static_exists = (static_returncode == 0 and static_cm == "rrs-mon-static")
-    dynamic_exists = (dynamic_returncode == 0 and dynamic_cm == "rrs-mon-dynamic")
+    static_exists = static_returncode == 0 and static_cm == "rrs-mon-static"
+    dynamic_exists = dynamic_returncode == 0 and dynamic_cm == "rrs-mon-dynamic"
 
     if not static_exists or not dynamic_exists:
         logger.warning("WARNING: Required ConfigMaps not found")
@@ -257,8 +260,10 @@ def check_configmaps():
     logger.info("INFO: rrs-mon-dynamic ConfigMap exists")
 
     # Validate rrs-mon-static contains critical services configuration
-    cmd = ('kubectl get configmap rrs-mon-static -n rack-resiliency '
-           '-o jsonpath="{.data.critical-service-config\\.json}"')
+    cmd = (
+        "kubectl get configmap rrs-mon-static -n rack-resiliency "
+        '-o jsonpath="{.data.critical-service-config\\.json}"'
+    )
     output, returncode = run_command(cmd)
 
     if returncode != 0 or not output:
@@ -287,7 +292,7 @@ def check_zones_list():
         bool: True if command succeeds, False otherwise
     """
     logger.info("\n=== Checking RRS Zones List ===")
-    cmd = 'cray rrs zones list --format json'
+    cmd = "cray rrs zones list --format json"
     output, returncode = run_command(cmd)
 
     if returncode != 0:
@@ -296,11 +301,8 @@ def check_zones_list():
 
     try:
         zones = json.loads(output)
-        zone_count = len(zones.get('Zones', []))
-        logger.info(
-            "SUCCESS: 'cray rrs zones list' returned %d zones",
-            zone_count
-        )
+        zone_count = len(zones.get("Zones", []))
+        logger.info("SUCCESS: 'cray rrs zones list' returned %d zones", zone_count)
         return True
     except Exception as exc:  # pylint: disable=broad-except
         logger.error("Failed to parse zones list output: %s", exc)
@@ -314,7 +316,7 @@ def check_critical_services_list():
         bool: True if command succeeds, False otherwise
     """
     logger.info("\n=== Checking RRS Critical Services List ===")
-    cmd = 'cray rrs criticalservices list --format json'
+    cmd = "cray rrs criticalservices list --format json"
     output, returncode = run_command(cmd)
 
     if returncode != 0:
@@ -328,7 +330,7 @@ def check_critical_services_list():
             service_count = sum(len(v) for v in namespaces.values())
             logger.info(
                 "SUCCESS: 'cray rrs criticalservices list' returned %d services",
-                service_count
+                service_count,
             )
             return True
 
@@ -346,22 +348,20 @@ def check_critical_services_status():
         bool: True if command succeeds, False otherwise
     """
     logger.info("\n=== Checking RRS Critical Services Status ===")
-    cmd = 'cray rrs criticalservices status list --format json'
+    cmd = "cray rrs criticalservices status list --format json"
     output, returncode = run_command(cmd)
 
     if returncode != 0:
-        logger.error(
-            "FAILURE: 'cray rrs criticalservices status list' command failed"
-        )
+        logger.error("FAILURE: 'cray rrs criticalservices status list' command failed")
         return False
 
     try:
         status = json.loads(output)
-        service_count = len(status.get('critical_services_status', []))
+        service_count = len(status.get("critical_services_status", []))
         logger.info(
             "SUCCESS: 'cray rrs criticalservices status list' returned "
             "status for %d services",
-            service_count
+            service_count,
         )
         return True
     except Exception as exc:  # pylint: disable=broad-except
@@ -388,10 +388,12 @@ def main():
 
     if not rr_enabled:
         # RR not enabled - verify deployment is in Pending/Init state (negative test)
-        logger.info("\n[Negative Test] Verifying deployment state when RR is disabled...")
+        logger.info(
+            "\n[Negative Test] Verifying deployment state when RR is disabled..."
+        )
         deployment_state_ok = _check_deployment_when_disabled()
         results.append(("Deployment State Check (RR Disabled)", deployment_state_ok))
-        
+
         skipped_tests = [
             "Kubernetes Zones Check",
             "Ceph Zones Check",
@@ -408,7 +410,7 @@ def main():
         logger.info("RRS Enablement Check: PASS (RR not enabled - expected)")
         logger.info(
             "Deployment State Check (RR Disabled): %s",
-            "PASS" if deployment_state_ok else "FAIL"
+            "PASS" if deployment_state_ok else "FAIL",
         )
         for test in skipped_tests:
             logger.info("%s: SKIPPED", test)
@@ -416,9 +418,11 @@ def main():
         logger.info("Rack Resiliency is not enabled on this system")
         logger.info("This is expected behavior for systems without RR configured")
         logger.info("-" * 60)
-        
+
         if deployment_state_ok:
-            logger.info("\nTests completed (RR not enabled - deployment in expected state)")
+            logger.info(
+                "\nTests completed (RR not enabled - deployment in expected state)"
+            )
             sys.exit(0)
         else:
             logger.error("\nTests failed (deployment not in expected Pending state)")
@@ -568,7 +572,7 @@ def _print_summary(results, skipped_tests):
         len(results) + len(skipped_tests),
         passed,
         failed,
-        len(skipped_tests)
+        len(skipped_tests),
     )
     logger.info("-" * 60)
 
@@ -581,7 +585,7 @@ def _check_deployment_when_disabled():
         bool: True if deployment is in expected state, False otherwise
     """
     logger.info("=== Checking Deployment State (RR Disabled) ===")
-    
+
     # Check if deployment exists
     cmd = 'kubectl get deployment cray-rrs -n rack-resiliency -o jsonpath="{.metadata.name}" 2>/dev/null'
     output, returncode = run_command(cmd)
@@ -593,9 +597,11 @@ def _check_deployment_when_disabled():
     logger.info("INFO: cray-rrs deployment exists")
 
     # Check pod status
-    pod_cmd = ('kubectl get pods -n rack-resiliency '
-               '-l app.kubernetes.io/instance=cray-rrs '
-               '-o jsonpath="{.items[0].status.phase}" 2>/dev/null')
+    pod_cmd = (
+        "kubectl get pods -n rack-resiliency "
+        "-l app.kubernetes.io/instance=cray-rrs "
+        '-o jsonpath="{.items[0].status.phase}" 2>/dev/null'
+    )
     pod_status, pod_returncode = run_command(pod_cmd)
 
     if pod_returncode != 0 or not pod_status:
@@ -606,15 +612,14 @@ def _check_deployment_when_disabled():
 
     if pod_status == "Pending":
         logger.info(
-            "SUCCESS: Deployment is in Pending state as expected "
-            "(RR disabled)"
+            "SUCCESS: Deployment is in Pending state as expected " "(RR disabled)"
         )
         return True
 
     logger.error(
         "FAILURE: When RR is disabled, deployment should be Pending or NotFound, "
         "but found: %s",
-        pod_status
+        pod_status,
     )
     return False
 
