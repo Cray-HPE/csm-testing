@@ -42,18 +42,31 @@ command:
         fi
         
         # Check Kubernetes topology zones using node labels
-        echo "Checking Kubernetes topology zones..." && \
-        kubectl get nodes -L topology.kubernetes.io/zone && \
+        echo "Checking Kubernetes topology zones..."
+        kubectl get nodes -L topology.kubernetes.io/zone
         
-        # Verify that at least one node has a zone label
-        ZONE_COUNT=$(kubectl get nodes -L topology.kubernetes.io/zone --no-headers | awk "{print \$6}" | grep -v "^$" | wc -l) && \
-        echo "Number of nodes with zone labels: $ZONE_COUNT" && \
+        # Get total node count
+        TOTAL_NODES=$(kubectl get nodes --no-headers | wc -l)
+        echo "Total nodes: $TOTAL_NODES"
         
-        if [ "$ZONE_COUNT" -gt 0 ]; then
-          echo "SUCCESS: Kubernetes zones are configured"
+        # Count nodes with zone labels
+        ZONE_COUNT=$(kubectl get nodes -L topology.kubernetes.io/zone --no-headers | awk "{print \$6}" | grep -v "^$" | wc -l)
+        echo "Nodes with zone labels: $ZONE_COUNT"
+        
+        # Check if any zones are configured
+        if [ "$ZONE_COUNT" -eq 0 ]; then
+          echo "FAILURE: No Kubernetes zones found"
+          exit 1
+        fi
+        
+        # Check if all nodes have zone labels
+        if [ "$ZONE_COUNT" -eq "$TOTAL_NODES" ]; then
+          echo "SUCCESS: All nodes have zone labels configured"
           exit 0
         else
-          echo "FAILURE: No Kubernetes zones found"
+          MISSING_COUNT=$((TOTAL_NODES - ZONE_COUNT))
+          echo "FAILURE: $MISSING_COUNT node(s) missing zone labels"
+          kubectl get nodes -L topology.kubernetes.io/zone --no-headers | awk "{print \$1, \$6}" | grep " $" || true
           exit 1
         fi
       '

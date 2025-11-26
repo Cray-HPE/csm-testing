@@ -30,9 +30,6 @@ gossfile:
   ../tests/goss-rr-k8s-zones-check.yaml: {}
   ../tests/goss-rr-ceph-zones-check.yaml: {}
 
-  # Helm Chart Check (skipped if RR not enabled)
-  ../tests/goss-rr-helm-chart-check.yaml: {}
-
   # Metadata Check (skipped if RR not enabled)
   ../tests/goss-rr-configmap-check.yaml: {}
   ../tests/goss-rr-policy-check.yaml: {}

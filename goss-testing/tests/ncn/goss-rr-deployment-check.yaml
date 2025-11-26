@@ -60,7 +60,7 @@ command:
           echo "SUCCESS: Deployment pods are Running"
           exit 0
         else
-          echo "FAILURE: Expected pods to be Running, but found: $POD_STATUS"
+          echo "FAILURE: Pod is in $POD_STATUS state. NOTE: If any of the prerequisites tests were skipped, the cray-rrs pod will not be Running."
           exit 1
         fi
       '

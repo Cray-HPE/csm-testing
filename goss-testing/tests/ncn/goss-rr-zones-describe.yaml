@@ -30,7 +30,7 @@ command:
   {{$testlabel}}:
     title: RR zones describe
     meta:
-      desc: Describes detailed information for a specific zone including node details and OSD information.
+      desc: Verifies the endpoint functionality for the cray rr zones describe command.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
@@ -56,8 +56,8 @@ command:
         fi
 
         # Run RR zones describe command
-        echo "Running cray rr zones describe test case for zone: $ZONE_NAME" && \
-        cray rr zones describe "$ZONE_NAME" --format toml
+        cray rr zones describe "$ZONE_NAME" --format json > /dev/null && \
+        echo "Endpoint is working: cray rr zones describe command executed successfully."
       '
     exit-status: 0
     timeout: 60000

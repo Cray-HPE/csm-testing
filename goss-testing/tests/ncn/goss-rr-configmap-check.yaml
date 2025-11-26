@@ -42,14 +42,20 @@ command:
         fi
         
         # Check if rrs-mon-static ConfigMap exists
-        echo "Checking rrs-mon-static ConfigMap..." && \
-        kubectl get configmap rrs-mon-static -n rack-resiliency -o jsonpath="{.metadata.name}" && \
-        echo "" && \
+        echo "Checking rrs-mon-static ConfigMap..."
+        if ! kubectl get configmap rrs-mon-static -n rack-resiliency -o jsonpath="{.metadata.name}" 2>/dev/null; then
+          echo "ERROR: rrs-mon-static ConfigMap not found"
+          exit 1
+        fi
+        echo ""
         
         # Check if rrs-mon-dynamic ConfigMap exists
-        echo "Checking rrs-mon-dynamic ConfigMap..." && \
-        kubectl get configmap rrs-mon-dynamic -n rack-resiliency -o jsonpath="{.metadata.name}" && \
-        echo "" && \
+        echo "Checking rrs-mon-dynamic ConfigMap..."
+        if ! kubectl get configmap rrs-mon-dynamic -n rack-resiliency -o jsonpath="{.metadata.name}" 2>/dev/null; then
+          echo "ERROR: rrs-mon-dynamic ConfigMap not found"
+          exit 1
+        fi
+        echo ""
         
         # Validate rrs-mon-static contains critical services configuration
         echo "Validating critical services configuration in rrs-mon-static..." && \

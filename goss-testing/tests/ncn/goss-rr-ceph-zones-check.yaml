@@ -42,20 +42,43 @@ command:
         fi
         
         # Check Ceph zones using ceph osd tree
-        echo "Checking Ceph zones (racks)..." && \
-        ceph osd tree | grep rack && \
+        echo "Checking Ceph zones (racks)..."
+        ceph osd tree
         
         # Count the number of racks
-        RACK_COUNT=$(ceph osd tree | grep rack | wc -l) && \
-        echo "Number of Ceph racks found: $RACK_COUNT" && \
+        RACK_COUNT=$(ceph osd tree | grep rack | wc -l)
+        echo "Number of Ceph racks found: $RACK_COUNT"
         
-        if [ "$RACK_COUNT" -gt 0 ]; then
-          echo "SUCCESS: Ceph zones are configured"
-          exit 0
-        else
+        if [ "$RACK_COUNT" -eq 0 ]; then
           echo "FAILURE: No Ceph racks/zones found"
           exit 1
         fi
+        
+        # Get all storage node hostnames
+        STORAGE_NODES=$(ceph osd tree | grep host | awk "{print \$4}")
+        TOTAL_STORAGE_NODES=$(echo "$STORAGE_NODES" | wc -l)
+        echo "Total storage nodes: $TOTAL_STORAGE_NODES"
+        
+        # Check each storage node to ensure it has a rack parent
+        RACKLESS_COUNT=0
+        RACKLESS_LIST=""
+        
+        for node in $STORAGE_NODES; do
+          # Check if this host appears under a rack in the tree
+          if ! ceph osd tree | grep -B 20 "host.*$node" | grep -q "rack"; then
+            RACKLESS_COUNT=$((RACKLESS_COUNT + 1))
+            RACKLESS_LIST="$RACKLESS_LIST$node\n"
+          fi
+        done
+        
+        if [ "$RACKLESS_COUNT" -gt 0 ]; then
+          echo "FAILURE: $RACKLESS_COUNT storage node(s) found without rack assignment:"
+          echo -e "$RACKLESS_LIST"
+          exit 1
+        fi
+        
+        echo "SUCCESS: All storage nodes are assigned to racks"
+        exit 0
       '
     exit-status: 0
     timeout: 60000

@@ -30,7 +30,7 @@ command:
   {{$testlabel}}:
     title: RR critical services status describe
     meta:
-      desc: Describes detailed status for a specific critical service including pod-level information, node placement, and zone distribution.
+      desc: Verifies the endpoint functionality for the cray rr criticalservices status describe command.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
@@ -56,8 +56,8 @@ command:
         fi
 
         # Run RR critical services status describe command
-        echo "Running cray rr criticalservices status describe test case for service: $SERVICE_NAME" && \
-        cray rr criticalservices status describe "$SERVICE_NAME" --format toml
+        cray rr criticalservices status describe "$SERVICE_NAME" --format json > /dev/null && \
+        echo "Endpoint is working: cray rr criticalservices status describe command executed successfully."
       '
     exit-status: 0
     timeout: 60000

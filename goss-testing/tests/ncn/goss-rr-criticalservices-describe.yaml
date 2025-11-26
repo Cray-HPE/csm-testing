@@ -30,7 +30,7 @@ command:
   {{$testlabel}}:
     title: RR critical services describe
     meta:
-      desc: Describes detailed information about a specific critical service including configured instances, namespace, and type.
+      desc: Verifies the endpoint functionality for the cray rr criticalservices describe command.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
@@ -56,8 +56,8 @@ command:
         fi
 
         # Run RR critical services describe command
-        echo "Running cray rr criticalservices describe test case for service: $SERVICE_NAME" && \
-        cray rr criticalservices describe "$SERVICE_NAME" --format toml
+        cray rr criticalservices describe "$SERVICE_NAME" --format json > /dev/null && \
+        echo "Endpoint is working: cray rr criticalservices describe command executed successfully."
       '
     exit-status: 0
     timeout: 60000
