@@ -59,17 +59,17 @@ command:
         fi
 
         # Check if all services are balanced
-        UNBALANCED_SERVICES=$(echo "$STATUS_OUTPUT" | jq -r ".critical_services_status.namespace | to_entries[] | .value[] | select(.balanced == false) | .name" 2>/dev/null || echo "")
+        UNBALANCED_SERVICES=$(echo "$STATUS_OUTPUT" | jq -r ".critical_services.namespace | to_entries[] | .value[] | select(.balanced == \"false\") | .name" 2>/dev/null || echo "")
 
         # Check for services with NA balance status
-        NA_SERVICES=$(echo "$STATUS_OUTPUT" | jq -r ".critical_services_status.namespace | to_entries[] | .value[] | select(.balanced == null or .balanced == \"NA\") | .name" 2>/dev/null || echo "")
+        NA_SERVICES=$(echo "$STATUS_OUTPUT" | jq -r ".critical_services.namespace | to_entries[] | .value[] | select(.balanced == \"NA\") | .name" 2>/dev/null || echo "")
 
         if [ -z "$UNBALANCED_SERVICES" ] && [ -z "$NA_SERVICES" ]; then
           echo "SUCCESS: All critical services are balanced across zones"
           exit 0
         else
           if [ -n "$UNBALANCED_SERVICES" ]; then
-            echo "WARNING: The following services are not balanced:"
+            echo "INFO: The following services are not balanced:"
             echo "$UNBALANCED_SERVICES"
             echo ""
           fi
@@ -79,8 +79,7 @@ command:
             echo "$NA_SERVICES"
             echo ""
           fi
-
-          echo "This may be expected during system initialization or maintenance."
+          echo "Some critical services are not balanced across zones."
           echo "Check individual service status with: cray rrs criticalservices status describe <service-name>"
           exit 0
         fi
