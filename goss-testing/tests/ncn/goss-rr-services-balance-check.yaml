@@ -51,7 +51,7 @@ command:
         echo "Checking if all critical services are balanced across zones..."
         
         # Get the critical services status list
-        STATUS_OUTPUT=$(cray rr criticalservices status list --format json 2>/dev/null)
+        STATUS_OUTPUT=$(cray rrs criticalservices status list --format json 2>/dev/null)
         
         if [ -z "$STATUS_OUTPUT" ]; then
           echo "FAILURE: Unable to retrieve critical services status"
@@ -72,7 +72,7 @@ command:
           echo "$UNBALANCED_SERVICES"
           echo ""
           echo "This may be expected during system initialization or maintenance."
-          echo "Check individual service status with: cray rr criticalservices status describe <service-name>"
+          echo "Check individual service status with: cray rrs criticalservices status describe <service-name>"
           exit 0
         fi
       '

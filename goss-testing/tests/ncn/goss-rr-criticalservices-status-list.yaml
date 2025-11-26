@@ -49,8 +49,8 @@ command:
         fi
         
         # Run RR critical services status list command
-        echo "Running cray rr criticalservices status list test case" && \
-        cray rr criticalservices status list --format toml
+        echo "Running cray rrs criticalservices status list test case" && \
+        cray rrs criticalservices status list --format toml
       '
     exit-status: 0
     timeout: 60000

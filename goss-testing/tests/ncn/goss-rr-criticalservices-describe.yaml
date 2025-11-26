@@ -30,7 +30,7 @@ command:
   {{$testlabel}}:
     title: RR critical services describe
     meta:
-      desc: Verifies the endpoint functionality for the cray rr criticalservices describe command.
+      desc: Verifies the endpoint functionality for the cray rrs criticalservices describe command.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
@@ -49,15 +49,15 @@ command:
         fi
         
         # Get the first critical service name dynamically
-        SERVICE_NAME=$(cray rr criticalservices list --format json | jq -r ".critical_services.namespace | to_entries[0].value[0].name // empty")
+        SERVICE_NAME=$(cray rrs criticalservices list --format json | jq -r ".critical_services.namespace | to_entries[0].value[0].name // empty")
         if [ -z "$SERVICE_NAME" ]; then
           echo "No critical services found in the system"
           exit 1
         fi
 
         # Run RR critical services describe command
-        cray rr criticalservices describe "$SERVICE_NAME" --format json > /dev/null && \
-        echo "Endpoint is working: cray rr criticalservices describe command executed successfully."
+        cray rrs criticalservices describe "$SERVICE_NAME" --format json > /dev/null && \
+        echo "Endpoint is working: cray rrs criticalservices describe command executed successfully."
       '
     exit-status: 0
     timeout: 60000

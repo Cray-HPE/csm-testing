@@ -49,8 +49,8 @@ command:
         fi
         
         # Run RR zones list command
-        echo "Running cray rr zones list test case" && \
-        cray rr zones list --format toml
+        echo "Running cray rrs zones list test case" && \
+        cray rrs zones list --format toml
       '
     exit-status: 0
     timeout: 60000

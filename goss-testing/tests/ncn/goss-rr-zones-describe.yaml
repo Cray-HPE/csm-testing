@@ -30,7 +30,7 @@ command:
   {{$testlabel}}:
     title: RR zones describe
     meta:
-      desc: Verifies the endpoint functionality for the cray rr zones describe command.
+      desc: Verifies the endpoint functionality for the cray rrs zones describe command.
       sev: 0
     exec: |-
       "{{$logrun}}" -l "{{$testlabel}}" bash -c '
@@ -49,15 +49,15 @@ command:
         fi
         
         # Get the first zone name dynamically
-        ZONE_NAME=$(cray rr zones list --format json | jq -r ".Zones[0].Zone_Name // empty")
+        ZONE_NAME=$(cray rrs zones list --format json | jq -r ".Zones[0].Zone_Name // empty")
         if [ -z "$ZONE_NAME" ]; then
           echo "No zones found in the system"
           exit 1
         fi
 
         # Run RR zones describe command
-        cray rr zones describe "$ZONE_NAME" --format json > /dev/null && \
-        echo "Endpoint is working: cray rr zones describe command executed successfully."
+        cray rrs zones describe "$ZONE_NAME" --format json > /dev/null && \
+        echo "Endpoint is working: cray rrs zones describe command executed successfully."
       '
     exit-status: 0
     timeout: 60000
