@@ -1,0 +1,84 @@
+#
+# MIT License
+#
+# (C) Copyright 2025 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+
+{{ $scripts := .Env.GOSS_BASE | printf "%s/scripts" }}
+{{ $logrun := .Env.GOSS_BASE | printf "%s/scripts/log_run.sh" }}
+
+command:
+  {{ $testlabel := "rr_ceph_zones_check" }}
+  {{$testlabel}}:
+    title: Ceph Zones Check
+    meta:
+      desc: Verifies that Ceph zones are configured by checking the Ceph OSD tree for rack entries.
+      sev: 0
+    exec: |-
+      "{{$logrun}}" -l "{{$testlabel}}" bash -c '
+        set -euo pipefail
+        # Check if Rack Resiliency is enabled
+        if [ ! -f /tmp/rr_enabled_marker ]; then
+          echo "SKIPPED: Rack Resiliency is not enabled on this system"
+          exit 0
+        fi
+        
+        # Check Ceph zones using ceph osd tree
+        echo "Checking Ceph zones (racks)..."
+        ceph osd tree
+        
+        # Count the number of racks
+        RACK_COUNT=$(ceph osd tree | grep rack | wc -l)
+        echo "Number of Ceph racks found: $RACK_COUNT"
+        
+        if [ "$RACK_COUNT" -eq 0 ]; then
+          echo "FAILURE: No Ceph racks/zones found"
+          exit 1
+        fi
+        
+        # Get all storage node hostnames
+        STORAGE_NODES=$(ceph osd tree | grep host | awk "{print \$4}")
+        TOTAL_STORAGE_NODES=$(echo "$STORAGE_NODES" | wc -l)
+        echo "Total storage nodes: $TOTAL_STORAGE_NODES"
+        
+        # Check each storage node to ensure it has a rack parent
+        RACKLESS_COUNT=0
+        RACKLESS_LIST=""
+        
+        for node in $STORAGE_NODES; do
+          # Check if this host appears under a rack in the tree
+          if ! ceph osd tree | grep -B 20 "host.*$node" | grep -q "rack"; then
+            RACKLESS_COUNT=$((RACKLESS_COUNT + 1))
+            RACKLESS_LIST="$RACKLESS_LIST$node\n"
+          fi
+        done
+        
+        if [ "$RACKLESS_COUNT" -gt 0 ]; then
+          echo "FAILURE: $RACKLESS_COUNT storage node(s) found without rack assignment:"
+          echo -e "$RACKLESS_LIST"
+          exit 1
+        fi
+        
+        echo "SUCCESS: All storage nodes are assigned to racks"
+        exit 0
+      '
+    exit-status: 0
+    skip: false
