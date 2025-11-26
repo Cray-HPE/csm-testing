@@ -55,5 +55,4 @@ command:
         echo "SUCCESS: Critical services list retrieved successfully"
       '
     exit-status: 0
-    timeout: 600
     skip: false

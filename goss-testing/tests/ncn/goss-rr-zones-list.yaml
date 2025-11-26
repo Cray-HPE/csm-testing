@@ -55,5 +55,4 @@ command:
         echo "SUCCESS: Zones list retrieved successfully"
       '
     exit-status: 0
-    timeout: 600
     skip: false

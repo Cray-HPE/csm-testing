@@ -59,5 +59,4 @@ command:
         exit 0
       '
     exit-status: 0
-    timeout: 600
     skip: false

@@ -64,5 +64,4 @@ command:
         echo "SUCCESS: All required ConfigMaps exist and are properly configured"
       '
     exit-status: 0
-    timeout: 600
     skip: false
