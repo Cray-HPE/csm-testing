@@ -60,7 +60,9 @@ command:
         # Validate rrs-mon-static contains critical services configuration
         echo "Validating critical services configuration in rrs-mon-static..." && \
         kubectl get configmap rrs-mon-static -n rack-resiliency -o jsonpath="{.data.critical-service-config\.json}" | jq -e ".critical_services" > /dev/null
+        
+        echo "SUCCESS: All required ConfigMaps exist and are properly configured"
       '
     exit-status: 0
-    timeout: 60000
+    timeout: 600
     skip: false

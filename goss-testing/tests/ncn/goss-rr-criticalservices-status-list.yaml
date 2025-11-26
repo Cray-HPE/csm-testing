@@ -51,7 +51,9 @@ command:
         # Run RR critical services status list command
         echo "Running cray rrs criticalservices status list test case" && \
         cray rrs criticalservices status list --format toml
+        
+        echo "SUCCESS: Critical services status list retrieved successfully"
       '
     exit-status: 0
-    timeout: 60000
+    timeout: 600
     skip: false

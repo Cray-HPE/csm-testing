@@ -60,5 +60,5 @@ command:
         echo "Endpoint is working: cray rrs zones describe command executed successfully."
       '
     exit-status: 0
-    timeout: 60000
+    timeout: 600
     skip: false

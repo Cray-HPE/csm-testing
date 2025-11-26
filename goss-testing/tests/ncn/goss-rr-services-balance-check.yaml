@@ -40,16 +40,16 @@ command:
           echo "SKIPPED: Rack Resiliency is not enabled on this system"
           exit 0
         fi
-        
+
         # Check if deployment is Running (prerequisite for CLI commands)
         POD_STATUS=$(kubectl get pods -n rack-resiliency -l app.kubernetes.io/instance=cray-rrs -o jsonpath="{.items[0].status.phase}" 2>/dev/null || echo "NotFound")
         if [ "$POD_STATUS" != "Running" ]; then
           echo "SKIPPED: Deployment not Running (status: $POD_STATUS), cannot test CLI"
           exit 0
         fi
-        
+
         echo "Checking if all critical services are balanced across zones..."
-        
+
         # Get the critical services status list
         STATUS_OUTPUT=$(cray rrs criticalservices status list --format json 2>/dev/null)
         
@@ -57,25 +57,34 @@ command:
           echo "FAILURE: Unable to retrieve critical services status"
           exit 1
         fi
-        
-        echo "Critical Services Status:"
-        echo "$STATUS_OUTPUT" | jq "."
-        
+
         # Check if all services are balanced
         UNBALANCED_SERVICES=$(echo "$STATUS_OUTPUT" | jq -r ".critical_services_status.namespace | to_entries[] | .value[] | select(.balanced == false) | .name" 2>/dev/null || echo "")
-        
-        if [ -z "$UNBALANCED_SERVICES" ]; then
+
+        # Check for services with NA balance status
+        NA_SERVICES=$(echo "$STATUS_OUTPUT" | jq -r ".critical_services_status.namespace | to_entries[] | .value[] | select(.balanced == null or .balanced == \"NA\") | .name" 2>/dev/null || echo "")
+
+        if [ -z "$UNBALANCED_SERVICES" ] && [ -z "$NA_SERVICES" ]; then
           echo "SUCCESS: All critical services are balanced across zones"
           exit 0
         else
-          echo "WARNING: The following services are not balanced:"
-          echo "$UNBALANCED_SERVICES"
-          echo ""
+          if [ -n "$UNBALANCED_SERVICES" ]; then
+            echo "WARNING: The following services are not balanced:"
+            echo "$UNBALANCED_SERVICES"
+            echo ""
+          fi
+
+          if [ -n "$NA_SERVICES" ]; then
+            echo "INFO: The following services have NA balance status:"
+            echo "$NA_SERVICES"
+            echo ""
+          fi
+
           echo "This may be expected during system initialization or maintenance."
           echo "Check individual service status with: cray rrs criticalservices status describe <service-name>"
           exit 0
         fi
       '
     exit-status: 0
-    timeout: 60000
+    timeout: 600
     skip: false
