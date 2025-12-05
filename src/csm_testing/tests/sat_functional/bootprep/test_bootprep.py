@@ -686,6 +686,9 @@ class BootprepTestCase(SATTestCase):
             for job in jobs_json:
                 archive_name = job.get('image_root_archive_name', '')
                 if archive_name.startswith(cls.test_prefix):
+                    if job.get('status') == 'error':
+                        logging.warning('Skipping deletion of IMS job with ID %s, to allow for debugging', job.get('id'))
+                        continue
                     try:
                         found_job_ids.append(job['id'])
                     except KeyError:
