@@ -36,6 +36,7 @@ import shutil
 import subprocess
 import tempfile
 from typing import List
+from datetime import datetime
 import unittest
 
 import requests
@@ -686,8 +687,8 @@ class BootprepTestCase(SATTestCase):
             for job in jobs_json:
                 archive_name = job.get('image_root_archive_name', '')
                 if archive_name.startswith(cls.test_prefix):
-                    if job.get('status') == 'error':
-                        logging.warning('Skipping deletion of IMS job with ID %s, to allow for debugging', job.get('id'))
+                    if job.get('status') == 'error' and cls.days_since(job.get('created')) <= 7:
+                        logging.warning('Skipping deletion of IMS job with ID %s, to allow for potential debugging, this job will be cleaned up by a subequent test run after 7 days.', job.get('id'))
                         continue
                     try:
                         found_job_ids.append(job['id'])
@@ -987,6 +988,26 @@ class BootprepTestCase(SATTestCase):
         # Copy the bootprep input file into the temporary directory
         tmp_bootprep_file_path = os.path.join(cls.temp_dir.name, dest_folder, os.path.basename(bootprep_file))
         shutil.copy(src_bootprep_file_path, tmp_bootprep_file_path)
+
+    @staticmethod
+    def days_since(date_str):
+        """Returns number of days since a given date string
+
+        Args:
+            date_str: date string in the format "2025-12-13T23:37:58.357683"
+
+        Returns:
+            int: number of days since the given date_str or 0 if unable to parse.
+        """
+
+        try:
+            date = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%f').date()
+            current_date = datetime.today().date()
+        except ValueError as e:
+            logging.warning("Unable to parse date string: %s, with error %s returning 0", date_str, e)
+            return 0
+
+        return (current_date - date).days
 
     @classmethod
     def check_sle_products_availability(cls):
