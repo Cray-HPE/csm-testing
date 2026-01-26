@@ -195,10 +195,12 @@ class BootprepTestCase(SATTestCase):
 
     def setUp(self):
         # Ensure resources from past tests are deleted to start with a clean slate
+        super().setUp()
         type(self).delete_matching_resources()
 
     def tearDown(self):
         type(self).delete_matching_resources()
+        super().tearDown()
 
     @classmethod
     def delete_matching_resources(cls):
@@ -954,7 +956,7 @@ class BootprepTestCase(SATTestCase):
 
         # Since the command is executed in the temporary directory containing
         # the bootprep input file, just use the relative file path
-        command = f'sat bootprep run {bootprep_opts_str} {bootprep_file}'
+        command = f'{self.sat_base_command} bootprep run {bootprep_opts_str} {bootprep_file}'
         try:
             result = subprocess.run(shlex.split(command), cwd=self.temp_dir.name, check=check,
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)

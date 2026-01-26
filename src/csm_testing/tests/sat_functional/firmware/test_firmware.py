@@ -133,7 +133,7 @@ class TestFirmware(SATTestCase):
     def test_firmware_describe_existing_snapshot(self) -> None:
         """Test that `sat firmware --snapshots SNAPSHOT` describes an existing firmware snapshot."""
         snapshot = self.snapshot1
-        command = f'sat firmware --snapshots {snapshot}'
+        command = f'{self.sat_base_command} firmware --snapshots {snapshot}'
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, check=True)
         output = proc.stdout.decode().strip()
@@ -146,7 +146,7 @@ class TestFirmware(SATTestCase):
         """Test that `sat firmware --snapshots SNAPSHOT_1 SNAPSHOT_2` prints the details for two snapshots."""
         snap1 = self.snapshot1
         snap2 = self.snapshot2
-        command = f'sat firmware --snapshots {snap1} {snap2}'
+        command = f'{self.sat_base_command} firmware --snapshots {snap1} {snap2}'
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, check=True)
         output = proc.stdout.decode()
@@ -159,7 +159,7 @@ class TestFirmware(SATTestCase):
     def test_firmware_query_nonexistent_snapshot(self) -> None:
         """Test that `sat firmware --snapshots NON_EXISTENT_SNAPSHOT` querying a non-existent firmware snapshot."""
         non_existent_snapshot = str(uuid.uuid4())
-        command = f'sat firmware --snapshots {non_existent_snapshot}'
+        command = f'{self.sat_base_command} firmware --snapshots {non_existent_snapshot}'
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, check=False)
         stderr_output = proc.stderr.decode()
@@ -172,7 +172,7 @@ class TestFirmware(SATTestCase):
         """Test that `sat firmware -x <xname>` prints firmware info for a single xname."""
         self.assertGreater(len(self.xnames), 0, "No xnames found in sat firmware output.")
         xname = self.xnames[0]
-        command = f'sat firmware -x {xname}'
+        command = f'{self.sat_base_command} firmware -x {xname}'
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, check=True)
         xname_output = proc.stdout.decode().strip()
@@ -183,7 +183,7 @@ class TestFirmware(SATTestCase):
     def test_firmware_query_multiple_xnames(self) -> None:
         """Test that `sat firmware -x <xname1>,<xname2>` prints firmware info for multiple xnames."""
         self.assertGreaterEqual(len(self.xnames), 2, "Less than two unique xnames found in sat firmware output.")
-        command = f'sat firmware -x {self.xnames[0]},{self.xnames[1]}'
+        command = f'{self.sat_base_command} firmware -x {self.xnames[0]},{self.xnames[1]}'
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, check=True)
         multi_xname_output = proc.stdout.decode().strip()
@@ -195,7 +195,7 @@ class TestFirmware(SATTestCase):
     def test_firmware_query_xnames_from_file(self) -> None:
         """Test that `sat firmware --xname-file <file>` prints firmware info for xnames listed in a file."""
         self.assertGreaterEqual(len(self.xnames), 2, "Less than two unique xnames found in sat firmware output.")
-        command = f'sat firmware --xname-file {self.xname_file}'
+        command = f'{self.sat_base_command} firmware --xname-file {self.xname_file}'
         proc = subprocess.run(shlex.split(command), cwd=self.temp_dir.name,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         file_xname_output = proc.stdout.decode().strip()
@@ -206,7 +206,7 @@ class TestFirmware(SATTestCase):
 
     def test_firmware_list_snapshots(self) -> None:
         """Test that `sat firmware --snapshots` prints a list of snapshot names."""
-        command = 'sat firmware --snapshots'
+        command = f'{self.sat_base_command} firmware --snapshots'
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE, check=True)
         output = proc.stdout.decode().strip()
@@ -222,6 +222,6 @@ class TestFirmware(SATTestCase):
                          f"Snapshot name {self.snapshot1} does not match expected format.")
         self.assertRegex(self.snapshot2, pattern,
                          f"Snapshot name {self.snapshot2} does not match expected format.")
-        
+
 if __name__ == '__main__':
     unittest.main()

@@ -53,12 +53,14 @@ class TestInit(SATTestCase):
     """Test the `sat init` command."""
 
     def setUp(self):
+        super().setUp()
         self.temp_dir_path = tempfile.mkdtemp()
         os.environ["SAT_CONFIG_DIR"] = self.temp_dir_path
 
     def tearDown(self):
         del os.environ["SAT_CONFIG_DIR"]
         shutil.rmtree(self.temp_dir_path)
+        super().tearDown()
 
     def validate_toml_headings(self, path, headers_to_validate):
         with open(path, 'r') as file:
@@ -70,7 +72,7 @@ class TestInit(SATTestCase):
     def test_init_command_empty_dir(self):
         """Test that `sat init` outputs the correct value when no sat
         configuration files exist in SAT_CONFIG_DIR"""
-        command = 'sat init'
+        command = f'{self.sat_base_command} init'
 
         command_output = execute_command(command)
 
@@ -81,7 +83,7 @@ class TestInit(SATTestCase):
 
     def test_init_command_non_empty_dir(self):
         """Test that `sat init` returns the proper error when it has already been run."""
-        command = 'sat init'
+        command = f'{self.sat_base_command} init'
 
         execute_command(command)
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -92,8 +94,8 @@ class TestInit(SATTestCase):
 
     def test_init_command_force(self):
         """Test that `sat init -f` overwrites the original file"""
-        first_command = 'sat init'
-        second_command = 'sat init -f'
+        first_command = f'{self.sat_base_command} init'
+        second_command = f'{self.sat_base_command} init -f'
 
         sat_toml_file_path = self.temp_dir_path + "/sat.toml"
         # run sat init
@@ -121,7 +123,7 @@ class TestInit(SATTestCase):
 
     def test_init_command_alternate_output(self):
         """Test that `sat init -o` outputs to the specified directory"""
-        command = 'sat init -o'
+        command = f'{self.sat_base_command} init -o'
         file_name = "/test_sat.toml"
 
         output_dir = self.temp_dir_path + "/output_dir"
@@ -138,7 +140,7 @@ class TestInit(SATTestCase):
 
     def test_set_sat_config_file(self):
         """Test that `sat init` outputs to the path in the SAT_CONFIG_FILE variable"""
-        command = 'sat init'
+        command = f'{self.sat_base_command} init'
         file_name = "/test_sat.toml"
 
         output_dir = self.temp_dir_path + "/output_dir"
@@ -161,7 +163,7 @@ class TestInit(SATTestCase):
     def test_init_command_with_user(self):
         """Test that `sat init` outputs the correct value when --username is set."""
         test_username = 'fake_user'
-        command = f'sat --username {test_username} init'
+        command = f'{self.sat_base_command} --username {test_username} init'
 
         command_output = execute_command(command)
 

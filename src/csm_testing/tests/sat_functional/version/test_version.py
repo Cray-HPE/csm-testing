@@ -56,7 +56,7 @@ class TestVersion(SATTestCase):
         # Prepare a clean environment without SAT_IMAGE
         env = os.environ.copy()
         env.pop('SAT_IMAGE', None)
-        command = 'sat --version'
+        command = f'{self.sat_base_command} --version'
 
         # Use stdout and stderr instead of capture_output=True for Python 3.6 compatibility
         proc = subprocess.run(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE,

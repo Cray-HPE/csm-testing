@@ -33,7 +33,6 @@ class TestNid2Xname(SATTestCase):
     @classmethod
     def setUpClass(cls):
         """Set up data used by all test methods."""
-        super().setUpClass()
         cls.components = cls.get_hsm_components()
         cls.first_xname = cls.components[0]['Xname']
         cls.first_nid = cls.components[0]['NID']
@@ -85,7 +84,7 @@ class TestNid2Xname(SATTestCase):
         nid = self.first_nid
 
         # Convert nid to xname using sat command
-        sat_command = f"sat nid2xname nid{nid}"
+        sat_command = f"{self.sat_base_command} nid2xname nid{nid}"
         converted_xname = self.run_command(sat_command)
 
         self.assertEqual(xname, converted_xname,
@@ -98,7 +97,7 @@ class TestNid2Xname(SATTestCase):
         nid = self.first_nid
 
         # Convert xname to nid using sat command
-        sat_command_reverse = f"sat xname2nid {xname}"
+        sat_command_reverse = f"{self.sat_base_command} xname2nid {xname}"
         converted_nid = self.run_command(sat_command_reverse)
 
         self.assertEqual(f"nid{int(nid):06d}", converted_nid,
@@ -113,7 +112,7 @@ class TestNid2Xname(SATTestCase):
 
         # Test with space-separated nids
         nid_args = ' '.join([f"nid{nid}" for nid in nids])
-        sat_command = f"sat nid2xname {nid_args}"
+        sat_command = f"{self.sat_base_command} nid2xname {nid_args}"
         converted_xnames = self.run_command(sat_command)
         expected_xnames = ','.join(xnames)
         self.assertEqual(expected_xnames, converted_xnames,
@@ -121,7 +120,7 @@ class TestNid2Xname(SATTestCase):
 
         # Test with comma-separated nids
         nid_list = ','.join([f"nid{nid}" for nid in nids])
-        sat_command = f"sat nid2xname {nid_list}"
+        sat_command = f"{self.sat_base_command} nid2xname {nid_list}"
         converted_xnames = self.run_command(sat_command)
         self.assertEqual(expected_xnames, converted_xnames,
                         f"Comma-separated test: Expected xnames {expected_xnames} but got {converted_xnames}")
@@ -138,14 +137,14 @@ class TestNid2Xname(SATTestCase):
 
         # Test with space-separated xnames
         xname_args = ' '.join(xnames)
-        sat_command = f"sat xname2nid {xname_args}"
+        sat_command = f"{self.sat_base_command} xname2nid {xname_args}"
         converted_nids = self.run_command(sat_command)
         self.assertEqual(expected_nid_range, converted_nids,
                         f"Space-separated test: Expected nid range {expected_nid_range} but got {converted_nids}")
 
         # Test with comma-separated xnames
         xname_list = ','.join(xnames)
-        sat_command = f"sat xname2nid {xname_list}"
+        sat_command = f"{self.sat_base_command} xname2nid {xname_list}"
         converted_nids = self.run_command(sat_command)
         self.assertEqual(expected_nid_range, converted_nids,
                         f"Comma-separated test: Expected nid range {expected_nid_range} but got {converted_nids}")
@@ -156,7 +155,7 @@ class TestNid2Xname(SATTestCase):
         nids = [str(c['NID']) for c in consecutive_components]
         xnames = [c['Xname'] for c in consecutive_components]
         expected_nid_range = f"nid[{int(nids[0]):06d}-{int(nids[-1]):06d}]"
-        sat_command_range = f"sat xname2nid -f range {' '.join(xnames)}"
+        sat_command_range = f"{self.sat_base_command} xname2nid -f range {' '.join(xnames)}"
         converted_nid_range = self.run_command(sat_command_range)
         self.assertEqual(expected_nid_range, converted_nid_range, f"Expected nid range {expected_nid_range} but got {converted_nid_range}")
 
@@ -167,7 +166,7 @@ class TestNid2Xname(SATTestCase):
         nids = [str(component['NID']) for component in sample_components]
         xnames = [component['Xname'] for component in sample_components]
 
-        sat_command_nid = f"sat xname2nid -f nid {' '.join(xnames)}"
+        sat_command_nid = f"{self.sat_base_command} xname2nid -f nid {' '.join(xnames)}"
         converted_nid_list = self.run_command(sat_command_nid)
 
         expected_nid_list = ','.join([f"nid{int(nid):06d}" for nid in nids])
@@ -180,7 +179,7 @@ class TestNid2Xname(SATTestCase):
         xnames = [c['Xname'] for c in consecutive_components]
         nid_range = f"nid[{int(nids[0]):06d}-{int(nids[-1]):06d}]"
         expected_xnames = ','.join(xnames)
-        sat_command = f"sat nid2xname {nid_range}"
+        sat_command = f"{self.sat_base_command} nid2xname {nid_range}"
         converted_xnames = self.run_command(sat_command)
         self.assertEqual(expected_xnames, converted_xnames, f"Expected xnames {expected_xnames} but got {converted_xnames} for nid range {nid_range}")
 
